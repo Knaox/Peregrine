@@ -1,53 +1,42 @@
-import { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useConsoleWebSocket } from '@/hooks/useConsoleWebSocket';
+import { useWingsWebSocket } from '@/hooks/useWingsWebSocket';
 import { useCommandHistory } from '@/hooks/useCommandHistory';
-import { ConsoleOutput } from '@/components/console/ConsoleOutput';
-import { ConsoleInput } from '@/components/console/ConsoleInput';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { ConsoleOutput } from '@/components/console/ConsoleOutput';
+import { ConsoleInput } from '@/components/console/ConsoleInput';
 
 export function ServerConsolePage() {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
 
-    const {
-        messages,
-        isConnected,
-        sendWsCommand,
-        clearMessages,
-    } = useConsoleWebSocket(serverId);
+    const { messages, isConnected, sendCommand, clearMessages } = useWingsWebSocket(serverId, {
+        console: true,
+        stats: true,
+    });
 
     const { addCommand, navigateUp, navigateDown } = useCommandHistory(serverId);
 
-    const handleSend = useCallback(
-        (command: string) => {
-            sendWsCommand(command);
-            addCommand(command);
-        },
-        [sendWsCommand, addCommand],
-    );
+    const handleSend = (command: string) => {
+        sendCommand(command);
+        addCommand(command);
+    };
 
     return (
-        <div className="flex h-full flex-col gap-4">
-            {/* Header */}
+        <div className="flex h-[calc(100vh-6rem)] flex-col gap-3">
             <div className="flex items-center justify-between">
                 <Badge color={isConnected ? 'green' : 'red'}>
-                    {isConnected
-                        ? t('servers.console.connected')
-                        : t('servers.console.disconnected')}
+                    {isConnected ? t('servers.console.connected') : t('servers.console.disconnected')}
                 </Badge>
                 <Button variant="ghost" size="sm" onClick={clearMessages}>
                     {t('servers.console.clear')}
                 </Button>
             </div>
 
-            {/* Console output */}
             <ConsoleOutput messages={messages} />
 
-            {/* Console input */}
             <ConsoleInput
                 onSend={handleSend}
                 onHistoryUp={navigateUp}

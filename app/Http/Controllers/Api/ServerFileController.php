@@ -26,7 +26,13 @@ class ServerFileController extends Controller
         $this->authorize('manageFiles', $server);
 
         $directory = $request->query('directory', '/');
-        $files = $this->clientService->listFiles($server->identifier, $directory);
+        $rawFiles = $this->clientService->listFiles($server->identifier, $directory);
+
+        // Pelican returns [{ "object": "file_object", "attributes": { ... } }]
+        // Flatten to [{ name, size, is_file, ... }]
+        $files = array_map(function (array $file): array {
+            return $file['attributes'] ?? $file;
+        }, $rawFiles);
 
         return response()->json(['data' => $files]);
     }

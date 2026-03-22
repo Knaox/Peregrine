@@ -22,14 +22,13 @@ class PelicanApplicationService
      *
      * @throws RequestException
      */
-    public function createUser(string $email, string $username, string $firstName, string $lastName): PelicanUser
+    public function createUser(string $email, string $username, string $name): PelicanUser
     {
         $response = $this->request()
             ->post('/api/application/users', [
                 'email' => $email,
                 'username' => $username,
-                'first_name' => $firstName,
-                'last_name' => $lastName,
+                'name' => $name,
             ])
             ->throw();
 
@@ -243,15 +242,16 @@ class PelicanApplicationService
     // -------------------------------------------------------------------------
 
     /**
-     * List all eggs for a given nest.
+     * List all eggs from the Pelican panel.
+     * Pelican no longer has nests — eggs are listed directly.
      *
      * @return PelicanEgg[]
      *
      * @throws RequestException
      */
-    public function listEggs(int $nestId): array
+    public function listEggs(): array
     {
-        return $this->fetchAllPages("/api/application/nests/{$nestId}/eggs", PelicanEgg::class);
+        return $this->fetchAllPages('/api/application/eggs', PelicanEgg::class);
     }
 
     /**
@@ -268,35 +268,7 @@ class PelicanApplicationService
         return PelicanEgg::fromApiResponse($response->json());
     }
 
-    // -------------------------------------------------------------------------
-    // Nests
-    // -------------------------------------------------------------------------
-
-    /**
-     * List all nests from the Pelican panel.
-     *
-     * @return PelicanNest[]
-     *
-     * @throws RequestException
-     */
-    public function listNests(): array
-    {
-        return $this->fetchAllPages('/api/application/nests', PelicanNest::class);
-    }
-
-    /**
-     * Get a single nest by its Pelican ID.
-     *
-     * @throws RequestException
-     */
-    public function getNest(int $nestId): PelicanNest
-    {
-        $response = $this->request()
-            ->get("/api/application/nests/{$nestId}")
-            ->throw();
-
-        return PelicanNest::fromApiResponse($response->json());
-    }
+    // Note: Pelican removed the /nests API. Nests are derived from eggs during sync.
 
     // -------------------------------------------------------------------------
     // Private helpers

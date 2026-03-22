@@ -76,15 +76,22 @@ class SyncService
         foreach ($pelicanUserIds as $pelicanUserId) {
             $pelicanUser = $this->pelicanService->getUser($pelicanUserId);
 
-            $exists = User::where('pelican_user_id', $pelicanUser->id)->exists()
-                || User::where('email', $pelicanUser->email)->exists();
-
-            if ($exists) {
+            // Already linked by pelican_user_id — skip
+            if (User::where('pelican_user_id', $pelicanUser->id)->exists()) {
                 continue;
             }
 
+            // Exists by email but not yet linked — update pelican_user_id
+            $existingUser = User::where('email', $pelicanUser->email)->first();
+            if ($existingUser) {
+                $existingUser->update(['pelican_user_id' => $pelicanUser->id]);
+                $imported++;
+                continue;
+            }
+
+            // New user — create
             User::create([
-                'name' => $pelicanUser->firstName . ' ' . $pelicanUser->lastName,
+                'name' => $pelicanUser->name,
                 'email' => $pelicanUser->email,
                 'password' => Hash::make(Str::random(32)),
                 'pelican_user_id' => $pelicanUser->id,
@@ -161,12 +168,22 @@ class SyncService
 
             $pelicanServer = $this->pelicanService->getServer($pelicanServerId);
 
+            // Try to match the egg — may be null if eggs haven't been synced yet
+            $eggId = Egg::where('pelican_egg_id', $pelicanServer->eggId)->value('id');
+
+            // Auto-sync eggs if no match found
+            if ($eggId === null) {
+                $this->syncEggs();
+                $eggId = Egg::where('pelican_egg_id', $pelicanServer->eggId)->value('id');
+            }
+
             Server::create([
                 'pelican_server_id' => $pelicanServer->id,
+                'identifier' => $pelicanServer->identifier,
                 'user_id' => $userId,
                 'name' => $pelicanServer->name,
                 'status' => $pelicanServer->isSuspended ? 'suspended' : 'active',
-                'egg_id' => Egg::where('pelican_egg_id', $pelicanServer->eggId)->value('id'),
+                'egg_id' => $eggId,
             ]);
 
             $imported++;
@@ -180,39 +197,39 @@ class SyncService
     // -------------------------------------------------------------------------
 
     /**
-     * Synchronise all nests and eggs from Pelican into the local database.
+     * Synchronise all eggs from Pelican into the local database.
+     * Pelican no longer has nests — eggs are listed directly.
+     * If the egg has a nestId, we upsert the nest too.
      *
      * @return int Total number of eggs upserted.
      */
     public function syncEggs(): int
     {
-        $nests = $this->pelicanService->listNests();
+        $eggs = $this->pelicanService->listEggs();
         $eggCount = 0;
 
-        foreach ($nests as $pelicanNest) {
-            $nest = Nest::updateOrCreate(
-                ['pelican_nest_id' => $pelicanNest->id],
+        foreach ($eggs as $pelicanEgg) {
+            // Upsert nest if the egg has a nest_id
+            $nestId = null;
+            if ($pelicanEgg->nestId > 0) {
+                $nest = Nest::updateOrCreate(
+                    ['pelican_nest_id' => $pelicanEgg->nestId],
+                    ['name' => 'Nest #' . $pelicanEgg->nestId],
+                );
+                $nestId = $nest->id;
+            }
+
+            Egg::updateOrCreate(
+                ['pelican_egg_id' => $pelicanEgg->id],
                 [
-                    'name' => $pelicanNest->name,
-                    'description' => $pelicanNest->description,
+                    'nest_id' => $nestId,
+                    'name' => $pelicanEgg->name,
+                    'docker_image' => $pelicanEgg->dockerImage,
+                    'startup' => $pelicanEgg->startup,
+                    'description' => $pelicanEgg->description,
                 ],
             );
-
-            $eggs = $this->pelicanService->listEggs($pelicanNest->id);
-
-            foreach ($eggs as $pelicanEgg) {
-                Egg::updateOrCreate(
-                    ['pelican_egg_id' => $pelicanEgg->id],
-                    [
-                        'nest_id' => $nest->id,
-                        'name' => $pelicanEgg->name,
-                        'docker_image' => $pelicanEgg->dockerImage,
-                        'startup' => $pelicanEgg->startup,
-                        'description' => $pelicanEgg->description,
-                    ],
-                );
-                $eggCount++;
-            }
+            $eggCount++;
         }
 
         return $eggCount;

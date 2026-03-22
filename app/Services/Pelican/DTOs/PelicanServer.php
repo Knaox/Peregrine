@@ -29,7 +29,7 @@ final readonly class PelicanServer
             nodeId: $attributes['node'],
             eggId: $attributes['egg'],
             nestId: $attributes['nest'] ?? 0,
-            isSuspended: $attributes['suspended'] ?? false,
+            isSuspended: ($attributes['status'] === 'suspended') || ($attributes['suspended'] ?? false),
             limits: ServerLimits::fromApiResponse($attributes['limits'] ?? []),
         );
     }

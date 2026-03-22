@@ -38,29 +38,25 @@ class ListServers extends ListRecords
                         return;
                     }
 
-                    // Build import array, matching Pelican userId to local user
-                    $imports = array_map(fn (object $s): array => [
-                        'pelican_server_id' => $s->id,
-                        'user_id' => User::where('pelican_user_id', $s->userId)->first()?->id,
-                    ], $comparison->new);
+                    // Current admin as fallback owner
+                    $fallbackUserId = auth()->id();
 
-                    // Filter out servers where we couldn't match a user
-                    $imports = array_filter($imports, fn (array $i): bool => $i['user_id'] !== null);
-                    $skipped = $newCount - count($imports);
+                    $imports = array_map(function (object $s) use ($fallbackUserId): array {
+                        // Try matching by pelican_user_id first, then by email via Pelican user
+                        $localUser = User::where('pelican_user_id', $s->userId)->first();
 
-                    $imported = $syncService->importServers(array_values($imports));
+                        return [
+                            'pelican_server_id' => $s->id,
+                            'user_id' => $localUser?->id ?? $fallbackUserId,
+                        ];
+                    }, $comparison->new);
+
+                    $imported = $syncService->importServers($imports);
 
                     Notification::make()
                         ->title("Imported {$imported} servers from Pelican")
                         ->success()
                         ->send();
-
-                    if ($skipped > 0) {
-                        Notification::make()
-                            ->title("{$skipped} servers skipped (no matching user)")
-                            ->warning()
-                            ->send();
-                    }
                 }),
         ];
     }

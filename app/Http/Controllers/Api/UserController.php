@@ -57,6 +57,8 @@ class UserController extends Controller
         }
 
         $this->pelicanService->updateUser($user->pelican_user_id, [
+            'email' => $user->email,
+            'username' => $user->name,
             'password' => $request->validated('password'),
         ]);
 
