@@ -15,6 +15,7 @@ class Server extends Model
     protected $fillable = [
         'user_id',
         'pelican_server_id',
+        'identifier',
         'name',
         'status',
         'egg_id',

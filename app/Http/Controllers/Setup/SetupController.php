@@ -61,37 +61,50 @@ class SetupController extends Controller
         $validated = $request->validated();
 
         try {
-            // Write environment variables
-            $this->setupService->writeEnv([
-                'DB_HOST' => $validated['database']['host'],
-                'DB_PORT' => (string) $validated['database']['port'],
-                'DB_DATABASE' => $validated['database']['name'],
-                'DB_USERNAME' => $validated['database']['username'],
-                'DB_PASSWORD' => $validated['database']['password'] ?? '',
-                'PELICAN_URL' => $validated['pelican']['url'],
-                'PELICAN_ADMIN_API_KEY' => $validated['pelican']['api_key'],
-                'AUTH_MODE' => $validated['auth']['mode'],
-                'OAUTH_CLIENT_ID' => $validated['auth']['oauth_client_id'] ?? '',
-                'OAUTH_CLIENT_SECRET' => $validated['auth']['oauth_client_secret'] ?? '',
-                'OAUTH_AUTHORIZE_URL' => $validated['auth']['oauth_authorize_url'] ?? '',
-                'OAUTH_TOKEN_URL' => $validated['auth']['oauth_token_url'] ?? '',
-                'OAUTH_USER_URL' => $validated['auth']['oauth_user_url'] ?? '',
-                'BRIDGE_ENABLED' => $validated['bridge']['enabled'] ? 'true' : 'false',
-                'STRIPE_WEBHOOK_SECRET' => $validated['bridge']['stripe_webhook_secret'] ?? '',
-            ]);
+            $dbHost = $validated['database']['host'];
+            $dbPort = (int) $validated['database']['port'];
+            $dbName = $validated['database']['name'];
+            $dbUser = $validated['database']['username'];
+            $dbPass = $validated['database']['password'] ?? '';
 
-            // Run migrations
+            // 1. Reconfigure DB connection at runtime (no .env write yet — artisan serve restarts on .env change)
+            $this->setupService->reconfigureDatabase($dbHost, $dbPort, $dbName, $dbUser, $dbPass);
+
+            // 2. Run migrations + seed using the runtime config
             $this->setupService->runMigrations();
 
-            // Create admin user
+            // 3. Create admin user
             $this->setupService->createAdminUser(
                 name: $validated['admin']['name'],
                 email: $validated['admin']['email'],
                 password: $validated['admin']['password'],
             );
 
-            // Mark as installed
-            $this->setupService->markAsInstalled();
+            // 4. Send the response BEFORE writing .env (because artisan serve will restart)
+            // We use register_shutdown_function to write the .env after the response is sent
+            register_shutdown_function(function () use ($validated, $dbHost, $dbPort, $dbName, $dbUser, $dbPass) {
+                $this->setupService->writeEnv([
+                    'PANEL_INSTALLED' => 'true',
+                    'DB_CONNECTION' => 'mysql',
+                    'DB_HOST' => $dbHost,
+                    'DB_PORT' => (string) $dbPort,
+                    'DB_DATABASE' => $dbName,
+                    'DB_USERNAME' => $dbUser,
+                    'DB_PASSWORD' => $dbPass,
+                    'DB_SOCKET' => '',
+                    'PELICAN_URL' => $validated['pelican']['url'],
+                    'PELICAN_ADMIN_API_KEY' => $validated['pelican']['api_key'],
+                    'PELICAN_CLIENT_API_KEY' => $validated['pelican']['client_api_key'],
+                    'AUTH_MODE' => $validated['auth']['mode'],
+                    'OAUTH_CLIENT_ID' => $validated['auth']['oauth_client_id'] ?? '',
+                    'OAUTH_CLIENT_SECRET' => $validated['auth']['oauth_client_secret'] ?? '',
+                    'OAUTH_AUTHORIZE_URL' => $validated['auth']['oauth_authorize_url'] ?? '',
+                    'OAUTH_TOKEN_URL' => $validated['auth']['oauth_token_url'] ?? '',
+                    'OAUTH_USER_URL' => $validated['auth']['oauth_user_url'] ?? '',
+                    'BRIDGE_ENABLED' => $validated['bridge']['enabled'] ? 'true' : 'false',
+                    'STRIPE_WEBHOOK_SECRET' => $validated['bridge']['stripe_webhook_secret'] ?? '',
+                ]);
+            });
 
             return response()->json(['success' => true]);
         } catch (\Throwable $e) {
@@ -104,14 +117,35 @@ class SetupController extends Controller
 
     public function dockerDetect(): JsonResponse
     {
+        $isDocker = filter_var(env('DOCKER', false), FILTER_VALIDATE_BOOLEAN);
+
+        $defaults = $isDocker ? [
+            'host' => env('DB_HOST', 'mysql'),
+            'port' => (int) env('DB_PORT', 3306),
+            'database' => env('DB_DATABASE', 'peregrine'),
+            'username' => env('DB_USERNAME', 'peregrine'),
+        ] : [];
+
+        // Test if the current DB config already works
+        $dbReady = false;
+        if ($isDocker) {
+            try {
+                $dbReady = $this->setupService->testDatabaseConnection(
+                    host: $defaults['host'],
+                    port: $defaults['port'],
+                    database: $defaults['database'],
+                    username: $defaults['username'],
+                    password: env('DB_PASSWORD', ''),
+                );
+            } catch (\Throwable) {
+                $dbReady = false;
+            }
+        }
+
         return response()->json([
-            'is_docker' => env('DOCKER', false),
-            'defaults' => [
-                'host' => 'mysql',
-                'port' => 3306,
-                'database' => 'biomebounty_panel',
-                'username' => 'biomebounty',
-            ],
+            'is_docker' => $isDocker,
+            'db_ready' => $dbReady,
+            'defaults' => $defaults,
         ]);
     }
 }

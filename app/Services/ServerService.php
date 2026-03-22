@@ -22,59 +22,35 @@ class ServerService
     // -------------------------------------------------------------------------
 
     /**
-     * Start the server.
-     *
      * @throws RequestException
      */
-    public function start(string $clientApiKey): void
+    public function start(): void
     {
-        $this->clientService->setPowerState(
-            $clientApiKey,
-            $this->serverIdentifier(),
-            'start',
-        );
+        $this->clientService->setPowerState($this->serverIdentifier(), 'start');
     }
 
     /**
-     * Stop the server gracefully.
-     *
      * @throws RequestException
      */
-    public function stop(string $clientApiKey): void
+    public function stop(): void
     {
-        $this->clientService->setPowerState(
-            $clientApiKey,
-            $this->serverIdentifier(),
-            'stop',
-        );
+        $this->clientService->setPowerState($this->serverIdentifier(), 'stop');
     }
 
     /**
-     * Restart the server.
-     *
      * @throws RequestException
      */
-    public function restart(string $clientApiKey): void
+    public function restart(): void
     {
-        $this->clientService->setPowerState(
-            $clientApiKey,
-            $this->serverIdentifier(),
-            'restart',
-        );
+        $this->clientService->setPowerState($this->serverIdentifier(), 'restart');
     }
 
     /**
-     * Kill the server process immediately.
-     *
      * @throws RequestException
      */
-    public function kill(string $clientApiKey): void
+    public function kill(): void
     {
-        $this->clientService->setPowerState(
-            $clientApiKey,
-            $this->serverIdentifier(),
-            'kill',
-        );
+        $this->clientService->setPowerState($this->serverIdentifier(), 'kill');
     }
 
     // -------------------------------------------------------------------------
@@ -82,26 +58,20 @@ class ServerService
     // -------------------------------------------------------------------------
 
     /**
-     * Suspend the server via the Application API.
-     *
      * @throws RequestException
      */
     public function suspend(): void
     {
         $this->applicationService->suspendServer($this->server->pelican_server_id);
-
         $this->server->update(['status' => 'suspended']);
     }
 
     /**
-     * Unsuspend the server via the Application API.
-     *
      * @throws RequestException
      */
     public function unsuspend(): void
     {
         $this->applicationService->unsuspendServer($this->server->pelican_server_id);
-
         $this->server->update(['status' => 'active']);
     }
 
@@ -110,14 +80,11 @@ class ServerService
     // -------------------------------------------------------------------------
 
     /**
-     * Delete the server from Pelican and the local database.
-     *
      * @throws RequestException
      */
     public function delete(): void
     {
         $this->applicationService->deleteServer($this->server->pelican_server_id);
-
         $this->server->delete();
     }
 
@@ -126,45 +93,28 @@ class ServerService
     // -------------------------------------------------------------------------
 
     /**
-     * Get the current resource usage for this server.
-     *
      * @throws RequestException
      */
-    public function getResources(string $clientApiKey): ServerResources
+    public function getResources(): ServerResources
     {
-        return $this->clientService->getServerResources(
-            $clientApiKey,
-            $this->serverIdentifier(),
-        );
+        return $this->clientService->getServerResources($this->serverIdentifier());
     }
 
     /**
-     * Get websocket credentials for this server.
-     *
      * @throws RequestException
      */
-    public function getWebsocketCredentials(string $clientApiKey): WebsocketCredentials
+    public function getWebsocketCredentials(): WebsocketCredentials
     {
-        return $this->clientService->getWebsocket(
-            $clientApiKey,
-            $this->serverIdentifier(),
-        );
+        return $this->clientService->getWebsocket($this->serverIdentifier());
     }
 
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
-    /**
-     * Resolve the server identifier used by the Client API.
-     *
-     * The Client API uses the short identifier (UUID prefix), not the numeric ID.
-     * If the local model stores the identifier we use it; otherwise we fall back
-     * to fetching the server from the Application API.
-     */
     private function serverIdentifier(): string
     {
-        if (! empty($this->server->identifier)) {
+        if (!empty($this->server->identifier)) {
             return $this->server->identifier;
         }
 

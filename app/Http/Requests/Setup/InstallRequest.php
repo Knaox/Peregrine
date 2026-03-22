@@ -30,6 +30,7 @@ class InstallRequest extends FormRequest
             // Pelican
             'pelican.url' => ['required', 'url'],
             'pelican.api_key' => ['required', 'string'],
+            'pelican.client_api_key' => ['required', 'string'],
 
             // Auth
             'auth.mode' => ['required', 'string', 'in:local,oauth'],

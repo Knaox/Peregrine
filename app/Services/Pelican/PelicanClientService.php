@@ -22,13 +22,13 @@ class PelicanClientService
      *
      * @throws RequestException
      */
-    public function listServers(string $apiKey): array
+    public function listServers(): array
     {
         $items = [];
         $page = 1;
 
         do {
-            $response = $this->request($apiKey)
+            $response = $this->request()
                 ->get('/api/client', ['page' => $page])
                 ->throw();
 
@@ -51,9 +51,9 @@ class PelicanClientService
      *
      * @throws RequestException
      */
-    public function getServer(string $apiKey, string $serverIdentifier): PelicanServer
+    public function getServer(string $serverIdentifier): PelicanServer
     {
-        $response = $this->request($apiKey)
+        $response = $this->request()
             ->get("/api/client/servers/{$serverIdentifier}")
             ->throw();
 
@@ -65,9 +65,9 @@ class PelicanClientService
      *
      * @throws RequestException
      */
-    public function getServerResources(string $apiKey, string $serverIdentifier): ServerResources
+    public function getServerResources(string $serverIdentifier): ServerResources
     {
-        $response = $this->request($apiKey)
+        $response = $this->request()
             ->get("/api/client/servers/{$serverIdentifier}/resources")
             ->throw();
 
@@ -83,9 +83,9 @@ class PelicanClientService
      *
      * @throws RequestException
      */
-    public function sendCommand(string $apiKey, string $serverIdentifier, string $command): void
+    public function sendCommand(string $serverIdentifier, string $command): void
     {
-        $this->request($apiKey)
+        $this->request()
             ->post("/api/client/servers/{$serverIdentifier}/command", [
                 'command' => $command,
             ])
@@ -97,9 +97,9 @@ class PelicanClientService
      *
      * @throws RequestException
      */
-    public function setPowerState(string $apiKey, string $serverIdentifier, string $signal): void
+    public function setPowerState(string $serverIdentifier, string $signal): void
     {
-        $this->request($apiKey)
+        $this->request()
             ->post("/api/client/servers/{$serverIdentifier}/power", [
                 'signal' => $signal,
             ])
@@ -117,9 +117,9 @@ class PelicanClientService
      *
      * @throws RequestException
      */
-    public function listFiles(string $apiKey, string $serverIdentifier, string $directory = '/'): array
+    public function listFiles(string $serverIdentifier, string $directory = '/'): array
     {
-        $response = $this->request($apiKey)
+        $response = $this->request()
             ->get("/api/client/servers/{$serverIdentifier}/files/list", [
                 'directory' => $directory,
             ])
@@ -133,9 +133,9 @@ class PelicanClientService
      *
      * @throws RequestException
      */
-    public function getFileContent(string $apiKey, string $serverIdentifier, string $filePath): string
+    public function getFileContent(string $serverIdentifier, string $filePath): string
     {
-        $response = $this->request($apiKey)
+        $response = $this->request()
             ->get("/api/client/servers/{$serverIdentifier}/files/contents", [
                 'file' => $filePath,
             ])
@@ -149,11 +149,11 @@ class PelicanClientService
      *
      * @throws RequestException
      */
-    public function renameFile(string $apiKey, string $serverIdentifier, string $from, string $to): void
+    public function renameFile(string $serverIdentifier, string $from, string $to): void
     {
         $root = dirname($from);
 
-        $this->request($apiKey)
+        $this->request()
             ->put("/api/client/servers/{$serverIdentifier}/files/rename", [
                 'root' => $root === '.' ? '/' : $root,
                 'files' => [
@@ -171,11 +171,11 @@ class PelicanClientService
      *
      * @throws RequestException
      */
-    public function deleteFile(string $apiKey, string $serverIdentifier, string $filePath): void
+    public function deleteFile(string $serverIdentifier, string $filePath): void
     {
         $root = dirname($filePath);
 
-        $this->request($apiKey)
+        $this->request()
             ->post("/api/client/servers/{$serverIdentifier}/files/delete", [
                 'root' => $root === '.' ? '/' : $root,
                 'files' => [basename($filePath)],
@@ -190,12 +190,62 @@ class PelicanClientService
      *
      * @throws RequestException
      */
-    public function compressFiles(string $apiKey, string $serverIdentifier, array $files): void
+    public function compressFiles(string $serverIdentifier, array $files): void
     {
-        $this->request($apiKey)
+        $this->request()
             ->post("/api/client/servers/{$serverIdentifier}/files/compress", [
                 'root' => '/',
                 'files' => $files,
+            ])
+            ->throw();
+    }
+
+    /**
+     * Write content to a file on the server.
+     * Note: Pelican expects raw text body, not JSON.
+     *
+     * @throws RequestException
+     */
+    public function writeFile(string $serverIdentifier, string $filePath, string $content): void
+    {
+        Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->clientApiKey(),
+            'Accept' => 'application/json',
+        ])
+            ->withBody($content, 'text/plain')
+            ->retry(3, 100)
+            ->baseUrl($this->baseUrl())
+            ->post("/api/client/servers/{$serverIdentifier}/files/write?file=" . urlencode($filePath))
+            ->throw();
+    }
+
+    /**
+     * Decompress an archive on the server.
+     *
+     * @throws RequestException
+     */
+    public function decompressFiles(string $serverIdentifier, string $file): void
+    {
+        $this->request()
+            ->timeout(300)
+            ->post("/api/client/servers/{$serverIdentifier}/files/decompress", [
+                'root' => dirname($file) === '.' ? '/' : dirname($file),
+                'file' => basename($file),
+            ])
+            ->throw();
+    }
+
+    /**
+     * Create a new folder on the server.
+     *
+     * @throws RequestException
+     */
+    public function createFolder(string $serverIdentifier, string $root, string $name): void
+    {
+        $this->request()
+            ->post("/api/client/servers/{$serverIdentifier}/files/create-folder", [
+                'root' => $root,
+                'name' => $name,
             ])
             ->throw();
     }
@@ -209,9 +259,9 @@ class PelicanClientService
      *
      * @throws RequestException
      */
-    public function getWebsocket(string $apiKey, string $serverIdentifier): WebsocketCredentials
+    public function getWebsocket(string $serverIdentifier): WebsocketCredentials
     {
-        $response = $this->request($apiKey)
+        $response = $this->request()
             ->get("/api/client/servers/{$serverIdentifier}/websocket")
             ->throw();
 
@@ -227,10 +277,15 @@ class PelicanClientService
         return rtrim((string) config('panel.pelican.url'), '/');
     }
 
-    private function request(string $apiKey): PendingRequest
+    private function clientApiKey(): string
+    {
+        return (string) config('panel.pelican.client_api_key');
+    }
+
+    private function request(): PendingRequest
     {
         return Http::withHeaders([
-            'Authorization' => 'Bearer ' . $apiKey,
+            'Authorization' => 'Bearer ' . $this->clientApiKey(),
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
         ])

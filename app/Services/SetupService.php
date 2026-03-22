@@ -53,18 +53,14 @@ class SetupService
         string $username,
         string $password,
     ): bool {
-        try {
-            $dsn = "mysql:host={$host};port={$port};dbname={$database}";
-            $pdo = new PDO($dsn, $username, $password, [
-                PDO::ATTR_TIMEOUT => 5,
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            ]);
-            $pdo->query('SELECT 1');
+        $dsn = "mysql:host={$host};port={$port};dbname={$database}";
+        $pdo = new PDO($dsn, $username, $password, [
+            PDO::ATTR_TIMEOUT => 5,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ]);
+        $pdo->query('SELECT 1');
 
-            return true;
-        } catch (PDOException) {
-            return false;
-        }
+        return true;
     }
 
     /**
@@ -88,11 +84,36 @@ class SetupService
     }
 
     /**
+     * Reconfigure the database connection at runtime with the given credentials.
+     * This is needed because writeEnv changes the .env but Laravel still has the old config cached.
+     */
+    public function reconfigureDatabase(
+        string $host,
+        int $port,
+        string $database,
+        string $username,
+        string $password,
+    ): void {
+        config([
+            'database.connections.mysql.host' => $host,
+            'database.connections.mysql.port' => $port,
+            'database.connections.mysql.database' => $database,
+            'database.connections.mysql.username' => $username,
+            'database.connections.mysql.password' => $password,
+            'database.connections.mysql.unix_socket' => '',
+            'database.default' => 'mysql',
+        ]);
+
+        DB::purge('mysql');
+        DB::reconnect('mysql');
+    }
+
+    /**
      * Run all pending database migrations.
      */
     public function runMigrations(): void
     {
-        Artisan::call('migrate', ['--force' => true]);
+        Artisan::call('migrate', ['--force' => true, '--seed' => true]);
     }
 
     /**

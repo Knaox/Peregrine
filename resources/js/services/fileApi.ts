@@ -1,0 +1,83 @@
+import type { FileEntry } from '@/types/FileEntry';
+import { request, requestRaw } from '@/services/http';
+
+export async function fetchFiles(serverId: number, directory: string = '/'): Promise<FileEntry[]> {
+    const params = new URLSearchParams({ directory });
+    const { data } = await request<{ data: FileEntry[] }>(
+        `/api/servers/${serverId}/files?${params.toString()}`,
+    );
+    return data;
+}
+
+export async function fetchFileContent(serverId: number, file: string): Promise<string> {
+    const params = new URLSearchParams({ file });
+    const response = await requestRaw(
+        `/api/servers/${serverId}/files/content?${params.toString()}`,
+        {
+            headers: { 'Accept': 'text/plain' },
+        },
+    );
+    return response.text();
+}
+
+export async function writeFile(serverId: number, file: string, content: string): Promise<void> {
+    await request(`/api/servers/${serverId}/files/write`, {
+        method: 'POST',
+        body: JSON.stringify({ file, content }),
+    });
+}
+
+export async function renameFiles(
+    serverId: number,
+    root: string,
+    files: Array<{ from: string; to: string }>,
+): Promise<void> {
+    await request(`/api/servers/${serverId}/files/rename`, {
+        method: 'POST',
+        body: JSON.stringify({ root, files }),
+    });
+}
+
+export async function deleteFiles(
+    serverId: number,
+    root: string,
+    files: string[],
+): Promise<void> {
+    await request(`/api/servers/${serverId}/files/delete`, {
+        method: 'POST',
+        body: JSON.stringify({ root, files }),
+    });
+}
+
+export async function compressFiles(
+    serverId: number,
+    root: string,
+    files: string[],
+): Promise<void> {
+    await request(`/api/servers/${serverId}/files/compress`, {
+        method: 'POST',
+        body: JSON.stringify({ root, files }),
+    });
+}
+
+export async function decompressFile(
+    serverId: number,
+    root: string,
+    file: string,
+): Promise<void> {
+    await request(`/api/servers/${serverId}/files/decompress`, {
+        method: 'POST',
+        body: JSON.stringify({ root, file }),
+    });
+}
+
+export async function createFolder(
+    serverId: number,
+    root: string,
+    name: string,
+): Promise<void> {
+    await request(`/api/servers/${serverId}/files/create-folder`, {
+        method: 'POST',
+        body: JSON.stringify({ root, name }),
+    });
+}

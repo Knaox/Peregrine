@@ -12,7 +12,10 @@ class EnsureInstalled
     {
         $installed = config('panel.installed');
 
-        if (!$installed && !$request->is('setup', 'setup/*', 'api/setup/*')) {
+        if (!$installed && !$request->is('setup', 'setup/*', 'api/setup/*', 'livewire*', 'filament*', 'docs/*')) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'panel_not_installed'], 503);
+            }
             return redirect('/setup');
         }
 

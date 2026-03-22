@@ -16,7 +16,9 @@
         "required": "Ce champ est requis",
         "optional": "Optionnel",
         "install": "Installer",
-        "installing": "Installation en cours..."
+        "installing": "Installation en cours...",
+        "coming_soon": "Bientot disponible",
+        "back": "Retour"
     },
     "setup": {
         "title": "Installation de Peregrine",
@@ -49,7 +51,8 @@
             "password_placeholder": "Entrez le mot de passe de la base de données",
             "test_success": "Connexion à la base de données réussie.",
             "test_failed": "Impossible de se connecter à la base de données : {{error}}",
-            "docker_detected": "Environnement Docker détecté. Les champs de la base de données ont été pré-remplis."
+            "docker_detected": "Environnement Docker détecté. Les champs de la base de données ont été pré-remplis.",
+            "docker_db_ready": "La base de données Docker est déjà configurée et prête. Vous pouvez passer à l'étape suivante."
         },
         "admin": {
             "title": "Compte administrateur",
@@ -70,8 +73,10 @@
             "url_placeholder": "https://pelican.exemple.com",
             "api_key": "Clé API Admin (Application API)",
             "api_key_placeholder": "ptlc_...",
-            "api_key_help": "Générez une clé Application API dans votre panel admin Pelican, section Clés API.",
-            "client_api_note": "Les clés Client API sont générées automatiquement par Pelican pour chaque utilisateur. Aucune configuration nécessaire ici.",
+            "api_key_help": "Générez une clé Application API (papp_...) dans votre panel admin Pelican, section Clés API.",
+            "client_api_key": "Clé API Client",
+            "client_api_key_placeholder": "pacc_...",
+            "client_api_key_help": "Générez une clé Client API (pacc_...) depuis votre compte admin dans Pelican. Cette clé permet de proxifier les actions serveur (console, fichiers, power) pour tous les utilisateurs.",
             "test_success": "Connexion à Pelican réussie.",
             "test_failed": "Impossible de se connecter à Pelican : {{error}}"
         },
@@ -123,17 +128,30 @@
             "email": "Adresse e-mail",
             "password": "Mot de passe",
             "remember": "Se souvenir de moi",
-            "forgot_password": "Mot de passe oublié ?"
+            "forgot_password": "Mot de passe oublié ?",
+            "no_account": "Pas encore de compte ?",
+            "create_account": "Créer un compte",
+            "error": "E-mail ou mot de passe invalide."
         },
         "register": {
             "title": "Créer un compte",
-            "button": "Créer un compte"
+            "button": "Créer un compte",
+            "name": "Nom complet",
+            "email": "Adresse e-mail",
+            "password": "Mot de passe",
+            "password_confirmation": "Confirmer le mot de passe",
+            "has_account": "Déjà un compte ?",
+            "sign_in": "Se connecter",
+            "disabled": "L'inscription est désactivée. Veuillez vous connecter avec votre compte existant."
         }
     },
     "servers": {
         "list": {
             "title": "Mes serveurs",
-            "empty": "Vous n'avez pas encore de serveurs."
+            "empty": "Vous n'avez pas encore de serveurs.",
+            "search": "Rechercher des serveurs...",
+            "search_empty": "Aucun serveur ne correspond a votre recherche.",
+            "stats_unavailable": "Statistiques indisponibles"
         },
         "status": {
             "active": "Actif",
@@ -149,23 +167,109 @@
             "restart": "Redémarrer",
             "kill": "Forcer l'arrêt"
         },
+        "power": {
+            "confirm_kill": "Etes-vous sur de vouloir forcer l'arret de ce serveur ? Cela peut entrainer une perte de donnees.",
+            "success": "Signal envoye.",
+            "error": "Echec de l'envoi du signal."
+        },
         "console": {
             "title": "Console",
-            "send_command": "Envoyer une commande..."
+            "send_command": "Envoyer une commande...",
+            "connected": "Connecte",
+            "disconnected": "Deconnecte",
+            "reconnecting": "Reconnexion...",
+            "connection_error": "Erreur de connexion",
+            "clear": "Effacer",
+            "scroll_to_bottom": "Aller en bas",
+            "server_offline": "Le serveur est hors ligne. Console indisponible."
         },
         "files": {
-            "title": "Gestionnaire de fichiers"
+            "title": "Gestionnaire de fichiers",
+            "name": "Nom",
+            "size": "Taille",
+            "modified": "Modifie",
+            "type": "Type",
+            "new_file": "Nouveau fichier",
+            "new_folder": "Nouveau dossier",
+            "refresh": "Actualiser",
+            "rename": "Renommer",
+            "delete": "Supprimer",
+            "compress": "Compresser",
+            "decompress": "Extraire",
+            "confirm_delete": "Voulez-vous vraiment supprimer \"{{name}}\" ?",
+            "unsaved_changes": "Vous avez des modifications non enregistrees. Les abandonner ?",
+            "save": "Enregistrer",
+            "close": "Fermer",
+            "saving": "Enregistrement...",
+            "empty": "Ce repertoire est vide.",
+            "create_name": "Entrez un nom",
+            "renamed": "Renomme avec succes.",
+            "deleted": "Supprime avec succes.",
+            "compressed": "Compresse avec succes.",
+            "decompressed": "Extrait avec succes.",
+            "created": "Cree avec succes.",
+            "saved": "Fichier enregistre.",
+            "edit": "Modifier",
+            "modified_badge": "Modifie"
         },
         "sftp": {
-            "title": "Accès SFTP",
-            "set_password": "Définir le mot de passe SFTP"
+            "title": "Acces SFTP",
+            "set_password": "Definir le mot de passe SFTP",
+            "host": "Hote",
+            "port": "Port",
+            "username": "Nom d'utilisateur",
+            "password_label": "Mot de passe SFTP",
+            "copy_success": "Copie dans le presse-papiers",
+            "instructions": "Connectez-vous avec un client SFTP comme FileZilla ou WinSCP en utilisant les identifiants ci-dessus.",
+            "password_changed": "Mot de passe SFTP mis a jour."
         },
-        "not_found": "Serveur introuvable."
+        "not_found": "Serveur introuvable.",
+        "detail": {
+            "overview": "Vue d'ensemble",
+            "console": "Console",
+            "files": "Fichiers",
+            "sftp": "SFTP",
+            "info": "Informations du serveur",
+            "game": "Jeu",
+            "plan": "Plan",
+            "allocated": "Ressources allouees",
+            "created": "Date de creation",
+            "not_found": "Serveur introuvable.",
+            "back": "Retour aux serveurs"
+        },
+        "resources": {
+            "cpu": "CPU",
+            "memory": "Memoire",
+            "disk": "Disque",
+            "network": "Reseau",
+            "download": "Telechargement",
+            "upload": "Envoi"
+        }
     },
     "nav": {
         "dashboard": "Tableau de bord",
         "servers": "Serveurs",
         "settings": "Paramètres",
-        "profile": "Profil"
+        "profile": "Profil",
+        "logout": "Déconnexion"
+    },
+    "profile": {
+        "title": "Profil",
+        "name": "Nom",
+        "email": "E-mail",
+        "locale": "Langue",
+        "save": "Enregistrer",
+        "saved": "Profil mis a jour.",
+        "password": {
+            "title": "Changer le mot de passe",
+            "current": "Mot de passe actuel",
+            "new": "Nouveau mot de passe",
+            "confirm": "Confirmer le nouveau mot de passe",
+            "changed": "Mot de passe change avec succes."
+        },
+        "locale_options": {
+            "en": "English",
+            "fr": "Francais"
+        }
     }
 }

@@ -16,6 +16,7 @@ export interface AdminConfig {
 export interface PelicanConfig {
     url: string;
     api_key: string;
+    client_api_key: string;
 }
 
 export interface AuthConfig {

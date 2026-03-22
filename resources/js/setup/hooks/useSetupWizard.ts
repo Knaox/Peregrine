@@ -1,10 +1,13 @@
 import { useState, useCallback } from 'react';
+import i18n from '@/i18n/config';
 import type { SetupState } from '../types';
 
 const TOTAL_STEPS = 7;
 
+const detectedLocale = (i18n.language ?? 'en').startsWith('fr') ? 'fr' : 'en';
+
 const initialState: SetupState = {
-    locale: 'en',
+    locale: detectedLocale,
     database: {
         host: 'localhost',
         port: 3306,
@@ -21,6 +24,7 @@ const initialState: SetupState = {
     pelican: {
         url: '',
         api_key: '',
+        client_api_key: '',
     },
     auth: {
         mode: 'local',

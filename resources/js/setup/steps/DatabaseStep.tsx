@@ -9,6 +9,7 @@ import { testDatabase, detectDocker } from '../services/setupApi';
 export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) {
     const { t } = useTranslation();
     const [dockerDetected, setDockerDetected] = useState(false);
+    const [dbReady, setDbReady] = useState(false);
 
     const testFn = useCallback(
         () => testDatabase(data.database),
@@ -31,20 +32,26 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                             username: (res.defaults.username as string) ?? data.database.username,
                         },
                     });
+                    if (res.db_ready) {
+                        setDbReady(true);
+                    }
                 }
             })
             .catch(() => {
                 // Silently ignore docker detection failures
             });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- only on mount
     }, []);
 
     const updateField = (field: keyof DatabaseConfig, value: string | number) => {
         reset();
+        setDbReady(false);
         onChange({
             database: { ...data.database, [field]: value },
         });
     };
+
+    const canProceed = result.status === 'success' || dbReady;
 
     return (
         <div className="space-y-6">
@@ -57,7 +64,18 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                 </p>
             </div>
 
-            {dockerDetected && (
+            {dockerDetected && dbReady && (
+                <div className="flex items-start gap-3 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                    <svg className="w-5 h-5 text-green-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <p className="text-sm text-green-300">
+                        {t('setup.database.docker_db_ready')}
+                    </p>
+                </div>
+            )}
+
+            {dockerDetected && !dbReady && (
                 <div className="flex items-start gap-3 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                     <svg className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -123,16 +141,18 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                 </FormField>
             </div>
 
-            <ConnectionTestButton
-                result={result}
-                onTest={runTest}
-                successMessage={t('setup.database.test_success')}
-                errorMessage={
-                    result.error
-                        ? t('setup.database.test_failed', { error: result.error })
-                        : undefined
-                }
-            />
+            {!dbReady && (
+                <ConnectionTestButton
+                    result={result}
+                    onTest={runTest}
+                    successMessage={t('setup.database.test_success')}
+                    errorMessage={
+                        result.error
+                            ? t('setup.database.test_failed', { error: result.error })
+                            : undefined
+                    }
+                />
+            )}
 
             <div className="flex justify-between pt-4">
                 <button
@@ -145,7 +165,7 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                 <button
                     type="button"
                     onClick={onNext}
-                    disabled={result.status !== 'success'}
+                    disabled={!canProceed}
                     className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {t('common.next')}

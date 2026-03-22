@@ -16,7 +16,9 @@
         "required": "This field is required",
         "optional": "Optional",
         "install": "Install",
-        "installing": "Installing..."
+        "installing": "Installing...",
+        "coming_soon": "Coming soon",
+        "back": "Back"
     },
     "setup": {
         "title": "Peregrine Setup",
@@ -49,7 +51,8 @@
             "password_placeholder": "Enter database password",
             "test_success": "Successfully connected to the database.",
             "test_failed": "Could not connect to the database: {{error}}",
-            "docker_detected": "Docker environment detected. Database fields have been pre-filled."
+            "docker_detected": "Docker environment detected. Database fields have been pre-filled.",
+            "docker_db_ready": "Docker database is already configured and ready. You can proceed to the next step."
         },
         "admin": {
             "title": "Admin Account",
@@ -70,8 +73,10 @@
             "url_placeholder": "https://pelican.example.com",
             "api_key": "Admin API Key (Application API)",
             "api_key_placeholder": "ptlc_...",
-            "api_key_help": "Generate an Application API key in your Pelican admin panel under API Keys.",
-            "client_api_note": "Client API keys are generated automatically by Pelican for each user. You don't need to configure them here.",
+            "api_key_help": "Generate an Application API key (papp_...) in your Pelican admin panel under API Keys.",
+            "client_api_key": "Client API Key",
+            "client_api_key_placeholder": "pacc_...",
+            "client_api_key_help": "Generate a Client API key (pacc_...) from your admin account in Pelican. This key is used to proxy server actions (console, files, power) for all users.",
             "test_success": "Successfully connected to Pelican.",
             "test_failed": "Could not connect to Pelican: {{error}}"
         },
@@ -123,17 +128,30 @@
             "email": "Email Address",
             "password": "Password",
             "remember": "Remember me",
-            "forgot_password": "Forgot your password?"
+            "forgot_password": "Forgot your password?",
+            "no_account": "Don't have an account?",
+            "create_account": "Create one",
+            "error": "Invalid email or password."
         },
         "register": {
             "title": "Create Account",
-            "button": "Create Account"
+            "button": "Create Account",
+            "name": "Full Name",
+            "email": "Email Address",
+            "password": "Password",
+            "password_confirmation": "Confirm Password",
+            "has_account": "Already have an account?",
+            "sign_in": "Sign in",
+            "disabled": "Registration is disabled. Please sign in with your existing account."
         }
     },
     "servers": {
         "list": {
             "title": "My Servers",
-            "empty": "You don't have any servers yet."
+            "empty": "You don't have any servers yet.",
+            "search": "Search servers...",
+            "search_empty": "No servers match your search.",
+            "stats_unavailable": "Stats unavailable"
         },
         "status": {
             "active": "Active",
@@ -149,23 +167,109 @@
             "restart": "Restart",
             "kill": "Kill"
         },
+        "power": {
+            "confirm_kill": "Are you sure you want to kill this server? This may cause data loss.",
+            "success": "Power signal sent.",
+            "error": "Failed to send power signal."
+        },
         "console": {
             "title": "Console",
-            "send_command": "Send command..."
+            "send_command": "Send command...",
+            "connected": "Connected",
+            "disconnected": "Disconnected",
+            "reconnecting": "Reconnecting...",
+            "connection_error": "Connection error",
+            "clear": "Clear",
+            "scroll_to_bottom": "Scroll to bottom",
+            "server_offline": "Server is offline. Console unavailable."
         },
         "files": {
-            "title": "File Manager"
+            "title": "File Manager",
+            "name": "Name",
+            "size": "Size",
+            "modified": "Modified",
+            "type": "Type",
+            "new_file": "New File",
+            "new_folder": "New Folder",
+            "refresh": "Refresh",
+            "rename": "Rename",
+            "delete": "Delete",
+            "compress": "Compress",
+            "decompress": "Extract",
+            "confirm_delete": "Are you sure you want to delete \"{{name}}\"?",
+            "unsaved_changes": "You have unsaved changes. Discard them?",
+            "save": "Save",
+            "close": "Close",
+            "saving": "Saving...",
+            "empty": "This directory is empty.",
+            "create_name": "Enter a name",
+            "renamed": "Renamed successfully.",
+            "deleted": "Deleted successfully.",
+            "compressed": "Compressed successfully.",
+            "decompressed": "Extracted successfully.",
+            "created": "Created successfully.",
+            "saved": "File saved.",
+            "edit": "Edit",
+            "modified_badge": "Modified"
         },
         "sftp": {
             "title": "SFTP Access",
-            "set_password": "Set SFTP Password"
+            "set_password": "Set SFTP Password",
+            "host": "Host",
+            "port": "Port",
+            "username": "Username",
+            "password_label": "SFTP Password",
+            "copy_success": "Copied to clipboard",
+            "instructions": "Connect using an SFTP client like FileZilla or WinSCP with the credentials above.",
+            "password_changed": "SFTP password updated successfully."
         },
-        "not_found": "Server not found."
+        "not_found": "Server not found.",
+        "detail": {
+            "overview": "Overview",
+            "console": "Console",
+            "files": "Files",
+            "sftp": "SFTP",
+            "info": "Server Information",
+            "game": "Game",
+            "plan": "Plan",
+            "allocated": "Allocated Resources",
+            "created": "Created",
+            "not_found": "Server not found.",
+            "back": "Back to servers"
+        },
+        "resources": {
+            "cpu": "CPU",
+            "memory": "Memory",
+            "disk": "Disk",
+            "network": "Network",
+            "download": "Download",
+            "upload": "Upload"
+        }
     },
     "nav": {
         "dashboard": "Dashboard",
         "servers": "Servers",
         "settings": "Settings",
-        "profile": "Profile"
+        "profile": "Profile",
+        "logout": "Logout"
+    },
+    "profile": {
+        "title": "Profile",
+        "name": "Name",
+        "email": "Email",
+        "locale": "Language",
+        "save": "Save Changes",
+        "saved": "Profile updated.",
+        "password": {
+            "title": "Change Password",
+            "current": "Current Password",
+            "new": "New Password",
+            "confirm": "Confirm New Password",
+            "changed": "Password changed successfully."
+        },
+        "locale_options": {
+            "en": "English",
+            "fr": "Francais"
+        }
     }
 }

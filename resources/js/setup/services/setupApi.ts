@@ -40,16 +40,20 @@ export async function install(state: SetupState): Promise<{ success: boolean; er
             password: state.database.password,
         },
         admin: state.admin,
-        pelican: state.pelican,
+        pelican: {
+            url: state.pelican.url,
+            api_key: state.pelican.api_key,
+            client_api_key: state.pelican.client_api_key,
+        },
         auth: state.auth,
         bridge: state.bridge,
         locale: state.locale,
     });
 }
 
-export async function detectDocker(): Promise<{ is_docker: boolean; defaults: Partial<DatabaseConfig> }> {
+export async function detectDocker(): Promise<{ is_docker: boolean; db_ready: boolean; defaults: Partial<DatabaseConfig> }> {
     const response = await fetch(`${API_BASE}/docker-detect`, {
         headers: { 'Accept': 'application/json' },
     });
-    return response.json() as Promise<{ is_docker: boolean; defaults: Partial<DatabaseConfig> }>;
+    return response.json() as Promise<{ is_docker: boolean; db_ready: boolean; defaults: Partial<DatabaseConfig> }>;
 }

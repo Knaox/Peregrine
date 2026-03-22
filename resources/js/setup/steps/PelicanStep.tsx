@@ -16,7 +16,7 @@ export function PelicanStep({ data, onChange, onNext, onPrevious }: StepProps) {
 
     const { result, runTest, reset } = useConnectionTest(testFn);
 
-    const updateField = (field: 'url' | 'api_key', value: string) => {
+    const updateField = (field: 'url' | 'api_key' | 'client_api_key', value: string) => {
         reset();
         onChange({
             pelican: { ...data.pelican, [field]: value },
@@ -58,15 +58,20 @@ export function PelicanStep({ data, onChange, onNext, onPrevious }: StepProps) {
                         className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono"
                     />
                 </FormField>
-            </div>
 
-            <div className="flex items-start gap-3 p-4 bg-slate-700/50 border border-slate-600 rounded-lg">
-                <svg className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-sm text-slate-400">
-                    {t('setup.pelican.client_api_note')}
-                </p>
+                <FormField
+                    label={t('setup.pelican.client_api_key')}
+                    required
+                    help={t('setup.pelican.client_api_key_help')}
+                >
+                    <input
+                        type="text"
+                        value={data.pelican.client_api_key}
+                        onChange={(e) => updateField('client_api_key', e.target.value)}
+                        placeholder={t('setup.pelican.client_api_key_placeholder')}
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono"
+                    />
+                </FormField>
             </div>
 
             <ConnectionTestButton
@@ -91,7 +96,7 @@ export function PelicanStep({ data, onChange, onNext, onPrevious }: StepProps) {
                 <button
                     type="button"
                     onClick={onNext}
-                    disabled={result.status !== 'success'}
+                    disabled={!data.pelican.url || !data.pelican.api_key || !data.pelican.client_api_key}
                     className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {t('common.next')}
