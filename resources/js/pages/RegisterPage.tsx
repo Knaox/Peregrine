@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { AnimatePresence, m } from 'motion/react';
+import clsx from 'clsx';
 import { useAuthStore } from '@/stores/authStore';
 import { useBranding } from '@/hooks/useBranding';
 import { ApiError } from '@/services/api';
@@ -19,7 +21,6 @@ export function RegisterPage() {
     const [generalError, setGeneralError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Check auth mode from meta tag
     const authMode = document.querySelector('meta[name="auth-mode"]')?.getAttribute('content') ?? 'local';
     const isOAuth = authMode === 'oauth';
 
@@ -57,59 +58,111 @@ export function RegisterPage() {
         return errors[field]?.[0];
     };
 
+    const inputClasses = clsx(
+        'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)]',
+        'placeholder-[var(--color-text-muted)] transition-all duration-[var(--transition-base)]',
+        'focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-glow)]',
+    );
+
     if (isOAuth) {
         return (
-            <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-4">
-                <div className="w-full max-w-md">
+            <div
+                className="flex min-h-screen items-center justify-center px-4 text-[var(--color-text-primary)]"
+                style={{
+                    backgroundImage: 'linear-gradient(-45deg, #0c0f1a, #151926, #0f1628, #121a30)',
+                    backgroundSize: '400% 400%',
+                    animation: 'gradient-shift 20s ease infinite',
+                }}
+            >
+                <m.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-full max-w-md"
+                >
                     <div className="mb-8 text-center">
                         <img
                             src={branding.logo_url}
                             alt={branding.app_name}
-                            className="mx-auto h-16 w-16 mb-4"
+                            className="mx-auto mb-4 h-16 w-16"
+                            style={{ filter: 'drop-shadow(0 0 12px var(--color-primary-glow))' }}
                         />
-                        <h1 className="text-2xl font-bold">{branding.app_name}</h1>
+                        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                            {branding.app_name}
+                        </h1>
                     </div>
 
-                    <div className="rounded-xl border border-slate-700 bg-slate-800 p-8 text-center">
-                        <p className="text-slate-300 mb-6">
+                    <div className="rounded-[var(--radius-lg)] border border-[var(--color-glass-border)] bg-[var(--color-glass)] p-8 text-center shadow-2xl backdrop-blur-xl">
+                        <p className="mb-6 text-[var(--color-text-secondary)]">
                             {t('auth.register.disabled')}
                         </p>
                         <Link
                             to="/login"
-                            className="inline-block rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                            className={clsx(
+                                'inline-block rounded-[var(--radius)] bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white',
+                                'transition-all duration-[var(--transition-base)]',
+                                'hover:bg-[var(--color-primary-hover)] hover:shadow-[var(--shadow-glow)] hover:scale-[1.01]',
+                            )}
                         >
                             {t('auth.register.sign_in')}
                         </Link>
                     </div>
-                </div>
+                </m.div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-4">
-            <div className="w-full max-w-md">
+        <div
+            className="flex min-h-screen items-center justify-center px-4 text-[var(--color-text-primary)]"
+            style={{
+                background: 'linear-gradient(135deg, #0c0f1a 0%, #111827 50%, #0f172a 100%)',
+                backgroundSize: '200% 200%',
+                animation: 'ambient-shift 20s ease infinite',
+            }}
+        >
+            <m.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-full max-w-md"
+            >
                 {/* Logo and title */}
                 <div className="mb-8 text-center">
                     <img
                         src={branding.logo_url}
                         alt={branding.app_name}
-                        className="mx-auto h-16 w-16 mb-4"
+                        className="mx-auto mb-4 h-16 w-16 drop-shadow-[0_0_20px_var(--color-primary-glow)]"
                     />
-                    <h1 className="text-2xl font-bold">{branding.app_name}</h1>
-                    <p className="mt-2 text-slate-400">{t('auth.register.title')}</p>
+                    <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                        {branding.app_name}
+                    </h1>
+                    <p className="mt-2 text-[var(--color-text-secondary)]">
+                        {t('auth.register.title')}
+                    </p>
                 </div>
 
-                <div className="rounded-xl border border-slate-700 bg-slate-800 p-8">
+                <div className="rounded-[var(--radius-lg)] border border-[var(--color-glass-border)] bg-[var(--color-glass)] p-8 shadow-2xl backdrop-blur-xl">
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {generalError && (
-                            <div className="rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                                {generalError}
-                            </div>
-                        )}
+                        <AnimatePresence>
+                            {generalError && (
+                                <m.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.25 }}
+                                    className="rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger-glow)] px-4 py-3 text-sm text-[var(--color-danger)]"
+                                >
+                                    {generalError}
+                                </m.div>
+                            )}
+                        </AnimatePresence>
 
                         <div>
-                            <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-300">
+                            <label
+                                htmlFor="name"
+                                className="mb-1.5 block text-sm font-medium text-[var(--color-text-secondary)]"
+                            >
                                 {t('auth.register.name')}
                             </label>
                             <input
@@ -119,15 +172,20 @@ export function RegisterPage() {
                                 onChange={(e) => setName(e.target.value)}
                                 required
                                 autoComplete="name"
-                                className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2.5 text-sm text-white placeholder-slate-400 transition-colors focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                className={inputClasses}
                             />
                             {getFieldError('name') && (
-                                <p className="mt-1 text-xs text-red-400">{getFieldError('name')}</p>
+                                <p className="mt-1 text-xs text-[var(--color-danger)]">
+                                    {getFieldError('name')}
+                                </p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-300">
+                            <label
+                                htmlFor="email"
+                                className="mb-1.5 block text-sm font-medium text-[var(--color-text-secondary)]"
+                            >
                                 {t('auth.register.email')}
                             </label>
                             <input
@@ -137,15 +195,20 @@ export function RegisterPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                                 autoComplete="email"
-                                className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2.5 text-sm text-white placeholder-slate-400 transition-colors focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                className={inputClasses}
                             />
                             {getFieldError('email') && (
-                                <p className="mt-1 text-xs text-red-400">{getFieldError('email')}</p>
+                                <p className="mt-1 text-xs text-[var(--color-danger)]">
+                                    {getFieldError('email')}
+                                </p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-slate-300">
+                            <label
+                                htmlFor="password"
+                                className="mb-1.5 block text-sm font-medium text-[var(--color-text-secondary)]"
+                            >
                                 {t('auth.register.password')}
                             </label>
                             <input
@@ -155,15 +218,20 @@ export function RegisterPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 autoComplete="new-password"
-                                className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2.5 text-sm text-white placeholder-slate-400 transition-colors focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                className={inputClasses}
                             />
                             {getFieldError('password') && (
-                                <p className="mt-1 text-xs text-red-400">{getFieldError('password')}</p>
+                                <p className="mt-1 text-xs text-[var(--color-danger)]">
+                                    {getFieldError('password')}
+                                </p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor="password_confirmation" className="mb-1.5 block text-sm font-medium text-slate-300">
+                            <label
+                                htmlFor="password_confirmation"
+                                className="mb-1.5 block text-sm font-medium text-[var(--color-text-secondary)]"
+                            >
                                 {t('auth.register.password_confirmation')}
                             </label>
                             <input
@@ -173,14 +241,20 @@ export function RegisterPage() {
                                 onChange={(e) => setPasswordConfirmation(e.target.value)}
                                 required
                                 autoComplete="new-password"
-                                className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2.5 text-sm text-white placeholder-slate-400 transition-colors focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                                className={inputClasses}
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={clsx(
+                                'w-full rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white',
+                                'transition-all duration-[var(--transition-base)]',
+                                'hover:bg-[var(--color-primary-hover)] hover:shadow-[var(--shadow-glow)] hover:scale-[1.01]',
+                                'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-glow)]',
+                                'disabled:cursor-not-allowed disabled:opacity-50',
+                            )}
                         >
                             {isSubmitting ? t('common.loading') : t('auth.register.button')}
                         </button>
@@ -188,16 +262,16 @@ export function RegisterPage() {
                 </div>
 
                 {/* Link to login */}
-                <p className="mt-6 text-center text-sm text-slate-400">
+                <p className="mt-6 text-center text-sm text-[var(--color-text-secondary)]">
                     {t('auth.register.has_account')}{' '}
                     <Link
                         to="/login"
-                        className="font-medium text-orange-500 hover:text-orange-400 transition-colors"
+                        className="font-medium text-[var(--color-primary)] transition-colors duration-[var(--transition-base)] hover:text-[var(--color-primary-hover)]"
                     >
                         {t('auth.register.sign_in')}
                     </Link>
                 </p>
-            </div>
+            </m.div>
         </div>
     );
 }

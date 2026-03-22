@@ -24,7 +24,7 @@ export function FileEditor({
         <>
             {/* Overlay */}
             <div
-                className="fixed inset-0 bg-black/50 z-40"
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
                 onClick={onClose}
                 role="button"
                 tabIndex={-1}
@@ -38,14 +38,17 @@ export function FileEditor({
             <div
                 className={clsx(
                     'fixed right-0 top-0 h-full w-2/3 max-w-3xl z-50',
-                    'bg-slate-800 border-l border-slate-700',
-                    'flex flex-col shadow-2xl',
+                    'backdrop-blur-xl bg-[var(--color-glass)] border-l border-[var(--color-glass-border)]',
+                    'flex flex-col shadow-[var(--shadow-lg)]',
                 )}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-glass-border)]">
                     <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-sm text-slate-200 truncate max-w-xs" title={filePath}>
+                        <span
+                            className="text-sm text-[var(--color-text-secondary)] truncate max-w-xs"
+                            title={filePath}
+                        >
                             {extractFileName(filePath)}
                         </span>
                         {isDirty && (
@@ -79,7 +82,8 @@ export function FileEditor({
                     value={content}
                     onChange={(e) => onContentChange(e.target.value)}
                     className={clsx(
-                        'flex-1 font-mono text-sm bg-slate-950 text-slate-200',
+                        'flex-1 font-[var(--font-mono)] text-sm',
+                        'bg-[var(--color-background)] text-[var(--color-text-secondary)]',
                         'w-full p-4 resize-none focus:outline-none',
                     )}
                     spellCheck={false}

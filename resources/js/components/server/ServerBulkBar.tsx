@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import clsx from 'clsx';
+import { AnimatePresence, m } from 'motion/react';
+import { Button } from '@/components/ui/Button';
 import type { ServerBulkBarProps } from '@/components/server/ServerBulkBar.props';
 
 export function ServerBulkBar({
@@ -11,50 +12,58 @@ export function ServerBulkBar({
     const { t } = useTranslation();
 
     return (
-        <div
-            className={clsx(
-                'fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-3 transition-transform duration-300',
-                selectedCount > 0 ? 'translate-y-0' : 'translate-y-full',
+        <AnimatePresence>
+            {selectedCount > 0 && (
+                <m.div
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 100, opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl bg-[var(--color-glass)] border-t border-[var(--color-glass-border)] shadow-[0_-8px_30px_rgba(0,0,0,0.5)] px-6 py-3"
+                >
+                    <div className="mx-auto flex max-w-5xl items-center justify-between">
+                        <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                            <span className="text-[var(--color-primary)]">{selectedCount}</span>
+                            {' '}{t('servers.list.selected_count', { count: selectedCount })}
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                disabled={isPending}
+                                onClick={() => onBulkPower('start')}
+                                className="bg-[var(--color-success)] hover:shadow-[var(--shadow-glow-success)]"
+                            >
+                                {t('servers.bulk.start_all')}
+                            </Button>
+                            <Button
+                                variant="danger"
+                                size="sm"
+                                disabled={isPending}
+                                onClick={() => onBulkPower('stop')}
+                            >
+                                {t('servers.bulk.stop_all')}
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                disabled={isPending}
+                                onClick={() => onBulkPower('restart')}
+                                className="bg-[var(--color-warning)] hover:shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                            >
+                                {t('servers.bulk.restart_all')}
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={onDeselectAll}
+                            >
+                                {t('servers.list.deselect_all')}
+                            </Button>
+                        </div>
+                    </div>
+                </m.div>
             )}
-        >
-            <div className="mx-auto flex max-w-5xl items-center justify-between">
-                <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                    {t('servers.list.selected_count', { count: selectedCount })}
-                </span>
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => onBulkPower('start')}
-                        className="rounded-[var(--radius)] bg-green-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
-                    >
-                        {t('servers.bulk.start_all')}
-                    </button>
-                    <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => onBulkPower('stop')}
-                        className="rounded-[var(--radius)] bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
-                    >
-                        {t('servers.bulk.stop_all')}
-                    </button>
-                    <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => onBulkPower('restart')}
-                        className="rounded-[var(--radius)] bg-amber-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-700 disabled:opacity-50"
-                    >
-                        {t('servers.bulk.restart_all')}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onDeselectAll}
-                        className="rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
-                    >
-                        {t('servers.list.deselect_all')}
-                    </button>
-                </div>
-            </div>
-        </div>
+        </AnimatePresence>
     );
 }

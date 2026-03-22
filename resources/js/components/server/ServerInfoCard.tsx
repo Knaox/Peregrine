@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Card } from '@/components/ui/Card';
+import { GlassCard } from '@/components/ui/GlassCard';
 import { formatBytes, formatDate } from '@/utils/format';
 import type { ServerInfoCardProps } from '@/components/server/ServerInfoCard.props';
 
@@ -11,8 +11,8 @@ interface InfoRowProps {
 function InfoRow({ label, value }: InfoRowProps) {
     return (
         <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-slate-400">{label}</span>
-            <span className="text-sm font-medium text-white">{value}</span>
+            <span className="text-sm text-[var(--color-text-muted)]">{label}</span>
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">{value}</span>
         </div>
     );
 }
@@ -31,11 +31,11 @@ export function ServerInfoCard({ server }: ServerInfoCardProps) {
         : '-';
 
     return (
-        <Card className="p-5">
-            <h3 className="mb-3 text-base font-semibold text-white">
+        <GlassCard className="p-5">
+            <h3 className="mb-3 text-base font-semibold text-[var(--color-text-primary)]">
                 {t('servers.detail.info')}
             </h3>
-            <div className="divide-y divide-slate-700">
+            <div className="divide-y divide-[var(--color-border)]">
                 {server.egg && (
                     <InfoRow label={t('servers.detail.game')} value={server.egg.name} />
                 )}
@@ -51,6 +51,6 @@ export function ServerInfoCard({ server }: ServerInfoCardProps) {
                     value={formatDate(server.created_at)}
                 />
             </div>
-        </Card>
+        </GlassCard>
     );
 }

@@ -3,8 +3,16 @@ import { type IconButtonProps } from '@/components/ui/IconButton.props';
 import { Spinner } from '@/components/ui/Spinner';
 
 const variantClasses: Record<NonNullable<IconButtonProps['variant']>, string> = {
-    ghost: 'bg-transparent hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)]',
-    danger: 'bg-transparent hover:bg-red-500/20 text-red-400',
+    ghost: clsx(
+        'bg-transparent text-[var(--color-text-secondary)]',
+        'hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]',
+        'hover:shadow-[0_0_8px_var(--color-primary-glow)]',
+    ),
+    danger: clsx(
+        'bg-transparent text-[var(--color-text-secondary)]',
+        'hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10',
+        'hover:shadow-[0_0_8px_var(--color-danger-glow)]',
+    ),
 };
 
 const sizeClasses: Record<NonNullable<IconButtonProps['size']>, string> = {
@@ -29,8 +37,10 @@ export function IconButton({
             onClick={onClick}
             title={title}
             className={clsx(
-                'inline-flex items-center justify-center rounded-[var(--radius)] transition-colors',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'inline-flex items-center justify-center rounded-[var(--radius)]',
+                'transition-all duration-[var(--transition-fast)]',
+                'hover:scale-110 active:scale-95',
+                'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100',
                 variantClasses[variant],
                 sizeClasses[size],
                 className,

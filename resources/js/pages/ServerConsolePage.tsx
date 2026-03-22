@@ -1,8 +1,9 @@
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { m } from 'motion/react';
 import { useWingsWebSocket } from '@/hooks/useWingsWebSocket';
 import { useCommandHistory } from '@/hooks/useCommandHistory';
-import { Badge } from '@/components/ui/Badge';
+import { StatusDot } from '@/components/ui/StatusDot';
 import { Button } from '@/components/ui/Button';
 import { ConsoleOutput } from '@/components/console/ConsoleOutput';
 import { ConsoleInput } from '@/components/console/ConsoleInput';
@@ -25,12 +26,25 @@ export function ServerConsolePage() {
     };
 
     return (
-        <div className="flex h-[calc(100vh-6rem)] flex-col gap-3">
+        <m.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="flex h-[calc(100vh-6rem)] flex-col gap-3"
+        >
             <div className="flex items-center justify-between">
-                <Badge color={isConnected ? 'green' : 'red'}>
-                    {isConnected ? t('servers.console.connected') : t('servers.console.disconnected')}
-                </Badge>
-                <Button variant="ghost" size="sm" onClick={clearMessages}>
+                <div className="inline-flex items-center gap-2 rounded-[var(--radius-full)] backdrop-blur-md bg-[var(--color-glass)] border border-[var(--color-glass-border)] px-3 py-1.5">
+                    <StatusDot status={isConnected ? 'running' : 'offline'} size="sm" />
+                    <span className="text-xs font-medium text-[var(--color-text-secondary)]">
+                        {isConnected ? t('servers.console.connected') : t('servers.console.disconnected')}
+                    </span>
+                </div>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearMessages}
+                    className="backdrop-blur-md bg-[var(--color-glass)] border border-[var(--color-glass-border)]"
+                >
                     {t('servers.console.clear')}
                 </Button>
             </div>
@@ -43,6 +57,6 @@ export function ServerConsolePage() {
                 onHistoryDown={navigateDown}
                 disabled={!isConnected}
             />
-        </div>
+        </m.div>
     );
 }

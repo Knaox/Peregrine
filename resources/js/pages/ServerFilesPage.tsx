@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
+import { m } from 'motion/react';
 import { useFileManager } from '@/hooks/useFileManager';
 import { useFileEditor } from '@/hooks/useFileEditor';
 import {
@@ -101,9 +102,14 @@ export function ServerFilesPage() {
     };
 
     return (
-        <div className="space-y-4">
+        <m.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="space-y-4"
+        >
             <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
                     {t('servers.files.title')}
                 </h2>
                 <FileToolbar
@@ -118,7 +124,7 @@ export function ServerFilesPage() {
                 onNavigate={navigateTo}
             />
 
-            <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+            <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition-all">
                 <FileList
                     files={files}
                     currentDirectory={currentDirectory}
@@ -143,6 +149,6 @@ export function ServerFilesPage() {
                     onClose={editor.closeFile}
                 />
             )}
-        </div>
+        </m.div>
     );
 }

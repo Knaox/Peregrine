@@ -38,7 +38,7 @@ export function FileList({
 
     if (files.length === 0) {
         return (
-            <div className="flex items-center justify-center py-16 text-slate-400 text-sm">
+            <div className="flex items-center justify-center py-16 text-[var(--color-text-muted)] text-sm">
                 {t('servers.files.empty')}
             </div>
         );
@@ -47,7 +47,7 @@ export function FileList({
     return (
         <table className="w-full text-sm">
             <thead>
-                <tr className="text-slate-400 text-left border-b border-slate-700">
+                <tr className="text-[var(--color-text-muted)] text-left border-b border-[var(--color-border)]">
                     <th className="pb-2 pl-2 w-8" />
                     <th className="pb-2">{t('servers.files.name')}</th>
                     <th className="pb-2 w-28">{t('servers.files.size')}</th>
@@ -70,15 +70,15 @@ export function FileList({
                     return (
                         <tr
                             key={file.name}
-                            className="hover:bg-slate-700/50 transition-colors border-b border-slate-700/50"
+                            className="hover:bg-[var(--color-surface-hover)] transition-colors duration-[var(--transition-fast)] border-b border-[var(--color-border)]/50"
                         >
                             <td className="py-2 pl-2">
                                 {file.is_directory ? (
-                                    <svg className="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <svg className="w-5 h-5 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                     </svg>
                                 ) : (
-                                    <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <svg className="w-5 h-5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
                                 )}
@@ -87,17 +87,17 @@ export function FileList({
                                 <button
                                     type="button"
                                     onClick={handleClick}
-                                    className="text-left text-slate-200 hover:text-white transition-colors"
+                                    className="text-left text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-[var(--transition-fast)]"
                                 >
                                     {file.name}
                                 </button>
                             </td>
-                            <td className="py-2 text-slate-400">
+                            <td className="py-2 text-[var(--color-text-muted)]">
                                 {file.is_directory
                                     ? '\u2014'
                                     : formatBytes(file.size)}
                             </td>
-                            <td className="py-2 text-slate-400">
+                            <td className="py-2 text-[var(--color-text-muted)]">
                                 {new Date(file.modified_at * 1000).toLocaleString()}
                             </td>
                             <td className="py-2">

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import { Card } from '@/components/ui/Card';
+import { GlassCard } from '@/components/ui/GlassCard';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
@@ -35,9 +35,13 @@ function CredentialRow({ label, value }: CredentialRowProps) {
 
     return (
         <div className="flex items-center justify-between gap-3 py-2">
-            <span className="text-sm text-slate-400 whitespace-nowrap">{label}</span>
+            <span className="text-sm text-[var(--color-text-muted)] whitespace-nowrap">{label}</span>
             <div className="flex items-center gap-2">
-                <span className="bg-slate-700 px-3 py-2 rounded-lg font-mono text-sm text-white">
+                <span className={clsx(
+                    'px-3 py-2 rounded-[var(--radius)]',
+                    'bg-[var(--color-background)] border border-[var(--color-border)]',
+                    'font-[var(--font-mono)] text-sm text-[var(--color-text-primary)]',
+                )}>
                     {value}
                 </span>
                 <IconButton
@@ -77,23 +81,23 @@ export function SftpCredentials({ server, userEmail }: SftpCredentialsProps) {
     };
 
     return (
-        <Card className="p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">
+        <GlassCard className="p-6">
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
                 {t('servers.sftp.title')}
             </h2>
 
-            <div className="divide-y divide-slate-700">
+            <div className="divide-y divide-[var(--color-border)]">
                 <CredentialRow label={t('servers.sftp.port')} value="2022" />
                 <CredentialRow label={t('servers.sftp.username')} value={sftpUsername} />
             </div>
 
-            <p className="mt-3 text-xs text-slate-500">
+            <p className="mt-3 text-xs text-[var(--color-text-muted)]">
                 {t('servers.sftp.host_note')}
             </p>
 
-            <hr className="my-5 border-slate-700" />
+            <hr className="my-5 border-[var(--color-border)]" />
 
-            <h3 className="text-base font-medium text-white mb-3">
+            <h3 className="text-base font-medium text-[var(--color-text-primary)] mb-3">
                 {t('servers.sftp.set_password')}
             </h3>
 
@@ -136,9 +140,9 @@ export function SftpCredentials({ server, userEmail }: SftpCredentialsProps) {
                 </Button>
             </form>
 
-            <p className={clsx('mt-5 text-xs text-slate-500 leading-relaxed')}>
+            <p className="mt-5 text-xs text-[var(--color-text-muted)] leading-relaxed">
                 {t('servers.sftp.instructions')}
             </p>
-        </Card>
+        </GlassCard>
     );
 }

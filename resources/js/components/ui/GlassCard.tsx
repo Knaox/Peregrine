@@ -1,25 +1,24 @@
 import clsx from 'clsx';
-import { type CardProps } from '@/components/ui/Card.props';
+import { type GlassCardProps } from '@/components/ui/GlassCard.props';
 
-export function Card({
-    hover = false,
-    glass = false,
-    glow = false,
-    className,
+export function GlassCard({
     children,
+    className,
+    hover = false,
+    glow = false,
     onClick,
-}: CardProps) {
+}: GlassCardProps) {
     return (
         <div
             className={clsx(
                 'rounded-[var(--radius-lg)]',
+                'backdrop-blur-xl bg-[var(--color-glass)]',
+                'border border-[var(--color-glass-border)]',
+                'shadow-[var(--shadow-md)]',
                 'transition-all duration-[var(--transition-smooth)]',
-                glass
-                    ? 'backdrop-blur-xl bg-[var(--color-glass)] border border-[var(--color-glass-border)]'
-                    : 'bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)]',
                 hover && [
                     'hover:border-[var(--color-border-hover)]',
-                    'hover:shadow-[var(--shadow-md)]',
+                    'hover:shadow-[var(--shadow-lg)]',
                     'cursor-pointer',
                 ],
                 glow && 'hover:shadow-[var(--shadow-glow)]',

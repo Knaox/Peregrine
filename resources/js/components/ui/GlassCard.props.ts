@@ -1,10 +1,9 @@
 import { type ReactNode } from 'react';
 
-export interface CardProps {
-    hover?: boolean;
-    glass?: boolean;
-    glow?: boolean;
-    className?: string;
+export interface GlassCardProps {
     children: ReactNode;
+    className?: string;
+    hover?: boolean;
+    glow?: boolean;
     onClick?: () => void;
 }

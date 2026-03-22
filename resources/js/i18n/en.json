@@ -235,6 +235,10 @@
             "password_changed": "SFTP password updated successfully."
         },
         "not_found": "Server not found.",
+        "sidebar": {
+            "principal": "Main",
+            "management": "Management"
+        },
         "detail": {
             "overview": "Overview",
             "console": "Console",

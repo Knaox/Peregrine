@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { m } from 'motion/react';
 import { useServer } from '@/hooks/useServer';
 import { useAuthStore } from '@/stores/authStore';
 import { SftpCredentials } from '@/components/server/SftpCredentials';
@@ -18,5 +19,13 @@ export function ServerSftpPage() {
         );
     }
 
-    return <SftpCredentials server={server} userEmail={user?.email ?? ''} />;
+    return (
+        <m.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+        >
+            <SftpCredentials server={server} userEmail={user?.email ?? ''} />
+        </m.div>
+    );
 }

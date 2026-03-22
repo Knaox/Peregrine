@@ -235,6 +235,10 @@
             "password_changed": "Mot de passe SFTP mis a jour."
         },
         "not_found": "Serveur introuvable.",
+        "sidebar": {
+            "principal": "Principal",
+            "management": "Gestion"
+        },
         "detail": {
             "overview": "Vue d'ensemble",
             "console": "Console",

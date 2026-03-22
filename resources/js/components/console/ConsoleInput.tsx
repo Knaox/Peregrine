@@ -31,11 +31,14 @@ export function ConsoleInput({ onSend, onHistoryUp, onHistoryDown, disabled }: C
     return (
         <div
             className={clsx(
-                'flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2',
-                disabled && 'cursor-not-allowed opacity-50',
+                'flex items-center gap-2 px-3 py-2',
+                'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius)]',
+                'transition-all duration-[var(--transition-base)]',
+                'focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary-glow)]',
+                disabled && 'opacity-40 cursor-not-allowed',
             )}
         >
-            <span className="font-mono text-sm text-slate-500">$</span>
+            <span className="text-[var(--color-primary)] font-[var(--font-mono)] text-sm font-bold">$</span>
             <input
                 type="text"
                 value={value}
@@ -45,8 +48,9 @@ export function ConsoleInput({ onSend, onHistoryUp, onHistoryDown, disabled }: C
                 placeholder={t('servers.console.send_command')}
                 autoFocus
                 className={clsx(
-                    'flex-1 bg-transparent font-mono text-sm text-slate-200',
-                    'outline-none placeholder:text-slate-500',
+                    'flex-1 bg-transparent font-[var(--font-mono)] text-sm',
+                    'text-[var(--color-text-primary)]',
+                    'outline-none placeholder:text-[var(--color-text-muted)]',
                     disabled && 'cursor-not-allowed',
                 )}
             />

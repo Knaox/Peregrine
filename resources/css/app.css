@@ -1,2 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "./theme.css";
 @import "tailwindcss";
+
+body {
+    font-family: var(--font-sans);
+    background: var(--color-background);
+    background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(249, 115, 22, 0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.02) 0%, transparent 50%);
+    background-attachment: fixed;
+    color: var(--color-text-primary);
+}
+
+::selection {
+    background: rgba(249, 115, 22, 0.3);
+    color: white;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--color-background);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--color-surface-hover);
+    border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+}

@@ -52,7 +52,7 @@ export function ProfileForm({ onSaved }: ProfileFormProps) {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
-            <h3 className="text-base font-semibold text-white">
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
                 {t('profile.info')}
             </h3>
 
@@ -75,7 +75,7 @@ export function ProfileForm({ onSaved }: ProfileFormProps) {
             <div className="flex flex-col gap-1.5">
                 <label
                     htmlFor="locale-select"
-                    className="text-sm font-medium text-slate-300"
+                    className="text-sm font-medium text-[var(--color-text-secondary)]"
                 >
                     {t('profile.locale')}
                 </label>
@@ -83,7 +83,7 @@ export function ProfileForm({ onSaved }: ProfileFormProps) {
                     id="locale-select"
                     value={locale}
                     onChange={(e) => setLocale(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all duration-[var(--transition-base)]"
                 >
                     {LOCALE_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>

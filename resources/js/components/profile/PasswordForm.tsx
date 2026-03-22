@@ -72,7 +72,7 @@ export function PasswordForm() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
-            <h3 className="text-base font-semibold text-white">
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
                 {t('profile.password.title')}
             </h3>
 

@@ -1,16 +1,72 @@
 :root {
-    --color-background: #0f172a;
-    --color-surface: #1e293b;
-    --color-surface-hover: #334155;
-    --color-border: #334155;
+    --color-background: #0c0f1a;
+    --color-surface: #151926;
+    --color-surface-hover: #1e2338;
+    --color-surface-elevated: #1a1f33;
+    --color-border: rgba(148, 163, 184, 0.08);
+    --color-border-hover: rgba(148, 163, 184, 0.15);
     --color-primary: #f97316;
-    --color-primary-hover: #ea580c;
+    --color-primary-hover: #fb923c;
+    --color-primary-glow: rgba(249, 115, 22, 0.15);
     --color-danger: #ef4444;
+    --color-danger-glow: rgba(239, 68, 68, 0.15);
     --color-warning: #f59e0b;
     --color-success: #22c55e;
-    --color-text-primary: #f8fafc;
+    --color-success-glow: rgba(34, 197, 94, 0.15);
+    --color-info: #3b82f6;
+    --color-text-primary: #f1f5f9;
     --color-text-secondary: #94a3b8;
-    --color-text-muted: #64748b;
+    --color-text-muted: #475569;
+    --color-glass: rgba(21, 25, 38, 0.75);
+    --color-glass-border: rgba(148, 163, 184, 0.08);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 20px var(--color-primary-glow);
+    --shadow-glow-success: 0 0 15px var(--color-success-glow);
+    --shadow-glow-danger: 0 0 15px var(--color-danger-glow);
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+    --transition-smooth: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    --radius-sm: 0.375rem;
     --radius: 0.75rem;
-    --font-family: 'Inter', sans-serif;
+    --radius-lg: 1rem;
+    --radius-full: 9999px;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Ambient background gradient */
+body {
+    background-color: var(--color-background);
+    background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(249, 115, 22, 0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.02) 0%, transparent 50%);
+    background-attachment: fixed;
+    font-family: var(--font-sans);
+}
+
+/* Status pulse animation */
+@keyframes pulse-glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Animated gradient for login background */
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Smooth underline grow */
+@keyframes underline-grow {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
+/* Floating animation for empty states */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }

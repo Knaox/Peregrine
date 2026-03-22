@@ -2,12 +2,13 @@ import type { ServerGroupHeaderProps } from '@/components/server/ServerGroupHead
 
 export function ServerGroupHeader({ name, count }: ServerGroupHeaderProps) {
     return (
-        <div className="flex items-center gap-3 py-4">
-            <div className="h-px flex-1 bg-[var(--color-border)]" />
-            <span className="text-xs font-medium uppercase tracking-widest text-[var(--color-text-muted)]">
-                {name} ({count})
+        <div className="flex items-center gap-4 py-4">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[var(--color-border-hover)] to-transparent" />
+            <span className="text-xs uppercase tracking-[0.2em] font-medium text-[var(--color-text-muted)]">
+                {name}{' '}
+                <span className="text-[var(--color-text-secondary)]">({count})</span>
             </span>
-            <div className="h-px flex-1 bg-[var(--color-border)]" />
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[var(--color-border-hover)] to-transparent" />
         </div>
     );
 }
