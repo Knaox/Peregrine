@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useBranding } from '@/hooks/useBranding';
 
 export function AppLayout() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user, logout } = useAuthStore();
     const branding = useBranding();
     const location = useLocation();
@@ -23,7 +23,6 @@ export function AppLayout() {
 
     const navLinks = [
         { to: '/dashboard', label: t('nav.dashboard') },
-        { to: '/servers', label: t('nav.servers') },
     ];
 
     const isActive = (path: string) => location.pathname === path;
@@ -138,6 +137,35 @@ export function AppLayout() {
                                                     {t('nav.settings')}
                                                 </a>
                                             )}
+                                            <div className="flex items-center justify-between px-4 py-2">
+                                                <span className="text-xs text-[var(--color-text-muted)]">{t('profile.locale')}</span>
+                                                <div className="flex gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { void i18n.changeLanguage('en'); closeUserMenu(); }}
+                                                        className={clsx(
+                                                            'rounded px-2 py-0.5 text-xs font-medium transition-all duration-[var(--transition-fast)]',
+                                                            i18n.language.startsWith('en')
+                                                                ? 'bg-[var(--color-primary)] text-white'
+                                                                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
+                                                        )}
+                                                    >
+                                                        EN
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { void i18n.changeLanguage('fr'); closeUserMenu(); }}
+                                                        className={clsx(
+                                                            'rounded px-2 py-0.5 text-xs font-medium transition-all duration-[var(--transition-fast)]',
+                                                            i18n.language.startsWith('fr')
+                                                                ? 'bg-[var(--color-primary)] text-white'
+                                                                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
+                                                        )}
+                                                    >
+                                                        FR
+                                                    </button>
+                                                </div>
+                                            </div>
                                             <hr className="my-1 border-[var(--color-border)]" />
                                             <button
                                                 type="button"
@@ -223,7 +251,7 @@ export function AppLayout() {
             </nav>
 
             {/* Main content */}
-            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <main className="px-6 py-8 lg:px-10">
                 <Outlet />
             </main>
         </div>

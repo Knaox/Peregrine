@@ -14,7 +14,7 @@ export function ServerDetailPage() {
 
     if (isLoading) {
         return (
-            <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="flex h-screen items-center justify-center">
                 <Spinner size="lg" />
             </div>
         );
@@ -22,7 +22,7 @@ export function ServerDetailPage() {
 
     if (isError || !server) {
         return (
-            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+            <div className="flex h-screen flex-col items-center justify-center gap-4">
                 <GlassCard className="px-8 py-6 text-center">
                     <p className="text-[var(--color-text-secondary)]">
                         {t('servers.detail.not_found')}
@@ -39,16 +39,18 @@ export function ServerDetailPage() {
     }
 
     return (
-        <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="min-h-screen"
-        >
+        <div className="flex h-screen overflow-hidden">
             <ServerSidebar server={server} />
-            <main className="md:ml-56 min-h-screen p-6">
-                <Outlet />
-            </main>
-        </m.div>
+            <m.main
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1 overflow-y-auto"
+            >
+                <div className="p-6">
+                    <Outlet />
+                </div>
+            </m.main>
+        </div>
     );
 }

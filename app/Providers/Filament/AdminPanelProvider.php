@@ -7,6 +7,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -42,6 +43,12 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-arrow-left'),
             ])
             ->sidebarCollapsibleOnDesktop()
+            ->navigationItems([
+                NavigationItem::make('Panel joueur')
+                    ->url('/')
+                    ->icon('heroicon-o-arrow-left')
+                    ->sort(100),
+            ])
             ->navigationGroups([
                 'Servers',
                 'Pelican',

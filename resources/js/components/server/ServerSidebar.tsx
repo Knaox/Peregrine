@@ -206,18 +206,31 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
                 )}
             </AnimatePresence>
 
-            {/* Sidebar */}
+            {/* Sidebar — desktop: static in flex parent, mobile: fixed overlay */}
             <aside
                 className={clsx(
-                    'fixed left-0 top-0 z-30 h-screen w-56 overflow-y-auto',
+                    'w-56 flex-shrink-0 h-full overflow-y-auto',
                     'backdrop-blur-xl bg-[var(--color-glass)] border-r border-[var(--color-glass-border)]',
-                    'transition-transform duration-[var(--transition-smooth)]',
-                    'md:static md:translate-x-0',
-                    mobileOpen ? 'translate-x-0' : '-translate-x-full',
+                    'hidden md:flex md:flex-col',
                 )}
             >
                 {navContent}
             </aside>
+
+            {/* Mobile sidebar (fixed overlay) */}
+            <AnimatePresence>
+                {mobileOpen && (
+                    <m.aside
+                        initial={{ x: '-100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '-100%' }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        className="fixed left-0 top-0 z-40 h-screen w-56 overflow-y-auto backdrop-blur-xl bg-[var(--color-glass)] border-r border-[var(--color-glass-border)] md:hidden"
+                    >
+                        {navContent}
+                    </m.aside>
+                )}
+            </AnimatePresence>
         </>
     );
 }
