@@ -221,7 +221,11 @@
             "created": "Created successfully.",
             "saved": "File saved.",
             "edit": "Edit",
-            "modified_badge": "Modified"
+            "modified_badge": "Modified",
+            "drop_here": "Drop files or folders here to upload",
+            "uploading": "Uploading...",
+            "upload_success": "Upload complete",
+            "upload_error": "Upload failed"
         },
         "sftp": {
             "title": "SFTP Access",
@@ -259,6 +263,15 @@
             "network": "Network",
             "download": "Download",
             "upload": "Upload"
+        },
+        "variables": {
+            "title": "Server Configuration",
+            "count": "{{count}} variable(s)",
+            "saved": "Variable saved.",
+            "save": "Save",
+            "not_editable": "Not editable",
+            "advanced": "Advanced Configuration",
+            "advanced_count": "{{count}} file(s)"
         }
     },
     "nav": {

@@ -236,6 +236,20 @@ class PelicanClientService
     }
 
     /**
+     * Get a signed upload URL for a server.
+     *
+     * @throws RequestException
+     */
+    public function getUploadUrl(string $serverIdentifier): string
+    {
+        $response = $this->request()
+            ->get("/api/client/servers/{$serverIdentifier}/files/upload")
+            ->throw();
+
+        return $response->json('attributes.url') ?? '';
+    }
+
+    /**
      * Create a new folder on the server.
      *
      * @throws RequestException
@@ -246,6 +260,43 @@ class PelicanClientService
             ->post("/api/client/servers/{$serverIdentifier}/files/create-folder", [
                 'root' => $root,
                 'name' => $name,
+            ])
+            ->throw();
+    }
+
+    // -------------------------------------------------------------------------
+    // Startup variables
+    // -------------------------------------------------------------------------
+
+    /**
+     * Get startup variables for a server.
+     *
+     * @return array<int, array<string, mixed>>
+     *
+     * @throws RequestException
+     */
+    public function getStartupVariables(string $serverIdentifier): array
+    {
+        $response = $this->request()
+            ->get("/api/client/servers/{$serverIdentifier}/startup")
+            ->throw();
+
+        $data = $response->json('data') ?? [];
+
+        return array_map(fn (array $item) => $item['attributes'] ?? $item, $data);
+    }
+
+    /**
+     * Update a single startup variable.
+     *
+     * @throws RequestException
+     */
+    public function updateStartupVariable(string $serverIdentifier, string $key, string $value): void
+    {
+        $this->request()
+            ->put("/api/client/servers/{$serverIdentifier}/startup/variable", [
+                'key' => $key,
+                'value' => $value,
             ])
             ->throw();
     }

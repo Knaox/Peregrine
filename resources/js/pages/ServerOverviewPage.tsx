@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/Badge';
 import { ServerPowerControls } from '@/components/server/ServerPowerControls';
 import { ServerResourceCards } from '@/components/server/ServerResourceCards';
 import { ServerInfoCard } from '@/components/server/ServerInfoCard';
+import { ServerVariables } from '@/components/server/ServerVariables';
 
 const CopyIcon = (
     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -173,6 +174,11 @@ export function ServerOverviewPage() {
             {/* Server info */}
             <section>
                 <ServerInfoCard server={server} />
+            </section>
+
+            {/* Startup variables */}
+            <section>
+                <ServerVariables serverId={serverId} />
             </section>
         </m.div>
     );

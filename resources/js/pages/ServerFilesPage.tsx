@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 import { m } from 'motion/react';
 import { useFileManager } from '@/hooks/useFileManager';
 import { useFileEditor } from '@/hooks/useFileEditor';
+import { useFileUpload } from '@/hooks/useFileUpload';
 import {
     renameFiles,
     deleteFiles,
@@ -31,6 +33,8 @@ export function ServerFilesPage() {
     } = useFileManager(serverId);
 
     const editor = useFileEditor();
+    const { isUploading, progress, error: uploadError, handleDrop } = useFileUpload(serverId);
+    const [isDragOver, setIsDragOver] = useState(false);
 
     const renameMutation = useMutation({
         mutationFn: (params: { from: string; to: string }) =>
@@ -124,7 +128,35 @@ export function ServerFilesPage() {
                 onNavigate={navigateTo}
             />
 
-            <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition-all">
+            <div
+                className="relative rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition-all"
+                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={(e) => { setIsDragOver(false); void handleDrop(e, currentDirectory); }}
+            >
+                {isDragOver && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--color-primary)] bg-[var(--color-primary)]/5 backdrop-blur-sm">
+                        <div className="text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-2 h-10 w-10 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                            <p className="text-[var(--color-primary)] font-medium">{t('servers.files.drop_here')}</p>
+                        </div>
+                    </div>
+                )}
+
+                {isUploading && (
+                    <div className="mb-3 rounded-[var(--radius)] bg-[var(--color-primary)]/10 px-3 py-2 text-sm text-[var(--color-primary)]">
+                        {progress || t('servers.files.uploading')}
+                    </div>
+                )}
+
+                {uploadError && (
+                    <div className="mb-3 rounded-[var(--radius)] bg-red-500/10 px-3 py-2 text-sm text-red-500">
+                        {t('servers.files.upload_error')}: {uploadError}
+                    </div>
+                )}
+
                 <FileList
                     files={files}
                     currentDirectory={currentDirectory}

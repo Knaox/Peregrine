@@ -31,6 +31,11 @@ class ServerPlanResource extends Resource
 
     protected static ?string $navigationLabel = 'Plans';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return (bool) config('bridge.enabled');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

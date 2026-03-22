@@ -38,7 +38,7 @@ export function FileEditor({
             <div
                 className={clsx(
                     'fixed right-0 top-0 h-full w-2/3 max-w-3xl z-50',
-                    'backdrop-blur-xl bg-[var(--color-glass)] border-l border-[var(--color-glass-border)]',
+                    'backdrop-blur-xl bg-[var(--color-surface)]/95 border-l border-[var(--color-border)]',
                     'flex flex-col shadow-[var(--shadow-lg)]',
                 )}
             >
@@ -83,7 +83,7 @@ export function FileEditor({
                     onChange={(e) => onContentChange(e.target.value)}
                     className={clsx(
                         'flex-1 font-[var(--font-mono)] text-sm',
-                        'bg-[var(--color-background)] text-[var(--color-text-secondary)]',
+                        'bg-[var(--color-background)] text-[var(--color-text-primary)]',
                         'w-full p-4 resize-none focus:outline-none',
                     )}
                     spellCheck={false}

@@ -5,6 +5,6 @@ export interface FileEntry {
     is_file: boolean;
     is_symlink: boolean;
     is_directory: boolean;
-    modified_at: number;
+    modified_at: number | string;
     mimetype?: string;
 }

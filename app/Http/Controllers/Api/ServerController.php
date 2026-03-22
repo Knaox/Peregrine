@@ -36,6 +36,33 @@ class ServerController extends Controller
         return new ServerResource($server);
     }
 
+    public function startupVariables(Request $request, Server $server): JsonResponse
+    {
+        $this->authorize('view', $server);
+
+        $variables = $this->clientService->getStartupVariables($server->identifier);
+
+        return response()->json(['data' => $variables]);
+    }
+
+    public function updateStartupVariable(Request $request, Server $server): JsonResponse
+    {
+        $this->authorize('update', $server);
+
+        $validated = $request->validate([
+            'key' => ['required', 'string'],
+            'value' => ['required', 'string'],
+        ]);
+
+        $this->clientService->updateStartupVariable(
+            $server->identifier,
+            $validated['key'],
+            $validated['value'],
+        );
+
+        return response()->json(['success' => true]);
+    }
+
     public function batchStats(Request $request): JsonResponse
     {
         $servers = $request->user()

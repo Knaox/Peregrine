@@ -65,6 +65,18 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
 
     const navContent = (
         <div className="flex h-full flex-col">
+            {/* Back to dashboard */}
+            <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 px-4 py-3 text-xs text-[var(--color-text-muted)] transition-colors duration-[var(--transition-fast)] hover:text-[var(--color-text-primary)] border-b border-[var(--color-glass-border)]"
+            >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                {t('servers.detail.back')}
+            </button>
+
             {/* Server header */}
             <div className="border-b border-[var(--color-glass-border)] p-4">
                 <div className="flex items-center gap-3">
@@ -167,7 +179,7 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
                 type="button"
                 onClick={() => setMobileOpen(!mobileOpen)}
                 className={clsx(
-                    'fixed left-4 top-20 z-40 rounded-[var(--radius)]',
+                    'fixed left-4 top-4 z-40 rounded-[var(--radius)]',
                     'bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)]',
                     'p-2 text-[var(--color-text-secondary)] md:hidden',
                     'transition-all duration-[var(--transition-base)]',
@@ -197,7 +209,7 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
             {/* Sidebar */}
             <aside
                 className={clsx(
-                    'fixed left-0 top-16 z-30 h-[calc(100vh-4rem)] w-56',
+                    'fixed left-0 top-0 z-30 h-screen w-56 overflow-y-auto',
                     'backdrop-blur-xl bg-[var(--color-glass)] border-r border-[var(--color-glass-border)]',
                     'transition-transform duration-[var(--transition-smooth)]',
                     'md:static md:translate-x-0',

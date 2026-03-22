@@ -42,13 +42,11 @@ function App() {
                                     <Route path="/dashboard" element={<DashboardPage />} />
                                     <Route path="/profile" element={<ProfilePage />} />
                                 </Route>
-                                <Route element={<AppLayout />}>
-                                    <Route path="/servers/:id" element={<ServerDetailPage />}>
-                                        <Route index element={<ServerOverviewPage />} />
-                                        <Route path="console" element={<ServerConsolePage />} />
-                                        <Route path="files" element={<ServerFilesPage />} />
-                                        <Route path="sftp" element={<ServerSftpPage />} />
-                                    </Route>
+                                <Route path="/servers/:id" element={<ServerDetailPage />}>
+                                    <Route index element={<ServerOverviewPage />} />
+                                    <Route path="console" element={<ServerConsolePage />} />
+                                    <Route path="files" element={<ServerFilesPage />} />
+                                    <Route path="sftp" element={<ServerSftpPage />} />
                                 </Route>
                             </Route>
                         </Routes>

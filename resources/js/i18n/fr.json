@@ -221,7 +221,11 @@
             "created": "Cree avec succes.",
             "saved": "Fichier enregistre.",
             "edit": "Modifier",
-            "modified_badge": "Modifie"
+            "modified_badge": "Modifie",
+            "drop_here": "Deposez vos fichiers ou dossiers ici pour les envoyer",
+            "uploading": "Envoi en cours...",
+            "upload_success": "Envoi termine",
+            "upload_error": "Echec de l'envoi"
         },
         "sftp": {
             "title": "Acces SFTP",
@@ -259,6 +263,15 @@
             "network": "Reseau",
             "download": "Telechargement",
             "upload": "Envoi"
+        },
+        "variables": {
+            "title": "Configuration du serveur",
+            "count": "{{count}} variable(s)",
+            "saved": "Variable enregistree.",
+            "save": "Enregistrer",
+            "not_editable": "Non modifiable",
+            "advanced": "Configuration avancee",
+            "advanced_count": "{{count}} fichier(s)"
         }
     },
     "nav": {

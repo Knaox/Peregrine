@@ -3,6 +3,7 @@ import type { ServerStatsMap } from '@/types/ServerStats';
 import type { ServerResources } from '@/types/ServerResources';
 import type { WebSocketCredentials } from '@/types/WebSocketCredentials';
 import type { PowerSignal } from '@/types/PowerSignal';
+import type { StartupVariable } from '@/types/StartupVariable';
 import { request } from '@/services/http';
 
 export async function fetchServer(id: number): Promise<Server> {
@@ -37,4 +38,16 @@ export async function sendCommand(id: number, command: string): Promise<void> {
 export async function fetchWebSocketCredentials(id: number): Promise<WebSocketCredentials> {
     const { data } = await request<{ data: WebSocketCredentials }>(`/api/servers/${id}/websocket`);
     return data;
+}
+
+export async function fetchStartupVariables(id: number): Promise<StartupVariable[]> {
+    const { data } = await request<{ data: StartupVariable[] }>(`/api/servers/${id}/startup`);
+    return data;
+}
+
+export async function updateStartupVariable(id: number, key: string, value: string): Promise<void> {
+    await request(`/api/servers/${id}/startup/variable`, {
+        method: 'PUT',
+        body: JSON.stringify({ key, value }),
+    });
 }

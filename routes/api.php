@@ -52,6 +52,10 @@ Route::middleware('auth')->group(function () {
         Route::post('servers/{server}/command', [ServerConsoleController::class, 'command']);
     });
 
+    // Server startup variables
+    Route::get('servers/{server}/startup', [ServerController::class, 'startupVariables']);
+    Route::put('servers/{server}/startup/variable', [ServerController::class, 'updateStartupVariable']);
+
     // Server console & resources
     Route::get('servers/{server}/websocket', [ServerConsoleController::class, 'websocket']);
     Route::get('servers/{server}/resources', [ServerConsoleController::class, 'resources']);
@@ -65,6 +69,7 @@ Route::middleware('auth')->group(function () {
         Route::post('delete', [ServerFileController::class, 'delete']);
         Route::post('compress', [ServerFileController::class, 'compress']);
         Route::post('decompress', [ServerFileController::class, 'decompress']);
+        Route::get('upload-url', [ServerFileController::class, 'uploadUrl']);
         Route::post('create-folder', [ServerFileController::class, 'createFolder']);
     });
 

@@ -43,10 +43,10 @@ export function ServerDetailPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="flex min-h-[calc(100vh-4rem)]"
+            className="min-h-screen"
         >
             <ServerSidebar server={server} />
-            <main className="flex-1 p-6">
+            <main className="md:ml-56 min-h-screen p-6">
                 <Outlet />
             </main>
         </m.div>

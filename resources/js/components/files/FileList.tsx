@@ -98,7 +98,9 @@ export function FileList({
                                     : formatBytes(file.size)}
                             </td>
                             <td className="py-2 text-[var(--color-text-muted)]">
-                                {new Date(file.modified_at * 1000).toLocaleString()}
+                                {file.modified_at
+                                    ? new Date(typeof file.modified_at === 'string' ? file.modified_at : file.modified_at * 1000).toLocaleString()
+                                    : '\u2014'}
                             </td>
                             <td className="py-2">
                                 <FileActionMenu

@@ -116,6 +116,15 @@ class ServerFileController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function uploadUrl(Request $request, Server $server): JsonResponse
+    {
+        $this->authorize('manageFiles', $server);
+
+        $url = $this->clientService->getUploadUrl($server->identifier);
+
+        return response()->json(['data' => ['url' => $url]]);
+    }
+
     public function createFolder(CreateFolderRequest $request, Server $server): JsonResponse
     {
         $validated = $request->validated();

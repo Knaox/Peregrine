@@ -71,6 +71,29 @@ export async function decompressFile(
     });
 }
 
+export async function fetchUploadUrl(serverId: number): Promise<string> {
+    const { data } = await request<{ data: { url: string } }>(
+        `/api/servers/${serverId}/files/upload-url`,
+    );
+    return data.url;
+}
+
+export async function uploadFilesToWings(
+    uploadUrl: string,
+    directory: string,
+    files: File[],
+): Promise<void> {
+    const formData = new FormData();
+    for (const file of files) {
+        formData.append('files', file);
+    }
+    // Upload directly to Wings (not through Peregrine backend)
+    await fetch(`${uploadUrl}&directory=${encodeURIComponent(directory)}`, {
+        method: 'POST',
+        body: formData,
+    });
+}
+
 export async function createFolder(
     serverId: number,
     root: string,
