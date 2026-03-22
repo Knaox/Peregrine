@@ -1,0 +1,63 @@
+import { useState, useCallback } from 'react';
+import type { SetupState } from '../types';
+
+const TOTAL_STEPS = 7;
+
+const initialState: SetupState = {
+    locale: 'en',
+    database: {
+        host: 'localhost',
+        port: 3306,
+        database: 'peregrine',
+        username: 'root',
+        password: '',
+    },
+    admin: {
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
+    },
+    pelican: {
+        url: '',
+        api_key: '',
+    },
+    auth: {
+        mode: 'local',
+        oauth_client_id: '',
+        oauth_client_secret: '',
+        oauth_authorize_url: '',
+        oauth_token_url: '',
+        oauth_user_url: '',
+    },
+    bridge: {
+        enabled: false,
+        stripe_webhook_secret: '',
+    },
+};
+
+export function useSetupWizard() {
+    const [currentStep, setCurrentStep] = useState(0);
+    const [data, setData] = useState<SetupState>(initialState);
+
+    const goNext = useCallback(() => {
+        setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS - 1));
+    }, []);
+
+    const goPrevious = useCallback(() => {
+        setCurrentStep((prev) => Math.max(prev - 1, 0));
+    }, []);
+
+    const updateData = useCallback((updates: Partial<SetupState>) => {
+        setData((prev) => ({ ...prev, ...updates }));
+    }, []);
+
+    return {
+        currentStep,
+        totalSteps: TOTAL_STEPS,
+        data,
+        goNext,
+        goPrevious,
+        updateData,
+    };
+}

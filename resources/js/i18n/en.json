@@ -1,0 +1,171 @@
+{
+    "common": {
+        "next": "Next",
+        "previous": "Previous",
+        "save": "Save",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "delete": "Delete",
+        "edit": "Edit",
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "success": "Success",
+        "test_connection": "Test Connection",
+        "connection_success": "Connection successful",
+        "connection_failed": "Connection failed",
+        "required": "This field is required",
+        "optional": "Optional",
+        "install": "Install",
+        "installing": "Installing..."
+    },
+    "setup": {
+        "title": "Peregrine Setup",
+        "subtitle": "Configure your game server panel",
+        "steps": {
+            "language": "Language",
+            "database": "Database",
+            "admin": "Admin Account",
+            "pelican": "Pelican",
+            "auth": "Authentication",
+            "bridge": "Bridge",
+            "summary": "Summary"
+        },
+        "language": {
+            "title": "Choose Your Language",
+            "description": "Select the language for the setup wizard and default panel language."
+        },
+        "database": {
+            "title": "Database Configuration",
+            "description": "Configure the connection to your MySQL database.",
+            "host": "Database Host",
+            "host_placeholder": "localhost",
+            "port": "Port",
+            "port_placeholder": "3306",
+            "name": "Database Name",
+            "name_placeholder": "peregrine",
+            "username": "Username",
+            "username_placeholder": "root",
+            "password": "Password",
+            "password_placeholder": "Enter database password",
+            "test_success": "Successfully connected to the database.",
+            "test_failed": "Could not connect to the database: {{error}}",
+            "docker_detected": "Docker environment detected. Database fields have been pre-filled."
+        },
+        "admin": {
+            "title": "Admin Account",
+            "description": "Create the first administrator account.",
+            "name": "Full Name",
+            "name_placeholder": "John Doe",
+            "email": "Email Address",
+            "email_placeholder": "admin@example.com",
+            "password": "Password",
+            "password_placeholder": "Minimum 8 characters",
+            "password_confirmation": "Confirm Password",
+            "password_confirmation_placeholder": "Repeat password"
+        },
+        "pelican": {
+            "title": "Pelican Panel",
+            "description": "Connect Peregrine to your Pelican panel.",
+            "url": "Pelican URL",
+            "url_placeholder": "https://pelican.example.com",
+            "api_key": "Admin API Key (Application API)",
+            "api_key_placeholder": "ptlc_...",
+            "api_key_help": "Generate an Application API key in your Pelican admin panel under API Keys.",
+            "client_api_note": "Client API keys are generated automatically by Pelican for each user. You don't need to configure them here.",
+            "test_success": "Successfully connected to Pelican.",
+            "test_failed": "Could not connect to Pelican: {{error}}"
+        },
+        "auth": {
+            "title": "Authentication",
+            "description": "Choose how users will sign in to Peregrine.",
+            "mode_local": "Local Authentication",
+            "mode_local_description": "Users sign in with email and password. Accounts are managed directly in Peregrine.",
+            "mode_oauth": "OAuth2 (External Provider)",
+            "mode_oauth_description": "Users sign in through an external identity provider (e.g., your shop).",
+            "oauth_client_id": "Client ID",
+            "oauth_client_secret": "Client Secret",
+            "oauth_authorize_url": "Authorization URL",
+            "oauth_authorize_url_placeholder": "https://shop.example.com/oauth/authorize",
+            "oauth_token_url": "Token URL",
+            "oauth_token_url_placeholder": "https://shop.example.com/oauth/token",
+            "oauth_user_url": "User Info URL",
+            "oauth_user_url_placeholder": "https://shop.example.com/api/user"
+        },
+        "bridge": {
+            "title": "Bridge Module",
+            "description": "Automatically provision servers when customers purchase through Stripe.",
+            "enable": "Enable Bridge",
+            "disabled_note": "You can enable this later in the admin settings.",
+            "stripe_webhook_secret": "Stripe Webhook Secret",
+            "stripe_webhook_secret_placeholder": "whsec_...",
+            "stripe_webhook_secret_help": "Create a webhook endpoint in your Stripe dashboard pointing to {{url}} and paste the signing secret here."
+        },
+        "summary": {
+            "title": "Review Configuration",
+            "description": "Review your settings before installing Peregrine.",
+            "section_database": "Database",
+            "section_admin": "Admin Account",
+            "section_pelican": "Pelican Panel",
+            "section_auth": "Authentication",
+            "section_bridge": "Bridge Module",
+            "install_button": "Install Peregrine",
+            "installing_migrations": "Running database migrations...",
+            "installing_admin": "Creating admin account...",
+            "installing_config": "Writing configuration...",
+            "install_complete": "Installation complete! Redirecting to login..."
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Sign In",
+            "button": "Sign In",
+            "oauth_button": "Sign in with {{provider}}",
+            "email": "Email Address",
+            "password": "Password",
+            "remember": "Remember me",
+            "forgot_password": "Forgot your password?"
+        },
+        "register": {
+            "title": "Create Account",
+            "button": "Create Account"
+        }
+    },
+    "servers": {
+        "list": {
+            "title": "My Servers",
+            "empty": "You don't have any servers yet."
+        },
+        "status": {
+            "active": "Active",
+            "suspended": "Suspended",
+            "terminated": "Terminated",
+            "running": "Running",
+            "stopped": "Stopped",
+            "offline": "Offline"
+        },
+        "actions": {
+            "start": "Start",
+            "stop": "Stop",
+            "restart": "Restart",
+            "kill": "Kill"
+        },
+        "console": {
+            "title": "Console",
+            "send_command": "Send command..."
+        },
+        "files": {
+            "title": "File Manager"
+        },
+        "sftp": {
+            "title": "SFTP Access",
+            "set_password": "Set SFTP Password"
+        },
+        "not_found": "Server not found."
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "servers": "Servers",
+        "settings": "Settings",
+        "profile": "Profile"
+    }
+}

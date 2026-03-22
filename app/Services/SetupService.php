@@ -1,0 +1,144 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use PDO;
+use PDOException;
+
+class SetupService
+{
+    /**
+     * Write key-value pairs to the .env file atomically.
+     *
+     * Existing keys are updated in-place; new keys are appended.
+     *
+     * @param array<string, string> $values
+     */
+    public function writeEnv(array $values): void
+    {
+        $envPath = base_path('.env');
+        $contents = file_exists($envPath) ? file_get_contents($envPath) : '';
+
+        foreach ($values as $key => $value) {
+            $escapedValue = $this->escapeEnvValue($value);
+
+            // Match existing key (with or without quotes)
+            $pattern = '/^' . preg_quote($key, '/') . '=.*/m';
+
+            if (preg_match($pattern, $contents)) {
+                $contents = preg_replace($pattern, "{$key}={$escapedValue}", $contents);
+            } else {
+                $contents = rtrim($contents, "\n") . "\n{$key}={$escapedValue}\n";
+            }
+        }
+
+        // Write atomically: write to temp file, then rename.
+        $tmpPath = $envPath . '.tmp';
+        file_put_contents($tmpPath, $contents, LOCK_EX);
+        rename($tmpPath, $envPath);
+    }
+
+    /**
+     * Test a database connection with the given credentials.
+     */
+    public function testDatabaseConnection(
+        string $host,
+        int $port,
+        string $database,
+        string $username,
+        string $password,
+    ): bool {
+        try {
+            $dsn = "mysql:host={$host};port={$port};dbname={$database}";
+            $pdo = new PDO($dsn, $username, $password, [
+                PDO::ATTR_TIMEOUT => 5,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ]);
+            $pdo->query('SELECT 1');
+
+            return true;
+        } catch (PDOException) {
+            return false;
+        }
+    }
+
+    /**
+     * Test the connection to a Pelican panel by hitting its API.
+     */
+    public function testPelicanConnection(string $url, string $apiKey): bool
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])
+                ->timeout(10)
+                ->get(rtrim($url, '/') . '/api/application/users?per_page=1');
+
+            return $response->successful();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Run all pending database migrations.
+     */
+    public function runMigrations(): void
+    {
+        Artisan::call('migrate', ['--force' => true]);
+    }
+
+    /**
+     * Create an admin user in the local database.
+     */
+    public function createAdminUser(string $name, string $email, string $password): void
+    {
+        User::create([
+            'name' => $name,
+            'email' => $email,
+            'password' => Hash::make($password),
+            'is_admin' => true,
+            'email_verified_at' => now(),
+        ]);
+    }
+
+    /**
+     * Mark the application as installed by setting PANEL_INSTALLED=true in .env.
+     */
+    public function markAsInstalled(): void
+    {
+        $this->writeEnv(['PANEL_INSTALLED' => 'true']);
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Escape a value for safe inclusion in the .env file.
+     *
+     * Wraps the value in double-quotes if it contains spaces, quotes, or special characters.
+     */
+    private function escapeEnvValue(string $value): string
+    {
+        if ($value === '') {
+            return '""';
+        }
+
+        // If the value contains spaces, #, quotes, or starts/ends with whitespace, wrap it.
+        if (preg_match('/[\s#"\'\\\\]/', $value) || $value !== trim($value)) {
+            $escaped = str_replace(['\\', '"'], ['\\\\', '\\"'], $value);
+
+            return '"' . $escaped . '"';
+        }
+
+        return $value;
+    }
+}

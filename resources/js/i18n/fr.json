@@ -1,0 +1,171 @@
+{
+    "common": {
+        "next": "Suivant",
+        "previous": "Précédent",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "confirm": "Confirmer",
+        "delete": "Supprimer",
+        "edit": "Modifier",
+        "loading": "Chargement...",
+        "error": "Une erreur est survenue",
+        "success": "Succès",
+        "test_connection": "Tester la connexion",
+        "connection_success": "Connexion réussie",
+        "connection_failed": "Échec de la connexion",
+        "required": "Ce champ est requis",
+        "optional": "Optionnel",
+        "install": "Installer",
+        "installing": "Installation en cours..."
+    },
+    "setup": {
+        "title": "Installation de Peregrine",
+        "subtitle": "Configurez votre panel de gestion de serveurs de jeux",
+        "steps": {
+            "language": "Langue",
+            "database": "Base de données",
+            "admin": "Compte admin",
+            "pelican": "Pelican",
+            "auth": "Authentification",
+            "bridge": "Bridge",
+            "summary": "Résumé"
+        },
+        "language": {
+            "title": "Choisissez votre langue",
+            "description": "Sélectionnez la langue pour l'assistant d'installation et la langue par défaut du panel."
+        },
+        "database": {
+            "title": "Configuration de la base de données",
+            "description": "Configurez la connexion à votre base de données MySQL.",
+            "host": "Hôte de la base de données",
+            "host_placeholder": "localhost",
+            "port": "Port",
+            "port_placeholder": "3306",
+            "name": "Nom de la base de données",
+            "name_placeholder": "peregrine",
+            "username": "Nom d'utilisateur",
+            "username_placeholder": "root",
+            "password": "Mot de passe",
+            "password_placeholder": "Entrez le mot de passe de la base de données",
+            "test_success": "Connexion à la base de données réussie.",
+            "test_failed": "Impossible de se connecter à la base de données : {{error}}",
+            "docker_detected": "Environnement Docker détecté. Les champs de la base de données ont été pré-remplis."
+        },
+        "admin": {
+            "title": "Compte administrateur",
+            "description": "Créez le premier compte administrateur.",
+            "name": "Nom complet",
+            "name_placeholder": "Jean Dupont",
+            "email": "Adresse e-mail",
+            "email_placeholder": "admin@exemple.com",
+            "password": "Mot de passe",
+            "password_placeholder": "Minimum 8 caractères",
+            "password_confirmation": "Confirmer le mot de passe",
+            "password_confirmation_placeholder": "Répétez le mot de passe"
+        },
+        "pelican": {
+            "title": "Panel Pelican",
+            "description": "Connectez Peregrine à votre panel Pelican.",
+            "url": "URL de Pelican",
+            "url_placeholder": "https://pelican.exemple.com",
+            "api_key": "Clé API Admin (Application API)",
+            "api_key_placeholder": "ptlc_...",
+            "api_key_help": "Générez une clé Application API dans votre panel admin Pelican, section Clés API.",
+            "client_api_note": "Les clés Client API sont générées automatiquement par Pelican pour chaque utilisateur. Aucune configuration nécessaire ici.",
+            "test_success": "Connexion à Pelican réussie.",
+            "test_failed": "Impossible de se connecter à Pelican : {{error}}"
+        },
+        "auth": {
+            "title": "Authentification",
+            "description": "Choisissez comment les utilisateurs se connecteront à Peregrine.",
+            "mode_local": "Authentification locale",
+            "mode_local_description": "Les utilisateurs se connectent avec email et mot de passe. Les comptes sont gérés directement dans Peregrine.",
+            "mode_oauth": "OAuth2 (Fournisseur externe)",
+            "mode_oauth_description": "Les utilisateurs se connectent via un fournisseur d'identité externe (ex : votre boutique).",
+            "oauth_client_id": "Client ID",
+            "oauth_client_secret": "Client Secret",
+            "oauth_authorize_url": "URL d'autorisation",
+            "oauth_authorize_url_placeholder": "https://boutique.exemple.com/oauth/authorize",
+            "oauth_token_url": "URL du token",
+            "oauth_token_url_placeholder": "https://boutique.exemple.com/oauth/token",
+            "oauth_user_url": "URL des infos utilisateur",
+            "oauth_user_url_placeholder": "https://boutique.exemple.com/api/user"
+        },
+        "bridge": {
+            "title": "Module Bridge",
+            "description": "Provisionnement automatique des serveurs lors d'un achat via Stripe.",
+            "enable": "Activer le Bridge",
+            "disabled_note": "Vous pourrez l'activer plus tard dans les paramètres admin.",
+            "stripe_webhook_secret": "Secret du webhook Stripe",
+            "stripe_webhook_secret_placeholder": "whsec_...",
+            "stripe_webhook_secret_help": "Créez un endpoint webhook dans votre dashboard Stripe pointant vers {{url}} et collez le secret de signature ici."
+        },
+        "summary": {
+            "title": "Vérification de la configuration",
+            "description": "Vérifiez vos paramètres avant d'installer Peregrine.",
+            "section_database": "Base de données",
+            "section_admin": "Compte administrateur",
+            "section_pelican": "Panel Pelican",
+            "section_auth": "Authentification",
+            "section_bridge": "Module Bridge",
+            "install_button": "Installer Peregrine",
+            "installing_migrations": "Exécution des migrations...",
+            "installing_admin": "Création du compte administrateur...",
+            "installing_config": "Écriture de la configuration...",
+            "install_complete": "Installation terminée ! Redirection vers la connexion..."
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Connexion",
+            "button": "Se connecter",
+            "oauth_button": "Se connecter avec {{provider}}",
+            "email": "Adresse e-mail",
+            "password": "Mot de passe",
+            "remember": "Se souvenir de moi",
+            "forgot_password": "Mot de passe oublié ?"
+        },
+        "register": {
+            "title": "Créer un compte",
+            "button": "Créer un compte"
+        }
+    },
+    "servers": {
+        "list": {
+            "title": "Mes serveurs",
+            "empty": "Vous n'avez pas encore de serveurs."
+        },
+        "status": {
+            "active": "Actif",
+            "suspended": "Suspendu",
+            "terminated": "Résilié",
+            "running": "En cours",
+            "stopped": "Arrêté",
+            "offline": "Hors ligne"
+        },
+        "actions": {
+            "start": "Démarrer",
+            "stop": "Arrêter",
+            "restart": "Redémarrer",
+            "kill": "Forcer l'arrêt"
+        },
+        "console": {
+            "title": "Console",
+            "send_command": "Envoyer une commande..."
+        },
+        "files": {
+            "title": "Gestionnaire de fichiers"
+        },
+        "sftp": {
+            "title": "Accès SFTP",
+            "set_password": "Définir le mot de passe SFTP"
+        },
+        "not_found": "Serveur introuvable."
+    },
+    "nav": {
+        "dashboard": "Tableau de bord",
+        "servers": "Serveurs",
+        "settings": "Paramètres",
+        "profile": "Profil"
+    }
+}

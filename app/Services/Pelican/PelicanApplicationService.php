@@ -1,0 +1,361 @@
+<?php
+
+namespace App\Services\Pelican;
+
+use App\Services\Pelican\DTOs\PelicanEgg;
+use App\Services\Pelican\DTOs\PelicanNest;
+use App\Services\Pelican\DTOs\PelicanNode;
+use App\Services\Pelican\DTOs\PelicanServer;
+use App\Services\Pelican\DTOs\PelicanUser;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Http;
+
+class PelicanApplicationService
+{
+    // -------------------------------------------------------------------------
+    // Users
+    // -------------------------------------------------------------------------
+
+    /**
+     * Create a new user on the Pelican panel.
+     *
+     * @throws RequestException
+     */
+    public function createUser(string $email, string $username, string $firstName, string $lastName): PelicanUser
+    {
+        $response = $this->request()
+            ->post('/api/application/users', [
+                'email' => $email,
+                'username' => $username,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+            ])
+            ->throw();
+
+        return PelicanUser::fromApiResponse($response->json());
+    }
+
+    /**
+     * Delete a user from the Pelican panel.
+     *
+     * @throws RequestException
+     */
+    public function deleteUser(int $pelicanUserId): void
+    {
+        $this->request()
+            ->delete("/api/application/users/{$pelicanUserId}")
+            ->throw();
+    }
+
+    /**
+     * Update a user on the Pelican panel.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @throws RequestException
+     */
+    public function updateUser(int $pelicanUserId, array $data): PelicanUser
+    {
+        $response = $this->request()
+            ->patch("/api/application/users/{$pelicanUserId}", $data)
+            ->throw();
+
+        return PelicanUser::fromApiResponse($response->json());
+    }
+
+    /**
+     * Get a single user by their Pelican ID.
+     *
+     * @throws RequestException
+     */
+    public function getUser(int $pelicanUserId): PelicanUser
+    {
+        $response = $this->request()
+            ->get("/api/application/users/{$pelicanUserId}")
+            ->throw();
+
+        return PelicanUser::fromApiResponse($response->json());
+    }
+
+    /**
+     * List all users from the Pelican panel.
+     *
+     * @return PelicanUser[]
+     *
+     * @throws RequestException
+     */
+    public function listUsers(): array
+    {
+        return $this->fetchAllPages('/api/application/users', PelicanUser::class);
+    }
+
+    // -------------------------------------------------------------------------
+    // Servers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Create a new server on the Pelican panel.
+     *
+     * @throws RequestException
+     */
+    public function createServer(
+        int $userId,
+        int $eggId,
+        int $nestId,
+        int $ram,
+        int $cpu,
+        int $disk,
+        int $nodeId,
+        string $name,
+    ): PelicanServer {
+        $response = $this->request()
+            ->post('/api/application/servers', [
+                'name' => $name,
+                'user' => $userId,
+                'egg' => $eggId,
+                'nest' => $nestId,
+                'docker_image' => '~',
+                'startup' => '~',
+                'limits' => [
+                    'memory' => $ram,
+                    'swap' => 0,
+                    'disk' => $disk,
+                    'io' => 500,
+                    'cpu' => $cpu,
+                ],
+                'feature_limits' => [
+                    'databases' => 0,
+                    'allocations' => 1,
+                    'backups' => 0,
+                ],
+                'deploy' => [
+                    'locations' => [],
+                    'dedicated_ip' => false,
+                    'port_range' => [],
+                ],
+                'allocation' => [
+                    'default' => null,
+                ],
+                'node_id' => $nodeId,
+            ])
+            ->throw();
+
+        return PelicanServer::fromApiResponse($response->json());
+    }
+
+    /**
+     * Suspend a server on the Pelican panel.
+     *
+     * @throws RequestException
+     */
+    public function suspendServer(int $pelicanServerId): void
+    {
+        $this->request()
+            ->post("/api/application/servers/{$pelicanServerId}/suspend")
+            ->throw();
+    }
+
+    /**
+     * Unsuspend a server on the Pelican panel.
+     *
+     * @throws RequestException
+     */
+    public function unsuspendServer(int $pelicanServerId): void
+    {
+        $this->request()
+            ->post("/api/application/servers/{$pelicanServerId}/unsuspend")
+            ->throw();
+    }
+
+    /**
+     * Delete a server from the Pelican panel.
+     *
+     * @throws RequestException
+     */
+    public function deleteServer(int $pelicanServerId): void
+    {
+        $this->request()
+            ->delete("/api/application/servers/{$pelicanServerId}")
+            ->throw();
+    }
+
+    /**
+     * Get a single server by its Pelican ID.
+     *
+     * @throws RequestException
+     */
+    public function getServer(int $pelicanServerId): PelicanServer
+    {
+        $response = $this->request()
+            ->get("/api/application/servers/{$pelicanServerId}")
+            ->throw();
+
+        return PelicanServer::fromApiResponse($response->json());
+    }
+
+    /**
+     * List servers from the Pelican panel, optionally filtered by user.
+     *
+     * @return PelicanServer[]
+     *
+     * @throws RequestException
+     */
+    public function listServers(?int $userId = null): array
+    {
+        $query = $userId !== null ? ['filter[user]' => $userId] : [];
+
+        return $this->fetchAllPages('/api/application/servers', PelicanServer::class, $query);
+    }
+
+    // -------------------------------------------------------------------------
+    // Nodes
+    // -------------------------------------------------------------------------
+
+    /**
+     * List all nodes from the Pelican panel.
+     *
+     * @return PelicanNode[]
+     *
+     * @throws RequestException
+     */
+    public function listNodes(): array
+    {
+        return $this->fetchAllPages('/api/application/nodes', PelicanNode::class);
+    }
+
+    /**
+     * Get a single node by its Pelican ID.
+     *
+     * @throws RequestException
+     */
+    public function getNode(int $nodeId): PelicanNode
+    {
+        $response = $this->request()
+            ->get("/api/application/nodes/{$nodeId}")
+            ->throw();
+
+        return PelicanNode::fromApiResponse($response->json());
+    }
+
+    // -------------------------------------------------------------------------
+    // Eggs
+    // -------------------------------------------------------------------------
+
+    /**
+     * List all eggs for a given nest.
+     *
+     * @return PelicanEgg[]
+     *
+     * @throws RequestException
+     */
+    public function listEggs(int $nestId): array
+    {
+        return $this->fetchAllPages("/api/application/nests/{$nestId}/eggs", PelicanEgg::class);
+    }
+
+    /**
+     * Get a single egg by its Pelican ID.
+     *
+     * @throws RequestException
+     */
+    public function getEgg(int $eggId): PelicanEgg
+    {
+        $response = $this->request()
+            ->get("/api/application/eggs/{$eggId}")
+            ->throw();
+
+        return PelicanEgg::fromApiResponse($response->json());
+    }
+
+    // -------------------------------------------------------------------------
+    // Nests
+    // -------------------------------------------------------------------------
+
+    /**
+     * List all nests from the Pelican panel.
+     *
+     * @return PelicanNest[]
+     *
+     * @throws RequestException
+     */
+    public function listNests(): array
+    {
+        return $this->fetchAllPages('/api/application/nests', PelicanNest::class);
+    }
+
+    /**
+     * Get a single nest by its Pelican ID.
+     *
+     * @throws RequestException
+     */
+    public function getNest(int $nestId): PelicanNest
+    {
+        $response = $this->request()
+            ->get("/api/application/nests/{$nestId}")
+            ->throw();
+
+        return PelicanNest::fromApiResponse($response->json());
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    private function baseUrl(): string
+    {
+        return rtrim((string) config('panel.pelican.url'), '/');
+    }
+
+    private function apiKey(): string
+    {
+        return (string) config('panel.pelican.admin_api_key');
+    }
+
+    private function request(): PendingRequest
+    {
+        return Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey(),
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ])
+            ->retry(3, 100)
+            ->baseUrl($this->baseUrl());
+    }
+
+    /**
+     * Fetch all pages for a paginated endpoint and map each item through a DTO.
+     *
+     * @template T
+     *
+     * @param class-string<T> $dtoClass
+     * @param array<string, mixed> $query
+     *
+     * @return T[]
+     *
+     * @throws RequestException
+     */
+    private function fetchAllPages(string $endpoint, string $dtoClass, array $query = []): array
+    {
+        $items = [];
+        $page = 1;
+
+        do {
+            $response = $this->request()
+                ->get($endpoint, array_merge($query, ['page' => $page]))
+                ->throw();
+
+            $json = $response->json();
+            $data = $json['data'] ?? [];
+
+            foreach ($data as $item) {
+                $items[] = $dtoClass::fromApiResponse($item);
+            }
+
+            $totalPages = $json['meta']['pagination']['total_pages'] ?? 1;
+            $page++;
+        } while ($page <= $totalPages);
+
+        return $items;
+    }
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Dark circle background -->
+  <circle cx="16" cy="16" r="15" fill="#1E293B"/>
+  <!-- Simplified falcon silhouette -->
+  <g transform="translate(16,16)">
+    <!-- Body -->
+    <path d="M-2,-9 L3,-5 L4,1 L2,7 L0,9 L-2,6 L-3,1 L-4,-2 Z" fill="#F97316"/>
+    <!-- Wing left -->
+    <path d="M-4,-2 L-9,-4 L-10,-2 L-6,1 L-3,1 Z" fill="#F97316" opacity="0.85"/>
+    <!-- Wing right -->
+    <path d="M3,-5 L9,-7 L10,-4 L6,0 L4,1 Z" fill="#F97316" opacity="0.85"/>
+    <!-- Head -->
+    <path d="M-2,-9 L0,-11 L3,-10 L3,-5 L0,-7 Z" fill="#F97316"/>
+  </g>
+</svg>
