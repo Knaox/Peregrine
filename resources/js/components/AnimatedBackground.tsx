@@ -1,50 +1,85 @@
 /**
- * Animated background with floating gradient orbs and grid overlay.
- * Renders behind all content. Uses pure CSS animations for performance.
+ * Animated gradient mesh background — Aceternity-inspired pattern.
+ * Uses large colorful blobs with CSS blur + mix-blend-mode + slow animations.
+ * The blur makes them soft; opacity is HIGH (0.6-0.8) so they're VISIBLE.
  */
 export function AnimatedBackground() {
     return (
-        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
-            {/* Animated gradient orbs */}
-            <div
-                className="absolute -left-1/4 top-0 h-[600px] w-[600px] rounded-full opacity-[0.035]"
-                style={{
-                    background: 'radial-gradient(circle, var(--color-primary) 0%, transparent 70%)',
-                    animation: 'orb-float-1 25s ease-in-out infinite',
-                }}
-            />
-            <div
-                className="absolute -right-1/4 top-1/3 h-[500px] w-[500px] rounded-full opacity-[0.025]"
-                style={{
-                    background: 'radial-gradient(circle, var(--color-info) 0%, transparent 70%)',
-                    animation: 'orb-float-2 30s ease-in-out infinite',
-                }}
-            />
-            <div
-                className="absolute bottom-0 left-1/3 h-[400px] w-[400px] rounded-full opacity-[0.02]"
-                style={{
-                    background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)',
-                    animation: 'orb-float-3 20s ease-in-out infinite',
-                }}
-            />
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+            {/* Blur container — all children are blurred together */}
+            <div className="absolute inset-0" style={{ filter: 'blur(80px)' }}>
+                {/* Orange primary orb — top left */}
+                <div
+                    className="absolute h-[500px] w-[500px] rounded-full"
+                    style={{
+                        top: '-10%',
+                        left: '-5%',
+                        background: 'radial-gradient(circle, rgba(249, 115, 22, 0.7) 0%, transparent 70%)',
+                        animation: 'orb-float-1 25s ease-in-out infinite',
+                    }}
+                />
+                {/* Blue orb — top right */}
+                <div
+                    className="absolute h-[450px] w-[450px] rounded-full"
+                    style={{
+                        top: '10%',
+                        right: '-10%',
+                        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.5) 0%, transparent 70%)',
+                        animation: 'orb-float-2 30s ease-in-out infinite',
+                    }}
+                />
+                {/* Violet orb — center */}
+                <div
+                    className="absolute h-[400px] w-[400px] rounded-full"
+                    style={{
+                        top: '50%',
+                        left: '30%',
+                        background: 'radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%)',
+                        animation: 'orb-float-3 20s ease-in-out infinite',
+                    }}
+                />
+                {/* Cyan orb — bottom right */}
+                <div
+                    className="absolute h-[350px] w-[350px] rounded-full"
+                    style={{
+                        bottom: '-5%',
+                        right: '20%',
+                        background: 'radial-gradient(circle, rgba(6, 182, 212, 0.35) 0%, transparent 70%)',
+                        animation: 'orb-float-1 35s ease-in-out infinite reverse',
+                    }}
+                />
+                {/* Rose orb — bottom left */}
+                <div
+                    className="absolute h-[300px] w-[300px] rounded-full"
+                    style={{
+                        bottom: '10%',
+                        left: '-5%',
+                        background: 'radial-gradient(circle, rgba(244, 63, 94, 0.3) 0%, transparent 70%)',
+                        animation: 'orb-float-2 22s ease-in-out infinite reverse',
+                    }}
+                />
+            </div>
 
-            {/* Subtle grid pattern */}
-            <div
-                className="absolute inset-0 opacity-[0.03]"
-                style={{
-                    backgroundImage: `
-                        linear-gradient(rgba(148, 163, 184, 0.3) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(148, 163, 184, 0.3) 1px, transparent 1px)
-                    `,
-                    backgroundSize: '60px 60px',
-                }}
-            />
-
-            {/* Vignette overlay */}
+            {/* Dark overlay to tame the colors — keeps it subtle but visible */}
             <div
                 className="absolute inset-0"
+                style={{ background: 'rgba(12, 15, 26, 0.75)' }}
+            />
+
+            {/* Noise texture overlay for depth */}
+            <svg className="absolute inset-0 h-full w-full opacity-[0.08]">
+                <filter id="noise">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+                </filter>
+                <rect width="100%" height="100%" filter="url(#noise)" />
+            </svg>
+
+            {/* Subtle dot grid */}
+            <div
+                className="absolute inset-0 opacity-[0.04]"
                 style={{
-                    background: 'radial-gradient(ellipse at center, transparent 50%, var(--color-background) 100%)',
+                    backgroundImage: 'radial-gradient(circle, rgba(148, 163, 184, 0.8) 1px, transparent 1px)',
+                    backgroundSize: '24px 24px',
                 }}
             />
         </div>

@@ -210,7 +210,7 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
             <aside
                 className={clsx(
                     'w-56 flex-shrink-0 h-full overflow-y-auto',
-                    'backdrop-blur-xl bg-[var(--color-glass)] border-r border-[var(--color-glass-border)]',
+                    'bg-[var(--color-surface)] border-r border-[var(--color-border)]',
                     'hidden md:flex md:flex-col',
                 )}
             >
@@ -225,7 +225,7 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
                         animate={{ x: 0 }}
                         exit={{ x: '-100%' }}
                         transition={{ duration: 0.25, ease: 'easeOut' }}
-                        className="fixed left-0 top-0 z-40 h-screen w-56 overflow-y-auto backdrop-blur-xl bg-[var(--color-glass)] border-r border-[var(--color-glass-border)] md:hidden"
+                        className="fixed left-0 top-0 z-40 h-screen w-56 overflow-y-auto bg-[var(--color-surface)] border-r border-[var(--color-border)] md:hidden"
                     >
                         {navContent}
                     </m.aside>

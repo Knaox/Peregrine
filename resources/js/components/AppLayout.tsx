@@ -48,7 +48,7 @@ export function AppLayout() {
     return (
         <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-primary)]">
             {/* Top navbar */}
-            <nav className="sticky top-0 z-50 border-b border-[var(--color-glass-border)] bg-[var(--color-glass)] backdrop-blur-xl">
+            <nav className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 backdrop-blur-xl">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
                         {/* Left: Logo + Nav links */}
