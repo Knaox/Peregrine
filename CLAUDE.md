@@ -546,6 +546,18 @@ class MyResource extends Resource
 - [x] Bulk selection : useServerSelection (Set<number>), ServerBulkBar (sticky bottom, Start/Stop/Restart all)
 - [x] Groupement par egg : ServerGroupHeader (separateur avec nom egg + count), DashboardPage reecrit
 - [x] Pelican API fixes : PelicanUser DTO (name vs first_name/last_name), nests supprimes, syncEggs sans nests, authorize trait, fichiers format transform
+- [x] Refonte UI premium "Mix gaming + clean" : Motion (Framer Motion) ajoute, 8 composants UI refaits (hover scale+glow, status dots pulse, glassmorphism cards, focus glow inputs, animated bars, conic gradient spinner), AppLayout refait (navbar blur, animated underline links, AnimatePresence dropdown/mobile), LoginPage+RegisterPage refaites (gradient anime, glassmorphism card, motion fade-in), ServerCard refait (m.div layout, StatusDot, hover scale+glow), DashboardPage refait (stagger reveal, glassmorphism toolbar, gradient group headers, AnimatePresence bulk bar), ServerOverviewPage refait (h-64 banner, glassmorphism pills, power buttons avec labels, motion fade-in), ServerSidebar refait (sections Principal/Gestion, StatusDot, user info bottom, back button), ConsoleOutput/Input refait (CSS vars, glassmorphism scroll button), FileList/Editor refait (hover rows, glassmorphism editor), ProfilePage/SftpCredentials refait (GlassCard)
+- [x] Nouveaux composants UI : StatusDot (pulse animation), GlassCard (always glassmorphism), MotionProvider (LazyMotion)
+- [x] AnimatedBackground : 5 orbes gradient (orange/bleu/violet/cyan/rose) avec blur 80px + overlay sombre 75% + noise texture SVG + dot grid. Keyframes orb-float-1/2/3, shimmer, breathe, float. Integre dans AppLayout et ServerDetailPage.
+- [x] Variables d'environnement serveur : GET/PUT /api/servers/{id}/startup, getStartupVariables/updateStartupVariable dans PelicanClientService, useStartupVariables hook, ServerVariables composant (grille 2 cols, toggle booleans, save par variable), integre dans ServerOverviewPage
+- [x] File upload drag-and-drop : getUploadUrl (signed Wings URL), useFileUpload hook (recursive folder reading via webkitGetAsEntry, create subdirs, upload to Wings), drop zone overlay dans ServerFilesPage
+- [x] Sidebar layout fix : pattern Tailwind UI "flex h-screen overflow-hidden" — sidebar static dans flex parent (desktop), fixed overlay (mobile), main content flex-1 overflow-y-auto
+- [x] Dashboard full screen (supprime max-w-7xl)
+- [x] Nouveau logo Peregrine falcon (SVG minimaliste, style Pelican) + favicon assorti
+- [x] Filament : bouton "Panel joueur" dans sidebar navigation + user menu, ServerPlanResource cache si Bridge desactive, NavigationItem retour panel
+- [x] AppLayout : supprime lien "Serveurs" inutile, ajoute switch langue EN/FR dans dropdown user
+- [x] Fix branding : SettingsService utilise les bonnes cles (app_logo_path au lieu de logo_url)
+- [x] Fix dates fichiers : gere string ISO et timestamp unix
 - [x] Config files : config/panel.php (avec client_api_key), config/auth-mode.php, config/bridge.php
 - [x] .env.example avec PELICAN_CLIENT_API_KEY + SANCTUM_STATEFUL_DOMAINS
 - [x] Blade views : app.blade.php, setup.blade.php
@@ -555,22 +567,11 @@ class MyResource extends Resource
 - [x] Git repo GitHub : https://github.com/Knaox/Peregrine (public) — dernier push : commit initial, changements récents pas encore committés
 
 ### Pas fait
-- [ ] **P1 URGENT** — REFONTE UI COMPLETE "Mix gaming + clean" : refonte visuelle de TOUS les composants pour un look premium moderne. Style : structure clean avec accents gaming subtils. Animations partout (hover scale+shadow, transitions fluides, pulse status). Glassmorphism (backdrop-blur sur cards, sidebar, modales). Gradients subtils sur surfaces. Glow colore sur elements actifs (status dots, boutons hover, cards selectionnees). TOUT doit utiliser les CSS variables (theming compatible). Pas trop geek, un truc que tout le monde peut kiffer, vivant et moderne. Concerne :
-  - **AppLayout** : navbar glassmorphism, liens avec underline animate, avatar avec ring glow, transitions smooth
-  - **Server cards (liste)** : banner egg 40% largeur, gradient overlay, hover scale(1.01)+shadow glow, status dot avec pulse animation, stats avec micro-animations
-  - **Page detail serveur** : banner full-width avec parallax subtle, overlay gradient, badge statut glow, IP pill glassmorphism, boutons power avec labels + hover glow, stats cards avec gradient fond + animate on load, instance active, variables env editables (grille 2 cols), config avancee collapsible
-  - **Sidebar serveur** : glassmorphism semi-transparent, sections groupees (Principal/Donnees/Gestion + liens custom), liens avec hover slide animation, active state gradient accent, icones avec subtle scale hover
-  - **Console** : terminal avec gradient fond, cursor blink animation, output fade-in ligne par ligne
-  - **File manager** : hover rows avec gradient subtle, file icons avec couleur par type, editor slide-in avec backdrop-blur
-  - **Login/Register** : fond avec gradient anime subtil, card glassmorphism centree, inputs avec focus glow
-  - **Setup wizard** : stepper avec animations entre etapes, cards glassmorphism
-  - **Profil/SFTP** : meme coherence visuelle
-  - **REGLE** : TOUTES les couleurs via CSS variables. L'admin change le theme dans Filament → tout le panel change de look instantanement.
-- [ ] **P2** — Pages Filament Apparence : Theme (color pickers, font, radius, CSS custom), Cards serveurs (config affichage), Sidebar serveur (entrees, icones, ordre, position)
-- [ ] **P2** — Sidebar serveur configurable avec sections groupees (Principal: Accueil/Console/Fichiers, Donnees: BDD/Sauvegardes/Planification, Gestion: Utilisateurs/Reseau/SFTP, + liens custom: Dashboard/Shop). Config JSON dans settings, admin Filament pour activer/desactiver/reordonner. Plugins ajoutent leurs entrees via manifest.
-- [ ] **P2** — Variables d'environnement serveur : endpoint GET /api/servers/{id}/startup-variables, affichage en grille 2 colonnes, types adaptes (text, number, toggle, select), section "Config avancee" collapsible, bouton sauvegarder
+- [ ] **P2** — Pages Filament Apparence : Theme (color pickers, font, radius, CSS custom), Cards serveurs (config affichage)
+- [ ] **P2** — Sidebar serveur configurable : config JSON dans settings, admin Filament pour activer/desactiver/reordonner les entrees. Plugins ajoutent leurs entrees via manifest.
 - [ ] **P2** — Plugin slots : chaque page expose des zones d'injection pour les plugins (sidebar entries, overview widgets, detail sections, toolbar actions)
 - [ ] **P2** — UI sync avancee Filament (modales comparaison avec checkboxes, Inviter sur le Shop, matching manuel email)
+- [ ] **P2** — Setup wizard refonte visuelle (stepper anime, glassmorphism cards, coherence avec le nouveau design)
 - [ ] **P3** — Bridge plugin (BridgeServiceProvider, StripeWebhookController, ProvisioningService, SubscriptionService, jobs queue, idempotence, email "Serveur pret")
 - [ ] **P4** — Auth features (forgot/reset password endpoints + pages React, email verification)
 - [ ] **P4** — Templates email (serveur pret, invitation Shop, reset password) — i18n EN+FR

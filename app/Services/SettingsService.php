@@ -58,9 +58,9 @@ class SettingsService
     public function getBranding(): array
     {
         return [
-            'app_name' => $this->get('app_name'),
-            'logo_url' => $this->get('logo_url'),
-            'favicon_url' => $this->get('favicon_url'),
+            'app_name' => $this->get('app_name', 'Peregrine'),
+            'logo_url' => $this->get('app_logo_path', '/images/logo.svg'),
+            'favicon_url' => $this->get('app_favicon_path', '/images/favicon.svg'),
         ];
     }
 
