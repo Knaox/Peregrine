@@ -3,10 +3,10 @@ import { type ButtonProps } from '@/components/ui/Button.props';
 import { Spinner } from '@/components/ui/Spinner';
 
 const variantClasses: Record<NonNullable<ButtonProps['variant']>, string> = {
-    primary: 'bg-orange-500 hover:bg-orange-600 text-white',
-    danger: 'bg-red-500 hover:bg-red-600 text-white',
-    ghost: 'bg-transparent hover:bg-slate-700 text-slate-300',
-    secondary: 'bg-slate-700 hover:bg-slate-600 text-white',
+    primary: 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-primary)]',
+    danger: 'bg-[var(--color-danger)] hover:bg-[var(--color-danger)] text-[var(--color-text-primary)]',
+    ghost: 'bg-transparent hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)]',
+    secondary: 'bg-[var(--color-surface-hover)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]',
 };
 
 const sizeClasses: Record<NonNullable<ButtonProps['size']>, string> = {
@@ -30,7 +30,7 @@ export function Button({
             disabled={disabled || isLoading}
             onClick={onClick}
             className={clsx(
-                'rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+                'rounded-[var(--radius)] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
                 'inline-flex items-center justify-center gap-2',
                 variantClasses[variant],
                 sizeClasses[size],

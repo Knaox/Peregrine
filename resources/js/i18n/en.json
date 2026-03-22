@@ -151,7 +151,18 @@
             "empty": "You don't have any servers yet.",
             "search": "Search servers...",
             "search_empty": "No servers match your search.",
-            "stats_unavailable": "Stats unavailable"
+            "stats_unavailable": "Stats unavailable",
+            "uncategorized": "Uncategorized",
+            "select_mode": "Select",
+            "selected_count": "{{count}} server(s) selected",
+            "deselect_all": "Deselect all",
+            "copy_ip": "Copy address",
+            "copied": "Copied!"
+        },
+        "bulk": {
+            "start_all": "Start all",
+            "stop_all": "Stop all",
+            "restart_all": "Restart all"
         },
         "status": {
             "active": "Active",

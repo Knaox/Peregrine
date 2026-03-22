@@ -11,7 +11,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 {label && (
                     <label
                         htmlFor={inputId}
-                        className='text-sm font-medium text-slate-300'
+                        className='text-sm font-medium text-[var(--color-text-secondary)]'
                     >
                         {label}
                     </label>
@@ -20,9 +20,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                     ref={ref}
                     id={inputId}
                     className={clsx(
-                        'w-full px-3 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 text-sm',
-                        'focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent',
-                        error ? 'border-red-500' : 'border-slate-600',
+                        'w-full px-3 py-2 bg-[var(--color-surface-hover)] border rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm',
+                        'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent',
+                        error ? 'border-red-500' : 'border-[var(--color-border)]',
                     )}
                     {...rest}
                 />

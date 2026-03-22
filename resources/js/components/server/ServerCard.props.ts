@@ -7,4 +7,8 @@ export interface ServerCardProps {
     stats: ServerStats | undefined;
     onPower: (serverId: number, signal: PowerSignal) => void;
     isPowerPending: boolean;
+    isSelectable?: boolean;
+    isSelected?: boolean;
+    onSelect?: (serverId: number) => void;
+    isDragging?: boolean;
 }

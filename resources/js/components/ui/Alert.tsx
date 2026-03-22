@@ -65,7 +65,7 @@ export function Alert({ variant, children, className }: AlertProps) {
     return (
         <div
             className={clsx(
-                'flex items-start gap-3 rounded-lg border p-4 text-sm',
+                'flex items-start gap-3 rounded-[var(--radius)] border p-4 text-sm',
                 variantClasses[variant],
                 className,
             )}

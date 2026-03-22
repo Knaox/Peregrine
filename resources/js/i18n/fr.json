@@ -151,7 +151,18 @@
             "empty": "Vous n'avez pas encore de serveurs.",
             "search": "Rechercher des serveurs...",
             "search_empty": "Aucun serveur ne correspond a votre recherche.",
-            "stats_unavailable": "Statistiques indisponibles"
+            "stats_unavailable": "Statistiques indisponibles",
+            "uncategorized": "Non categorise",
+            "select_mode": "Selectionner",
+            "selected_count": "{{count}} serveur(s) selectionne(s)",
+            "deselect_all": "Tout deselectionner",
+            "copy_ip": "Copier l'adresse",
+            "copied": "Copie !"
+        },
+        "bulk": {
+            "start_all": "Tout demarrer",
+            "stop_all": "Tout arreter",
+            "restart_all": "Tout redemarrer"
         },
         "status": {
             "active": "Actif",

@@ -18,6 +18,7 @@ class Egg extends Model
         'nest_id',
         'name',
         'docker_image',
+        'banner_image',
         'startup',
         'description',
     ];

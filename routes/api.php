@@ -36,6 +36,7 @@ Route::prefix('oauth')->group(function () {
 Route::prefix('settings')->group(function () {
     Route::get('branding', [SettingsController::class, 'branding']);
     Route::get('auth-mode', [SettingsController::class, 'authMode']);
+    Route::get('theme', [SettingsController::class, 'theme']);
 });
 
 // Protected API routes

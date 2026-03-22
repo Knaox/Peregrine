@@ -6,6 +6,11 @@ export interface Server {
     egg: {
         id: number;
         name: string;
+        banner_image?: string | null;
+    } | null;
+    allocation?: {
+        ip: string;
+        port: number;
     } | null;
     plan: {
         id: number;

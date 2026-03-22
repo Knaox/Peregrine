@@ -5,8 +5,8 @@ export function Card({ hover = false, className, children, onClick }: CardProps)
     return (
         <div
             className={clsx(
-                'bg-slate-800 border border-slate-700 rounded-xl',
-                hover && 'hover:border-slate-600 transition-colors cursor-pointer',
+                'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius)]',
+                hover && 'hover:border-[var(--color-border)] transition-colors cursor-pointer',
                 onClick && !hover && 'cursor-pointer',
                 className,
             )}

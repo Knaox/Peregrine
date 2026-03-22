@@ -11,7 +11,7 @@ const barColorClasses: Record<NonNullable<StatBarProps['color']>, string> = {
     green: 'bg-green-500',
     yellow: 'bg-yellow-500',
     red: 'bg-red-500',
-    orange: 'bg-orange-500',
+    orange: 'bg-[var(--color-primary)]',
 };
 
 export function StatBar({ label, value, max, formatted, color }: StatBarProps) {
@@ -22,10 +22,10 @@ export function StatBar({ label, value, max, formatted, color }: StatBarProps) {
     return (
         <div className='flex flex-col gap-1.5'>
             <div className='flex items-center justify-between'>
-                <span className='text-sm text-slate-400'>{label}</span>
-                <span className='text-sm font-medium text-white'>{formatted}</span>
+                <span className='text-sm text-[var(--color-text-secondary)]'>{label}</span>
+                <span className='text-sm font-medium text-[var(--color-text-primary)]'>{formatted}</span>
             </div>
-            <div className='h-2 w-full rounded-full bg-slate-700'>
+            <div className='h-2 w-full rounded-full bg-[var(--color-surface-hover)]'>
                 <div
                     className={clsx(
                         'h-2 rounded-full transition-all duration-300',

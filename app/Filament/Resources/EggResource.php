@@ -4,8 +4,13 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\EggResource\Pages;
 use App\Models\Egg;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use BackedEnum;
@@ -24,6 +29,33 @@ class EggResource extends Resource
     public static function canCreate(): bool
     {
         return false;
+    }
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema
+            ->schema([
+                TextInput::make('name')
+                    ->label('Name')
+                    ->disabled(),
+                Textarea::make('description')
+                    ->label('Description')
+                    ->disabled(),
+                TextInput::make('docker_image')
+                    ->label('Docker Image')
+                    ->disabled(),
+                FileUpload::make('banner_image')
+                    ->label('Banner Image')
+                    ->image()
+                    ->directory('eggs/banners')
+                    ->disk('public')
+                    ->imageResizeMode('cover')
+                    ->imageCropAspectRatio('16:9')
+                    ->imageResizeTargetWidth('800')
+                    ->imageResizeTargetHeight('450')
+                    ->maxSize(2048)
+                    ->helperText('Recommended: 800x450px (16:9). Max 2MB.'),
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -54,7 +86,7 @@ class EggResource extends Resource
             ])
             ->filters([])
             ->recordActions([
-                ViewAction::make(),
+                EditAction::make(),
             ])
             ->toolbarActions([])
             ->defaultSort('id', 'desc');
@@ -64,6 +96,7 @@ class EggResource extends Resource
     {
         return [
             'index' => Pages\ListEggs::route('/'),
+            'edit' => Pages\EditEgg::route('/{record}/edit'),
         ];
     }
 }

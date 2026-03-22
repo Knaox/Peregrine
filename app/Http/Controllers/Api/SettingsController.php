@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BrandingResource;
 use App\Services\SettingsService;
+use App\Services\ThemeService;
 use Illuminate\Http\JsonResponse;
 
 class SettingsController extends Controller
@@ -26,6 +27,14 @@ class SettingsController extends Controller
     {
         return response()->json([
             'mode' => config('auth-mode.mode'),
+        ]);
+    }
+
+    public function theme(ThemeService $themeService): JsonResponse
+    {
+        return response()->json([
+            'data' => $themeService->getTheme(),
+            'css_variables' => $themeService->getCssVariables(),
         ]);
     }
 }

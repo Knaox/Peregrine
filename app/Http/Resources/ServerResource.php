@@ -17,6 +17,7 @@ class ServerResource extends JsonResource
             'egg' => $this->whenLoaded('egg', fn () => [
                 'id' => $this->egg->id,
                 'name' => $this->egg->name,
+                'banner_image' => $this->egg->banner_image ? asset('storage/' . $this->egg->banner_image) : null,
             ]),
             'plan' => $this->whenLoaded('plan', fn () => [
                 'id' => $this->plan->id,

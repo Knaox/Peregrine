@@ -536,7 +536,16 @@ class MyResource extends Resource
 - [x] i18n EN + FR complet : setup, auth, servers (list, status, power, detail, resources, console, files, sftp), nav, common, profile
 - [x] Commandes artisan sync : sync:users (interactif), sync:servers (interactif), sync:eggs, sync:nodes, sync:health
 - [x] Job schedule : SyncServerStatusJob toutes les 5 min (met a jour statuts serveur depuis Pelican)
-- [x] Boutons sync Filament : Sync Users (ListUsers), Sync Servers (ListServers), Sync Eggs (ListEggs), Sync Nests (ListNests), Sync Nodes (ListNodes) — tous avec notifications de succes/erreur
+- [x] Boutons sync Filament : Sync Users (ListUsers), Sync Servers (ListServers), Sync Eggs (ListEggs), Sync Nodes (ListNodes) — tous avec notifications de succes/erreur
+- [x] WebSocket unifie : useWingsWebSocket (keepalive 10s, token refresh, reconnect backoff, StrictMode safe) — utilise par console et stats
+- [x] Theme system : CSS variables (theme.css), ThemeProvider (fetch API + inject vars), ThemeService backend, endpoint GET /api/settings/theme, 16 cles theme_* dans settings
+- [x] Migration UI vers CSS variables : 8 composants UI (Button, Badge, Card, Input, StatBar, Spinner, Alert, IconButton) + AppLayout — toutes les couleurs via var(--color-*)
+- [x] Egg banner images : migration banner_image sur eggs, FileUpload dans Filament EggResource, ServerResource inclut egg.banner_image URL
+- [x] Server cards redesign : layout horizontal avec banner egg a gauche, status border colore, nom+IP copiable, power buttons, stats compactes, checkbox selection mode
+- [x] Drag-and-drop serveurs : useServerOrder (localStorage persistence), native HTML drag-and-drop
+- [x] Bulk selection : useServerSelection (Set<number>), ServerBulkBar (sticky bottom, Start/Stop/Restart all)
+- [x] Groupement par egg : ServerGroupHeader (separateur avec nom egg + count), DashboardPage reecrit
+- [x] Pelican API fixes : PelicanUser DTO (name vs first_name/last_name), nests supprimes, syncEggs sans nests, authorize trait, fichiers format transform
 - [x] Config files : config/panel.php (avec client_api_key), config/auth-mode.php, config/bridge.php
 - [x] .env.example avec PELICAN_CLIENT_API_KEY + SANCTUM_STATEFUL_DOMAINS
 - [x] Blade views : app.blade.php, setup.blade.php
@@ -546,16 +555,18 @@ class MyResource extends Resource
 - [x] Git repo GitHub : https://github.com/Knaox/Peregrine (public) — dernier push : commit initial, changements récents pas encore committés
 
 ### Pas fait
-- [ ] **P2** — Système de customisation complet : thème visuel (couleurs, fonts, radius, CSS custom), config cards serveur (contenu, style, colonnes, groupement), config sidebar serveur (entrées, icônes, position, style), config widgets serveur (ordre, options, quick actions), intégration Filament admin (couleurs dynamiques), 4 pages Filament "Apparence", migration composants vers CSS variables, IconMap
-- [ ] **P2** — UI sync avancée Filament (modales comparaison avec checkboxes, Inviter sur le Shop, matching manuel email)
-- [ ] **P3** — Bridge plugin (BridgeServiceProvider, StripeWebhookController, ProvisioningService, SubscriptionService, jobs queue, idempotence, email "Serveur prêt")
-- [ ] ~~**P3** — Widgets dashboard configurables~~ (intégré dans le système de customisation P2)
-- [ ] ~~**P3** — Sidebar serveur configurable~~ (intégré dans le système de customisation P2)
+- [ ] **P2** — Page detail serveur premium : banniere egg full-width en haut, variables d'environnement editables (grille comme le screenshot Pelican), sidebar avec sections (Principal, Donnees, Gestion), integration plugin slots, badge statut overlay sur banniere, boutons power avec labels, stats cards (CPU/RAM/Disk/Network), instance active avec bouton "Changer de jeu", informations serveur, config avancee collapsible. Chaque section/widget est un slot ou un plugin peut injecter du contenu.
+- [ ] **P2** — Migration CSS variables restante : console, files, profile, setup wizard, auth pages — tous doivent utiliser var(--color-*) pour coherence theme
+- [ ] **P2** — Pages Filament Apparence : Theme (color pickers, font, radius, CSS custom), Cards serveurs (config affichage), Sidebar serveur (entrees, icones, ordre, position)
+- [ ] **P2** — Sidebar serveur configurable avec sections groupees (Principal: Accueil/Console/Fichiers, Donnees: BDD/Sauvegardes/Planification, Gestion: Utilisateurs/Reseau/SFTP, + liens custom: Dashboard/Shop). Config JSON dans settings, admin Filament pour activer/desactiver/reordonner. Plugins ajoutent leurs entrees via manifest.
+- [ ] **P2** — Variables d'environnement serveur : endpoint GET /api/servers/{id}/startup-variables, affichage en grille 2 colonnes, types adaptes (text, number, toggle, select), section "Config avancee" collapsible, bouton sauvegarder
+- [ ] **P2** — UI sync avancee Filament (modales comparaison avec checkboxes, Inviter sur le Shop, matching manuel email)
+- [ ] **P3** — Bridge plugin (BridgeServiceProvider, StripeWebhookController, ProvisioningService, SubscriptionService, jobs queue, idempotence, email "Serveur pret")
 - [ ] **P4** — Auth features (forgot/reset password endpoints + pages React, email verification)
-- [ ] **P4** — Templates email (serveur prêt, invitation Shop, reset password) — i18n EN+FR
-- [ ] **P4** — Plugin system (GET /api/plugins manifest, PluginLoader React, window.PanelShared)
+- [ ] **P4** — Templates email (serveur pret, invitation Shop, reset password) — i18n EN+FR
+- [ ] **P4** — Plugin system : GET /api/plugins manifest, PluginLoader React, window.PanelShared. **Chaque page du panel expose des "slots" ou les plugins injectent du contenu** : sidebar entries, overview widgets, detail page sections, toolbar actions. Le manifest JSON d'un plugin declare ses slots : `{ "slots": { "server.sidebar": [...], "server.overview.widgets": [...], "server.detail.sections": [...] } }`.
 - [ ] **P5** — Tests (Feature tests API, Unit tests services Pelican/Sync/Settings/Setup, Bridge tests)
-- [ ] **P5** — Infra & DX (commit+push GitHub, README.md, CI/CD GitHub Actions, bannières eggs)
+- [ ] **P5** — Infra & DX (commit+push GitHub, README.md, CI/CD GitHub Actions, bannieres eggs par defaut)
 
 ## Roadmap détaillée
 
@@ -1013,19 +1024,17 @@ Chaque step est indépendant et peut être réalisé dans une session Claude Cod
 ~~### Step 5 : File Manager~~ ✅ FAIT
 ~~### Step 6 : SFTP + Profil~~ ✅ FAIT
 
-### Step 7 : Système de customisation complet
-1. Seeder les clés `theme_*`, `card_server_config`, `sidebar_server_config`, `widgets_server_config` dans `SettingsSeeder`
-2. Créer `ThemeService` backend (getTheme, getThemeCssVariables, getLayoutConfig)
-3. Ajouter endpoint `GET /api/settings/theme` (retourne tout : CSS vars + layout config + card config + sidebar config + widget config)
-4. Créer `ThemeProvider.tsx` + `useTheme.ts` + `useCardConfig.ts` + `useSidebarConfig.ts` + `useWidgetConfig.ts`
-5. Créer `IconMap` (resources/js/utils/icons.tsx) — mapping string → SVG inline
-6. Migrer TOUS les composants existants pour utiliser CSS variables au lieu de couleurs Tailwind en dur
-7. Adapter `ServerCard` pour utiliser `useCardConfig()` (show/hide éléments, style de carte)
-8. Adapter `ServerSidebar` pour utiliser `useSidebarConfig()` (entrées dynamiques, icônes, position, style)
-9. Adapter `ServerOverviewPage` pour utiliser `useWidgetConfig()` (widgets dynamiques ordonnés)
-10. Intégrer le thème dans Filament admin (`AdminPanelProvider` lit les couleurs depuis `ThemeService`)
-11. Créer 4 pages Filament sous "Apparence" : Thème, Cards serveurs, Sidebar serveur, Widgets serveur
-12. Chaque page avec preview live, drag-and-drop, color pickers, toggles
+~~### Step 7 : Theme system + Server cards redesign~~ ✅ FAIT (Phase 7A+7B)
+- CSS variables, ThemeProvider, ThemeService, egg banners, server cards premium, drag-drop, bulk selection, groupement
+
+### Step 7 (reste) : Page detail serveur premium + migration CSS + Filament Apparence
+1. Refonte ServerOverviewPage : banniere egg full-width, badge statut overlay, IP:port copiable, boutons power avec labels (Demarrer/Redemarrer/Arreter), stats cards (CPU/RAM/Disk/Network), instance active (egg icon + nom + bouton "Changer de jeu"), informations serveur (ID, RAM, Stockage), config serveur (variables env editables en grille 2 cols), config avancee collapsible
+2. Endpoint `GET /api/servers/{id}/startup-variables` — retourne les variables d'environnement du serveur depuis Pelican Client API
+3. Sidebar serveur avec sections groupees : PRINCIPAL (Accueil, Console, Fichiers), DONNEES (BDD, Sauvegardes, Planification), GESTION (Utilisateurs, Reseau, SFTP), + liens custom (Dashboard, Shop). Config JSON dans settings.
+4. Plugin slots : chaque page expose des zones d'injection (sidebar entries, overview widgets, detail sections, toolbar actions)
+5. Migrer composants restants vers CSS variables (console, files, profile, setup, auth)
+6. Pages Filament "Apparence" : Theme, Cards serveurs, Sidebar serveur
+7. Integration theme dans AdminPanelProvider (couleurs dynamiques)
 
 ~~### Step 8 : Commandes sync + boutons sync Filament~~ ✅ FAIT (5 commandes artisan + job schedule + boutons sync dans 5 pages Filament)
 

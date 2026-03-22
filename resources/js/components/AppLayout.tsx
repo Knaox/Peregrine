@@ -26,9 +26,9 @@ export function AppLayout() {
     const isActive = (path: string) => location.pathname === path;
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white">
+        <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-primary)]">
             {/* Top navbar */}
-            <nav className="border-b border-slate-700 bg-slate-800">
+            <nav className="border-b border-[var(--color-border)] bg-[var(--color-surface)]">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
                         {/* Left: Logo + Nav links */}
@@ -50,10 +50,10 @@ export function AppLayout() {
                                     <Link
                                         key={link.to}
                                         to={link.to}
-                                        className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                                        className={`rounded-[var(--radius)] px-3 py-2 text-sm font-medium transition-colors ${
                                             isActive(link.to)
-                                                ? 'bg-slate-700 text-white'
-                                                : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                                                ? 'bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]'
+                                                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]'
                                         }`}
                                     >
                                         {link.label}
@@ -69,9 +69,9 @@ export function AppLayout() {
                                 <button
                                     type="button"
                                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
+                                    className="flex items-center gap-2 rounded-[var(--radius)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
                                 >
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)] text-sm font-bold text-[var(--color-text-primary)]">
                                         {user?.name.charAt(0).toUpperCase()}
                                     </div>
                                     <span>{user?.name}</span>
@@ -86,27 +86,27 @@ export function AppLayout() {
                                 </button>
 
                                 {isUserMenuOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-lg">
+                                    <div className="absolute right-0 mt-2 w-48 rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-lg">
                                         <Link
                                             to="/profile"
                                             onClick={() => setIsUserMenuOpen(false)}
-                                            className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
+                                            className="block px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
                                         >
                                             {t('nav.profile')}
                                         </Link>
                                         {user?.is_admin && (
                                             <a
                                                 href="/admin"
-                                                className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
+                                                className="block px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
                                             >
                                                 {t('nav.settings')}
                                             </a>
                                         )}
-                                        <hr className="my-1 border-slate-700" />
+                                        <hr className="my-1 border-[var(--color-border)]" />
                                         <button
                                             type="button"
                                             onClick={handleLogout}
-                                            className="block w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
+                                            className="block w-full px-4 py-2 text-left text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
                                         >
                                             {t('nav.logout')}
                                         </button>
@@ -118,7 +118,7 @@ export function AppLayout() {
                             <button
                                 type="button"
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                                className="md:hidden rounded-lg p-2 text-slate-300 hover:bg-slate-700 hover:text-white"
+                                className="md:hidden rounded-[var(--radius)] p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
                             >
                                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     {isMobileMenuOpen ? (
@@ -134,34 +134,34 @@ export function AppLayout() {
 
                 {/* Mobile menu */}
                 {isMobileMenuOpen && (
-                    <div className="border-t border-slate-700 md:hidden">
+                    <div className="border-t border-[var(--color-border)] md:hidden">
                         <div className="space-y-1 px-4 py-3">
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.to}
                                     to={link.to}
                                     onClick={() => setIsMobileMenuOpen(false)}
-                                    className={`block rounded-lg px-3 py-2 text-sm font-medium ${
+                                    className={`block rounded-[var(--radius)] px-3 py-2 text-sm font-medium ${
                                         isActive(link.to)
-                                            ? 'bg-slate-700 text-white'
-                                            : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                                            ? 'bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]'
+                                            : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]'
                                     }`}
                                 >
                                     {link.label}
                                 </Link>
                             ))}
-                            <hr className="border-slate-700" />
+                            <hr className="border-[var(--color-border)]" />
                             <Link
                                 to="/profile"
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white"
+                                className="block rounded-[var(--radius)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
                             >
                                 {t('nav.profile')}
                             </Link>
                             {user?.is_admin && (
                                 <a
                                     href="/admin"
-                                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white"
+                                    className="block rounded-[var(--radius)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
                                 >
                                     {t('nav.settings')}
                                 </a>
@@ -169,7 +169,7 @@ export function AppLayout() {
                             <button
                                 type="button"
                                 onClick={handleLogout}
-                                className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white"
+                                className="block w-full rounded-[var(--radius)] px-3 py-2 text-left text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
                             >
                                 {t('nav.logout')}
                             </button>
