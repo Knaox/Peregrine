@@ -49,10 +49,6 @@ class EggResource extends Resource
                     ->image()
                     ->directory('eggs/banners')
                     ->disk('public')
-                    ->imageResizeMode('cover')
-                    ->imageCropAspectRatio('16:9')
-                    ->imageResizeTargetWidth('800')
-                    ->imageResizeTargetHeight('450')
                     ->maxSize(2048)
                     ->helperText('Recommended: 800x450px (16:9). Max 2MB.'),
             ]);

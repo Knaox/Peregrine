@@ -555,11 +555,21 @@ class MyResource extends Resource
 - [x] Git repo GitHub : https://github.com/Knaox/Peregrine (public) — dernier push : commit initial, changements récents pas encore committés
 
 ### Pas fait
-- [ ] **P2** — Page detail serveur premium : banniere egg full-width en haut, variables d'environnement editables (grille comme le screenshot Pelican), sidebar avec sections (Principal, Donnees, Gestion), integration plugin slots, badge statut overlay sur banniere, boutons power avec labels, stats cards (CPU/RAM/Disk/Network), instance active avec bouton "Changer de jeu", informations serveur, config avancee collapsible. Chaque section/widget est un slot ou un plugin peut injecter du contenu.
-- [ ] **P2** — Migration CSS variables restante : console, files, profile, setup wizard, auth pages — tous doivent utiliser var(--color-*) pour coherence theme
+- [ ] **P1 URGENT** — REFONTE UI COMPLETE "Mix gaming + clean" : refonte visuelle de TOUS les composants pour un look premium moderne. Style : structure clean avec accents gaming subtils. Animations partout (hover scale+shadow, transitions fluides, pulse status). Glassmorphism (backdrop-blur sur cards, sidebar, modales). Gradients subtils sur surfaces. Glow colore sur elements actifs (status dots, boutons hover, cards selectionnees). TOUT doit utiliser les CSS variables (theming compatible). Pas trop geek, un truc que tout le monde peut kiffer, vivant et moderne. Concerne :
+  - **AppLayout** : navbar glassmorphism, liens avec underline animate, avatar avec ring glow, transitions smooth
+  - **Server cards (liste)** : banner egg 40% largeur, gradient overlay, hover scale(1.01)+shadow glow, status dot avec pulse animation, stats avec micro-animations
+  - **Page detail serveur** : banner full-width avec parallax subtle, overlay gradient, badge statut glow, IP pill glassmorphism, boutons power avec labels + hover glow, stats cards avec gradient fond + animate on load, instance active, variables env editables (grille 2 cols), config avancee collapsible
+  - **Sidebar serveur** : glassmorphism semi-transparent, sections groupees (Principal/Donnees/Gestion + liens custom), liens avec hover slide animation, active state gradient accent, icones avec subtle scale hover
+  - **Console** : terminal avec gradient fond, cursor blink animation, output fade-in ligne par ligne
+  - **File manager** : hover rows avec gradient subtle, file icons avec couleur par type, editor slide-in avec backdrop-blur
+  - **Login/Register** : fond avec gradient anime subtil, card glassmorphism centree, inputs avec focus glow
+  - **Setup wizard** : stepper avec animations entre etapes, cards glassmorphism
+  - **Profil/SFTP** : meme coherence visuelle
+  - **REGLE** : TOUTES les couleurs via CSS variables. L'admin change le theme dans Filament → tout le panel change de look instantanement.
 - [ ] **P2** — Pages Filament Apparence : Theme (color pickers, font, radius, CSS custom), Cards serveurs (config affichage), Sidebar serveur (entrees, icones, ordre, position)
 - [ ] **P2** — Sidebar serveur configurable avec sections groupees (Principal: Accueil/Console/Fichiers, Donnees: BDD/Sauvegardes/Planification, Gestion: Utilisateurs/Reseau/SFTP, + liens custom: Dashboard/Shop). Config JSON dans settings, admin Filament pour activer/desactiver/reordonner. Plugins ajoutent leurs entrees via manifest.
 - [ ] **P2** — Variables d'environnement serveur : endpoint GET /api/servers/{id}/startup-variables, affichage en grille 2 colonnes, types adaptes (text, number, toggle, select), section "Config avancee" collapsible, bouton sauvegarder
+- [ ] **P2** — Plugin slots : chaque page expose des zones d'injection pour les plugins (sidebar entries, overview widgets, detail sections, toolbar actions)
 - [ ] **P2** — UI sync avancee Filament (modales comparaison avec checkboxes, Inviter sur le Shop, matching manuel email)
 - [ ] **P3** — Bridge plugin (BridgeServiceProvider, StripeWebhookController, ProvisioningService, SubscriptionService, jobs queue, idempotence, email "Serveur pret")
 - [ ] **P4** — Auth features (forgot/reset password endpoints + pages React, email verification)
@@ -1026,6 +1036,40 @@ Chaque step est indépendant et peut être réalisé dans une session Claude Cod
 
 ~~### Step 7 : Theme system + Server cards redesign~~ ✅ FAIT (Phase 7A+7B)
 - CSS variables, ThemeProvider, ThemeService, egg banners, server cards premium, drag-drop, bulk selection, groupement
+
+### Step 7.5 : REFONTE UI COMPLETE "Mix gaming + clean" (PRIORITE)
+Direction artistique : structure clean avec accents gaming subtils. Moderne, pas trop geek, vivant.
+
+**CSS variables supplementaires a ajouter dans theme.css :**
+```css
+:root {
+    /* Existantes... */
+    --color-glow: rgba(249, 115, 22, 0.15);     /* glow primary */
+    --color-glow-success: rgba(34, 197, 94, 0.2);
+    --color-glow-danger: rgba(239, 68, 68, 0.2);
+    --color-glass: rgba(30, 41, 59, 0.7);        /* glassmorphism bg */
+    --color-glass-border: rgba(148, 163, 184, 0.1);
+    --shadow-glow: 0 0 20px var(--color-glow);
+    --shadow-card: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.2);
+    --shadow-card-hover: 0 10px 25px -5px rgba(0,0,0,0.4), 0 0 15px var(--color-glow);
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+```
+
+**Composants a refaire (utiliser le skill frontend-design pour chaque) :**
+1. AppLayout : navbar glassmorphism (backdrop-blur-xl), liens avec underline-grow animation, avatar ring glow
+2. ServerCard : hover scale(1.01) + shadow-glow, status dot pulse, banner fade overlay, stats micro-animate
+3. ServerOverviewPage : banner parallax subtle, stats cards avec gradient + count-up animation au load
+4. ServerSidebar : glass bg, section headers uppercase tracking, active link gradient left-border + glow
+5. ConsoleOutput : gradient background, cursor blink, output fade-in
+6. FileList : hover row gradient, file type icons colors
+7. LoginPage/RegisterPage : animated gradient background, glassmorphism card
+8. Tous les UI atoms : Button (hover glow shadow), Card (glass + shadow), Input (focus glow ring), Badge (subtle shadow)
+9. Setup wizard : transitions entre steps, glass cards
+
+**REGLE ABSOLUE** : tout via CSS variables pour theming. Aucune couleur en dur.
 
 ### Step 7 (reste) : Page detail serveur premium + migration CSS + Filament Apparence
 1. Refonte ServerOverviewPage : banniere egg full-width, badge statut overlay, IP:port copiable, boutons power avec labels (Demarrer/Redemarrer/Arreter), stats cards (CPU/RAM/Disk/Network), instance active (egg icon + nom + bouton "Changer de jeu"), informations serveur (ID, RAM, Stockage), config serveur (variables env editables en grille 2 cols), config avancee collapsible
