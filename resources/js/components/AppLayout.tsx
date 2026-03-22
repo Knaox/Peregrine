@@ -5,6 +5,7 @@ import { AnimatePresence, m } from 'motion/react';
 import clsx from 'clsx';
 import { useAuthStore } from '@/stores/authStore';
 import { useBranding } from '@/hooks/useBranding';
+import { AnimatedBackground } from '@/components/AnimatedBackground';
 
 export function AppLayout() {
     const { t, i18n } = useTranslation();
@@ -250,8 +251,10 @@ export function AppLayout() {
                 </AnimatePresence>
             </nav>
 
+            <AnimatedBackground />
+
             {/* Main content */}
-            <main className="px-6 py-8 lg:px-10">
+            <main className="relative z-10 px-6 py-8 lg:px-10">
                 <Outlet />
             </main>
         </div>

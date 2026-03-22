@@ -5,6 +5,7 @@ import { useServer } from '@/hooks/useServer';
 import { Spinner } from '@/components/ui/Spinner';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { ServerSidebar } from '@/components/server/ServerSidebar';
+import { AnimatedBackground } from '@/components/AnimatedBackground';
 
 export function ServerDetailPage() {
     const { t } = useTranslation();
@@ -45,9 +46,10 @@ export function ServerDetailPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
-                className="flex-1 overflow-y-auto"
+                className="relative flex-1 overflow-y-auto"
             >
-                <div className="p-6">
+                <AnimatedBackground />
+                <div className="relative z-10 p-6">
                     <Outlet />
                 </div>
             </m.main>
