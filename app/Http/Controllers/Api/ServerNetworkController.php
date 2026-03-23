@@ -35,29 +35,12 @@ class ServerNetworkController extends Controller
     {
         $this->authorize('update', $server);
 
-        // Check current allocation count before calling Pelican
-        $current = $this->networkService->listAllocations($server->identifier);
-        $currentCount = count($current);
-
-        // Get server limits from Pelican to check allocation_limit
-        try {
-            $raw = app(\App\Services\Pelican\PelicanClientService::class)->getRawServer($server->identifier);
-            $limit = $raw['feature_limits']['allocations'] ?? 0;
-        } catch (\Throwable) {
-            $limit = 0;
-        }
-
-        if ($limit > 0 && $currentCount >= $limit) {
-            return response()->json(['message' => 'allocation_limit_reached'], 422);
-        }
-
         try {
             $result = $this->networkService->addAllocation($server->identifier);
         } catch (\Illuminate\Http\Client\RequestException $e) {
-            if ($e->response->status() === 429) {
-                return response()->json(['message' => 'rate_limited'], 429);
-            }
-            return response()->json(['message' => 'no_allocations'], 422);
+            $status = $e->response->status();
+            $detail = $e->response->json('errors.0.detail') ?? '';
+            return response()->json(['message' => $detail ?: 'Failed to add allocation.'], $status >= 400 ? $status : 422);
         }
 
         Cache::forget("server_network:{$server->identifier}");

@@ -45,12 +45,7 @@ export function ServerNetworkPage() {
 
             {add.isError && (
                 <div className="rounded-[var(--radius)] bg-[var(--color-danger)]/10 px-3 py-2 text-sm text-[var(--color-danger)]">
-                    {(() => {
-                        const status = (add.error as { status?: number })?.status;
-                        if (status === 429) return t('servers.network.add_rate_limited');
-                        if (status === 422) return t('servers.network.add_limit_reached');
-                        return t('servers.network.add_error');
-                    })()}
+                    {t('servers.network.add_error')}
                 </div>
             )}
 
