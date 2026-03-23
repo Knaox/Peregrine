@@ -17,10 +17,10 @@ export function LanguageStep({ data, onChange, onNext }: StepProps) {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-xl font-semibold text-white">
+                <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
                     {t('setup.language.title')}
                 </h2>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-[var(--color-text-secondary)] text-sm mt-1">
                     {t('setup.language.description')}
                 </p>
             </div>
@@ -33,18 +33,18 @@ export function LanguageStep({ data, onChange, onNext }: StepProps) {
                         onClick={() => handleSelect(lang.code)}
                         className={`flex flex-col items-center justify-center p-8 rounded-xl border-2 transition-all ${
                             data.locale === lang.code
-                                ? 'border-orange-500 bg-orange-500/10'
-                                : 'border-slate-700 bg-slate-800 hover:border-slate-600'
+                                ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
+                                : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-hover)]'
                         }`}
                     >
-                        <span className="text-3xl font-bold text-white mb-2">
+                        <span className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
                             {lang.flag}
                         </span>
                         <span
                             className={`text-sm font-medium ${
                                 data.locale === lang.code
-                                    ? 'text-orange-500'
-                                    : 'text-slate-300'
+                                    ? 'text-[var(--color-primary)]'
+                                    : 'text-[var(--color-text-secondary)]'
                             }`}
                         >
                             {lang.label}
@@ -57,7 +57,7 @@ export function LanguageStep({ data, onChange, onNext }: StepProps) {
                 <button
                     type="button"
                     onClick={onNext}
-                    className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+                    className="px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)]"
                 >
                     {t('common.next')}
                 </button>

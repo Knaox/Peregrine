@@ -69,7 +69,7 @@ export function RegisterPage() {
             <div
                 className="flex min-h-screen items-center justify-center px-4 text-[var(--color-text-primary)]"
                 style={{
-                    backgroundImage: 'linear-gradient(-45deg, #0c0f1a, #151926, #0f1628, #121a30)',
+                    backgroundImage: 'linear-gradient(-45deg, var(--color-background), var(--color-surface), var(--color-background), var(--color-surface-elevated))',
                     backgroundSize: '400% 400%',
                     animation: 'gradient-shift 20s ease infinite',
                 }}
@@ -116,7 +116,7 @@ export function RegisterPage() {
         <div
             className="flex min-h-screen items-center justify-center px-4 text-[var(--color-text-primary)]"
             style={{
-                background: 'linear-gradient(135deg, #0c0f1a 0%, #111827 50%, #0f172a 100%)',
+                background: 'linear-gradient(135deg, var(--color-background) 0%, var(--color-surface) 50%, var(--color-background) 100%)',
                 backgroundSize: '200% 200%',
                 animation: 'ambient-shift 20s ease infinite',
             }}

@@ -10,21 +10,21 @@ interface ColorConfig {
 
 const colorConfig: Record<NonNullable<BadgeProps['color']>, ColorConfig> = {
     green: {
-        badge: 'bg-green-500/10 text-green-300 border border-green-500/20',
-        dot: 'bg-green-400',
-        glow: 'shadow-[0_0_6px_rgba(74,222,128,0.5)]',
+        badge: 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
+        dot: 'bg-[var(--color-success)]',
+        glow: 'shadow-[0_0_6px_var(--color-success-glow)]',
         pulse: true,
     },
     yellow: {
-        badge: 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/20',
-        dot: 'bg-yellow-400',
-        glow: 'shadow-[0_0_6px_rgba(250,204,21,0.5)]',
+        badge: 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
+        dot: 'bg-[var(--color-warning)]',
+        glow: 'shadow-[0_0_6px_rgba(var(--color-warning-rgb),0.5)]',
         pulse: false,
     },
     red: {
-        badge: 'bg-red-500/10 text-red-300 border border-red-500/20',
-        dot: 'bg-red-400',
-        glow: 'shadow-[0_0_6px_rgba(248,113,113,0.5)]',
+        badge: 'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20',
+        dot: 'bg-[var(--color-danger)]',
+        glow: 'shadow-[0_0_6px_var(--color-danger-glow)]',
         pulse: false,
     },
     gray: {
@@ -46,9 +46,9 @@ const colorConfig: Record<NonNullable<BadgeProps['color']>, ColorConfig> = {
         pulse: false,
     },
     blue: {
-        badge: 'bg-blue-500/10 text-blue-300 border border-blue-500/20',
-        dot: 'bg-blue-400',
-        glow: 'shadow-[0_0_6px_rgba(96,165,250,0.5)]',
+        badge: 'bg-[var(--color-info)]/10 text-[var(--color-info)] border border-[var(--color-info)]/20',
+        dot: 'bg-[var(--color-info)]',
+        glow: 'shadow-[0_0_6px_rgba(var(--color-info-rgb),0.5)]',
         pulse: false,
     },
 };

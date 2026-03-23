@@ -5,6 +5,7 @@ import { useWingsWebSocket } from '@/hooks/useWingsWebSocket';
 import { useCommandHistory } from '@/hooks/useCommandHistory';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { Button } from '@/components/ui/Button';
+import { ServerPowerControls } from '@/components/server/ServerPowerControls';
 import { ConsoleOutput } from '@/components/console/ConsoleOutput';
 import { ConsoleInput } from '@/components/console/ConsoleInput';
 
@@ -13,7 +14,7 @@ export function ServerConsolePage() {
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
 
-    const { messages, isConnected, sendCommand, clearMessages } = useWingsWebSocket(serverId, {
+    const { messages, serverState, isConnected, sendCommand, clearMessages } = useWingsWebSocket(serverId, {
         console: true,
         stats: true,
     });
@@ -32,12 +33,19 @@ export function ServerConsolePage() {
             transition={{ duration: 0.35, ease: 'easeOut' }}
             className="flex h-[calc(100vh-6rem)] flex-col gap-3"
         >
-            <div className="flex items-center justify-between">
-                <div className="inline-flex items-center gap-2 rounded-[var(--radius-full)] backdrop-blur-md bg-[var(--color-glass)] border border-[var(--color-glass-border)] px-3 py-1.5">
-                    <StatusDot status={isConnected ? 'running' : 'offline'} size="sm" />
-                    <span className="text-xs font-medium text-[var(--color-text-secondary)]">
-                        {isConnected ? t('servers.console.connected') : t('servers.console.disconnected')}
-                    </span>
+            {/* Header: status + power controls + clear */}
+            <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                    <div className="inline-flex items-center gap-2 rounded-[var(--radius-full)] backdrop-blur-md bg-[var(--color-glass)] border border-[var(--color-glass-border)] px-3 py-1.5">
+                        <StatusDot status={isConnected ? 'running' : 'offline'} size="sm" />
+                        <span className="text-xs font-medium text-[var(--color-text-secondary)]">
+                            {isConnected ? t('servers.console.connected') : t('servers.console.disconnected')}
+                        </span>
+                    </div>
+                    <ServerPowerControls
+                        serverId={serverId}
+                        state={serverState as 'running' | 'stopped' | 'offline' | 'starting'}
+                    />
                 </div>
                 <Button
                     variant="ghost"

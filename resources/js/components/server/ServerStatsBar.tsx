@@ -17,7 +17,7 @@ export function ServerStatsBar({ stats, isLoading }: ServerStatsBarProps) {
 
     if (!stats) {
         return (
-            <p className="text-xs text-slate-500 py-2">
+            <p className="text-xs text-[var(--color-text-muted)] py-2">
                 {t('servers.list.stats_unavailable')}
             </p>
         );

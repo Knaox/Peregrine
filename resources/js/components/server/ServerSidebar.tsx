@@ -5,58 +5,16 @@ import { AnimatePresence, m } from 'motion/react';
 import clsx from 'clsx';
 import { useAuthStore } from '@/stores/authStore';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { useSidebarConfig } from '@/hooks/useSidebarConfig';
+import { getIcon } from '@/utils/icons';
 import type { ServerSidebarProps } from '@/components/server/ServerSidebar.props';
-
-const icons: Record<string, React.ReactNode> = {
-    home: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z" />
-        </svg>
-    ),
-    terminal: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-    ),
-    folder: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-        </svg>
-    ),
-    key: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-        </svg>
-    ),
-};
-
-interface SectionConfig {
-    label: string;
-    links: { to: string; label: string; icon: string; end: boolean }[];
-}
 
 export function ServerSidebar({ server }: ServerSidebarProps) {
     const { t } = useTranslation();
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
     const [mobileOpen, setMobileOpen] = useState(false);
-
-    const sections: SectionConfig[] = [
-        {
-            label: t('servers.sidebar.principal'),
-            links: [
-                { to: `/servers/${server.id}`, label: t('servers.detail.overview'), icon: 'home', end: true },
-                { to: `/servers/${server.id}/console`, label: t('servers.detail.console'), icon: 'terminal', end: false },
-                { to: `/servers/${server.id}/files`, label: t('servers.detail.files'), icon: 'folder', end: false },
-            ],
-        },
-        {
-            label: t('servers.sidebar.management'),
-            links: [
-                { to: `/servers/${server.id}/sftp`, label: t('servers.detail.sftp'), icon: 'key', end: false },
-            ],
-        },
-    ];
+    const config = useSidebarConfig();
 
     const handleLogout = async () => {
         await logout();
@@ -69,7 +27,8 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
             <button
                 type="button"
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 px-4 py-3 text-xs text-[var(--color-text-muted)] transition-colors duration-[var(--transition-fast)] hover:text-[var(--color-text-primary)] border-b border-[var(--color-glass-border)]"
+                className="flex items-center gap-2 px-4 py-3 text-xs transition-all duration-150 hover:bg-white/[0.04]"
+                style={{ color: 'var(--color-text-muted)' }}
             >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -77,18 +36,22 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
                 {t('servers.detail.back')}
             </button>
 
-            {/* Server header */}
-            <div className="border-b border-[var(--color-glass-border)] p-4">
+            {/* Server header with egg icon */}
+            <div className="px-4 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <div className="flex items-center gap-3">
                     {server.egg?.banner_image ? (
                         <img
                             src={server.egg.banner_image}
                             alt={server.egg.name}
-                            className="h-10 w-10 rounded-[var(--radius)] object-cover"
+                            className="h-10 w-10 object-cover"
+                            style={{ borderRadius: 10 }}
                         />
                     ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius)] bg-[var(--color-surface-hover)]">
-                            <span className="text-xs font-bold text-[var(--color-text-muted)]">
+                        <div
+                            className="flex h-10 w-10 items-center justify-center"
+                            style={{ borderRadius: 10, background: 'var(--color-surface-hover)' }}
+                        >
+                            <span className="text-xs font-bold" style={{ color: 'var(--color-text-muted)' }}>
                                 {server.egg?.name?.charAt(0) ?? '?'}
                             </span>
                         </div>
@@ -96,63 +59,87 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                             <StatusDot status={server.status} size="sm" />
-                            <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
+                            <p className="truncate text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                                 {server.name}
                             </p>
                         </div>
-                        <p className="truncate text-[0.7rem] text-[var(--color-text-muted)]">
+                        <p className="truncate" style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
                             #{server.id}
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* Nav sections */}
-            <nav className="flex-1 overflow-y-auto p-3 space-y-4">
-                {sections.map((section) => (
-                    <div key={section.label}>
-                        <div className="flex items-center gap-2 px-3 mb-2">
-                            <span className="text-[0.65rem] uppercase tracking-[0.15em] text-[var(--color-text-muted)] font-semibold">
-                                {section.label}
-                            </span>
-                            <div className="h-px flex-1 bg-[var(--color-border)]" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                            {section.links.map((link) => (
-                                <NavLink
-                                    key={link.to}
-                                    to={link.to}
-                                    end={link.end}
-                                    onClick={() => setMobileOpen(false)}
-                                    className={({ isActive }) => clsx(
-                                        'flex items-center gap-3 rounded-[var(--radius)] px-3 py-2 text-sm font-medium',
-                                        'transition-all duration-[var(--transition-base)]',
-                                        isActive
-                                            ? 'border-l-[3px] border-[var(--color-primary)] bg-[var(--color-primary)]/5 text-[var(--color-primary)]'
-                                            : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]',
-                                    )}
-                                >
-                                    {icons[link.icon]}
-                                    {link.label}
-                                </NavLink>
-                            ))}
-                        </div>
-                    </div>
+            {/* Section label */}
+            <div className="px-5 mt-6 mb-2">
+                <span style={{
+                    fontSize: 10,
+                    letterSpacing: 2,
+                    textTransform: 'uppercase' as const,
+                    opacity: 0.35,
+                    color: 'var(--color-text-secondary)',
+                    fontWeight: 600,
+                }}>
+                    {t('servers.sidebar.principal')}
+                </span>
+            </div>
+
+            {/* Nav links */}
+            <nav className="flex-1 overflow-y-auto px-3 space-y-0.5">
+                {config.entries.map((entry) => (
+                    <NavLink
+                        key={entry.id}
+                        to={`/servers/${server.id}${entry.route_suffix}`}
+                        end={entry.route_suffix === ''}
+                        onClick={() => setMobileOpen(false)}
+                        className={({ isActive }) => clsx(
+                            'flex items-center gap-3 px-3 py-2.5 text-sm font-medium',
+                            'transition-all duration-150',
+                            isActive ? 'active-nav-link' : 'inactive-nav-link',
+                        )}
+                        style={({ isActive }) => isActive ? {
+                            borderLeft: '3px solid var(--color-primary)',
+                            background: 'rgba(var(--color-primary-rgb), 0.1)',
+                            boxShadow: 'inset 3px 0 12px -4px rgba(var(--color-primary-rgb), 0.3)',
+                            color: 'var(--color-primary)',
+                            borderRadius: '0 var(--radius) var(--radius) 0',
+                        } : {
+                            borderLeft: '3px solid transparent',
+                            color: 'var(--color-text-secondary)',
+                            borderRadius: '0 var(--radius) var(--radius) 0',
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!e.currentTarget.classList.contains('active-nav-link')) {
+                                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!e.currentTarget.classList.contains('active-nav-link')) {
+                                e.currentTarget.style.background = 'transparent';
+                            }
+                        }}
+                    >
+                        {getIcon(entry.icon)}
+                        {config.style !== 'compact' && t(entry.label_key)}
+                    </NavLink>
                 ))}
             </nav>
 
-            {/* Bottom: user info */}
+            {/* Bottom: user info with separator */}
             {user && (
-                <div className="border-t border-[var(--color-glass-border)] p-3">
-                    <div className="flex items-center gap-3 rounded-[var(--radius)] px-2 py-2">
-                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-bold text-white ring-2 ring-[var(--color-primary-glow)]">
+                <div className="mt-auto px-3 pb-3 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div className="flex items-center gap-3 px-2 py-2">
+                        <div
+                            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                            style={{ background: 'var(--color-primary)', boxShadow: '0 0 12px var(--color-primary-glow)' }}
+                        >
                             {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-medium text-[var(--color-text-primary)]">
+                            <p className="truncate text-xs font-medium" style={{ color: 'var(--color-text-primary)' }}>
                                 {user.name}
                             </p>
-                            <p className="truncate text-[0.65rem] text-[var(--color-text-muted)]">
+                            <p className="truncate" style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>
                                 {user.email}
                             </p>
                         </div>
@@ -160,7 +147,10 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
                             type="button"
                             onClick={handleLogout}
                             title={t('nav.logout')}
-                            className="text-[var(--color-text-muted)] transition-colors duration-[var(--transition-fast)] hover:text-[var(--color-danger)]"
+                            className="transition-colors duration-150"
+                            style={{ color: 'var(--color-text-muted)' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-danger)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; }}
                         >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -178,13 +168,14 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
             <button
                 type="button"
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className={clsx(
-                    'fixed left-4 top-4 z-40 rounded-[var(--radius)]',
-                    'bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)]',
-                    'p-2 text-[var(--color-text-secondary)] md:hidden',
-                    'transition-all duration-[var(--transition-base)]',
-                    'hover:bg-[var(--color-surface-hover)]',
-                )}
+                className="fixed left-4 top-4 z-40 p-2 md:hidden transition-all duration-150"
+                style={{
+                    borderRadius: 'var(--radius)',
+                    background: 'rgba(0,0,0,0.4)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    color: 'var(--color-text-secondary)',
+                }}
             >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -206,18 +197,18 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
                 )}
             </AnimatePresence>
 
-            {/* Sidebar — desktop: static in flex parent, mobile: fixed overlay */}
+            {/* Desktop sidebar — darker background */}
             <aside
-                className={clsx(
-                    'w-56 flex-shrink-0 h-full overflow-y-auto',
-                    'bg-[var(--color-surface)] border-r border-[var(--color-border)]',
-                    'hidden md:flex md:flex-col',
-                )}
+                className="w-56 flex-shrink-0 h-full overflow-y-auto hidden md:flex md:flex-col"
+                style={{
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+                }}
             >
                 {navContent}
             </aside>
 
-            {/* Mobile sidebar (fixed overlay) */}
+            {/* Mobile sidebar */}
             <AnimatePresence>
                 {mobileOpen && (
                     <m.aside
@@ -225,7 +216,12 @@ export function ServerSidebar({ server }: ServerSidebarProps) {
                         animate={{ x: 0 }}
                         exit={{ x: '-100%' }}
                         transition={{ duration: 0.25, ease: 'easeOut' }}
-                        className="fixed left-0 top-0 z-40 h-screen w-56 overflow-y-auto bg-[var(--color-surface)] border-r border-[var(--color-border)] md:hidden"
+                        className="fixed left-0 top-0 z-40 h-screen w-56 overflow-y-auto md:hidden"
+                        style={{
+                            background: 'rgba(0, 0, 0, 0.5)',
+                            backdropFilter: 'blur(16px)',
+                            borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+                        }}
                     >
                         {navContent}
                     </m.aside>

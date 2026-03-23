@@ -13,6 +13,7 @@ import type { Server } from '@/types/Server';
 import { Spinner } from '@/components/ui/Spinner';
 import { ServerSearchBar } from '@/components/server/ServerSearchBar';
 import { ServerCard } from '@/components/server/ServerCard';
+import { ServerCardSkeleton } from '@/components/server/ServerCardSkeleton';
 import { ServerEmptyState } from '@/components/server/ServerEmptyState';
 import { ServerGroupHeader } from '@/components/server/ServerGroupHeader';
 import { ServerBulkBar } from '@/components/server/ServerBulkBar';
@@ -20,20 +21,25 @@ import { ServerBulkBar } from '@/components/server/ServerBulkBar';
 interface ServerGroup {
     name: string;
     servers: Server[];
+    eggImage?: string | null;
 }
 
 function groupByEgg(servers: Server[], uncategorizedLabel: string): ServerGroup[] {
-    const groups = new Map<string, Server[]>();
+    const groups = new Map<string, { servers: Server[]; eggImage?: string | null }>();
     for (const server of servers) {
         const key = server.egg?.name ?? uncategorizedLabel;
-        const list = groups.get(key);
-        if (list) {
-            list.push(server);
+        const existing = groups.get(key);
+        if (existing) {
+            existing.servers.push(server);
         } else {
-            groups.set(key, [server]);
+            groups.set(key, { servers: [server], eggImage: server.egg?.banner_image });
         }
     }
-    return Array.from(groups.entries()).map(([name, srvs]) => ({ name, servers: srvs }));
+    return Array.from(groups.entries()).map(([name, data]) => ({
+        name,
+        servers: data.servers,
+        eggImage: data.eggImage,
+    }));
 }
 
 export function DashboardPage() {
@@ -156,9 +162,11 @@ export function DashboardPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.3 }}
-                        className="flex items-center justify-center py-12"
+                        className="flex flex-col gap-3 py-4"
                     >
-                        <Spinner size="lg" />
+                        <ServerCardSkeleton />
+                        <ServerCardSkeleton />
+                        <ServerCardSkeleton />
                     </m.div>
                 ) : servers.length === 0 ? (
                     <ServerEmptyState />
@@ -205,7 +213,7 @@ export function DashboardPage() {
                                 <AnimatePresence mode="popLayout">
                                     {groups.map((group) => (
                                         <div key={group.name}>
-                                            <ServerGroupHeader name={group.name} count={group.servers.length} />
+                                            <ServerGroupHeader name={group.name} count={group.servers.length} eggImage={group.eggImage} />
                                             <div className="flex flex-col gap-2">
                                                 {group.servers.map((server) => {
                                                     const globalIdx = orderedServers.indexOf(server);

@@ -35,6 +35,8 @@ class SettingsController extends Controller
         return response()->json([
             'data' => $themeService->getTheme(),
             'css_variables' => $themeService->getCssVariables(),
+            'card_config' => $themeService->getCardConfig(),
+            'sidebar_config' => $themeService->getSidebarConfig(),
         ]);
     }
 }

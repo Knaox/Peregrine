@@ -152,7 +152,7 @@ export function ServerFilesPage() {
                 )}
 
                 {uploadError && (
-                    <div className="mb-3 rounded-[var(--radius)] bg-red-500/10 px-3 py-2 text-sm text-red-500">
+                    <div className="mb-3 rounded-[var(--radius)] bg-[var(--color-danger)]/10 px-3 py-2 text-sm text-[var(--color-danger)]">
                         {t('servers.files.upload_error')}: {uploadError}
                     </div>
                 )}

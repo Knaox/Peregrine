@@ -1,18 +1,18 @@
 import { useTranslation } from 'react-i18next';
-import { GlassCard } from '@/components/ui/GlassCard';
 import { formatBytes, formatDate } from '@/utils/format';
 import type { ServerInfoCardProps } from '@/components/server/ServerInfoCard.props';
 
-interface InfoRowProps {
-    label: string;
-    value: string;
-}
-
-function InfoRow({ label, value }: InfoRowProps) {
+function InfoTile({ label, children }: { label: string; children: React.ReactNode }) {
     return (
-        <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-[var(--color-text-muted)]">{label}</span>
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">{value}</span>
+        <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            borderRadius: 10,
+            padding: 14,
+        }}>
+            <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }}>{label}</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                {children}
+            </div>
         </div>
     );
 }
@@ -20,37 +20,66 @@ function InfoRow({ label, value }: InfoRowProps) {
 export function ServerInfoCard({ server }: ServerInfoCardProps) {
     const { t } = useTranslation();
 
-    const ramLabel = server.plan?.ram
-        ? formatBytes(server.plan.ram * 1024 * 1024)
-        : '-';
-    const cpuLabel = server.plan?.cpu
-        ? `${server.plan.cpu}%`
-        : '-';
-    const diskLabel = server.plan?.disk
-        ? formatBytes(server.plan.disk * 1024 * 1024)
-        : '-';
+    const ramLabel = server.plan?.ram ? formatBytes(server.plan.ram * 1024 * 1024) : '-';
+    const cpuLabel = server.plan?.cpu ? `${server.plan.cpu}%` : '-';
+    const diskLabel = server.plan?.disk ? formatBytes(server.plan.disk * 1024 * 1024) : '-';
 
     return (
-        <GlassCard className="p-5">
-            <h3 className="mb-3 text-base font-semibold text-[var(--color-text-primary)]">
+        <div style={{
+            background: 'var(--color-surface)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 12,
+            padding: 20,
+        }}>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 16 }}>
                 {t('servers.detail.info')}
             </h3>
-            <div className="divide-y divide-[var(--color-border)]">
+
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {/* Game */}
                 {server.egg && (
-                    <InfoRow label={t('servers.detail.game')} value={server.egg.name} />
+                    <InfoTile label={t('servers.detail.game')}>
+                        <div className="flex items-center gap-2">
+                            {server.egg.banner_image && (
+                                <img src={server.egg.banner_image} alt="" className="h-5 w-5 rounded object-cover" />
+                            )}
+                            {server.egg.name}
+                        </div>
+                    </InfoTile>
                 )}
+
+                {/* Plan */}
                 {server.plan && (
-                    <InfoRow label={t('servers.detail.plan')} value={server.plan.name} />
+                    <InfoTile label={t('servers.detail.plan')}>
+                        {server.plan.name}
+                    </InfoTile>
                 )}
-                <InfoRow
-                    label={t('servers.detail.allocated')}
-                    value={`${ramLabel} RAM / ${cpuLabel} CPU / ${diskLabel} Disk`}
-                />
-                <InfoRow
-                    label={t('servers.detail.created')}
-                    value={formatDate(server.created_at)}
-                />
+
+                {/* Resources — badges */}
+                <InfoTile label={t('servers.detail.allocated')}>
+                    <div className="flex flex-wrap gap-1.5">
+                        <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium"
+                            style={{ background: 'rgba(var(--color-info-rgb), 0.12)', color: 'var(--color-info)' }}>
+                            {ramLabel}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium"
+                            style={{ background: 'rgba(var(--color-primary-rgb), 0.12)', color: 'var(--color-primary-hover)' }}>
+                            {cpuLabel}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium"
+                            style={{ background: 'rgba(var(--color-accent-rgb), 0.12)', color: 'var(--color-accent)' }}>
+                            {diskLabel}
+                        </span>
+                    </div>
+                </InfoTile>
+
+                {/* Created */}
+                <InfoTile label={t('servers.detail.created')}>
+                    <span style={{ fontSize: 13, fontWeight: 400, opacity: 0.7 }}>
+                        {formatDate(server.created_at)}
+                    </span>
+                </InfoTile>
             </div>
-        </GlassCard>
+        </div>
     );
 }

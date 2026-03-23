@@ -8,6 +8,7 @@ import { PelicanStep } from './steps/PelicanStep';
 import { AuthStep } from './steps/AuthStep';
 import { BridgeStep } from './steps/BridgeStep';
 import { SummaryStep } from './steps/SummaryStep';
+import { AnimatedBackground } from '@/components/AnimatedBackground';
 import type { StepProps } from './types';
 import type { ComponentType } from 'react';
 
@@ -28,18 +29,26 @@ export function SetupWizard() {
     const StepComponent = STEP_COMPONENTS[currentStep];
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white">
-            <div className="mx-auto max-w-2xl px-4 py-16">
-                <h1 className="text-3xl font-bold text-center mb-2">
-                    {t('setup.title')}
-                </h1>
-                <p className="text-slate-400 text-center mb-12">
-                    {t('setup.subtitle')}
-                </p>
+        <div className="relative min-h-screen text-[var(--color-text-primary)]">
+            <AnimatedBackground />
+
+            <div className="relative z-10 mx-auto max-w-2xl px-4 py-16">
+                {/* Logo + Title */}
+                <div className="mb-12 text-center">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary)]/10 ring-1 ring-[var(--color-primary)]/20">
+                        <img src="/images/logo.svg" alt="Logo" className="h-10 w-10" />
+                    </div>
+                    <h1 className="text-3xl font-bold">
+                        {t('setup.title')}
+                    </h1>
+                    <p className="mt-2 text-[var(--color-text-secondary)]">
+                        {t('setup.subtitle')}
+                    </p>
+                </div>
 
                 <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />
 
-                <div className="bg-slate-800 rounded-xl p-8 border border-slate-700">
+                <div className="rounded-2xl border border-[var(--color-glass-border)] bg-[var(--color-glass)] p-8 shadow-[var(--shadow-lg)] backdrop-blur-xl">
                     {StepComponent && (
                         <StepComponent
                             data={data}

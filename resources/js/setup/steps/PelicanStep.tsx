@@ -26,10 +26,10 @@ export function PelicanStep({ data, onChange, onNext, onPrevious }: StepProps) {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-xl font-semibold text-white">
+                <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
                     {t('setup.pelican.title')}
                 </h2>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-[var(--color-text-secondary)] text-sm mt-1">
                     {t('setup.pelican.description')}
                 </p>
             </div>
@@ -41,7 +41,7 @@ export function PelicanStep({ data, onChange, onNext, onPrevious }: StepProps) {
                         value={data.pelican.url}
                         onChange={(e) => updateField('url', e.target.value)}
                         placeholder={t('setup.pelican.url_placeholder')}
-                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                     />
                 </FormField>
 
@@ -55,7 +55,7 @@ export function PelicanStep({ data, onChange, onNext, onPrevious }: StepProps) {
                         value={data.pelican.api_key}
                         onChange={(e) => updateField('api_key', e.target.value)}
                         placeholder={t('setup.pelican.api_key_placeholder')}
-                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono"
+                        className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent font-mono"
                     />
                 </FormField>
 
@@ -69,7 +69,7 @@ export function PelicanStep({ data, onChange, onNext, onPrevious }: StepProps) {
                         value={data.pelican.client_api_key}
                         onChange={(e) => updateField('client_api_key', e.target.value)}
                         placeholder={t('setup.pelican.client_api_key_placeholder')}
-                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono"
+                        className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent font-mono"
                     />
                 </FormField>
             </div>
@@ -89,7 +89,7 @@ export function PelicanStep({ data, onChange, onNext, onPrevious }: StepProps) {
                 <button
                     type="button"
                     onClick={onPrevious}
-                    className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors"
+                    className="px-6 py-2 bg-[var(--color-surface-hover)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] ring-1 ring-[var(--color-border)]"
                 >
                     {t('common.previous')}
                 </button>
@@ -97,7 +97,7 @@ export function PelicanStep({ data, onChange, onNext, onPrevious }: StepProps) {
                     type="button"
                     onClick={onNext}
                     disabled={!data.pelican.url || !data.pelican.api_key || !data.pelican.client_api_key}
-                    className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {t('common.next')}
                 </button>

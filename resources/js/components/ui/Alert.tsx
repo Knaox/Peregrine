@@ -3,19 +3,19 @@ import { type AlertProps } from '@/components/ui/Alert.props';
 
 const variantClasses: Record<AlertProps['variant'], string> = {
     error: clsx(
-        'bg-red-500/5 backdrop-blur-sm',
-        'border border-red-500/20 border-l-2 border-l-red-500',
-        'text-red-300',
+        'bg-[var(--color-danger)]/5 backdrop-blur-sm',
+        'border border-[var(--color-danger)]/20 border-l-2 border-l-[var(--color-danger)]',
+        'text-[var(--color-danger)]',
     ),
     success: clsx(
-        'bg-green-500/5 backdrop-blur-sm',
-        'border border-green-500/20 border-l-2 border-l-green-500',
-        'text-green-300',
+        'bg-[var(--color-success)]/5 backdrop-blur-sm',
+        'border border-[var(--color-success)]/20 border-l-2 border-l-[var(--color-success)]',
+        'text-[var(--color-success)]',
     ),
     info: clsx(
-        'bg-blue-500/5 backdrop-blur-sm',
-        'border border-blue-500/20 border-l-2 border-l-blue-500',
-        'text-blue-300',
+        'bg-[var(--color-info)]/5 backdrop-blur-sm',
+        'border border-[var(--color-info)]/20 border-l-2 border-l-[var(--color-info)]',
+        'text-[var(--color-info)]',
     ),
 };
 
@@ -23,7 +23,7 @@ function AlertIcon({ variant }: { variant: AlertProps['variant'] }) {
     if (variant === 'error') {
         return (
             <svg
-                className='w-5 h-5 flex-shrink-0 text-red-300'
+                className='w-5 h-5 flex-shrink-0 text-[var(--color-danger)]'
                 fill='none'
                 viewBox='0 0 24 24'
                 stroke='currentColor'
@@ -41,7 +41,7 @@ function AlertIcon({ variant }: { variant: AlertProps['variant'] }) {
     if (variant === 'success') {
         return (
             <svg
-                className='w-5 h-5 flex-shrink-0 text-green-300'
+                className='w-5 h-5 flex-shrink-0 text-[var(--color-success)]'
                 fill='none'
                 viewBox='0 0 24 24'
                 stroke='currentColor'
@@ -58,7 +58,7 @@ function AlertIcon({ variant }: { variant: AlertProps['variant'] }) {
 
     return (
         <svg
-            className='w-5 h-5 flex-shrink-0 text-blue-300'
+            className='w-5 h-5 flex-shrink-0 text-[var(--color-info)]'
             fill='none'
             viewBox='0 0 24 24'
             stroke='currentColor'

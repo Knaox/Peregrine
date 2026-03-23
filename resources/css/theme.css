@@ -1,24 +1,32 @@
 :root {
-    --color-background: #0c0f1a;
-    --color-surface: #151926;
-    --color-surface-hover: #1e2338;
-    --color-surface-elevated: #1a1f33;
-    --color-border: rgba(148, 163, 184, 0.08);
-    --color-border-hover: rgba(148, 163, 184, 0.15);
-    --color-primary: #f97316;
-    --color-primary-hover: #fb923c;
-    --color-primary-glow: rgba(249, 115, 22, 0.15);
+    --color-background: #0c0a14;
+    --color-surface: #16131e;
+    --color-surface-hover: #1e1a2a;
+    --color-surface-elevated: #1a1724;
+    --color-border: #2a2535;
+    --color-border-hover: #3a3445;
+    --color-primary: #e11d48;
+    --color-primary-hover: #f43f5e;
+    --color-primary-rgb: 225, 29, 72;
+    --color-primary-glow: rgba(225, 29, 72, 0.15);
     --color-danger: #ef4444;
+    --color-danger-rgb: 239, 68, 68;
     --color-danger-glow: rgba(239, 68, 68, 0.15);
     --color-warning: #f59e0b;
-    --color-success: #22c55e;
-    --color-success-glow: rgba(34, 197, 94, 0.15);
+    --color-success: #10b981;
+    --color-success-rgb: 16, 185, 129;
+    --color-success-glow: rgba(16, 185, 129, 0.15);
     --color-info: #3b82f6;
-    --color-text-primary: #f1f5f9;
-    --color-text-secondary: #94a3b8;
-    --color-text-muted: #475569;
-    --color-glass: rgba(21, 25, 38, 0.75);
-    --color-glass-border: rgba(148, 163, 184, 0.08);
+    --color-info-rgb: 59, 130, 246;
+    --color-accent: #8b5cf6;
+    --color-accent-rgb: 139, 92, 246;
+    --color-warning-rgb: 245, 158, 11;
+    --color-text-primary: #f1f0f5;
+    --color-text-secondary: #8b849e;
+    --color-text-secondary-rgb: 139, 132, 158;
+    --color-text-muted: #5a5370;
+    --color-glass: rgba(22, 19, 30, 0.75);
+    --color-glass-border: #2a2535;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
@@ -34,14 +42,18 @@
     --radius-full: 9999px;
     --font-sans: 'Inter', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Glassmorphism enhanced */
+    --glass-blur: blur(12px) saturate(150%);
+    --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 /* Ambient background gradient */
 body {
     background-color: var(--color-background);
     background-image:
-        radial-gradient(ellipse at 20% 50%, rgba(249, 115, 22, 0.03) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.02) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 50%, rgba(var(--color-primary-rgb), 0.03) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(100, 60, 140, 0.02) 0%, transparent 50%);
     background-attachment: fixed;
     font-family: var(--font-sans);
 }
@@ -92,7 +104,7 @@ body {
     66% { transform: translate(-50px, -100px) scale(0.9); }
 }
 
-/* Shimmer effect for cards */
+/* Shimmer effect for skeleton loaders */
 @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
@@ -102,4 +114,69 @@ body {
 @keyframes breathe {
     0%, 100% { opacity: 0.5; }
     50% { opacity: 1; }
+}
+
+/* Rotating border glow for cards */
+@keyframes border-rotate {
+    0% { --border-angle: 0deg; }
+    100% { --border-angle: 360deg; }
+}
+
+/* Diagonal clip for server card banners */
+.banner-clip {
+    clip-path: polygon(0 0, 90% 0, 100% 100%, 0 100%);
+}
+
+/* Skeleton shimmer bar */
+.skeleton-shimmer {
+    background: linear-gradient(
+        90deg,
+        var(--color-surface) 0%,
+        var(--color-surface-hover) 40%,
+        var(--color-surface) 80%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Card spotlight overlay (positioned by JS) */
+.card-spotlight {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+.group:hover .card-spotlight {
+    opacity: 1;
+}
+
+/* Animated border glow on hover */
+.border-glow {
+    position: relative;
+}
+
+.border-glow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(
+        from var(--border-angle, 0deg),
+        transparent 40%,
+        var(--color-primary-glow) 50%,
+        transparent 60%
+    );
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity var(--transition-smooth);
+    animation: border-rotate 4s linear infinite;
+}
+
+.border-glow:hover::before {
+    opacity: 1;
 }

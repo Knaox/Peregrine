@@ -19,18 +19,18 @@ export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
     const { t } = useTranslation();
 
     return (
-        <nav className="mb-12">
+        <nav className="mb-8">
             <ol className="flex items-center gap-2">
                 {STEP_KEYS.slice(0, totalSteps).map((key, index) => (
                     <li key={key} className="flex items-center gap-2 flex-1">
                         <div className="flex flex-col items-center flex-1">
                             <div
-                                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                                className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-[var(--transition-smooth)] ${
                                     index === currentStep
-                                        ? 'bg-orange-500 text-white'
+                                        ? 'bg-[var(--color-primary)] text-white shadow-[var(--shadow-glow)] ring-2 ring-[var(--color-primary)]/30'
                                         : index < currentStep
-                                          ? 'bg-green-500 text-white'
-                                          : 'bg-slate-700 text-slate-400'
+                                          ? 'bg-[var(--color-success)] text-white'
+                                          : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] ring-1 ring-[var(--color-border)]'
                                 }`}
                             >
                                 {index < currentStep ? (
@@ -42,12 +42,12 @@ export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
                                 )}
                             </div>
                             <span
-                                className={`text-xs mt-1 text-center transition-colors ${
+                                className={`text-[0.65rem] mt-1.5 text-center font-medium transition-colors duration-[var(--transition-smooth)] ${
                                     index === currentStep
-                                        ? 'text-orange-500 font-semibold'
+                                        ? 'text-[var(--color-primary)]'
                                         : index < currentStep
-                                          ? 'text-green-500'
-                                          : 'text-slate-500'
+                                          ? 'text-[var(--color-success)]'
+                                          : 'text-[var(--color-text-muted)]'
                                 }`}
                             >
                                 {t(key)}
@@ -55,8 +55,8 @@ export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
                         </div>
                         {index < totalSteps - 1 && (
                             <div
-                                className={`h-px flex-1 mt-[-20px] transition-colors ${
-                                    index < currentStep ? 'bg-green-500' : 'bg-slate-700'
+                                className={`h-px flex-1 mt-[-20px] transition-colors duration-[var(--transition-smooth)] ${
+                                    index < currentStep ? 'bg-[var(--color-success)]' : 'bg-[var(--color-border)]'
                                 }`}
                             />
                         )}

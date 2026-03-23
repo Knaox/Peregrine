@@ -41,7 +41,7 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
                     'h-[calc(100vh-16rem)] overflow-y-auto p-4',
                     'bg-[var(--color-background)] rounded-[var(--radius-lg)]',
                     'border border-[var(--color-border)]',
-                    'font-[var(--font-mono)] text-sm text-green-400',
+                    'font-[var(--font-mono)] text-sm text-[var(--color-success)]',
                 )}
             >
                 {messages.map((msg) => (

@@ -22,7 +22,7 @@ export function ConnectionTestButton({
                 type="button"
                 onClick={onTest}
                 disabled={result.status === 'testing'}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-[var(--color-surface-hover)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] disabled:opacity-50 disabled:cursor-not-allowed ring-1 ring-[var(--color-border)]"
             >
                 {result.status === 'testing' ? (
                     <span className="flex items-center gap-2">
@@ -38,7 +38,7 @@ export function ConnectionTestButton({
             </button>
 
             {result.status === 'success' && (
-                <div className="flex items-center gap-2 text-green-400 text-sm">
+                <div className="flex items-center gap-2 text-[var(--color-success)] text-sm">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
@@ -47,7 +47,7 @@ export function ConnectionTestButton({
             )}
 
             {result.status === 'error' && (
-                <div className="flex items-center gap-2 text-red-400 text-sm">
+                <div className="flex items-center gap-2 text-[var(--color-danger)] text-sm">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>

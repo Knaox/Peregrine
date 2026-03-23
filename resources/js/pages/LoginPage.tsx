@@ -55,7 +55,7 @@ export function LoginPage() {
         <div
             className="flex min-h-screen items-center justify-center px-4 text-[var(--color-text-primary)]"
             style={{
-                backgroundImage: 'linear-gradient(-45deg, #0c0f1a, #151926, #0f1628, #121a30)',
+                backgroundImage: 'linear-gradient(-45deg, var(--color-background), var(--color-surface), var(--color-background), var(--color-surface-elevated))',
                 backgroundSize: '400% 400%',
                 animation: 'gradient-shift 20s ease infinite',
             }}

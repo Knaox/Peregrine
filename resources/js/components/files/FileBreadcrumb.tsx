@@ -8,7 +8,7 @@ export function FileBreadcrumb({ currentDirectory, onNavigate }: FileBreadcrumbP
     };
 
     return (
-        <nav className="flex items-center gap-1 text-sm text-slate-400">
+        <nav className="flex items-center gap-1 text-sm text-[var(--color-text-secondary)]">
             <button
                 type="button"
                 onClick={() => onNavigate('/')}
@@ -21,7 +21,7 @@ export function FileBreadcrumb({ currentDirectory, onNavigate }: FileBreadcrumbP
 
             {segments.map((segment, index) => (
                 <span key={buildPath(index)} className="flex items-center gap-1">
-                    <span className="text-slate-600">/</span>
+                    <span className="text-[var(--color-text-muted)]">/</span>
                     <button
                         type="button"
                         onClick={() => onNavigate(buildPath(index))}
