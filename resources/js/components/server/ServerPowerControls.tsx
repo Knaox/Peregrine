@@ -62,7 +62,9 @@ export function ServerPowerControls({ serverId, state }: ServerPowerControlsProp
                     <PowerButton label={t('servers.actions.stop')} variant="stop" disabled={isPending} onClick={() => handlePower('stop')} />
                 </>
             )}
-            <PowerButton label={t('servers.actions.kill')} variant="kill" disabled={isPending} onClick={() => handlePower('kill')} />
+            {!isStopped && (
+                <PowerButton label={t('servers.actions.kill')} variant="kill" disabled={isPending} onClick={() => handlePower('kill')} />
+            )}
         </div>
     );
 }

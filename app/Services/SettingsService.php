@@ -57,11 +57,40 @@ class SettingsService
      */
     public function getBranding(): array
     {
-        return [
-            'app_name' => $this->get('app_name', 'Peregrine'),
-            'logo_url' => $this->get('app_logo_path', '/images/logo.svg'),
-            'favicon_url' => $this->get('app_favicon_path', '/images/favicon.svg'),
-        ];
+        return Cache::remember('branding_full', self::CACHE_TTL, function (): array {
+            $logo = $this->get('app_logo_path', '/images/logo.webp');
+            $favicon = $this->get('app_favicon_path', '/images/favicon.ico');
+
+            $headerLinks = json_decode($this->get('header_links', '[]') ?? '[]', true) ?: [];
+
+            return [
+                'app_name' => $this->get('app_name', 'Peregrine'),
+                'show_app_name' => $this->get('show_app_name', 'true') === 'true',
+                'logo_height' => (int) $this->get('logo_height', '40'),
+                'logo_url' => $this->resolveAssetUrl($logo),
+                'favicon_url' => $this->resolveAssetUrl($favicon),
+                'header_links' => $headerLinks,
+            ];
+        });
+    }
+
+    /**
+     * Convert a storage path to a public URL.
+     * Paths starting with / or http are returned as-is (already absolute).
+     * Other paths are prefixed with /storage/ (Filament FileUpload paths).
+     */
+    private function resolveAssetUrl(?string $path): string
+    {
+        if (! $path || $path === '') {
+            return '/images/logo.webp';
+        }
+
+        // Already an absolute URL or public path
+        if (str_starts_with($path, '/') || str_starts_with($path, 'http')) {
+            return $path;
+        }
+
+        return '/storage/' . $path;
     }
 
     /**
@@ -82,5 +111,7 @@ class SettingsService
         foreach ($keys as $settingKey) {
             Cache::forget(self::CACHE_PREFIX . $settingKey);
         }
+
+        Cache::forget('branding_full');
     }
 }

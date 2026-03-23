@@ -5,6 +5,7 @@ export interface ServerStats {
     disk_bytes: number;
     network_rx: number;
     network_tx: number;
+    uptime: number;
 }
 
 export type ServerStatsMap = Record<number, ServerStats>;

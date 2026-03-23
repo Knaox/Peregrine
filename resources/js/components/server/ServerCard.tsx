@@ -1,12 +1,15 @@
 import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
+import { copyToClipboard } from '@/utils/clipboard';
 import { m } from 'motion/react';
 import clsx from 'clsx';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { formatBytes, formatCpu } from '@/utils/format';
+import { formatBytes, formatCpu, formatUptime } from '@/utils/format';
 import { useCardConfig } from '@/hooks/useCardConfig';
 import { useCountUp } from '@/hooks/useCountUp';
+import { fetchServer } from '@/services/serverApi';
 import type { ServerCardProps } from '@/components/server/ServerCard.props';
 
 /* Outlined circle power button */
@@ -90,9 +93,19 @@ export function ServerCard({
 }: ServerCardProps) {
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const queryClient = useQueryClient();
     const [copied, setCopied] = useState(false);
     const cardConfig = useCardConfig();
     const cardRef = useRef<HTMLDivElement>(null);
+
+    // Prefetch server data on hover for instant navigation
+    const handlePrefetch = useCallback(() => {
+        void queryClient.prefetchQuery({
+            queryKey: ['servers', server.id],
+            queryFn: () => fetchServer(server.id),
+            staleTime: 120_000,
+        });
+    }, [queryClient, server.id]);
     const [spotlightPos, setSpotlightPos] = useState({ x: 0, y: 0 });
 
     const state = (stats?.state ?? server.status) as
@@ -110,7 +123,7 @@ export function ServerCard({
     const handleCopy = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (!address) return;
-        void navigator.clipboard.writeText(address).then(() => {
+        void copyToClipboard(address).then(() => {
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
         });
@@ -128,11 +141,15 @@ export function ServerCard({
             role="button"
             tabIndex={0}
             onClick={() => navigate(`/servers/${server.id}`)}
+            onMouseEnter={handlePrefetch}
             onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/servers/${server.id}`); }}
             onMouseMove={handleMouseMove}
             className={clsx(
-                'group relative flex h-36 cursor-pointer overflow-hidden border-glow',
-                'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)]',
+                'group relative flex h-36 cursor-pointer overflow-hidden border-glow rounded-[var(--radius-lg)]',
+                cardConfig.card_style === 'elevated' && 'bg-[var(--color-surface)] shadow-[var(--shadow-md)]',
+                cardConfig.card_style === 'glass' && 'bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)]',
+                cardConfig.card_style === 'minimal' && 'bg-transparent border-b border-[var(--color-border)]',
+                (!cardConfig.card_style || cardConfig.card_style === 'default') && 'bg-[var(--color-surface)] border border-[var(--color-border)]',
                 'transition-all duration-300',
                 'hover:border-[var(--color-border-hover)] hover:shadow-[var(--shadow-glow)] hover:scale-[1.003]',
                 isDragging && 'opacity-50 scale-[0.98]',
@@ -170,17 +187,40 @@ export function ServerCard({
             {/* Center: name + address + status */}
             <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-center gap-1 py-3 pl-2 pr-2">
                 <div className="flex items-center gap-2">
-                    <StatusDot status={state} size="sm" />
+                    {cardConfig.show_status_badge && <StatusDot status={state} size="sm" />}
                     <span className="truncate text-lg font-bold text-[var(--color-text-primary)] transition-colors duration-300 group-hover:text-[var(--color-primary)]">
                         {server.name}
                     </span>
                 </div>
-                {address && (
+                <div className="flex items-center gap-2 flex-wrap">
+                    {cardConfig.show_egg_name && server.egg && (
+                        <span className="text-xs text-[var(--color-text-muted)]">{server.egg.name}</span>
+                    )}
+                    {cardConfig.show_plan_name && server.plan && (
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                            {cardConfig.show_egg_name && server.egg ? '·' : ''} {server.plan.name}
+                        </span>
+                    )}
+                </div>
+                {cardConfig.show_ip_port && address && (
                     <button
                         type="button"
                         onClick={handleCopy}
-                        className="mt-0.5 inline-flex w-fit items-center gap-1 text-sm font-mono text-[var(--color-text-secondary)] transition-colors duration-200 hover:text-[var(--color-text-primary)]"
+                        className="mt-0.5 inline-flex w-fit items-center gap-1.5 rounded-[var(--radius-full)] px-2.5 py-0.5 text-xs font-mono transition-all duration-200"
+                        style={{
+                            background: copied ? 'rgba(var(--color-success-rgb), 0.1)' : 'rgba(255,255,255,0.05)',
+                            color: copied ? 'var(--color-success)' : 'var(--color-text-secondary)',
+                        }}
                     >
+                        {copied ? (
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : (
+                            <svg className="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                            </svg>
+                        )}
                         <span>{copied ? t('servers.list.copied') : address}</span>
                     </button>
                 )}
@@ -209,6 +249,14 @@ export function ServerCard({
                         <AnimStat icon={CpuIcon} value={stats.cpu} formatter={formatCpu} />
                         <AnimStat icon={RamIcon} value={stats.memory_bytes} formatter={formatBytes} />
                         <AnimStat icon={DiskIcon} value={stats.disk_bytes} formatter={formatBytes} />
+                        {cardConfig.show_uptime && stats.uptime > 0 && (
+                            <span className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {formatUptime(stats.uptime)}
+                            </span>
+                        )}
                     </div>
                 )}
             </div>

@@ -36,7 +36,7 @@ export function SetupWizard() {
                 {/* Logo + Title */}
                 <div className="mb-12 text-center">
                     <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary)]/10 ring-1 ring-[var(--color-primary)]/20">
-                        <img src="/images/logo.svg" alt="Logo" className="h-10 w-10" />
+                        <img src="/images/logo.webp" alt="Logo" className="h-10 w-10" />
                     </div>
                     <h1 className="text-3xl font-bold">
                         {t('setup.title')}

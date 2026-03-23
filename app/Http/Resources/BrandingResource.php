@@ -11,8 +11,11 @@ class BrandingResource extends JsonResource
     {
         return [
             'app_name' => $this->resource['app_name'] ?? 'Peregrine',
-            'logo_url' => $this->resource['logo_url'] ?? '/images/logo.svg',
-            'favicon_url' => $this->resource['favicon_url'] ?? '/images/favicon.svg',
+            'show_app_name' => $this->resource['show_app_name'] ?? true,
+            'logo_height' => $this->resource['logo_height'] ?? 40,
+            'logo_url' => $this->resource['logo_url'] ?? '/images/logo.webp',
+            'favicon_url' => $this->resource['favicon_url'] ?? '/images/favicon.ico',
+            'header_links' => $this->resource['header_links'] ?? [],
         ];
     }
 }

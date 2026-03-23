@@ -5,6 +5,13 @@ import tailwindcss from '@tailwindcss/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
+    server: {
+        host: '0.0.0.0',
+        hmr: {
+            host: '172.16.1.175',
+        },
+        cors: true,
+    },
     plugins: [
         laravel({
             input: [

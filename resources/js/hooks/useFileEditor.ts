@@ -26,17 +26,22 @@ export function useFileEditor() {
         },
     });
 
+    const [error, setError] = useState<string | null>(null);
+
     const openFile = useCallback(async (serverId: number, filePath: string) => {
         setIsLoading(true);
+        setError(null);
         try {
             const fileContent = await fetchFileContent(serverId, filePath);
             setEditingFile(filePath);
             setContent(fileContent);
             setOriginalContent(fileContent);
+        } catch {
+            setError(t('servers.files.open_error', { defaultValue: 'Cannot open this file. It may be binary or too large.' }));
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const closeFile = useCallback(() => {
         if (isDirty) {
@@ -67,6 +72,7 @@ export function useFileEditor() {
         isDirty,
         isLoading,
         isSaving: saveMutation.isPending,
+        error,
         openFile,
         closeFile,
         updateContent,

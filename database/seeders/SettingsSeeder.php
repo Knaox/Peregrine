@@ -14,8 +14,8 @@ class SettingsSeeder extends Seeder
     {
         $defaults = [
             'app_name' => 'Peregrine',
-            'app_logo_path' => '/images/logo.svg',
-            'app_favicon_path' => '/images/favicon.svg',
+            'app_logo_path' => '/images/logo.webp',
+            'app_favicon_path' => '/images/favicon.ico',
             'theme_mode' => 'dark',
             'theme_primary' => '#e11d48',
             'theme_primary_hover' => '#f43f5e',

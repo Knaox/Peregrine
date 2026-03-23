@@ -42,12 +42,7 @@ function App() {
                                     <Route path="/dashboard" element={<DashboardPage />} />
                                     <Route path="/profile" element={<ProfilePage />} />
                                 </Route>
-                                <Route path="/servers/:id" element={<ServerDetailPage />}>
-                                    <Route index element={<ServerOverviewPage />} />
-                                    <Route path="console" element={<ServerConsolePage />} />
-                                    <Route path="files" element={<ServerFilesPage />} />
-                                    <Route path="sftp" element={<ServerSftpPage />} />
-                                </Route>
+                                <Route path="/servers/:id/*" element={<ServerDetailPage />} />
                             </Route>
                         </Routes>
                     </BrowserRouter>
@@ -64,4 +59,13 @@ if (container) {
             <App />
         </StrictMode>
     );
+
+    // Hide splash screen once React has mounted
+    requestAnimationFrame(() => {
+        const splash = document.getElementById('splash');
+        if (splash) {
+            splash.classList.add('hidden');
+            setTimeout(() => splash.remove(), 300);
+        }
+    });
 }

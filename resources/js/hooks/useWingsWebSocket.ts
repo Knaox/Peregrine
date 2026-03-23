@@ -163,6 +163,7 @@ export function useWingsWebSocket(
                                 disk_bytes: (s.disk_bytes as number) ?? 0,
                                 network_rx: net?.rx_bytes ?? 0,
                                 network_tx: net?.tx_bytes ?? 0,
+                                uptime: (s.uptime as number) ?? 0,
                             });
                             if (s.state) setServerState(s.state as string);
                         } catch { /* ignore */ }

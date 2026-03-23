@@ -492,22 +492,31 @@ class MyResource extends Resource
 ## État du projet
 
 ### Fait (résumé)
-Tout le **panel joueur (P1)** est terminé : stack complète (Laravel 13 + Filament 5 + React 19 + TS + Vite + Tailwind), Docker, models/migrations/seeders, services backend (Pelican Application+Client, Server, Sync, Settings, Setup), 33 routes API avec controllers découpés, ServerPolicy, Form Requests, rate limiting, Setup Wizard (backend+frontend 7 étapes), auth dual mode (local+OAuth), Filament admin complet (7 resources, widgets, Settings page), interface joueur complète (dashboard, serveur détail, console WebSocket, file manager avec upload drag-drop, SFTP, profil), commandes sync artisan (5 commandes + job schedule + boutons Filament), theme system (CSS variables + ThemeProvider + ThemeService), refonte UI premium "gaming + clean" (Motion, glassmorphism, AnimatedBackground, StatusDot, GlassCard), variables d'environnement serveur, i18n EN+FR complet, routing React complet.
+**Panel joueur complet** : Laravel 13 + Filament 5 + React 19 + TS + Vite + Tailwind. Docker. Setup Wizard (7 étapes). Auth dual mode (local+OAuth). Filament admin (7 resources, widgets, Settings, Theme).
+
+**8 pages serveur fonctionnelles** : Overview (WebSocket stats live), Console (WebSocket + power controls + état serveur), Files (drag-drop upload, bulk select/delete/compress, éditeur), SFTP (credentials + quick connect clipboard), Databases (CRUD + rotate password), Backups (create/download/restore/lock/delete), Schedules (presets + tasks + cron avancé), Network (allocations + notes + primary + bulk delete + add).
+
+**Système de thème complet** : 15+ couleurs personnalisables via admin Filament, card style/sort/group/columns, sidebar configurable (position left/top, style default/compact/pills, entries drag-and-drop), toutes les options fonctionnelles. Thème crimson par défaut. 0 couleur hardcodée.
+
+**Header personnalisable** : liens custom avec icônes, labels multi-langue (EN/FR), toggle ouverture nouvel onglet, taille logo configurable, toggle affichage nom app.
+
+**Cache Redis** : allocations (10min), SFTP details (30min), theme (1h), branding (1h), databases/backups/schedules/network (2-10min). Prefetch on hover des ServerCards. Splash screen instantané.
+
+**i18n FR/EN complet** avec accents corrects. Routes serveur dynamiques depuis la config sidebar. Uptime serveur via API Pelican. IP:port via allocation alias (fallback IP réelle).
+
+**Services Pelican séparés** : PelicanClientService, PelicanFileService, PelicanDatabaseService, PelicanBackupService, PelicanScheduleService, PelicanNetworkService + trait MakesClientRequests.
 
 Git repo : https://github.com/Knaox/Peregrine
 
 ### Pas fait
-- [ ] **P2** — Pages Filament Apparence : Theme (color pickers, font, radius, CSS custom), Cards serveurs (config affichage)
-- [ ] **P2** — Sidebar serveur configurable : config JSON dans settings, admin Filament pour activer/desactiver/reordonner les entrees. Plugins ajoutent leurs entrees via manifest.
-- [ ] **P2** — Plugin slots : chaque page expose des zones d'injection pour les plugins (sidebar entries, overview widgets, detail sections, toolbar actions)
-- [ ] **P2** — UI sync avancee Filament (modales comparaison avec checkboxes, Inviter sur le Shop, matching manuel email)
-- [ ] **P2** — Setup wizard refonte visuelle (stepper anime, glassmorphism cards, coherence avec le nouveau design)
-- [ ] **P3** — Bridge plugin (BridgeServiceProvider, StripeWebhookController, ProvisioningService, SubscriptionService, jobs queue, idempotence, email "Serveur pret")
+- [ ] **P2** — Plugin slots : zones d'injection pour les plugins (sidebar entries, overview widgets, detail sections)
+- [ ] **P2** — UI sync avancée Filament (modales comparaison avec checkboxes, Inviter sur le Shop, matching manuel email)
+- [ ] **P3** — Bridge plugin (BridgeServiceProvider, StripeWebhookController, ProvisioningService, SubscriptionService, jobs queue, idempotence)
 - [ ] **P4** — Auth features (forgot/reset password endpoints + pages React, email verification)
-- [ ] **P4** — Templates email (serveur pret, invitation Shop, reset password) — i18n EN+FR
-- [ ] **P4** — Plugin system : GET /api/plugins manifest, PluginLoader React, window.PanelShared. **Chaque page du panel expose des "slots" ou les plugins injectent du contenu** : sidebar entries, overview widgets, detail page sections, toolbar actions. Le manifest JSON d'un plugin declare ses slots : `{ "slots": { "server.sidebar": [...], "server.overview.widgets": [...], "server.detail.sections": [...] } }`.
-- [ ] **P5** — Tests (Feature tests API, Unit tests services Pelican/Sync/Settings/Setup, Bridge tests)
-- [ ] **P5** — Infra & DX (commit+push GitHub, README.md, CI/CD GitHub Actions, bannieres eggs par defaut)
+- [ ] **P4** — Templates email (serveur prêt, invitation Shop, reset password) — i18n EN+FR
+- [ ] **P4** — Plugin system : GET /api/plugins manifest, PluginLoader React, window.PanelShared
+- [ ] **P5** — Tests (Feature tests API, Unit tests services)
+- [ ] **P5** — Infra & DX (README.md, CI/CD GitHub Actions)
 
 ## Roadmap détaillée
 

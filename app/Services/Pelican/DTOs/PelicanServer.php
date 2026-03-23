@@ -15,6 +15,9 @@ final readonly class PelicanServer
         public int $nestId,
         public bool $isSuspended,
         public ServerLimits $limits,
+        public ?string $sftpHost = null,
+        public ?string $sftpAlias = null,
+        public int $sftpPort = 2022,
     ) {}
 
     public static function fromApiResponse(array $data): self
@@ -31,6 +34,9 @@ final readonly class PelicanServer
             nestId: $attributes['nest'] ?? 0,
             isSuspended: ($attributes['status'] === 'suspended') || ($attributes['suspended'] ?? false),
             limits: ServerLimits::fromApiResponse($attributes['limits'] ?? []),
+            sftpHost: $attributes['sftp_details']['ip'] ?? null,
+            sftpAlias: $attributes['sftp_details']['alias'] ?? null,
+            sftpPort: $attributes['sftp_details']['port'] ?? 2022,
         );
     }
 }

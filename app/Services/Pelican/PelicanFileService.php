@@ -1,0 +1,106 @@
+<?php
+
+namespace App\Services\Pelican;
+
+use App\Services\Pelican\Concerns\MakesClientRequests;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Http;
+
+class PelicanFileService
+{
+    use MakesClientRequests;
+
+    /** @return array<int, array<string, mixed>> */
+    public function listFiles(string $serverIdentifier, string $directory = '/'): array
+    {
+        return $this->request()
+            ->get("/api/client/servers/{$serverIdentifier}/files/list", ['directory' => $directory])
+            ->throw()
+            ->json('data') ?? [];
+    }
+
+    public function getFileContent(string $serverIdentifier, string $filePath): string
+    {
+        return $this->request()
+            ->get("/api/client/servers/{$serverIdentifier}/files/contents", ['file' => $filePath])
+            ->throw()
+            ->body();
+    }
+
+    public function renameFile(string $serverIdentifier, string $from, string $to): void
+    {
+        $root = dirname($from);
+        $this->request()
+            ->put("/api/client/servers/{$serverIdentifier}/files/rename", [
+                'root' => $root === '.' ? '/' : $root,
+                'files' => [['from' => basename($from), 'to' => $to]],
+            ])->throw();
+    }
+
+    public function deleteFile(string $serverIdentifier, string $filePath): void
+    {
+        $root = dirname($filePath);
+        $this->request()
+            ->post("/api/client/servers/{$serverIdentifier}/files/delete", [
+                'root' => $root === '.' ? '/' : $root,
+                'files' => [basename($filePath)],
+            ])->throw();
+    }
+
+    /** @param string[] $files */
+    public function compressFiles(string $serverIdentifier, array $files): void
+    {
+        $this->request()
+            ->post("/api/client/servers/{$serverIdentifier}/files/compress", ['root' => '/', 'files' => $files])
+            ->throw();
+    }
+
+    public function writeFile(string $serverIdentifier, string $filePath, string $content): void
+    {
+        Http::withHeaders(['Authorization' => 'Bearer ' . $this->clientApiKey(), 'Accept' => 'application/json'])
+            ->withBody($content, 'text/plain')
+            ->retry(3, 100)
+            ->baseUrl($this->baseUrl())
+            ->post("/api/client/servers/{$serverIdentifier}/files/write?file=" . urlencode($filePath))
+            ->throw();
+    }
+
+    public function decompressFiles(string $serverIdentifier, string $file): void
+    {
+        $this->request()->timeout(300)
+            ->post("/api/client/servers/{$serverIdentifier}/files/decompress", [
+                'root' => dirname($file) === '.' ? '/' : dirname($file),
+                'file' => basename($file),
+            ])->throw();
+    }
+
+    public function getUploadUrl(string $serverIdentifier): string
+    {
+        return $this->request()
+            ->get("/api/client/servers/{$serverIdentifier}/files/upload")
+            ->throw()
+            ->json('attributes.url') ?? '';
+    }
+
+    public function createFolder(string $serverIdentifier, string $root, string $name): void
+    {
+        $this->request()
+            ->post("/api/client/servers/{$serverIdentifier}/files/create-folder", ['root' => $root, 'name' => $name])
+            ->throw();
+    }
+
+    public function getFileDownloadUrl(string $serverIdentifier, string $file): string
+    {
+        return $this->request()
+            ->get("/api/client/servers/{$serverIdentifier}/files/download", ['file' => $file])
+            ->throw()
+            ->json('attributes.url') ?? '';
+    }
+
+    public function copyFile(string $serverIdentifier, string $location): void
+    {
+        $this->request()
+            ->post("/api/client/servers/{$serverIdentifier}/files/copy", ['location' => $location])
+            ->throw();
+    }
+}

@@ -11,6 +11,7 @@ final readonly class ServerResources
         public int $networkRxBytes,
         public int $networkTxBytes,
         public string $state,
+        public int $uptime = 0,
     ) {}
 
     public static function fromApiResponse(array $data): self
@@ -24,6 +25,7 @@ final readonly class ServerResources
             networkRxBytes: $resources['network_rx_bytes'] ?? 0,
             networkTxBytes: $resources['network_tx_bytes'] ?? 0,
             state: $attributes['current_state'] ?? 'offline',
+            uptime: $resources['uptime'] ?? 0,
         );
     }
 }

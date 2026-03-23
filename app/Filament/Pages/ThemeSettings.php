@@ -2,18 +2,16 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Pages\Theme\ThemeDefaults;
+use App\Filament\Pages\Theme\ThemeFormSchema;
 use App\Services\SettingsService;
+use App\Services\ThemeService;
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Forms\Components\ColorPicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use UnitEnum;
 
@@ -33,177 +31,98 @@ class ThemeSettings extends Page implements HasForms
 
     protected string $view = 'filament.pages.theme-settings';
 
-    private const DEFAULTS = [
-        'theme_primary' => '#e11d48',
-        'theme_primary_hover' => '#f43f5e',
-        'theme_danger' => '#ef4444',
-        'theme_warning' => '#f59e0b',
-        'theme_success' => '#10b981',
-        'theme_info' => '#3b82f6',
-        'theme_background' => '#0c0a14',
-        'theme_surface' => '#16131e',
-        'theme_surface_hover' => '#1e1a2a',
-        'theme_surface_elevated' => '#1a1724',
-        'theme_border' => '#2a2535',
-        'theme_border_hover' => '#3a3445',
-        'theme_text_primary' => '#f1f0f5',
-        'theme_text_secondary' => '#8b849e',
-        'theme_text_muted' => '#5a5370',
-        'theme_radius' => '0.75rem',
-        'theme_font' => 'Inter',
-        'theme_custom_css' => '',
-    ];
-
-    // Properties for all theme keys
+    // Theme color properties
     public ?string $theme_primary = '';
-
     public ?string $theme_primary_hover = '';
-
     public ?string $theme_danger = '';
-
     public ?string $theme_warning = '';
-
     public ?string $theme_success = '';
-
     public ?string $theme_info = '';
-
     public ?string $theme_background = '';
-
     public ?string $theme_surface = '';
-
     public ?string $theme_surface_hover = '';
-
     public ?string $theme_surface_elevated = '';
-
     public ?string $theme_border = '';
-
     public ?string $theme_border_hover = '';
-
     public ?string $theme_text_primary = '';
-
     public ?string $theme_text_secondary = '';
-
     public ?string $theme_text_muted = '';
-
     public ?string $theme_radius = '';
-
     public ?string $theme_font = '';
-
     public ?string $theme_custom_css = '';
+
+    // Card config properties
+    public bool $show_egg_icon = true;
+    public bool $show_egg_name = true;
+    public bool $show_plan_name = true;
+    public bool $show_status_badge = true;
+    public bool $show_stats_bars = true;
+    public bool $show_quick_actions = true;
+    public bool $show_ip_port = false;
+    public bool $show_uptime = false;
+    public ?string $card_style = 'glass';
+    public ?string $sort_default = 'name';
+    public ?string $group_by = 'none';
+    public ?int $columns_desktop = 3;
+    public ?int $columns_tablet = 2;
+    public ?int $columns_mobile = 1;
+
+    // Sidebar config properties
+    public ?string $sidebar_position = 'left';
+    public ?string $sidebar_style = 'default';
+    public bool $show_server_status = true;
+    public bool $show_server_name = true;
+    /** @var array<int, array<string, mixed>> */
+    public array $entries = [];
 
     public function mount(): void
     {
         $settings = app(SettingsService::class);
-        $values = [];
+        $themeService = app(ThemeService::class);
 
-        foreach (self::DEFAULTS as $key => $default) {
+        $values = [];
+        foreach (ThemeDefaults::COLORS as $key => $default) {
             $values[$key] = $settings->get($key, $default);
         }
+
+        $card = $themeService->getCardConfig();
+        $cols = $card['columns'] ?? [];
+        $values += [
+            'show_egg_icon' => $card['show_egg_icon'] ?? true,
+            'show_egg_name' => $card['show_egg_name'] ?? true,
+            'show_plan_name' => $card['show_plan_name'] ?? true,
+            'show_status_badge' => $card['show_status_badge'] ?? true,
+            'show_stats_bars' => $card['show_stats_bars'] ?? true,
+            'show_quick_actions' => $card['show_quick_actions'] ?? true,
+            'show_ip_port' => $card['show_ip_port'] ?? false,
+            'show_uptime' => $card['show_uptime'] ?? false,
+            'card_style' => $card['card_style'] ?? 'glass',
+            'sort_default' => $card['sort_default'] ?? 'name',
+            'group_by' => $card['group_by'] ?? 'none',
+            'columns_desktop' => $cols['desktop'] ?? 3,
+            'columns_tablet' => $cols['tablet'] ?? 2,
+            'columns_mobile' => $cols['mobile'] ?? 1,
+        ];
+
+        $sidebar = $themeService->getSidebarConfig();
+        $values += [
+            'sidebar_position' => $sidebar['position'] ?? 'left',
+            'sidebar_style' => $sidebar['style'] ?? 'default',
+            'show_server_status' => $sidebar['show_server_status'] ?? true,
+            'show_server_name' => $sidebar['show_server_name'] ?? true,
+            'entries' => $sidebar['entries'] ?? [],
+        ];
 
         $this->form->fill($values);
     }
 
     public function form(Schema $schema): Schema
     {
-        return $schema
-            ->schema([
-                Section::make('Brand Colors')
-                    ->description('Primary colors used throughout the player panel.')
-                    ->icon('heroicon-o-swatch')
-                    ->schema([
-                        ColorPicker::make('theme_primary')
-                            ->label('Primary')
-                            ->helperText('Main accent color (buttons, links, active states).'),
-                        ColorPicker::make('theme_primary_hover')
-                            ->label('Primary Hover'),
-                        ColorPicker::make('theme_danger')
-                            ->label('Danger'),
-                        ColorPicker::make('theme_warning')
-                            ->label('Warning'),
-                        ColorPicker::make('theme_success')
-                            ->label('Success'),
-                        ColorPicker::make('theme_info')
-                            ->label('Info / Accent'),
-                    ])->columns(3),
-
-                Section::make('Background & Surfaces')
-                    ->description('Dark mode background, cards, elevated surfaces, and hover states.')
-                    ->icon('heroicon-o-square-3-stack-3d')
-                    ->schema([
-                        ColorPicker::make('theme_background')
-                            ->label('Background')
-                            ->helperText('Main page background.'),
-                        ColorPicker::make('theme_surface')
-                            ->label('Surface')
-                            ->helperText('Cards, sidebar, panels.'),
-                        ColorPicker::make('theme_surface_hover')
-                            ->label('Surface Hover')
-                            ->helperText('Hovered cards, inputs.'),
-                        ColorPicker::make('theme_surface_elevated')
-                            ->label('Surface Elevated')
-                            ->helperText('Dropdowns, modals.'),
-                    ])->columns(2),
-
-                Section::make('Borders')
-                    ->description('Border colors for cards, inputs, and dividers. Use rgba() for transparency.')
-                    ->icon('heroicon-o-stop')
-                    ->schema([
-                        TextInput::make('theme_border')
-                            ->label('Border')
-                            ->helperText('Default border (e.g. rgba(148, 163, 184, 0.08) or #hex).'),
-                        TextInput::make('theme_border_hover')
-                            ->label('Border Hover')
-                            ->helperText('Hover/active border.'),
-                    ])->columns(2),
-
-                Section::make('Text Colors')
-                    ->description('Text hierarchy: primary, secondary, muted.')
-                    ->icon('heroicon-o-language')
-                    ->schema([
-                        ColorPicker::make('theme_text_primary')
-                            ->label('Text Primary'),
-                        ColorPicker::make('theme_text_secondary')
-                            ->label('Text Secondary'),
-                        ColorPicker::make('theme_text_muted')
-                            ->label('Text Muted'),
-                    ])->columns(3),
-
-                Section::make('Typography & Shape')
-                    ->description('Font family and border radius.')
-                    ->icon('heroicon-o-pencil-square')
-                    ->schema([
-                        Select::make('theme_font')
-                            ->label('Font Family')
-                            ->options([
-                                'Inter' => 'Inter',
-                                'Plus Jakarta Sans' => 'Plus Jakarta Sans',
-                                'Space Grotesk' => 'Space Grotesk',
-                                'Outfit' => 'Outfit',
-                                'system-ui' => 'System Default',
-                            ]),
-                        Select::make('theme_radius')
-                            ->label('Border Radius')
-                            ->options([
-                                '0' => 'None',
-                                '0.25rem' => 'Small',
-                                '0.375rem' => 'Medium',
-                                '0.75rem' => 'Large (default)',
-                                '1rem' => 'Extra Large',
-                                '1.5rem' => '2XL',
-                                '9999px' => 'Full (pill)',
-                            ]),
-                    ])->columns(2),
-
-                Section::make('Custom CSS')
-                    ->description('Inject custom CSS into the player panel. Use CSS variables (var(--color-*)) for theme compatibility.')
-                    ->icon('heroicon-o-code-bracket')
-                    ->schema([
-                        Textarea::make('theme_custom_css')
-                            ->label('Custom CSS')
-                            ->rows(6)
-                            ->placeholder('/* Your custom CSS here */'),
-                    ])->columns(1),
-            ]);
+        return $schema->schema([
+            ...ThemeFormSchema::colorSections(),
+            ThemeFormSchema::cardSection(),
+            ThemeFormSchema::sidebarSection(),
+        ]);
     }
 
     public function save(): void
@@ -211,30 +130,27 @@ class ThemeSettings extends Page implements HasForms
         $data = $this->form->getState();
         $settings = app(SettingsService::class);
 
-        foreach (array_keys(self::DEFAULTS) as $key) {
+        foreach (array_keys(ThemeDefaults::COLORS) as $key) {
             $settings->set($key, $data[$key] ?? null);
         }
 
-        Notification::make()
-            ->title('Theme saved')
-            ->body('Theme settings have been updated. Refresh the player panel to see changes.')
-            ->success()
-            ->send();
+        $settings->set('card_server_config', json_encode($this->buildCardConfig($data)));
+        $settings->set('sidebar_server_config', json_encode($this->buildSidebarConfig($data)));
+        $settings->clearCache();
+        app(\App\Services\ThemeService::class)->clearCache();
+
+        Notification::make()->title('Theme saved')
+            ->body('All theme, card and sidebar settings have been updated.')
+            ->success()->send();
     }
 
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')
-                ->label('Save Theme')
-                ->submit('save'),
-            Action::make('reset')
-                ->label('Reset to Defaults')
-                ->color('gray')
+            Action::make('save')->label('Save Theme')->submit('save'),
+            Action::make('reset')->label('Reset to Defaults')->color('gray')
                 ->requiresConfirmation()
-                ->action(function (): void {
-                    $this->resetToDefaults();
-                }),
+                ->action(fn () => $this->resetToDefaults()),
         ];
     }
 
@@ -242,16 +158,55 @@ class ThemeSettings extends Page implements HasForms
     {
         $settings = app(SettingsService::class);
 
-        foreach (self::DEFAULTS as $key => $value) {
+        foreach (ThemeDefaults::COLORS as $key => $value) {
             $settings->set($key, $value);
         }
+        $settings->set('card_server_config', json_encode(ThemeDefaults::CARD_CONFIG));
+        $settings->set('sidebar_server_config', json_encode(ThemeDefaults::SIDEBAR_CONFIG));
+        $settings->clearCache();
+        $this->mount();
 
-        $this->form->fill(self::DEFAULTS);
+        Notification::make()->title('All settings reset')
+            ->body('Theme, card and sidebar settings have been reset to defaults.')
+            ->success()->send();
+    }
 
-        Notification::make()
-            ->title('Theme reset')
-            ->body('Theme has been reset to default values.')
-            ->success()
-            ->send();
+    private function buildCardConfig(array $data): array
+    {
+        return [
+            'layout' => 'grid',
+            'columns' => [
+                'desktop' => (int) ($data['columns_desktop'] ?? 3),
+                'tablet' => (int) ($data['columns_tablet'] ?? 2),
+                'mobile' => (int) ($data['columns_mobile'] ?? 1),
+            ],
+            'show_egg_icon' => (bool) ($data['show_egg_icon'] ?? true),
+            'show_egg_name' => (bool) ($data['show_egg_name'] ?? true),
+            'show_plan_name' => (bool) ($data['show_plan_name'] ?? true),
+            'show_status_badge' => (bool) ($data['show_status_badge'] ?? true),
+            'show_stats_bars' => (bool) ($data['show_stats_bars'] ?? true),
+            'show_quick_actions' => (bool) ($data['show_quick_actions'] ?? true),
+            'show_ip_port' => (bool) ($data['show_ip_port'] ?? false),
+            'show_uptime' => (bool) ($data['show_uptime'] ?? false),
+            'card_style' => $data['card_style'] ?? 'glass',
+            'sort_default' => $data['sort_default'] ?? 'name',
+            'group_by' => $data['group_by'] ?? 'none',
+        ];
+    }
+
+    private function buildSidebarConfig(array $data): array
+    {
+        $entries = collect($data['entries'] ?? [])->map(fn (array $e, int $i) => [
+            'id' => $e['id'], 'label_key' => $e['label_key'], 'icon' => $e['icon'],
+            'enabled' => (bool) $e['enabled'], 'route_suffix' => $e['route_suffix'], 'order' => $i,
+        ])->values()->all();
+
+        return [
+            'position' => $data['sidebar_position'] ?? 'left',
+            'style' => $data['sidebar_style'] ?? 'default',
+            'show_server_status' => (bool) ($data['show_server_status'] ?? true),
+            'show_server_name' => (bool) ($data['show_server_name'] ?? true),
+            'entries' => $entries,
+        ];
     }
 }

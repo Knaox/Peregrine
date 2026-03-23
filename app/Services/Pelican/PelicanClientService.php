@@ -2,15 +2,14 @@
 
 namespace App\Services\Pelican;
 
+use App\Services\Pelican\Concerns\MakesClientRequests;
 use App\Services\Pelican\DTOs\PelicanServer;
 use App\Services\Pelican\DTOs\ServerResources;
 use App\Services\Pelican\DTOs\WebsocketCredentials;
-use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Facades\Http;
 
 class PelicanClientService
 {
+    use MakesClientRequests;
     // -------------------------------------------------------------------------
     // Servers
     // -------------------------------------------------------------------------
@@ -61,6 +60,20 @@ class PelicanClientService
     }
 
     /**
+     * Get raw server data from Pelican Client API (unstructured array).
+     *
+     * @return array<string, mixed>
+     */
+    public function getRawServer(string $serverIdentifier): array
+    {
+        $response = $this->request()
+            ->get("/api/client/servers/{$serverIdentifier}")
+            ->throw();
+
+        return $response->json('attributes') ?? $response->json() ?? [];
+    }
+
+    /**
      * Get current resource usage for a server.
      *
      * @throws RequestException
@@ -102,164 +115,6 @@ class PelicanClientService
         $this->request()
             ->post("/api/client/servers/{$serverIdentifier}/power", [
                 'signal' => $signal,
-            ])
-            ->throw();
-    }
-
-    // -------------------------------------------------------------------------
-    // File management
-    // -------------------------------------------------------------------------
-
-    /**
-     * List files in a directory on the server.
-     *
-     * @return array<int, array<string, mixed>>
-     *
-     * @throws RequestException
-     */
-    public function listFiles(string $serverIdentifier, string $directory = '/'): array
-    {
-        $response = $this->request()
-            ->get("/api/client/servers/{$serverIdentifier}/files/list", [
-                'directory' => $directory,
-            ])
-            ->throw();
-
-        return $response->json('data') ?? [];
-    }
-
-    /**
-     * Get the contents of a file on the server.
-     *
-     * @throws RequestException
-     */
-    public function getFileContent(string $serverIdentifier, string $filePath): string
-    {
-        $response = $this->request()
-            ->get("/api/client/servers/{$serverIdentifier}/files/contents", [
-                'file' => $filePath,
-            ])
-            ->throw();
-
-        return $response->body();
-    }
-
-    /**
-     * Rename (or move) a file on the server.
-     *
-     * @throws RequestException
-     */
-    public function renameFile(string $serverIdentifier, string $from, string $to): void
-    {
-        $root = dirname($from);
-
-        $this->request()
-            ->put("/api/client/servers/{$serverIdentifier}/files/rename", [
-                'root' => $root === '.' ? '/' : $root,
-                'files' => [
-                    [
-                        'from' => basename($from),
-                        'to' => $to,
-                    ],
-                ],
-            ])
-            ->throw();
-    }
-
-    /**
-     * Delete a file on the server.
-     *
-     * @throws RequestException
-     */
-    public function deleteFile(string $serverIdentifier, string $filePath): void
-    {
-        $root = dirname($filePath);
-
-        $this->request()
-            ->post("/api/client/servers/{$serverIdentifier}/files/delete", [
-                'root' => $root === '.' ? '/' : $root,
-                'files' => [basename($filePath)],
-            ])
-            ->throw();
-    }
-
-    /**
-     * Compress files on the server.
-     *
-     * @param string[] $files
-     *
-     * @throws RequestException
-     */
-    public function compressFiles(string $serverIdentifier, array $files): void
-    {
-        $this->request()
-            ->post("/api/client/servers/{$serverIdentifier}/files/compress", [
-                'root' => '/',
-                'files' => $files,
-            ])
-            ->throw();
-    }
-
-    /**
-     * Write content to a file on the server.
-     * Note: Pelican expects raw text body, not JSON.
-     *
-     * @throws RequestException
-     */
-    public function writeFile(string $serverIdentifier, string $filePath, string $content): void
-    {
-        Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->clientApiKey(),
-            'Accept' => 'application/json',
-        ])
-            ->withBody($content, 'text/plain')
-            ->retry(3, 100)
-            ->baseUrl($this->baseUrl())
-            ->post("/api/client/servers/{$serverIdentifier}/files/write?file=" . urlencode($filePath))
-            ->throw();
-    }
-
-    /**
-     * Decompress an archive on the server.
-     *
-     * @throws RequestException
-     */
-    public function decompressFiles(string $serverIdentifier, string $file): void
-    {
-        $this->request()
-            ->timeout(300)
-            ->post("/api/client/servers/{$serverIdentifier}/files/decompress", [
-                'root' => dirname($file) === '.' ? '/' : dirname($file),
-                'file' => basename($file),
-            ])
-            ->throw();
-    }
-
-    /**
-     * Get a signed upload URL for a server.
-     *
-     * @throws RequestException
-     */
-    public function getUploadUrl(string $serverIdentifier): string
-    {
-        $response = $this->request()
-            ->get("/api/client/servers/{$serverIdentifier}/files/upload")
-            ->throw();
-
-        return $response->json('attributes.url') ?? '';
-    }
-
-    /**
-     * Create a new folder on the server.
-     *
-     * @throws RequestException
-     */
-    public function createFolder(string $serverIdentifier, string $root, string $name): void
-    {
-        $this->request()
-            ->post("/api/client/servers/{$serverIdentifier}/files/create-folder", [
-                'root' => $root,
-                'name' => $name,
             ])
             ->throw();
     }
@@ -319,28 +174,4 @@ class PelicanClientService
         return WebsocketCredentials::fromApiResponse($response->json());
     }
 
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
-
-    private function baseUrl(): string
-    {
-        return rtrim((string) config('panel.pelican.url'), '/');
-    }
-
-    private function clientApiKey(): string
-    {
-        return (string) config('panel.pelican.client_api_key');
-    }
-
-    private function request(): PendingRequest
-    {
-        return Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->clientApiKey(),
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-        ])
-            ->retry(3, 100)
-            ->baseUrl($this->baseUrl());
-    }
 }

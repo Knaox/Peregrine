@@ -5,4 +5,5 @@ export interface ServerResources {
     disk_bytes: number;
     network_rx: number;
     network_tx: number;
+    uptime: number;
 }

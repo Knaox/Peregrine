@@ -2,19 +2,15 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Pages\Settings\SettingsFormSchema;
 use App\Services\SettingsService;
 use App\Services\SetupService;
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Radio;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use UnitEnum;
 
@@ -34,28 +30,28 @@ class Settings extends Page implements HasForms
 
     // Appearance
     public ?string $app_name = '';
-
-    public ?string $logo_url = '';
-
-    public ?string $favicon_url = '';
+    /** @var array<int, string>|null */
+    public ?array $logo_url = [];
+    /** @var array<int, string>|null */
+    public ?array $favicon_url = [];
+    public bool $show_app_name = true;
+    public ?string $logo_height = '40';
+    /** @var array<int, array<string, mixed>> */
+    public array $header_links = [];
 
     // Pelican
     public ?string $pelican_url = '';
-
     public ?string $pelican_admin_api_key = '';
+    public ?string $pelican_client_api_key = '';
 
     // Authentication
     public ?string $auth_mode = 'local';
-
     public ?string $oauth_client_id = '';
-
     public ?string $oauth_client_secret = '';
-
     public ?string $oauth_redirect_url = '';
 
     // Bridge
     public bool $bridge_enabled = false;
-
     public ?string $stripe_webhook_secret = '';
 
     public function mount(): void
@@ -63,26 +59,36 @@ class Settings extends Page implements HasForms
         $settings = app(SettingsService::class);
 
         $this->app_name = $settings->get('app_name', config('app.name'));
-        $this->logo_url = $settings->get('logo_url', '');
-        $this->favicon_url = $settings->get('favicon_url', '');
+        $this->show_app_name = $settings->get('show_app_name', 'true') === 'true';
+        $this->logo_height = $settings->get('logo_height', '40');
+
+        $logoPath = $settings->get('app_logo_path', '');
+        $faviconPath = $settings->get('app_favicon_path', '');
+        $logoForForm = ($logoPath && ! str_starts_with($logoPath, '/')) ? [$logoPath] : [];
+        $faviconForForm = ($faviconPath && ! str_starts_with($faviconPath, '/')) ? [$faviconPath] : [];
+
+        $this->header_links = json_decode($settings->get('header_links', '[]') ?? '[]', true) ?: [];
 
         $this->pelican_url = config('services.pelican.url', '');
         $this->pelican_admin_api_key = config('services.pelican.admin_api_key', '');
-
+        $this->pelican_client_api_key = config('panel.client_api_key', '');
         $this->auth_mode = config('auth.mode', 'local');
         $this->oauth_client_id = config('services.oauth.client_id', '');
         $this->oauth_client_secret = config('services.oauth.client_secret', '');
         $this->oauth_redirect_url = config('services.oauth.redirect_url', '');
-
         $this->bridge_enabled = (bool) config('services.bridge.enabled', false);
         $this->stripe_webhook_secret = config('services.stripe.webhook_secret', '');
 
         $this->form->fill([
             'app_name' => $this->app_name,
-            'logo_url' => $this->logo_url,
-            'favicon_url' => $this->favicon_url,
+            'show_app_name' => $this->show_app_name,
+            'logo_height' => $this->logo_height,
+            'logo_url' => $logoForForm,
+            'favicon_url' => $faviconForForm,
+            'header_links' => $this->header_links,
             'pelican_url' => $this->pelican_url,
             'pelican_admin_api_key' => $this->pelican_admin_api_key,
+            'pelican_client_api_key' => $this->pelican_client_api_key,
             'auth_mode' => $this->auth_mode,
             'oauth_client_id' => $this->oauth_client_id,
             'oauth_client_secret' => $this->oauth_client_secret,
@@ -94,142 +100,78 @@ class Settings extends Page implements HasForms
 
     public function form(Schema $schema): Schema
     {
-        return $schema
-            ->schema([
-                Section::make('Appearance')
-                    ->description('Customize the look and feel of your panel.')
-                    ->icon('heroicon-o-paint-brush')
-                    ->schema([
-                        TextInput::make('app_name')
-                            ->label('Application Name')
-                            ->placeholder('Peregrine')
-                            ->maxLength(255),
-                        TextInput::make('logo_url')
-                            ->label('Logo URL')
-                            ->placeholder('/images/logo.svg')
-                            ->maxLength(255),
-                        TextInput::make('favicon_url')
-                            ->label('Favicon URL')
-                            ->placeholder('/images/favicon.svg')
-                            ->maxLength(255),
-                    ])->columns(1),
-
-                Section::make('Pelican')
-                    ->description('Configure the connection to your Pelican panel.')
-                    ->icon('heroicon-o-globe-alt')
-                    ->schema([
-                        TextInput::make('pelican_url')
-                            ->label('Pelican URL')
-                            ->placeholder('https://panel.example.com')
-                            ->url()
-                            ->maxLength(255),
-                        TextInput::make('pelican_admin_api_key')
-                            ->label('Admin API Key')
-                            ->password()
-                            ->revealable()
-                            ->maxLength(255),
-                    ])->columns(1),
-
-                Section::make('Authentication')
-                    ->description('Configure how users authenticate.')
-                    ->icon('heroicon-o-lock-closed')
-                    ->schema([
-                        Radio::make('auth_mode')
-                            ->label('Authentication Mode')
-                            ->options([
-                                'local' => 'Local (email & password)',
-                                'oauth' => 'OAuth (SSO)',
-                            ])
-                            ->default('local')
-                            ->live(),
-                        TextInput::make('oauth_client_id')
-                            ->label('OAuth Client ID')
-                            ->maxLength(255)
-                            ->visible(fn (Get $get): bool => $get('auth_mode') === 'oauth'),
-                        TextInput::make('oauth_client_secret')
-                            ->label('OAuth Client Secret')
-                            ->password()
-                            ->revealable()
-                            ->maxLength(255)
-                            ->visible(fn (Get $get): bool => $get('auth_mode') === 'oauth'),
-                        TextInput::make('oauth_redirect_url')
-                            ->label('OAuth Redirect URL')
-                            ->url()
-                            ->maxLength(255)
-                            ->visible(fn (Get $get): bool => $get('auth_mode') === 'oauth'),
-                    ])->columns(1),
-
-                Section::make('Bridge')
-                    ->description('Configure the bridge between Pelican and Stripe.')
-                    ->icon('heroicon-o-link')
-                    ->schema([
-                        Toggle::make('bridge_enabled')
-                            ->label('Enable Bridge')
-                            ->live(),
-                        TextInput::make('stripe_webhook_secret')
-                            ->label('Stripe Webhook Secret')
-                            ->password()
-                            ->revealable()
-                            ->maxLength(255)
-                            ->visible(fn (Get $get): bool => (bool) $get('bridge_enabled')),
-                    ])->columns(1),
-            ]);
+        return $schema->schema([
+            SettingsFormSchema::appearance(),
+            SettingsFormSchema::pelican(),
+            SettingsFormSchema::authentication(),
+            SettingsFormSchema::bridge(),
+        ]);
     }
 
     public function save(): void
     {
         $data = $this->form->getState();
-
         $settings = app(SettingsService::class);
         $setup = app(SetupService::class);
 
-        // Save appearance settings to the database
+        // Appearance → DB
         $settings->set('app_name', $data['app_name'] ?? null);
-        $settings->set('logo_url', $data['logo_url'] ?? null);
-        $settings->set('favicon_url', $data['favicon_url'] ?? null);
+        $settings->set('show_app_name', ($data['show_app_name'] ?? true) ? 'true' : 'false');
+        $settings->set('logo_height', $data['logo_height'] ?? '40');
+        $settings->set('header_links', json_encode($data['header_links'] ?? []));
 
-        // Save Pelican, auth, and bridge settings to .env
+        $logoValue = $data['logo_url'] ?? null;
+        if ($logoValue) {
+            $path = is_array($logoValue) ? (array_values($logoValue)[0] ?? null) : $logoValue;
+            if ($path) {
+                $settings->set('app_logo_path', $path);
+            }
+        }
+
+        $faviconValue = $data['favicon_url'] ?? null;
+        if ($faviconValue) {
+            $path = is_array($faviconValue) ? (array_values($faviconValue)[0] ?? null) : $faviconValue;
+            if ($path) {
+                $settings->set('app_favicon_path', $path);
+            }
+        }
+
+        // Pelican, Auth, Bridge → .env
         $envValues = [];
-
         if (isset($data['pelican_url'])) {
             $envValues['PELICAN_URL'] = $data['pelican_url'];
         }
-
         if (isset($data['pelican_admin_api_key']) && $data['pelican_admin_api_key'] !== '') {
             $envValues['PELICAN_ADMIN_API_KEY'] = $data['pelican_admin_api_key'];
         }
-
+        if (isset($data['pelican_client_api_key']) && $data['pelican_client_api_key'] !== '') {
+            $envValues['PELICAN_CLIENT_API_KEY'] = $data['pelican_client_api_key'];
+        }
         $envValues['AUTH_MODE'] = $data['auth_mode'] ?? 'local';
-
         if (($data['auth_mode'] ?? 'local') === 'oauth') {
             $envValues['OAUTH_CLIENT_ID'] = $data['oauth_client_id'] ?? '';
             $envValues['OAUTH_CLIENT_SECRET'] = $data['oauth_client_secret'] ?? '';
             $envValues['OAUTH_REDIRECT_URL'] = $data['oauth_redirect_url'] ?? '';
         }
-
         $envValues['BRIDGE_ENABLED'] = ($data['bridge_enabled'] ?? false) ? 'true' : 'false';
-
         if (! empty($data['bridge_enabled']) && ! empty($data['stripe_webhook_secret'])) {
             $envValues['STRIPE_WEBHOOK_SECRET'] = $data['stripe_webhook_secret'];
         }
-
         if (! empty($envValues)) {
             $setup->writeEnv($envValues);
         }
 
-        Notification::make()
-            ->title('Settings saved')
+        $settings->clearCache();
+
+        Notification::make()->title('Settings saved')
             ->body('Your settings have been updated successfully.')
-            ->success()
-            ->send();
+            ->success()->send();
     }
 
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')
-                ->label('Save Settings')
-                ->submit('save'),
+            Action::make('save')->label('Save Settings')->submit('save'),
         ];
     }
 }

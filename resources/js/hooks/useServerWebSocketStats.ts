@@ -62,6 +62,7 @@ export function useServerWebSocketStats(serverId: number) {
                                         disk_bytes: (stats.disk_bytes as number) ?? 0,
                                         network_rx: ((stats.network as Record<string, number>)?.rx_bytes) ?? 0,
                                         network_tx: ((stats.network as Record<string, number>)?.tx_bytes) ?? 0,
+                                        uptime: (stats.uptime as number) ?? 0,
                                     });
                                     if (stats.state) {
                                         setServerState(stats.state as string);

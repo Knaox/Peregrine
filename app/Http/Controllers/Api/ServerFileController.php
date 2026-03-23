@@ -10,7 +10,7 @@ use App\Http\Requests\Server\FileDeleteRequest;
 use App\Http\Requests\Server\FileRenameRequest;
 use App\Http\Requests\Server\FileWriteRequest;
 use App\Models\Server;
-use App\Services\Pelican\PelicanClientService;
+use App\Services\Pelican\PelicanFileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -18,7 +18,7 @@ use Illuminate\Http\Response;
 class ServerFileController extends Controller
 {
     public function __construct(
-        private PelicanClientService $clientService,
+        private PelicanFileService $clientService,
     ) {}
 
     public function list(Request $request, Server $server): JsonResponse
@@ -29,9 +29,14 @@ class ServerFileController extends Controller
         $rawFiles = $this->clientService->listFiles($server->identifier, $directory);
 
         // Pelican returns [{ "object": "file_object", "attributes": { ... } }]
-        // Flatten to [{ name, size, is_file, ... }]
+        // Flatten and ensure is_directory is set (Pelican may not include it)
         $files = array_map(function (array $file): array {
-            return $file['attributes'] ?? $file;
+            $attrs = $file['attributes'] ?? $file;
+            if (!isset($attrs['is_directory'])) {
+                $attrs['is_directory'] = ($attrs['mimetype'] ?? '') === 'inode/directory'
+                    || (isset($attrs['is_file']) && $attrs['is_file'] === false);
+            }
+            return $attrs;
         }, $rawFiles);
 
         return response()->json(['data' => $files]);
@@ -136,5 +141,33 @@ class ServerFileController extends Controller
         );
 
         return response()->json(['success' => true]);
+    }
+
+    public function download(Request $request, Server $server): JsonResponse
+    {
+        $this->authorize('manageFiles', $server);
+
+        $file = $request->query('file');
+        if (!$file) {
+            return response()->json(['error' => 'File path required'], 422);
+        }
+
+        $url = $this->clientService->getFileDownloadUrl($server->identifier, $file);
+
+        return response()->json(['data' => ['url' => $url]]);
+    }
+
+    public function copy(Request $request, Server $server): JsonResponse
+    {
+        $this->authorize('manageFiles', $server);
+
+        $location = $request->input('location');
+        if (!$location) {
+            return response()->json(['error' => 'Location required'], 422);
+        }
+
+        $this->clientService->copyFile($server->identifier, $location);
+
+        return response()->json(['message' => 'success']);
     }
 }

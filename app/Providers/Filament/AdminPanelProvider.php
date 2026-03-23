@@ -31,9 +31,9 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName('Peregrine')
-            ->brandLogo(asset('images/logo.svg'))
+            ->brandLogo(asset('images/logo.webp'))
             ->brandLogoHeight('2rem')
-            ->favicon(asset('images/favicon.svg'))
+            ->favicon(asset('images/favicon.ico'))
             ->colors([
                 'primary' => Color::hex(app(ThemeService::class)->getPrimaryColor()),
             ])

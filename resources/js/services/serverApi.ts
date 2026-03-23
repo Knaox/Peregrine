@@ -6,9 +6,23 @@ import type { PowerSignal } from '@/types/PowerSignal';
 import type { StartupVariable } from '@/types/StartupVariable';
 import { request } from '@/services/http';
 
+interface ServerResponse {
+    data: Server;
+    allocation?: { ip: string; port: number } | null;
+    sftp_details?: { ip: string; port: number; username: string } | null;
+}
+
 export async function fetchServer(id: number): Promise<Server> {
-    const { data } = await request<{ data: Server }>(`/api/servers/${id}`);
-    return data;
+    const response = await request<ServerResponse>(`/api/servers/${id}`);
+    const server = response.data;
+    // Merge allocation and sftp_details from additional() into the server object
+    if (response.allocation) {
+        server.allocation = response.allocation;
+    }
+    if (response.sftp_details) {
+        server.sftp_details = response.sftp_details;
+    }
+    return server;
 }
 
 export async function fetchServerStats(): Promise<ServerStatsMap> {

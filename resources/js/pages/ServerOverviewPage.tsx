@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
-import clsx from 'clsx';
+import { copyToClipboard } from '@/utils/clipboard';
 import { useServer } from '@/hooks/useServer';
 import { useWingsWebSocket } from '@/hooks/useWingsWebSocket';
 import { Spinner } from '@/components/ui/Spinner';
@@ -36,7 +36,7 @@ export function ServerOverviewPage() {
 
     const handleCopy = () => {
         if (!address) return;
-        void navigator.clipboard.writeText(address).then(() => {
+        void copyToClipboard(address).then(() => {
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
         });

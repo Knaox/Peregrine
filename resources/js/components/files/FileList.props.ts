@@ -4,6 +4,9 @@ export interface FileListProps {
     files: FileEntry[];
     currentDirectory: string;
     isLoading: boolean;
+    selectedFiles: Set<string>;
+    onToggleSelect: (name: string) => void;
+    onToggleSelectAll: () => void;
     onNavigate: (directory: string) => void;
     onOpenFile: (filePath: string) => void;
     onRename: (name: string) => void;

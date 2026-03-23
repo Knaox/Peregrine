@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
+
 class ThemeService
 {
     public function __construct(
@@ -9,6 +11,11 @@ class ThemeService
     ) {}
 
     public function getTheme(): array
+    {
+        return Cache::remember('theme_full', 3600, fn () => $this->buildTheme());
+    }
+
+    private function buildTheme(): array
     {
         return [
             'mode' => $this->settingsService->get('theme_mode', 'dark'),
@@ -37,7 +44,12 @@ class ThemeService
 
     public function getCssVariables(): array
     {
-        $theme = $this->getTheme();
+        return Cache::remember('theme_css_vars', 3600, fn () => $this->buildCssVariables());
+    }
+
+    private function buildCssVariables(): array
+    {
+        $theme = $this->buildTheme();
         $vars = [];
         foreach ($theme['colors'] as $key => $value) {
             $cssKey = str_replace('_', '-', $key);
@@ -48,6 +60,9 @@ class ThemeService
         $vars['--color-primary-rgb'] = $this->hexToRgbTriplet($theme['colors']['primary']);
         $vars['--color-danger-rgb'] = $this->hexToRgbTriplet($theme['colors']['danger']);
         $vars['--color-success-rgb'] = $this->hexToRgbTriplet($theme['colors']['success']);
+        $vars['--color-info-rgb'] = $this->hexToRgbTriplet($theme['colors']['info']);
+        $vars['--color-warning-rgb'] = $this->hexToRgbTriplet($theme['colors']['warning']);
+        $vars['--color-text-secondary-rgb'] = $this->hexToRgbTriplet($theme['colors']['text_secondary']);
 
         // Auto-derive glow colors (base color with alpha)
         $vars['--color-primary-glow'] = $this->hexToRgba($theme['colors']['primary'], 0.15);
@@ -59,6 +74,13 @@ class ThemeService
         $vars['--color-glass-border'] = $theme['colors']['border'];
 
         $vars['--radius'] = $theme['radius'];
+
+        // Scale radius variants from base radius
+        $radiusVal = (float) $theme['radius'];
+        $unit = str_contains($theme['radius'], 'rem') ? 'rem' : 'px';
+        $vars['--radius-sm'] = ($radiusVal > 0 ? round($radiusVal * 0.5, 3) : 0) . $unit;
+        $vars['--radius-lg'] = ($radiusVal > 0 ? round($radiusVal * 1.33, 3) : 0) . $unit;
+
         $vars['--font-sans'] = $theme['font'] . ', system-ui, sans-serif';
 
         return $vars;
@@ -179,6 +201,15 @@ class ThemeService
      */
     public function getPrimaryColor(): string
     {
-        return $this->settingsService->get('theme_primary', '#f97316');
+        return $this->settingsService->get('theme_primary', '#e11d48');
+    }
+
+    /**
+     * Clear all theme caches. Call after saving theme settings.
+     */
+    public function clearCache(): void
+    {
+        Cache::forget('theme_full');
+        Cache::forget('theme_css_vars');
     }
 }

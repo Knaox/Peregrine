@@ -8,39 +8,15 @@ import { useServerStats } from '@/hooks/useServerStats';
 import { usePowerAction } from '@/hooks/usePowerAction';
 import { useServerOrder } from '@/hooks/useServerOrder';
 import { useServerSelection } from '@/hooks/useServerSelection';
+import { useCardConfig } from '@/hooks/useCardConfig';
 import type { PowerSignal } from '@/types/PowerSignal';
-import type { Server } from '@/types/Server';
-import { Spinner } from '@/components/ui/Spinner';
+import { sortServers, groupServers } from '@/utils/serverGrouping';
 import { ServerSearchBar } from '@/components/server/ServerSearchBar';
 import { ServerCard } from '@/components/server/ServerCard';
 import { ServerCardSkeleton } from '@/components/server/ServerCardSkeleton';
 import { ServerEmptyState } from '@/components/server/ServerEmptyState';
 import { ServerGroupHeader } from '@/components/server/ServerGroupHeader';
 import { ServerBulkBar } from '@/components/server/ServerBulkBar';
-
-interface ServerGroup {
-    name: string;
-    servers: Server[];
-    eggImage?: string | null;
-}
-
-function groupByEgg(servers: Server[], uncategorizedLabel: string): ServerGroup[] {
-    const groups = new Map<string, { servers: Server[]; eggImage?: string | null }>();
-    for (const server of servers) {
-        const key = server.egg?.name ?? uncategorizedLabel;
-        const existing = groups.get(key);
-        if (existing) {
-            existing.servers.push(server);
-        } else {
-            groups.set(key, { servers: [server], eggImage: server.egg?.banner_image });
-        }
-    }
-    return Array.from(groups.entries()).map(([name, data]) => ({
-        name,
-        servers: data.servers,
-        eggImage: data.eggImage,
-    }));
-}
 
 export function DashboardPage() {
     const { t } = useTranslation();
@@ -50,6 +26,7 @@ export function DashboardPage() {
     const { sendPower, isPending: isPowerPending } = usePowerAction();
     const serverOrder = useServerOrder();
     const selection = useServerSelection();
+    const cardConfig = useCardConfig();
     const [search, setSearch] = useState('');
 
     const hasAnimatedRef = useRef(false);
@@ -81,14 +58,21 @@ export function DashboardPage() {
         );
     }, [servers, search]);
 
-    const orderedServers = useMemo(
-        () => serverOrder.getOrderedServers(filteredServers),
-        [serverOrder, filteredServers],
+    // Apply sort_default then drag-order
+    const sortedServers = useMemo(
+        () => sortServers(filteredServers, cardConfig.sort_default),
+        [filteredServers, cardConfig.sort_default],
     );
 
+    const orderedServers = useMemo(
+        () => serverOrder.getOrderedServers(sortedServers),
+        [serverOrder, sortedServers],
+    );
+
+    // Group by configurable criteria
     const groups = useMemo(
-        () => groupByEgg(orderedServers, t('servers.list.uncategorized')),
-        [orderedServers, t],
+        () => groupServers(orderedServers, cardConfig.group_by, t('servers.list.uncategorized')),
+        [orderedServers, cardConfig.group_by, t],
     );
 
     const hasSearch = search.trim().length > 0;
@@ -115,6 +99,13 @@ export function DashboardPage() {
         },
         [serverOrder, orderedServers],
     );
+
+    // Grid columns via CSS custom properties (Tailwind can't do dynamic values)
+    const gridStyle = {
+        '--cols-mobile': cardConfig.columns.mobile,
+        '--cols-tablet': cardConfig.columns.tablet,
+        '--cols-desktop': cardConfig.columns.desktop,
+    } as React.CSSProperties;
 
     let globalCardIndex = 0;
 
@@ -212,9 +203,21 @@ export function DashboardPage() {
                             <div className="flex flex-col gap-2">
                                 <AnimatePresence mode="popLayout">
                                     {groups.map((group) => (
-                                        <div key={group.name}>
-                                            <ServerGroupHeader name={group.name} count={group.servers.length} eggImage={group.eggImage} />
-                                            <div className="flex flex-col gap-2">
+                                        <div key={group.name || '__all'}>
+                                            {group.name && (
+                                                <ServerGroupHeader name={group.name} count={group.servers.length} eggImage={group.eggImage} />
+                                            )}
+                                            <div
+                                                className="grid gap-3"
+                                                style={gridStyle}
+                                                // Tailwind arbitrary grid-cols from CSS vars
+                                                // grid-cols-[repeat(var(--cols-mobile),1fr)] doesn't work in all browsers
+                                                // so we use inline gridTemplateColumns as fallback
+                                            >
+                                                <style>{`
+                                                    @media (min-width: 768px) { [style*="--cols-tablet"] { grid-template-columns: repeat(var(--cols-tablet), 1fr) !important; } }
+                                                    @media (min-width: 1024px) { [style*="--cols-desktop"] { grid-template-columns: repeat(var(--cols-desktop), 1fr) !important; } }
+                                                `}</style>
                                                 {group.servers.map((server) => {
                                                     const globalIdx = orderedServers.indexOf(server);
                                                     const cardIndex = globalCardIndex++;
@@ -245,6 +248,7 @@ export function DashboardPage() {
                                                                     '[border-image:linear-gradient(to_right,transparent,var(--color-primary),transparent)_1]',
                                                                 ],
                                                             )}
+                                                            style={{ gridColumn: `span 1` }}
                                                         >
                                                             <ServerCard
                                                                 server={server}

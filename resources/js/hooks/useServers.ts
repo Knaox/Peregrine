@@ -5,6 +5,6 @@ export function useServers() {
     return useQuery({
         queryKey: ['servers'],
         queryFn: fetchServers,
-        staleTime: 30 * 1000, // 30 seconds
+        staleTime: 60_000, // 1 minute
     });
 }

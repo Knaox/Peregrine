@@ -1,0 +1,120 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Server\CreateScheduleRequest;
+use App\Http\Requests\Server\CreateTaskRequest;
+use App\Models\Server;
+use App\Services\Pelican\PelicanScheduleService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
+
+class ServerScheduleController extends Controller
+{
+    public function __construct(
+        private PelicanScheduleService $scheduleService,
+    ) {}
+
+    public function index(Server $server): JsonResponse
+    {
+        $this->authorize('view', $server);
+
+        $data = Cache::remember("server_schedules:{$server->identifier}", 300, function () use ($server): array {
+            $schedules = $this->scheduleService->listSchedules($server->identifier);
+
+            return array_map(function (array $schedule): array {
+                $attrs = $schedule['attributes'] ?? $schedule;
+                // Flatten tasks from relationships
+                $rawTasks = $attrs['relationships']['tasks']['data'] ?? [];
+                $attrs['tasks'] = array_map(
+                    fn (array $task) => $task['attributes'] ?? $task,
+                    $rawTasks,
+                );
+                unset($attrs['relationships']);
+                return $attrs;
+            }, $schedules);
+        });
+
+        return response()->json(['data' => $data]);
+    }
+
+    public function store(CreateScheduleRequest $request, Server $server): JsonResponse
+    {
+        $result = $this->scheduleService->createSchedule(
+            $server->identifier,
+            $request->validated(),
+        );
+
+        Cache::forget("server_schedules:{$server->identifier}");
+
+        $data = $result['attributes'] ?? $result;
+
+        return response()->json(['data' => $data], 201);
+    }
+
+    public function update(CreateScheduleRequest $request, Server $server, int $schedule): JsonResponse
+    {
+        $result = $this->scheduleService->updateSchedule(
+            $server->identifier,
+            $schedule,
+            $request->validated(),
+        );
+
+        Cache::forget("server_schedules:{$server->identifier}");
+
+        return response()->json(['data' => $result]);
+    }
+
+    public function execute(Server $server, int $schedule): JsonResponse
+    {
+        $this->authorize('update', $server);
+
+        $this->scheduleService->executeSchedule($server->identifier, $schedule);
+
+        Cache::forget("server_schedules:{$server->identifier}");
+
+        return response()->json(['message' => 'success']);
+    }
+
+    public function destroy(Server $server, int $schedule): JsonResponse
+    {
+        $this->authorize('update', $server);
+
+        $this->scheduleService->deleteSchedule($server->identifier, $schedule);
+
+        Cache::forget("server_schedules:{$server->identifier}");
+
+        return response()->json(['message' => 'success']);
+    }
+
+    public function storeTask(CreateTaskRequest $request, Server $server, int $schedule): JsonResponse
+    {
+        $data = $request->validated();
+        // Pelican requires sequence_id — auto-set to next available
+        if (!isset($data['sequence_id'])) {
+            $data['sequence_id'] = 1;
+        }
+
+        $result = $this->scheduleService->createTask(
+            $server->identifier,
+            $schedule,
+            $data,
+        );
+
+        Cache::forget("server_schedules:{$server->identifier}");
+
+        return response()->json(['data' => $result], 201);
+    }
+
+    public function destroyTask(Server $server, int $schedule, int $task): JsonResponse
+    {
+        $this->authorize('update', $server);
+
+        $this->scheduleService->deleteTask($server->identifier, $schedule, $task);
+
+        Cache::forget("server_schedules:{$server->identifier}");
+
+        return response()->json(['message' => 'success']);
+    }
+}

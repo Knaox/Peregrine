@@ -12,6 +12,11 @@ export interface Server {
         ip: string;
         port: number;
     } | null;
+    sftp_details?: {
+        ip: string;
+        port: number;
+        username: string;
+    } | null;
     plan: {
         id: number;
         name: string;

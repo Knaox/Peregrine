@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import { type FileListProps } from '@/components/files/FileList.props';
 import { FileActionMenu } from '@/components/files/FileActionMenu';
 import { Spinner } from '@/components/ui/Spinner';
@@ -7,8 +8,7 @@ import { formatBytes } from '@/utils/format';
 const ARCHIVE_EXTENSIONS = ['.zip', '.tar', '.tar.gz', '.tar.bz2', '.tgz'];
 
 function isArchive(name: string): boolean {
-    const lower = name.toLowerCase();
-    return ARCHIVE_EXTENSIONS.some((ext) => lower.endsWith(ext));
+    return ARCHIVE_EXTENSIONS.some((ext) => name.toLowerCase().endsWith(ext));
 }
 
 function buildPath(directory: string, name: string): string {
@@ -16,38 +16,23 @@ function buildPath(directory: string, name: string): string {
 }
 
 export function FileList({
-    files,
-    currentDirectory,
-    isLoading,
-    onNavigate,
-    onOpenFile,
-    onRename,
-    onDelete,
-    onCompress,
-    onDecompress,
+    files, currentDirectory, isLoading,
+    selectedFiles, onToggleSelect, onToggleSelectAll,
+    onNavigate, onOpenFile, onRename, onDelete, onCompress, onDecompress,
 }: FileListProps) {
     const { t } = useTranslation();
+    const allSelected = files.length > 0 && selectedFiles.size === files.length;
 
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-16">
-                <Spinner size="lg" />
-            </div>
-        );
-    }
-
-    if (files.length === 0) {
-        return (
-            <div className="flex items-center justify-center py-16 text-[var(--color-text-muted)] text-sm">
-                {t('servers.files.empty')}
-            </div>
-        );
-    }
+    if (isLoading) return <div className="flex items-center justify-center py-16"><Spinner size="lg" /></div>;
+    if (files.length === 0) return <div className="flex items-center justify-center py-16 text-[var(--color-text-muted)] text-sm">{t('servers.files.empty')}</div>;
 
     return (
         <table className="w-full text-sm">
             <thead>
                 <tr className="text-[var(--color-text-muted)] text-left border-b border-[var(--color-border)]">
+                    <th className="pb-2 pl-2 w-8">
+                        <input type="checkbox" checked={allSelected} onChange={onToggleSelectAll} className="rounded" />
+                    </th>
                     <th className="pb-2 pl-2 w-8" />
                     <th className="pb-2">{t('servers.files.name')}</th>
                     <th className="pb-2 w-28">{t('servers.files.size')}</th>
@@ -58,20 +43,24 @@ export function FileList({
             <tbody>
                 {files.map((file) => {
                     const fullPath = buildPath(currentDirectory, file.name);
+                    const isSelected = selectedFiles.has(file.name);
 
                     const handleClick = () => {
-                        if (file.is_directory) {
-                            onNavigate(fullPath);
-                        } else {
-                            onOpenFile(fullPath);
-                        }
+                        if (file.is_directory) onNavigate(fullPath);
+                        else onOpenFile(fullPath);
                     };
 
                     return (
                         <tr
                             key={file.name}
-                            className="hover:bg-[var(--color-surface-hover)] transition-colors duration-[var(--transition-fast)] border-b border-[var(--color-border)]/50"
+                            className={clsx(
+                                'transition-colors duration-[var(--transition-fast)] border-b border-[var(--color-border)]/50',
+                                isSelected ? 'bg-[var(--color-primary)]/5' : 'hover:bg-[var(--color-surface-hover)]',
+                            )}
                         >
+                            <td className="py-2 pl-2">
+                                <input type="checkbox" checked={isSelected} onChange={() => onToggleSelect(file.name)} className="rounded" />
+                            </td>
                             <td className="py-2 pl-2">
                                 {file.is_directory ? (
                                     <svg className="w-5 h-5 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -84,34 +73,18 @@ export function FileList({
                                 )}
                             </td>
                             <td className="py-2">
-                                <button
-                                    type="button"
-                                    onClick={handleClick}
-                                    className="text-left text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-[var(--transition-fast)]"
-                                >
+                                <button type="button" onClick={handleClick} className="text-left text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-[var(--transition-fast)]">
                                     {file.name}
                                 </button>
                             </td>
+                            <td className="py-2 text-[var(--color-text-muted)]">{file.is_directory ? '\u2014' : formatBytes(file.size)}</td>
                             <td className="py-2 text-[var(--color-text-muted)]">
-                                {file.is_directory
-                                    ? '\u2014'
-                                    : formatBytes(file.size)}
-                            </td>
-                            <td className="py-2 text-[var(--color-text-muted)]">
-                                {file.modified_at
-                                    ? new Date(typeof file.modified_at === 'string' ? file.modified_at : file.modified_at * 1000).toLocaleString()
-                                    : '\u2014'}
+                                {file.modified_at ? new Date(typeof file.modified_at === 'string' ? file.modified_at : file.modified_at * 1000).toLocaleString() : '\u2014'}
                             </td>
                             <td className="py-2">
-                                <FileActionMenu
-                                    name={file.name}
-                                    isFile={file.is_file}
-                                    isArchive={isArchive(file.name)}
-                                    onRename={() => onRename(file.name)}
-                                    onDelete={() => onDelete(file.name)}
-                                    onCompress={() => onCompress(file.name)}
-                                    onDecompress={() => onDecompress(file.name)}
-                                />
+                                <FileActionMenu name={file.name} isFile={file.is_file} isArchive={isArchive(file.name)}
+                                    onRename={() => onRename(file.name)} onDelete={() => onDelete(file.name)}
+                                    onCompress={() => onCompress(file.name)} onDecompress={() => onDecompress(file.name)} />
                             </td>
                         </tr>
                     );
