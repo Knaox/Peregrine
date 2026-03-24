@@ -41,10 +41,14 @@ class ServerScheduleController extends Controller
 
     public function store(CreateScheduleRequest $request, Server $server): JsonResponse
     {
-        $result = $this->scheduleService->createSchedule(
-            $server->identifier,
-            $request->validated(),
-        );
+        try {
+            $result = $this->scheduleService->createSchedule(
+                $server->identifier,
+                $request->validated(),
+            );
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            return response()->json(['message' => $e->response->json('errors.0.detail') ?? 'Pelican error'], $e->response->status());
+        }
 
         Cache::forget("server_schedules:{$server->identifier}");
 

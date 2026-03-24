@@ -169,7 +169,12 @@ export function ServerSchedulesPage() {
 
     const handleCreate = () => {
         const currentPreset = PRESETS[preset];
-        create.mutate(form, {
+        const payload = { ...form };
+        // Use preset name as fallback if name is empty
+        if (!payload.name.trim() && currentPreset) {
+            payload.name = currentPreset.name;
+        }
+        create.mutate(payload, {
             onSuccess: (newSchedule) => {
                 // Auto-add the preset's task if defined
                 if (currentPreset?.task && newSchedule?.id) {
