@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\ChangePasswordRequest;
 use App\Http\Requests\User\SftpPasswordRequest;
+use App\Http\Requests\User\UpdateDashboardLayoutRequest;
 use App\Http\Requests\User\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Services\Pelican\PelicanApplicationService;
@@ -43,6 +44,23 @@ class UserController extends Controller
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+    public function getDashboardLayout(Request $request): JsonResponse
+    {
+        return response()->json([
+            'data' => $request->user()->dashboard_layout,
+        ]);
+    }
+
+    public function updateDashboardLayout(UpdateDashboardLayoutRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $user->update(['dashboard_layout' => $request->validated('layout')]);
+
+        return response()->json([
+            'data' => $user->dashboard_layout,
+        ]);
     }
 
     public function sftpPassword(SftpPasswordRequest $request): JsonResponse

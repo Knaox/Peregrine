@@ -157,7 +157,12 @@
             "selected_count": "{{count}} serveur(s) sélectionné(s)",
             "deselect_all": "Tout désélectionner",
             "copy_ip": "Copier l'adresse",
-            "copied": "Copié !"
+            "copied": "Copié !",
+            "add_category": "Nouvelle categorie",
+            "category_placeholder": "Nom de la categorie...",
+            "delete_category_confirm": "Supprimer cette categorie ? Les serveurs seront deplaces vers Non classe.",
+            "drop_here": "Deposez les serveurs ici",
+            "reset_layout": "Reinitialiser la disposition"
         },
         "bulk": {
             "start_all": "Tout démarrer",
@@ -241,6 +246,7 @@
         },
         "sftp": {
             "title": "Accès SFTP",
+            "credentials_title": "Informations de connexion",
             "set_password": "Définir le mot de passe SFTP",
             "host": "Hôte",
             "port": "Port",
@@ -366,6 +372,7 @@
             "add_rate_limited": "Trop de requêtes. Veuillez patienter avant de réessayer.",
             "add_limit_reached": "Limite d'allocations atteinte pour ce serveur.",
             "no_allocations": "Aucune allocation réseau.",
+            "no_allocations_hint": "Ajoutez une allocation pour attribuer une IP et un port a ce serveur.",
             "selected_count": "{{count}} sélectionnée(s)",
             "deselect_all": "Tout désélectionner",
             "bulk_delete": "Supprimer la sélection",
@@ -386,7 +393,7 @@
             "schedules": "Planification",
             "network": "Réseau",
             "info": "Informations du serveur",
-            "game": "Jeu",
+            "game": "Egg",
             "plan": "Plan",
             "allocated": "Ressources allouées",
             "created": "Date de création",
@@ -416,7 +423,11 @@
         "servers": "Serveurs",
         "settings": "Paramètres",
         "profile": "Profil",
-        "logout": "Déconnexion"
+        "logout": "Déconnexion",
+        "greeting_morning": "Bonjour, {{name}}",
+        "greeting_afternoon": "Bon après-midi, {{name}}",
+        "greeting_evening": "Bonsoir, {{name}}",
+        "greeting_night": "Bonne nuit, {{name}}"
     },
     "profile": {
         "title": "Profil",

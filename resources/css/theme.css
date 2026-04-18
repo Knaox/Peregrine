@@ -36,24 +36,27 @@
     --transition-fast: 150ms ease;
     --transition-base: 250ms ease;
     --transition-smooth: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
     --radius-sm: 0.375rem;
     --radius: 0.75rem;
     --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
     --radius-full: 9999px;
     --font-sans: 'Inter', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
     /* Glassmorphism enhanced */
-    --glass-blur: blur(12px) saturate(150%);
-    --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    --glass-blur: blur(16px) saturate(180%);
+    --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --glass-highlight-strong: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Ambient background gradient */
 body {
     background-color: var(--color-background);
     background-image:
-        radial-gradient(ellipse at 20% 50%, rgba(var(--color-primary-rgb), 0.03) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(100, 60, 140, 0.02) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 50%, rgba(var(--color-primary-rgb), 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(100, 60, 140, 0.03) 0%, transparent 50%);
     background-attachment: fixed;
     font-family: var(--font-sans);
 }
@@ -83,25 +86,26 @@ body {
     50% { transform: translateY(-10px); }
 }
 
-/* Animated background orbs */
+/* Animated background orbs — more organic movement */
 @keyframes orb-float-1 {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    25% { transform: translate(80px, 60px) scale(1.1); }
-    50% { transform: translate(30px, 120px) scale(0.95); }
-    75% { transform: translate(-50px, 40px) scale(1.05); }
+    0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    20% { transform: translate(100px, 80px) scale(1.15) rotate(5deg); }
+    40% { transform: translate(40px, 150px) scale(0.95) rotate(-3deg); }
+    60% { transform: translate(-60px, 100px) scale(1.08) rotate(8deg); }
+    80% { transform: translate(-30px, 30px) scale(1.02) rotate(-2deg); }
 }
 
 @keyframes orb-float-2 {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    25% { transform: translate(-60px, 80px) scale(1.08); }
-    50% { transform: translate(-120px, 30px) scale(0.92); }
-    75% { transform: translate(-40px, -50px) scale(1.03); }
+    0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    25% { transform: translate(-80px, 100px) scale(1.1) rotate(-5deg); }
+    50% { transform: translate(-150px, 40px) scale(0.9) rotate(3deg); }
+    75% { transform: translate(-50px, -60px) scale(1.05) rotate(-8deg); }
 }
 
 @keyframes orb-float-3 {
     0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(100px, -60px) scale(1.12); }
-    66% { transform: translate(-50px, -100px) scale(0.9); }
+    33% { transform: translate(120px, -80px) scale(1.15); }
+    66% { transform: translate(-60px, -120px) scale(0.88); }
 }
 
 /* Shimmer effect for skeleton loaders */
@@ -120,6 +124,44 @@ body {
 @keyframes border-rotate {
     0% { --border-angle: 0deg; }
     100% { --border-angle: 360deg; }
+}
+
+/* Circular gauge fill animation */
+@keyframes gauge-fill {
+    from { stroke-dashoffset: var(--gauge-circumference); }
+    to { stroke-dashoffset: var(--gauge-offset); }
+}
+
+/* Glow pulse for active elements */
+@keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(var(--color-primary-rgb), 0.15); }
+    50% { box-shadow: 0 0 24px rgba(var(--color-primary-rgb), 0.3); }
+}
+
+/* Scale in animation */
+@keyframes scale-in {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Slide up + fade in */
+@keyframes slide-up-fade {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Progress bar glow sweep */
+@keyframes bar-glow-sweep {
+    0% { left: -40%; }
+    100% { left: 140%; }
+}
+
+/* Particle float for login */
+@keyframes particle-float {
+    0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
 }
 
 /* Diagonal clip for server card banners */
@@ -179,4 +221,64 @@ body {
 
 .border-glow:hover::before {
     opacity: 1;
+}
+
+/* Enhanced glass card with inner highlight */
+.glass-card-enhanced {
+    background: var(--color-glass);
+    backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: var(--glass-highlight), var(--shadow-md);
+}
+
+/* Animated progress bar with glow */
+.progress-bar-glow {
+    position: relative;
+    overflow: hidden;
+}
+.progress-bar-glow::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -40%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: bar-glow-sweep 2s ease-in-out infinite;
+}
+
+/* Circular gauge styling */
+.gauge-ring {
+    transform: rotate(-90deg);
+    transform-origin: center;
+}
+.gauge-ring circle {
+    transition: stroke-dashoffset 1s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 500ms ease;
+}
+
+/* Interactive hover lift */
+.hover-lift {
+    transition: transform var(--transition-smooth), box-shadow var(--transition-smooth);
+}
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Drag source opacity during pointer drag */
+.peregrine-dragging-source {
+    opacity: 0.3 !important;
+    transition: opacity 150ms ease;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .progress-bar-glow::after {
+        animation: none;
+    }
 }

@@ -16,9 +16,9 @@ function PowerButton({ label, onClick, disabled, variant }: {
             onClick={onClick}
             disabled={disabled}
             className={clsx(
-                'inline-flex items-center gap-1.5 px-3.5 py-1.5 text-sm rounded-lg',
-                'transition-all duration-150',
-                'disabled:opacity-40 disabled:cursor-not-allowed',
+                'inline-flex items-center gap-1.5 px-3.5 py-1.5 text-sm rounded-lg cursor-pointer',
+                'transition-all duration-200',
+                'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100',
                 variant === 'start' && 'bg-[var(--color-success)] text-white font-semibold hover:shadow-[0_0_16px_var(--color-success-glow)] hover:scale-[1.03]',
                 variant === 'restart' && 'border border-white/20 text-white hover:bg-white/10 hover:border-white/30 hover:scale-[1.03]',
                 variant === 'stop' && 'bg-[var(--color-danger)] text-white font-semibold hover:shadow-[0_0_16px_var(--color-danger-glow)] hover:scale-[1.03]',

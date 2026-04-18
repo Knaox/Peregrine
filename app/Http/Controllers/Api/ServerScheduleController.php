@@ -25,6 +25,15 @@ class ServerScheduleController extends Controller
 
             return array_map(function (array $schedule): array {
                 $attrs = $schedule['attributes'] ?? $schedule;
+                // Flatten cron object into top-level fields
+                if (isset($attrs['cron'])) {
+                    $attrs['minute'] = $attrs['cron']['minute'] ?? '*';
+                    $attrs['hour'] = $attrs['cron']['hour'] ?? '*';
+                    $attrs['day_of_month'] = $attrs['cron']['day_of_month'] ?? '*';
+                    $attrs['month'] = $attrs['cron']['month'] ?? '*';
+                    $attrs['day_of_week'] = $attrs['cron']['day_of_week'] ?? '*';
+                    unset($attrs['cron']);
+                }
                 // Flatten tasks from relationships
                 $rawTasks = $attrs['relationships']['tasks']['data'] ?? [];
                 $attrs['tasks'] = array_map(

@@ -13,19 +13,12 @@ export function ServerSearchBar({ value, onChange }: ServerSearchBarProps) {
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <svg
                     className={clsx(
-                        'h-5 w-5 transition-colors duration-300',
-                        isFocused ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]',
+                        'h-5 w-5 transition-all duration-300',
+                        isFocused ? 'text-[var(--color-primary)] scale-110' : 'text-[var(--color-text-muted)]',
                     )}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                 >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
                 </svg>
             </div>
 
@@ -43,8 +36,8 @@ export function ServerSearchBar({ value, onChange }: ServerSearchBarProps) {
                     'text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]',
                     'transition-all duration-300 outline-none',
                     isFocused
-                        ? 'border-[var(--color-primary)]/30 ring-1 ring-[var(--color-primary-glow)] pl-11'
-                        : 'border-[var(--color-glass-border)]',
+                        ? 'border-[var(--color-primary)]/30 ring-1 ring-[var(--color-primary-glow)] shadow-[0_0_16px_var(--color-primary-glow)] pl-11'
+                        : 'border-[var(--color-glass-border)] hover:border-[var(--color-border-hover)]',
                 )}
             />
 
@@ -53,21 +46,14 @@ export function ServerSearchBar({ value, onChange }: ServerSearchBarProps) {
                 type="button"
                 onClick={() => onChange('')}
                 className={clsx(
-                    'absolute inset-y-0 right-0 flex items-center pr-3',
-                    'transition-opacity duration-200',
-                    value.length > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none',
+                    'absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer',
+                    'transition-all duration-200',
+                    value.length > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none',
                 )}
             >
                 <svg
-                    className={clsx(
-                        'h-4 w-4 transition-all duration-200',
-                        'text-[var(--color-text-muted)]',
-                        'hover:text-[var(--color-text-primary)] hover:drop-shadow-[0_0_4px_var(--color-primary-glow)]',
-                    )}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
+                    className="h-4 w-4 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:drop-shadow-[0_0_4px_var(--color-primary-glow)] transition-all duration-200"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                 >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>

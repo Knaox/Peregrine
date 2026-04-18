@@ -157,7 +157,12 @@
             "selected_count": "{{count}} server(s) selected",
             "deselect_all": "Deselect all",
             "copy_ip": "Copy address",
-            "copied": "Copied!"
+            "copied": "Copied!",
+            "add_category": "New category",
+            "category_placeholder": "Category name...",
+            "delete_category_confirm": "Delete this category? Servers will move to Uncategorized.",
+            "drop_here": "Drop servers here",
+            "reset_layout": "Reset layout"
         },
         "bulk": {
             "start_all": "Start all",
@@ -241,6 +246,7 @@
         },
         "sftp": {
             "title": "SFTP Access",
+            "credentials_title": "Connection Details",
             "set_password": "Set SFTP Password",
             "host": "Host",
             "port": "Port",
@@ -366,6 +372,7 @@
             "add_rate_limited": "Too many requests. Please wait a moment before trying again.",
             "add_limit_reached": "Allocation limit reached for this server.",
             "no_allocations": "No network allocations.",
+            "no_allocations_hint": "Add an allocation to assign an IP and port to this server.",
             "selected_count": "{{count}} selected",
             "deselect_all": "Deselect all",
             "bulk_delete": "Remove selected",
@@ -386,7 +393,7 @@
             "schedules": "Schedules",
             "network": "Network",
             "info": "Server Information",
-            "game": "Game",
+            "game": "Egg",
             "plan": "Plan",
             "allocated": "Allocated Resources",
             "created": "Created",
@@ -416,7 +423,11 @@
         "servers": "Servers",
         "settings": "Settings",
         "profile": "Profile",
-        "logout": "Logout"
+        "logout": "Logout",
+        "greeting_morning": "Good morning, {{name}}",
+        "greeting_afternoon": "Good afternoon, {{name}}",
+        "greeting_evening": "Good evening, {{name}}",
+        "greeting_night": "Good night, {{name}}"
     },
     "profile": {
         "title": "Profile",

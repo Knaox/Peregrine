@@ -11,17 +11,15 @@ export function GlassCard({
     return (
         <div
             className={clsx(
-                'rounded-[var(--radius-lg)]',
-                'backdrop-blur-xl bg-[var(--color-glass)]',
-                'border border-[var(--color-glass-border)]',
-                'shadow-[var(--shadow-md)]',
-                'transition-all duration-[var(--transition-smooth)]',
+                'rounded-[var(--radius-lg)] glass-card-enhanced',
+                'transition-all duration-300',
                 hover && [
                     'hover:border-[var(--color-border-hover)]',
-                    'hover:shadow-[var(--shadow-lg)]',
+                    'hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
+                    'hover:-translate-y-0.5',
                     'cursor-pointer',
                 ],
-                glow && 'hover:shadow-[var(--shadow-glow)]',
+                glow && 'hover:shadow-[0_0_24px_var(--color-primary-glow),0_8px_32px_rgba(0,0,0,0.3)]',
                 onClick && !hover && 'cursor-pointer',
                 className,
             )}

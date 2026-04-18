@@ -24,5 +24,11 @@ export interface Server {
         cpu?: number;
         disk?: number;
     } | null;
+    /** Server resource limits from Pelican API (fallback when plan is null) */
+    limits?: {
+        memory: number;
+        cpu: number;
+        disk: number;
+    } | null;
     created_at: string;
 }

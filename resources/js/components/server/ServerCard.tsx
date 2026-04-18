@@ -11,85 +11,26 @@ import { useCardConfig } from '@/hooks/useCardConfig';
 import { useCountUp } from '@/hooks/useCountUp';
 import { fetchServer } from '@/services/serverApi';
 import type { ServerCardProps } from '@/components/server/ServerCard.props';
+import { ServerCardPowerButtons } from '@/components/server/ServerCardPowerButtons';
 
-/* Outlined circle power button */
-function PowerBtn({ icon, title, disabled, onClick }: {
-    icon: React.ReactNode;
-    title: string;
-    disabled?: boolean;
-    onClick: () => void;
-}) {
-    return (
-        <button
-            type="button"
-            title={title}
-            disabled={disabled}
-            onClick={onClick}
-            className={clsx(
-                'flex h-10 w-10 items-center justify-center rounded-full',
-                'border border-[var(--color-border-hover)] bg-transparent',
-                'text-[var(--color-text-secondary)]',
-                'transition-all duration-[var(--transition-base)]',
-                'hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:shadow-[var(--shadow-glow)]',
-                'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[var(--color-border-hover)] disabled:hover:text-[var(--color-text-secondary)] disabled:hover:shadow-none',
-            )}
-        >
-            {icon}
-        </button>
-    );
-}
-
-/* Animated stat with count-up + icon */
 function AnimStat({ icon, value, formatter }: {
-    icon: React.ReactNode;
-    value: number;
-    formatter: (v: number) => string;
+    icon: React.ReactNode; value: number; formatter: (v: number) => string;
 }) {
     const animated = useCountUp(value);
     return (
-        <span className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
+        <span className="flex items-center gap-1 text-white/70 text-xs">
             {icon} {formatter(animated)}
         </span>
     );
 }
 
-/* Stat icons */
-const CpuIcon = (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-    </svg>
-);
-const RamIcon = (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-    </svg>
-);
-const DiskIcon = (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 1.1.9 2 2 2h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2zm16 7H4m13 2h.01" />
-    </svg>
-);
-const PlayIcon = (
-    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-);
-const StopIcon = (
-    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z" /></svg>
-);
-const RestartIcon = (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M20.49 9A9 9 0 0 0 5.64 5.64L4 7m16 10l-1.64 1.36A9 9 0 0 1 3.51 15" />
-    </svg>
-);
+const CpuIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>;
+const RamIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
+const DiskIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 1.1.9 2 2 2h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2zm16 7H4m13 2h.01" /></svg>;
 
 export function ServerCard({
-    server,
-    stats,
-    onPower,
-    isPowerPending,
-    isSelectable = false,
-    isSelected = false,
-    onSelect,
-    isDragging = false,
+    server, stats, onPower, isPowerPending,
+    isSelectable = false, isSelected = false, onSelect, isDragging = false,
 }: ServerCardProps) {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -97,8 +38,9 @@ export function ServerCard({
     const [copied, setCopied] = useState(false);
     const cardConfig = useCardConfig();
     const cardRef = useRef<HTMLDivElement>(null);
+    const [spotlightPos, setSpotlightPos] = useState({ x: 0, y: 0 });
+    const hasBanner = cardConfig.show_egg_icon && !!server.egg?.banner_image;
 
-    // Prefetch server data on hover for instant navigation
     const handlePrefetch = useCallback(() => {
         void queryClient.prefetchQuery({
             queryKey: ['servers', server.id],
@@ -106,7 +48,6 @@ export function ServerCard({
             staleTime: 120_000,
         });
     }, [queryClient, server.id]);
-    const [spotlightPos, setSpotlightPos] = useState({ x: 0, y: 0 });
 
     const state = (stats?.state ?? server.status) as
         'running' | 'active' | 'stopped' | 'offline' | 'suspended' | 'terminated' | 'starting';
@@ -123,160 +64,135 @@ export function ServerCard({
     const handleCopy = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (!address) return;
-        void copyToClipboard(address).then(() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-        });
+        void copyToClipboard(address).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); });
     };
 
-    const handleSelect = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onSelect?.(server.id);
-    };
+    const handleSelect = (e: React.MouseEvent) => { e.stopPropagation(); onSelect?.(server.id); };
 
     return (
         <m.div
             ref={cardRef}
             layout
-            role="button"
-            tabIndex={0}
+            role="button" tabIndex={0}
             onClick={() => navigate(`/servers/${server.id}`)}
             onMouseEnter={handlePrefetch}
             onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/servers/${server.id}`); }}
             onMouseMove={handleMouseMove}
             className={clsx(
-                'group relative flex h-36 cursor-pointer overflow-hidden border-glow rounded-[var(--radius-lg)]',
-                cardConfig.card_style === 'elevated' && 'bg-[var(--color-surface)] shadow-[var(--shadow-md)]',
-                cardConfig.card_style === 'glass' && 'bg-[var(--color-glass)] backdrop-blur-xl border border-[var(--color-glass-border)]',
-                cardConfig.card_style === 'minimal' && 'bg-transparent border-b border-[var(--color-border)]',
-                (!cardConfig.card_style || cardConfig.card_style === 'default') && 'bg-[var(--color-surface)] border border-[var(--color-border)]',
-                'transition-all duration-300',
-                'hover:border-[var(--color-border-hover)] hover:shadow-[var(--shadow-glow)] hover:scale-[1.003]',
-                isDragging && 'opacity-50 scale-[0.98]',
-                isSelected && 'ring-2 ring-[var(--color-primary-glow)]',
+                'group relative h-36 cursor-pointer overflow-hidden border-glow rounded-[var(--radius-lg)]',
+                !hasBanner && 'bg-[var(--color-surface)] border border-[var(--color-border)]',
+                hasBanner && 'border border-transparent',
+                'transition-[box-shadow,border-color] duration-300',
+                'hover:border-[var(--color-border-hover)] hover:shadow-[0_8px_40px_rgba(0,0,0,0.4),var(--shadow-glow)]',
+                isDragging && 'opacity-50',
+                isSelected && 'ring-2 ring-[var(--color-primary)] ring-offset-1 ring-offset-[var(--color-background)]',
             )}
-            style={{ boxShadow: 'var(--glass-highlight)' }}
         >
-            {/* Card Spotlight — radial gradient follows cursor */}
-            <div
-                className="card-spotlight"
-                style={{
-                    background: `radial-gradient(circle 200px at ${spotlightPos.x}px ${spotlightPos.y}px, var(--color-primary-glow), transparent)`,
-                }}
-            />
-
-            {/* Egg banner — ~50% width with diagonal clip */}
-            {cardConfig.show_egg_icon && (
-                <div className="relative w-1/2 flex-shrink-0 overflow-hidden">
-                    {server.egg?.banner_image ? (
-                        <img
-                            src={server.egg.banner_image}
-                            alt={server.egg.name}
-                            className="banner-clip h-full w-full object-cover"
-                        />
-                    ) : (
-                        <div className="banner-clip flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--color-surface-hover)] to-[var(--color-background)]">
-                            <span className="text-lg font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
-                                {server.egg?.name ?? '?'}
-                            </span>
-                        </div>
-                    )}
-                </div>
+            {/* Full background image */}
+            {hasBanner && (
+                <>
+                    <img
+                        src={server.egg?.banner_image ?? undefined}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                    />
+                    {/* Gradient overlay — dark from right to left so text is readable */}
+                    <div className="absolute inset-0" style={{
+                        background: 'linear-gradient(to right, rgba(12,10,20,0.55) 0%, rgba(12,10,20,0.75) 35%, rgba(12,10,20,0.92) 65%, rgba(12,10,20,0.97) 100%)',
+                    }} />
+                </>
             )}
 
-            {/* Center: name + address + status */}
-            <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-center gap-1 py-3 pl-2 pr-2">
+            {/* Spotlight */}
+            <div className="card-spotlight" style={{
+                background: `radial-gradient(circle 250px at ${spotlightPos.x}px ${spotlightPos.y}px, rgba(var(--color-primary-rgb), 0.06), transparent)`,
+            }} />
+
+            {/* Content — overlays the background image */}
+            <div className="relative z-10 flex h-full min-w-0 flex-col justify-center gap-1.5 p-4 sm:p-5">
+                {/* Row 1: status + name */}
                 <div className="flex items-center gap-2">
                     {cardConfig.show_status_badge && <StatusDot status={state} size="sm" />}
-                    <span className="truncate text-lg font-bold text-[var(--color-text-primary)] transition-colors duration-300 group-hover:text-[var(--color-primary)]">
+                    <span className={clsx(
+                        'truncate text-sm sm:text-base font-bold transition-colors duration-300',
+                        hasBanner ? 'text-white group-hover:text-[var(--color-primary)]' : 'text-[var(--color-text-primary)] group-hover:text-[var(--color-primary)]',
+                    )}>
                         {server.name}
                     </span>
                 </div>
+
+                {/* Row 2: egg + plan */}
                 <div className="flex items-center gap-2 flex-wrap">
                     {cardConfig.show_egg_name && server.egg && (
-                        <span className="text-xs text-[var(--color-text-muted)]">{server.egg.name}</span>
+                        <span className={clsx('text-xs', hasBanner ? 'text-white/50' : 'text-[var(--color-text-muted)]')}>{server.egg.name}</span>
                     )}
                     {cardConfig.show_plan_name && server.plan && (
-                        <span className="text-xs text-[var(--color-text-muted)]">
+                        <span className={clsx('text-xs', hasBanner ? 'text-white/50' : 'text-[var(--color-text-muted)]')}>
                             {cardConfig.show_egg_name && server.egg ? '·' : ''} {server.plan.name}
                         </span>
                     )}
                 </div>
-                {cardConfig.show_ip_port && address && (
-                    <button
-                        type="button"
-                        onClick={handleCopy}
-                        className="mt-0.5 inline-flex w-fit items-center gap-1.5 rounded-[var(--radius-full)] px-2.5 py-0.5 text-xs font-mono transition-all duration-200"
-                        style={{
-                            background: copied ? 'rgba(var(--color-success-rgb), 0.1)' : 'rgba(255,255,255,0.05)',
-                            color: copied ? 'var(--color-success)' : 'var(--color-text-secondary)',
-                        }}
-                    >
-                        {copied ? (
-                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                        ) : (
-                            <svg className="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                            </svg>
-                        )}
-                        <span>{copied ? t('servers.list.copied') : address}</span>
-                    </button>
-                )}
-            </div>
 
-            {/* Right: power buttons + animated stats */}
-            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-            <div className="relative z-10 flex flex-shrink-0 items-center gap-6 px-5" onClick={(e) => e.stopPropagation()}>
-                {cardConfig.show_quick_actions && (
-                    <div className="flex items-center gap-2">
-                        {isStopped && (
-                            <PowerBtn icon={PlayIcon} title={t('servers.actions.start')} disabled={isPowerPending} onClick={() => onPower(server.id, 'start')} />
-                        )}
-                        {isRunning && (
-                            <>
-                                <PowerBtn icon={PlayIcon} title={t('servers.actions.start')} disabled={isPowerPending} onClick={() => onPower(server.id, 'start')} />
-                                <PowerBtn icon={StopIcon} title={t('servers.actions.stop')} disabled={isPowerPending} onClick={() => onPower(server.id, 'stop')} />
-                                <PowerBtn icon={RestartIcon} title={t('servers.actions.restart')} disabled={isPowerPending} onClick={() => onPower(server.id, 'restart')} />
-                            </>
-                        )}
-                    </div>
-                )}
+                {/* Row 3: address + stats + power */}
+                <div className="flex items-center gap-3 flex-wrap mt-0.5">
+                    {cardConfig.show_ip_port && address && (
+                        <button type="button" onClick={handleCopy}
+                            className="inline-flex items-center gap-1 rounded-[var(--radius-full)] px-2 py-0.5 text-[11px] font-mono cursor-pointer transition-all duration-200"
+                            style={{
+                                background: copied ? 'rgba(var(--color-success-rgb), 0.2)' : 'rgba(255,255,255,0.08)',
+                                color: copied ? 'var(--color-success)' : hasBanner ? 'rgba(255,255,255,0.7)' : 'var(--color-text-secondary)',
+                                backdropFilter: 'blur(8px)',
+                            }}>
+                            {copied ? (
+                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            ) : (
+                                <svg className="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                            )}
+                            <span>{copied ? t('servers.list.copied') : address}</span>
+                        </button>
+                    )}
 
-                {cardConfig.show_stats_bars && stats && (
-                    <div className="hidden items-center gap-4 text-sm sm:flex">
-                        <AnimStat icon={CpuIcon} value={stats.cpu} formatter={formatCpu} />
-                        <AnimStat icon={RamIcon} value={stats.memory_bytes} formatter={formatBytes} />
-                        <AnimStat icon={DiskIcon} value={stats.disk_bytes} formatter={formatBytes} />
-                        {cardConfig.show_uptime && stats.uptime > 0 && (
-                            <span className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {formatUptime(stats.uptime)}
+                    {cardConfig.show_stats_bars && stats && (
+                        <div className="flex items-center gap-3">
+                            <AnimStat icon={CpuIcon} value={stats.cpu} formatter={formatCpu} />
+                            <AnimStat icon={RamIcon} value={stats.memory_bytes} formatter={formatBytes} />
+                            <span className="hidden lg:flex items-center gap-1 text-white/70 text-xs">
+                                {DiskIcon} {formatBytes(stats.disk_bytes)}
                             </span>
-                        )}
-                    </div>
-                )}
+                            {cardConfig.show_uptime && stats.uptime > 0 && (
+                                <span className="hidden xl:flex items-center gap-1 text-white/70 text-xs">
+                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    {formatUptime(stats.uptime)}
+                                </span>
+                            )}
+                        </div>
+                    )}
+
+                    {cardConfig.show_quick_actions && (
+                        /* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+                        <div className="ml-auto flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <ServerCardPowerButtons
+                                serverId={server.id} isRunning={isRunning} isStopped={isStopped}
+                                isPowerPending={isPowerPending} onPower={onPower}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Selection checkbox */}
             {isSelectable && (
-                <button
-                    type="button"
-                    onClick={handleSelect}
+                <button type="button" onClick={handleSelect}
                     className={clsx(
-                        'absolute left-6 top-2 z-10 flex h-5 w-5 items-center justify-center rounded border transition-all duration-200',
+                        'absolute right-3 top-3 z-20',
+                        'flex h-6 w-6 items-center justify-center rounded',
+                        'border cursor-pointer transition-all duration-200',
                         isSelected
                             ? 'border-[var(--color-primary)] bg-[var(--color-primary)] ring-2 ring-[var(--color-primary-glow)]'
-                            : 'border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-sm',
-                    )}
-                >
+                            : 'border-white/30 bg-black/40 backdrop-blur-sm',
+                    )}>
                     {isSelected && (
-                        <svg className="h-3.5 w-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                        </svg>
+                        <svg className="h-3.5 w-3.5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
                     )}
                 </button>
             )}

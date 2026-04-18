@@ -114,4 +114,6 @@ Route::middleware('auth')->group(function () {
     Route::put('user/profile', [UserController::class, 'update']);
     Route::post('user/change-password', [UserController::class, 'changePassword']);
     Route::post('user/sftp-password', [UserController::class, 'sftpPassword']);
+    Route::get('user/dashboard-layout', [UserController::class, 'getDashboardLayout']);
+    Route::put('user/dashboard-layout', [UserController::class, 'updateDashboardLayout']);
 });

@@ -1,4 +1,5 @@
 import type { User } from '@/types/User';
+import type { DashboardLayout } from '@/types/DashboardLayout';
 import { request } from '@/services/http';
 
 export async function fetchProfile(): Promise<User> {
@@ -33,4 +34,17 @@ export async function setSftpPassword(data: {
         method: 'POST',
         body: JSON.stringify(data),
     });
+}
+
+export async function fetchDashboardLayout(): Promise<DashboardLayout | null> {
+    const { data } = await request<{ data: DashboardLayout | null }>('/api/user/dashboard-layout');
+    return data;
+}
+
+export async function saveDashboardLayout(layout: DashboardLayout): Promise<DashboardLayout> {
+    const { data } = await request<{ data: DashboardLayout }>('/api/user/dashboard-layout', {
+        method: 'PUT',
+        body: JSON.stringify({ layout }),
+    });
+    return data;
 }

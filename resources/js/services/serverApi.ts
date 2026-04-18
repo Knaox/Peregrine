@@ -10,17 +10,21 @@ interface ServerResponse {
     data: Server;
     allocation?: { ip: string; port: number } | null;
     sftp_details?: { ip: string; port: number; username: string } | null;
+    limits?: { memory: number; cpu: number; disk: number } | null;
 }
 
 export async function fetchServer(id: number): Promise<Server> {
     const response = await request<ServerResponse>(`/api/servers/${id}`);
     const server = response.data;
-    // Merge allocation and sftp_details from additional() into the server object
+    // Merge additional() data into the server object
     if (response.allocation) {
         server.allocation = response.allocation;
     }
     if (response.sftp_details) {
         server.sftp_details = response.sftp_details;
+    }
+    if (response.limits) {
+        server.limits = response.limits;
     }
     return server;
 }

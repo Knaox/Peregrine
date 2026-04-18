@@ -11,18 +11,35 @@ export function ProfilePage() {
         <m.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
+            transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
             className="max-w-2xl mx-auto space-y-6"
         >
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+            <m.h1
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1, duration: 0.35 }}
+                className="text-2xl font-bold text-[var(--color-text-primary)]"
+            >
                 {t('profile.title')}
-            </h1>
-            <GlassCard className="p-6">
-                <ProfileForm />
-            </GlassCard>
-            <GlassCard className="p-6">
-                <PasswordForm />
-            </GlassCard>
+            </m.h1>
+            <m.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15, duration: 0.4 }}
+            >
+                <GlassCard className="p-6">
+                    <ProfileForm />
+                </GlassCard>
+            </m.div>
+            <m.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25, duration: 0.4 }}
+            >
+                <GlassCard className="p-6">
+                    <PasswordForm />
+                </GlassCard>
+            </m.div>
         </m.div>
     );
 }

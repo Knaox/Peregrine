@@ -11,28 +11,32 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 {label && (
                     <label
                         htmlFor={inputId}
-                        className='text-sm font-medium text-[var(--color-text-secondary)]'
+                        className="text-sm font-medium text-[var(--color-text-secondary)] transition-colors duration-[var(--transition-fast)]"
                     >
                         {label}
                     </label>
                 )}
-                <input
-                    ref={ref}
-                    id={inputId}
-                    className={clsx(
-                        'w-full px-3 py-2 text-sm',
-                        'bg-[var(--color-surface)] rounded-[var(--radius)]',
-                        'text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]',
-                        'transition-all duration-[var(--transition-fast)]',
-                        'focus:outline-none focus:ring-2',
-                        error
-                            ? 'border border-[var(--color-danger)] focus:border-[var(--color-danger)] focus:ring-[var(--color-danger-glow)]'
-                            : 'border border-[var(--color-border)] focus:border-[var(--color-primary)] focus:ring-[var(--color-primary-glow)]',
-                    )}
-                    {...rest}
-                />
+                <div className="relative">
+                    <input
+                        ref={ref}
+                        id={inputId}
+                        className={clsx(
+                            'w-full px-4 py-2.5 text-sm',
+                            'bg-[var(--color-surface)] rounded-[var(--radius)]',
+                            'text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]',
+                            'transition-all duration-[var(--transition-base)]',
+                            'focus:outline-none focus:ring-2',
+                            'focus:shadow-[0_0_0_1px_var(--color-primary),0_0_16px_var(--color-primary-glow)]',
+                            error
+                                ? 'border border-[var(--color-danger)] focus:border-[var(--color-danger)] focus:ring-[var(--color-danger-glow)]'
+                                : 'border border-[var(--color-border)] focus:border-[var(--color-primary)] focus:ring-[var(--color-primary-glow)]',
+                            'hover:border-[var(--color-border-hover)]',
+                        )}
+                        {...rest}
+                    />
+                </div>
                 {error && (
-                    <span className='text-xs text-[var(--color-danger)]'>
+                    <span className="text-xs text-[var(--color-danger)] animate-[slide-up-fade_200ms_ease-out]">
                         {error}
                     </span>
                 )}

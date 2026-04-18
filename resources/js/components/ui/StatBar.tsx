@@ -7,10 +7,17 @@ function getBarColor(percent: number): string {
     return 'var(--color-danger)';
 }
 
+function getBarGlowColor(percent: number): string {
+    if (percent < 50) return 'var(--color-success-glow)';
+    if (percent < 80) return 'rgba(var(--color-warning-rgb), 0.3)';
+    return 'var(--color-danger-glow)';
+}
+
 export function StatBar({ label, value, max, formatted }: StatBarProps) {
     const percent = max > 0 ? (value / max) * 100 : 0;
     const clampedPercent = Math.min(100, Math.max(0, percent));
     const color = getBarColor(clampedPercent);
+    const glowColor = getBarGlowColor(clampedPercent);
 
     const [animatedWidth, setAnimatedWidth] = useState(0);
 
@@ -31,21 +38,24 @@ export function StatBar({ label, value, max, formatted }: StatBarProps) {
                     </span>
                 </div>
             )}
-            {/* Bar at the bottom — color transitions smoothly */}
             <div style={{
-                height: 4,
-                borderRadius: 2,
+                height: 6,
+                borderRadius: 3,
                 background: 'rgba(255,255,255,0.06)',
                 overflow: 'hidden',
+                position: 'relative',
             }}>
-                <div style={{
-                    height: '100%',
-                    width: `${animatedWidth}%`,
-                    background: color,
-                    borderRadius: 2,
-                    transition: 'width 500ms ease, background 500ms ease',
-                    boxShadow: clampedPercent > 80 ? `0 0 8px ${color}40` : 'none',
-                }} />
+                <div
+                    className="progress-bar-glow"
+                    style={{
+                        height: '100%',
+                        width: `${animatedWidth}%`,
+                        background: `linear-gradient(90deg, ${color}, ${color}cc)`,
+                        borderRadius: 3,
+                        transition: 'width 800ms cubic-bezier(0.34, 1.56, 0.64, 1), background 500ms ease',
+                        boxShadow: clampedPercent > 0 ? `0 0 12px ${glowColor}, 0 1px 3px ${glowColor}` : 'none',
+                    }}
+                />
             </div>
         </div>
     );

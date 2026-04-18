@@ -13,16 +13,17 @@ export function Card({
         <div
             className={clsx(
                 'rounded-[var(--radius-lg)]',
-                'transition-all duration-[var(--transition-smooth)]',
+                'transition-all duration-300',
                 glass
-                    ? 'backdrop-blur-xl bg-[var(--color-glass)] border border-[var(--color-glass-border)]'
+                    ? 'glass-card-enhanced'
                     : 'bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)]',
                 hover && [
                     'hover:border-[var(--color-border-hover)]',
                     'hover:shadow-[var(--shadow-md)]',
+                    'hover:-translate-y-0.5',
                     'cursor-pointer',
                 ],
-                glow && 'hover:shadow-[var(--shadow-glow)]',
+                glow && 'hover:shadow-[0_0_24px_var(--color-primary-glow)]',
                 onClick && !hover && 'cursor-pointer',
                 className,
             )}

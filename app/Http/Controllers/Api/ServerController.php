@@ -45,29 +45,50 @@ class ServerController extends Controller
         $allocation = null;
         $sftpDetails = null;
 
+        $limits = null;
+
         if ($server->identifier) {
             $allocation = $this->getCachedAllocation($server->identifier);
 
-            $sftpRaw = Cache::remember("sftp_details:{$server->identifier}", 1800, function () use ($server) {
-                try {
-                    $raw = $this->clientService->getRawServer($server->identifier);
-                    return $raw['sftp_details'] ?? [];
-                } catch (\Throwable) {
-                    return [];
-                }
-            });
+            // Clear legacy cache key from before refactor
+            Cache::forget("sftp_details:{$server->identifier}");
 
+            $cacheKey = "server_raw_v2:{$server->identifier}";
+            $rawData = Cache::get($cacheKey);
+            if ($rawData === null) {
+                try {
+                    $rawData = $this->clientService->getRawServer($server->identifier);
+                    if (!empty($rawData)) {
+                        Cache::put($cacheKey, $rawData, 900);
+                    }
+                } catch (\Throwable) {
+                    $rawData = [];
+                }
+            }
+
+            $sftpRaw = $rawData['sftp_details'] ?? [];
             $pelicanUsername = strtolower($request->user()->name ?? 'user');
             $sftpDetails = [
                 'ip' => $sftpRaw['alias'] ?? $sftpRaw['ip'] ?? $allocation['ip'] ?? null,
                 'port' => $sftpRaw['port'] ?? 2022,
                 'username' => $pelicanUsername . '.' . $server->identifier,
             ];
+
+            // Extract server limits from Pelican API response
+            $rawLimits = $rawData['limits'] ?? [];
+            if (!empty($rawLimits)) {
+                $limits = [
+                    'memory' => $rawLimits['memory'] ?? 0,
+                    'cpu' => $rawLimits['cpu'] ?? 0,
+                    'disk' => $rawLimits['disk'] ?? 0,
+                ];
+            }
         }
 
         return (new ServerResource($server))->additional([
             'allocation' => $allocation,
             'sftp_details' => $sftpDetails,
+            'limits' => $limits,
         ]);
     }
 
