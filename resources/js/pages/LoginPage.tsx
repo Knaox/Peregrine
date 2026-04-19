@@ -38,180 +38,127 @@ export function LoginPage() {
         }
     };
 
-    const handleOAuthLogin = () => { window.location.href = '/api/oauth/redirect'; };
-
     return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
-            {/* Animated gradient background */}
-            <div
-                className="absolute inset-0"
-                style={{
-                    backgroundImage: 'linear-gradient(-45deg, var(--color-background), #130d1e, var(--color-background), #1a0e24)',
-                    backgroundSize: '400% 400%',
-                    animation: 'gradient-shift 20s ease infinite',
-                }}
-            />
-
-            {/* Floating particles */}
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4"
+            style={{ background: 'var(--color-background)' }}>
+            {/* Gradient background */}
+            <div className="absolute inset-0" style={{
+                backgroundImage: 'linear-gradient(-45deg, var(--color-background), #130d1e, var(--color-background), #1a0e24)',
+                backgroundSize: '400% 400%', animation: 'gradient-shift 20s ease infinite',
+            }} />
             <LoginParticles />
-
             {/* Central glow */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full opacity-30"
-                    style={{ background: 'radial-gradient(circle, rgba(var(--color-primary-rgb), 0.2) 0%, transparent 70%)', filter: 'blur(60px)' }}
-                />
-            </div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(var(--color-primary-rgb), 0.15) 0%, transparent 70%)', filter: 'blur(60px)' }} />
 
-            <m.div
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
-                className="relative z-10 w-full max-w-md"
-            >
-                {/* Logo and title */}
-                <m.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    className="mb-8 text-center"
-                >
-                    <m.img
-                        src={branding.logo_url}
-                        alt={branding.app_name}
-                        className="mx-auto mb-5 h-20 w-20"
-                        animate={{ filter: ['drop-shadow(0 0 20px rgba(var(--color-primary-rgb), 0.3))', 'drop-shadow(0 0 40px rgba(var(--color-primary-rgb), 0.5))', 'drop-shadow(0 0 20px rgba(var(--color-primary-rgb), 0.3))'] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                    <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
-                        {branding.app_name}
-                    </h1>
-                    <p className="mt-2 text-[var(--color-text-secondary)]">{t('auth.login.title')}</p>
+            <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                className="relative z-10 w-full max-w-sm">
+
+                {/* Logo */}
+                <m.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.15, duration: 0.4 }} className="mb-6 text-center">
+                    <div className="flex justify-center mb-4">
+                        <img src={branding.logo_url} alt={branding.app_name}
+                            className="object-contain"
+                            style={{ height: branding.logo_height ?? 48, maxHeight: 64, maxWidth: 220, filter: 'drop-shadow(0 0 24px rgba(var(--color-primary-rgb), 0.4))' }} />
+                    </div>
+                    {branding.show_app_name !== false && (
+                        <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">{branding.app_name}</h1>
+                    )}
+                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">{t('auth.login.title')}</p>
                 </m.div>
 
-                {/* Glass card */}
-                <m.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3, duration: 0.5 }}
-                    className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-glass-border)] p-8 shadow-2xl"
-                    style={{ background: 'var(--color-glass)', backdropFilter: 'blur(20px) saturate(180%)', boxShadow: 'var(--glass-highlight-strong), 0 25px 50px rgba(0,0,0,0.4)' }}
-                >
+                {/* Form card */}
+                <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25, duration: 0.4 }}
+                    className="rounded-[var(--radius-xl)] p-6 sm:p-8"
+                    style={{ background: 'rgba(22, 19, 30, 0.85)', backdropFilter: 'blur(24px) saturate(180%)',
+                        border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+
                     {isOAuth ? (
-                        <m.button
-                            type="button"
-                            onClick={handleOAuthLogin}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className={clsx(
-                                'w-full rounded-[var(--radius)] border border-[var(--color-glass-border)] bg-[var(--color-surface)] px-4 py-3.5 text-sm font-semibold text-[var(--color-text-primary)]',
-                                'transition-all duration-[var(--transition-base)]',
-                                'hover:border-[var(--color-primary)]/50 hover:shadow-[var(--shadow-glow)]',
-                            )}
-                        >
+                        <m.button type="button" onClick={() => { window.location.href = '/api/oauth/redirect'; }}
+                            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                            className="w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] cursor-pointer transition-all duration-200 hover:border-[var(--color-primary)]/50 hover:shadow-[var(--shadow-glow)]">
                             {t('auth.login.oauth_button', { provider: 'Shop' })}
                         </m.button>
                     ) : (
-                        <form onSubmit={handleSubmit} className="space-y-5">
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             <AnimatePresence>
                                 {error && (
-                                    <m.div
-                                        initial={{ opacity: 0, y: -10, height: 0 }}
-                                        animate={{ opacity: 1, y: 0, height: 'auto' }}
-                                        exit={{ opacity: 0, y: -10, height: 0 }}
-                                        className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-3 text-sm text-[var(--color-danger)]"
-                                    >
+                                    <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-2.5 text-sm text-[var(--color-danger)]">
                                         {error}
                                     </m.div>
                                 )}
                             </AnimatePresence>
 
-                            <LoginField
-                                id="email" type="email" value={email} label={t('auth.login.email')}
+                            <AuthField id="email" type="email" value={email} label={t('auth.login.email')}
                                 onChange={setEmail} focused={focusedField === 'email'}
-                                onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)}
-                            />
-                            <LoginField
-                                id="password" type="password" value={password} label={t('auth.login.password')}
+                                onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)} />
+                            <AuthField id="password" type="password" value={password} label={t('auth.login.password')}
                                 onChange={setPassword} focused={focusedField === 'password'}
-                                onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)}
-                            />
+                                onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)} />
 
-                            <div className="flex items-center justify-between">
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <input
-                                        type="checkbox" checked={remember}
-                                        onChange={(e) => setRemember(e.target.checked)}
-                                        className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-primary)] focus:ring-[var(--color-primary-glow)] cursor-pointer"
-                                    />
-                                    <span className="text-sm text-[var(--color-text-secondary)] transition-colors duration-150 group-hover:text-[var(--color-text-primary)]">
-                                        {t('auth.login.remember')}
-                                    </span>
-                                </label>
-                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer group pt-1">
+                                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}
+                                    className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-primary)] cursor-pointer" />
+                                <span className="text-sm text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors">
+                                    {t('auth.login.remember')}
+                                </span>
+                            </label>
 
-                            <m.button
-                                type="submit" disabled={isSubmitting}
-                                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                            <button type="submit" disabled={isSubmitting}
                                 className={clsx(
-                                    'relative w-full overflow-hidden rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white',
-                                    'shadow-[0_4px_16px_var(--color-primary-glow)]',
-                                    'transition-all duration-[var(--transition-base)]',
+                                    'w-full rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white cursor-pointer',
+                                    'shadow-[0_4px_20px_var(--color-primary-glow)]',
+                                    'transition-all duration-200',
                                     'hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]',
-                                    'disabled:opacity-50 disabled:cursor-not-allowed',
-                                )}
-                            >
+                                    'active:scale-[0.98]',
+                                    'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
+                                )}>
                                 {isSubmitting ? t('common.loading') : t('auth.login.button')}
-                            </m.button>
+                            </button>
                         </form>
                     )}
                 </m.div>
 
                 {!isOAuth && (
-                    <m.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="mt-6 text-center text-sm text-[var(--color-text-secondary)]"
-                    >
+                    <p className="mt-5 text-center text-sm text-[var(--color-text-muted)]">
                         {t('auth.login.no_account')}{' '}
-                        <Link to="/register" className="font-medium text-[var(--color-primary)] transition-colors duration-[var(--transition-base)] hover:text-[var(--color-primary-hover)]">
+                        <Link to="/register" className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors">
                             {t('auth.login.create_account')}
                         </Link>
-                    </m.p>
+                    </p>
                 )}
             </m.div>
         </div>
     );
 }
 
-/* Animated input field with floating label effect */
-function LoginField({ id, type, value, label, onChange, focused, onFocus, onBlur }: {
-    id: string; type: string; value: string; label: string;
-    onChange: (v: string) => void; focused: boolean;
-    onFocus: () => void; onBlur: () => void;
+function AuthField({ id, type, value, label, error, onChange, focused, onFocus, onBlur }: {
+    id: string; type: string; value: string; label: string; error?: string;
+    onChange: (v: string) => void; focused: boolean; onFocus: () => void; onBlur: () => void;
 }) {
     return (
-        <div className="relative">
+        <div>
             <label htmlFor={id} className={clsx(
-                'mb-1.5 block text-sm font-medium transition-colors duration-200',
-                focused ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-secondary)]',
-            )}>
-                {label}
-            </label>
-            <input
-                id={id} type={type} value={value} required
-                autoComplete={type === 'email' ? 'email' : 'current-password'}
-                onChange={(e) => onChange(e.target.value)}
-                onFocus={onFocus} onBlur={onBlur}
+                'mb-1.5 block text-xs font-medium uppercase tracking-wider transition-colors duration-150',
+                focused ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]',
+            )}>{label}</label>
+            <input id={id} type={type} value={value} required
+                autoComplete={type === 'email' ? 'email' : type === 'password' ? 'current-password' : undefined}
+                onChange={(e) => onChange(e.target.value)} onFocus={onFocus} onBlur={onBlur}
                 className={clsx(
-                    'w-full rounded-[var(--radius)] border bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)]',
-                    'placeholder-[var(--color-text-muted)] transition-all duration-[var(--transition-base)]',
-                    'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-glow)]',
+                    'w-full rounded-[var(--radius)] border px-4 py-2.5 text-sm text-[var(--color-text-primary)]',
+                    'bg-[var(--color-background)] transition-all duration-200',
+                    'focus:outline-none focus:ring-1',
                     focused
-                        ? 'border-[var(--color-primary)] shadow-[0_0_16px_var(--color-primary-glow)]'
-                        : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)]',
-                )}
-            />
+                        ? 'border-[var(--color-primary)] ring-[var(--color-primary-glow)] shadow-[0_0_12px_var(--color-primary-glow)]'
+                        : 'border-[var(--color-border)] ring-transparent hover:border-[var(--color-border-hover)]',
+                )} />
+            {error && <p className="mt-1 text-xs text-[var(--color-danger)]">{error}</p>}
         </div>
     );
 }

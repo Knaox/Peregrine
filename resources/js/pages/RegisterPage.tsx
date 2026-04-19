@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { useAuthStore } from '@/stores/authStore';
 import { useBranding } from '@/hooks/useBranding';
 import { ApiError } from '@/services/api';
+import { LoginParticles } from '@/components/LoginParticles';
 
 export function RegisterPage() {
     const { t } = useTranslation();
@@ -20,6 +21,7 @@ export function RegisterPage() {
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [generalError, setGeneralError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [focusedField, setFocusedField] = useState<string | null>(null);
 
     const authMode = document.querySelector('meta[name="auth-mode"]')?.getAttribute('content') ?? 'local';
     const isOAuth = authMode === 'oauth';
@@ -29,23 +31,13 @@ export function RegisterPage() {
         setErrors({});
         setGeneralError('');
         setIsSubmitting(true);
-
         try {
-            await register({
-                name,
-                email,
-                password,
-                password_confirmation: passwordConfirmation,
-            });
+            await register({ name, email, password, password_confirmation: passwordConfirmation });
             navigate('/dashboard');
         } catch (err) {
             if (err instanceof ApiError && err.status === 422) {
-                const validationErrors = err.data.errors as Record<string, string[]> | undefined;
-                if (validationErrors) {
-                    setErrors(validationErrors);
-                } else {
-                    setGeneralError(t('common.error'));
-                }
+                const ve = err.data.errors as Record<string, string[]> | undefined;
+                if (ve) setErrors(ve); else setGeneralError(t('common.error'));
             } else {
                 setGeneralError(t('common.error'));
             }
@@ -54,56 +46,28 @@ export function RegisterPage() {
         }
     };
 
-    const getFieldError = (field: string): string | undefined => {
-        return errors[field]?.[0];
-    };
-
-    const inputClasses = clsx(
-        'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)]',
-        'placeholder-[var(--color-text-muted)] transition-all duration-[var(--transition-base)]',
-        'focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-glow)]',
-    );
+    const fieldError = (f: string) => errors[f]?.[0];
 
     if (isOAuth) {
         return (
-            <div
-                className="flex min-h-screen items-center justify-center px-4 text-[var(--color-text-primary)]"
-                style={{
-                    backgroundImage: 'linear-gradient(-45deg, var(--color-background), var(--color-surface), var(--color-background), var(--color-surface-elevated))',
-                    backgroundSize: '400% 400%',
-                    animation: 'gradient-shift 20s ease infinite',
-                }}
-            >
-                <m.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full max-w-md"
-                >
-                    <div className="mb-8 text-center">
-                        <img
-                            src={branding.logo_url}
-                            alt={branding.app_name}
-                            className="mx-auto mb-4 h-16 w-16"
-                            style={{ filter: 'drop-shadow(0 0 12px var(--color-primary-glow))' }}
-                        />
-                        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
-                            {branding.app_name}
-                        </h1>
-                    </div>
-
-                    <div className="rounded-[var(--radius-lg)] border border-[var(--color-glass-border)] bg-[var(--color-glass)] p-8 text-center shadow-2xl backdrop-blur-xl">
-                        <p className="mb-6 text-[var(--color-text-secondary)]">
-                            {t('auth.register.disabled')}
-                        </p>
-                        <Link
-                            to="/login"
-                            className={clsx(
-                                'inline-block rounded-[var(--radius)] bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white',
-                                'transition-all duration-[var(--transition-base)]',
-                                'hover:bg-[var(--color-primary-hover)] hover:shadow-[var(--shadow-glow)] hover:scale-[1.01]',
-                            )}
-                        >
+            <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4"
+                style={{ background: 'var(--color-background)' }}>
+                <div className="absolute inset-0" style={{
+                    backgroundImage: 'linear-gradient(-45deg, var(--color-background), #130d1e, var(--color-background), #1a0e24)',
+                    backgroundSize: '400% 400%', animation: 'gradient-shift 20s ease infinite',
+                }} />
+                <LoginParticles />
+                <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }} className="relative z-10 w-full max-w-sm text-center">
+                    <img src={branding.logo_url} alt={branding.app_name} className="mx-auto mb-4 object-contain"
+                        style={{ height: 48, maxWidth: 200, filter: 'drop-shadow(0 0 24px rgba(var(--color-primary-rgb), 0.4))' }} />
+                    <h1 className="text-xl font-semibold text-[var(--color-text-primary)] mb-4">{branding.app_name}</h1>
+                    <div className="rounded-[var(--radius-xl)] p-6" style={{
+                        background: 'rgba(22, 19, 30, 0.85)', backdropFilter: 'blur(24px) saturate(180%)',
+                        border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)',
+                    }}>
+                        <p className="mb-5 text-sm text-[var(--color-text-muted)]">{t('auth.register.disabled')}</p>
+                        <Link to="/login" className="inline-block rounded-[var(--radius)] bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_20px_var(--color-primary-glow)] transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]">
                             {t('auth.register.sign_in')}
                         </Link>
                     </div>
@@ -113,165 +77,110 @@ export function RegisterPage() {
     }
 
     return (
-        <div
-            className="flex min-h-screen items-center justify-center px-4 text-[var(--color-text-primary)]"
-            style={{
-                background: 'linear-gradient(135deg, var(--color-background) 0%, var(--color-surface) 50%, var(--color-background) 100%)',
-                backgroundSize: '200% 200%',
-                animation: 'ambient-shift 20s ease infinite',
-            }}
-        >
-            <m.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md"
-            >
-                {/* Logo and title */}
-                <div className="mb-8 text-center">
-                    <img
-                        src={branding.logo_url}
-                        alt={branding.app_name}
-                        className="mx-auto mb-4 h-16 w-16 drop-shadow-[0_0_20px_var(--color-primary-glow)]"
-                    />
-                    <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
-                        {branding.app_name}
-                    </h1>
-                    <p className="mt-2 text-[var(--color-text-secondary)]">
-                        {t('auth.register.title')}
-                    </p>
-                </div>
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4"
+            style={{ background: 'var(--color-background)' }}>
+            <div className="absolute inset-0" style={{
+                backgroundImage: 'linear-gradient(-45deg, var(--color-background), #130d1e, var(--color-background), #1a0e24)',
+                backgroundSize: '400% 400%', animation: 'gradient-shift 20s ease infinite',
+            }} />
+            <LoginParticles />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(var(--color-primary-rgb), 0.15) 0%, transparent 70%)', filter: 'blur(60px)' }} />
 
-                <div className="rounded-[var(--radius-lg)] border border-[var(--color-glass-border)] bg-[var(--color-glass)] p-8 shadow-2xl backdrop-blur-xl">
-                    <form onSubmit={handleSubmit} className="space-y-5">
+            <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                className="relative z-10 w-full max-w-sm">
+
+                <m.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.15 }} className="mb-6 text-center">
+                    <div className="flex justify-center mb-4">
+                        <img src={branding.logo_url} alt={branding.app_name}
+                            className="object-contain"
+                            style={{ height: branding.logo_height ?? 48, maxHeight: 64, maxWidth: 220, filter: 'drop-shadow(0 0 24px rgba(var(--color-primary-rgb), 0.4))' }} />
+                    </div>
+                    {branding.show_app_name !== false && (
+                        <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">{branding.app_name}</h1>
+                    )}
+                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">{t('auth.register.title')}</p>
+                </m.div>
+
+                <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25 }}
+                    className="rounded-[var(--radius-xl)] p-6 sm:p-8"
+                    style={{ background: 'rgba(22, 19, 30, 0.85)', backdropFilter: 'blur(24px) saturate(180%)',
+                        border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <AnimatePresence>
                             {generalError && (
-                                <m.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    transition={{ duration: 0.25 }}
-                                    className="rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger-glow)] px-4 py-3 text-sm text-[var(--color-danger)]"
-                                >
+                                <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-2.5 text-sm text-[var(--color-danger)]">
                                     {generalError}
                                 </m.div>
                             )}
                         </AnimatePresence>
 
-                        <div>
-                            <label
-                                htmlFor="name"
-                                className="mb-1.5 block text-sm font-medium text-[var(--color-text-secondary)]"
-                            >
-                                {t('auth.register.name')}
-                            </label>
-                            <input
-                                id="name"
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                                autoComplete="name"
-                                className={inputClasses}
-                            />
-                            {getFieldError('name') && (
-                                <p className="mt-1 text-xs text-[var(--color-danger)]">
-                                    {getFieldError('name')}
-                                </p>
-                            )}
-                        </div>
+                        <RegField id="name" type="text" value={name} label={t('auth.register.name')} error={fieldError('name')}
+                            onChange={setName} focused={focusedField === 'name'} auto="name"
+                            onFocus={() => setFocusedField('name')} onBlur={() => setFocusedField(null)} />
+                        <RegField id="email" type="email" value={email} label={t('auth.register.email')} error={fieldError('email')}
+                            onChange={setEmail} focused={focusedField === 'email'} auto="email"
+                            onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)} />
+                        <RegField id="password" type="password" value={password} label={t('auth.register.password')} error={fieldError('password')}
+                            onChange={setPassword} focused={focusedField === 'password'} auto="new-password"
+                            onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)} />
+                        <RegField id="password_confirmation" type="password" value={passwordConfirmation}
+                            label={t('auth.register.password_confirmation')}
+                            onChange={setPasswordConfirmation} focused={focusedField === 'password_confirmation'} auto="new-password"
+                            onFocus={() => setFocusedField('password_confirmation')} onBlur={() => setFocusedField(null)} />
 
-                        <div>
-                            <label
-                                htmlFor="email"
-                                className="mb-1.5 block text-sm font-medium text-[var(--color-text-secondary)]"
-                            >
-                                {t('auth.register.email')}
-                            </label>
-                            <input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                autoComplete="email"
-                                className={inputClasses}
-                            />
-                            {getFieldError('email') && (
-                                <p className="mt-1 text-xs text-[var(--color-danger)]">
-                                    {getFieldError('email')}
-                                </p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label
-                                htmlFor="password"
-                                className="mb-1.5 block text-sm font-medium text-[var(--color-text-secondary)]"
-                            >
-                                {t('auth.register.password')}
-                            </label>
-                            <input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                autoComplete="new-password"
-                                className={inputClasses}
-                            />
-                            {getFieldError('password') && (
-                                <p className="mt-1 text-xs text-[var(--color-danger)]">
-                                    {getFieldError('password')}
-                                </p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label
-                                htmlFor="password_confirmation"
-                                className="mb-1.5 block text-sm font-medium text-[var(--color-text-secondary)]"
-                            >
-                                {t('auth.register.password_confirmation')}
-                            </label>
-                            <input
-                                id="password_confirmation"
-                                type="password"
-                                value={passwordConfirmation}
-                                onChange={(e) => setPasswordConfirmation(e.target.value)}
-                                required
-                                autoComplete="new-password"
-                                className={inputClasses}
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
+                        <button type="submit" disabled={isSubmitting}
                             className={clsx(
-                                'w-full rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white',
-                                'transition-all duration-[var(--transition-base)]',
-                                'hover:bg-[var(--color-primary-hover)] hover:shadow-[var(--shadow-glow)] hover:scale-[1.01]',
-                                'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-glow)]',
-                                'disabled:cursor-not-allowed disabled:opacity-50',
-                            )}
-                        >
+                                'w-full rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white cursor-pointer',
+                                'shadow-[0_4px_20px_var(--color-primary-glow)]',
+                                'transition-all duration-200',
+                                'hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]',
+                                'active:scale-[0.98]',
+                                'disabled:opacity-50 disabled:cursor-not-allowed',
+                            )}>
                             {isSubmitting ? t('common.loading') : t('auth.register.button')}
                         </button>
                     </form>
-                </div>
+                </m.div>
 
-                {/* Link to login */}
-                <p className="mt-6 text-center text-sm text-[var(--color-text-secondary)]">
+                <p className="mt-5 text-center text-sm text-[var(--color-text-muted)]">
                     {t('auth.register.has_account')}{' '}
-                    <Link
-                        to="/login"
-                        className="font-medium text-[var(--color-primary)] transition-colors duration-[var(--transition-base)] hover:text-[var(--color-primary-hover)]"
-                    >
+                    <Link to="/login" className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors">
                         {t('auth.register.sign_in')}
                     </Link>
                 </p>
             </m.div>
+        </div>
+    );
+}
+
+function RegField({ id, type, value, label, error, onChange, focused, onFocus, onBlur, auto }: {
+    id: string; type: string; value: string; label: string; error?: string; auto?: string;
+    onChange: (v: string) => void; focused: boolean; onFocus: () => void; onBlur: () => void;
+}) {
+    return (
+        <div>
+            <label htmlFor={id} className={clsx(
+                'mb-1.5 block text-xs font-medium uppercase tracking-wider transition-colors duration-150',
+                focused ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]',
+            )}>{label}</label>
+            <input id={id} type={type} value={value} required autoComplete={auto}
+                onChange={(e) => onChange(e.target.value)} onFocus={onFocus} onBlur={onBlur}
+                className={clsx(
+                    'w-full rounded-[var(--radius)] border px-4 py-2.5 text-sm text-[var(--color-text-primary)]',
+                    'bg-[var(--color-background)] transition-all duration-200',
+                    'focus:outline-none focus:ring-1',
+                    focused
+                        ? 'border-[var(--color-primary)] ring-[var(--color-primary-glow)] shadow-[0_0_12px_var(--color-primary-glow)]'
+                        : 'border-[var(--color-border)] ring-transparent hover:border-[var(--color-border-hover)]',
+                )} />
+            {error && <p className="mt-1 text-xs text-[var(--color-danger)]">{error}</p>}
         </div>
     );
 }

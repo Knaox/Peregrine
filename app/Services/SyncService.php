@@ -227,6 +227,8 @@ class SyncService
                     'docker_image' => $pelicanEgg->dockerImage,
                     'startup' => $pelicanEgg->startup,
                     'description' => $pelicanEgg->description,
+                    'tags' => $pelicanEgg->tags,
+                    'features' => $pelicanEgg->features,
                 ],
             );
             $eggCount++;

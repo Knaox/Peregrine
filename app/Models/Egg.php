@@ -21,6 +21,8 @@ class Egg extends Model
         'banner_image',
         'startup',
         'description',
+        'tags',
+        'features',
     ];
 
     /**
@@ -33,6 +35,8 @@ class Egg extends Model
         return [
             'pelican_egg_id' => 'integer',
             'nest_id' => 'integer',
+            'tags' => 'array',
+            'features' => 'array',
         ];
     }
 

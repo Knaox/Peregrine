@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7557c75ae28a8a7065319988d14453ff",
+    "content-hash": "3d6530ad610ba2d5e3245198395981c3",
     "packages": [
         {
             "name": "blade-ui-kit/blade-heroicons",
@@ -554,16 +554,16 @@
         },
         {
             "name": "dedoc/scramble",
-            "version": "v0.13.16",
+            "version": "v0.13.20",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dedoc/scramble.git",
-                "reference": "43a5dd62b6a5d7d6fd0125092985d78ae22f0ffe"
+                "reference": "55545987558fdd44d676831a41bf0a41365c5ab6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dedoc/scramble/zipball/43a5dd62b6a5d7d6fd0125092985d78ae22f0ffe",
-                "reference": "43a5dd62b6a5d7d6fd0125092985d78ae22f0ffe",
+                "url": "https://api.github.com/repos/dedoc/scramble/zipball/55545987558fdd44d676831a41bf0a41365c5ab6",
+                "reference": "55545987558fdd44d676831a41bf0a41365c5ab6",
                 "shasum": ""
             },
             "require": {
@@ -622,7 +622,7 @@
             ],
             "support": {
                 "issues": "https://github.com/dedoc/scramble/issues",
-                "source": "https://github.com/dedoc/scramble/tree/v0.13.16"
+                "source": "https://github.com/dedoc/scramble/tree/v0.13.20"
             },
             "funding": [
                 {
@@ -630,7 +630,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-03-17T21:42:41+00:00"
+            "time": "2026-04-16T14:13:35+00:00"
         },
         {
             "name": "dflydev/dot-access-data",

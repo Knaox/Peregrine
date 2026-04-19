@@ -4,6 +4,10 @@ namespace App\Services\Pelican\DTOs;
 
 final readonly class PelicanEgg
 {
+    /**
+     * @param  list<string>  $tags
+     * @param  list<string>  $features
+     */
     public function __construct(
         public int $id,
         public int $nestId,
@@ -11,6 +15,8 @@ final readonly class PelicanEgg
         public string $dockerImage,
         public string $startup,
         public string $description,
+        public array $tags = [],
+        public array $features = [],
     ) {}
 
     public static function fromApiResponse(array $data): self
@@ -23,6 +29,8 @@ final readonly class PelicanEgg
             dockerImage: $attributes['docker_image'] ?? '',
             startup: $attributes['startup'] ?? '',
             description: $attributes['description'] ?? '',
+            tags: $attributes['tags'] ?? [],
+            features: $attributes['features'] ?? [],
         );
     }
 }
