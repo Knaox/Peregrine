@@ -31,7 +31,7 @@ export function ConsoleInput({ onSend, onHistoryUp, onHistoryDown, disabled }: C
     return (
         <div
             className={clsx(
-                'flex items-center gap-3 px-4 py-3 rounded-[var(--radius-lg)]',
+                'flex items-center gap-2 sm:gap-3 px-3 py-2.5 sm:px-4 sm:py-3 rounded-[var(--radius-lg)]',
                 'transition-all duration-200',
                 disabled && 'opacity-40 cursor-not-allowed',
             )}

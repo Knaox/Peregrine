@@ -62,11 +62,11 @@ function CopyField({ label, value }: { label: string; value: string }) {
     };
 
     return (
-        <div className="flex items-center justify-between rounded-[var(--radius)] px-3 py-3 transition-colors hover:bg-[var(--color-surface-hover)]/50">
+        <div className="flex items-center justify-between gap-2 rounded-[var(--radius)] px-2 sm:px-3 py-2 sm:py-3 transition-colors hover:bg-[var(--color-surface-hover)]/50">
             <div className="min-w-0">
                 <span className="block text-xs text-[var(--color-text-muted)]">{label}</span>
                 <span
-                    className="text-sm font-medium text-[var(--color-text-primary)]"
+                    className="text-xs sm:text-sm font-medium text-[var(--color-text-primary)] break-all"
                     style={{ fontFamily: 'var(--font-mono)' }}
                 >
                     {value}
@@ -108,13 +108,13 @@ function CredentialsSection({ sftpHost, sftpPort, sftpUsername, quickConnect, qc
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.05 }}
-            className="glass-card-enhanced rounded-[var(--radius-lg)] p-5"
+            className="glass-card-enhanced rounded-[var(--radius-lg)] p-4 sm:p-5"
         >
-            <div className="mb-4 flex items-center gap-2.5">
+            <div className="mb-3 sm:mb-4 flex items-center gap-2.5">
                 <div className="rounded-[var(--radius)] bg-[var(--color-primary)]/10 p-1.5">
                     <KeyIcon className="h-4 w-4 text-[var(--color-primary)]" />
                 </div>
-                <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+                <h3 className="text-sm sm:text-base font-semibold text-[var(--color-text-primary)]">
                     {t('servers.sftp.credentials_title')}
                 </h3>
             </div>
@@ -175,13 +175,13 @@ function PasswordSection({ password, confirm, mismatch, isPending, isSuccess, er
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
-            className="glass-card-enhanced rounded-[var(--radius-lg)] p-5"
+            className="glass-card-enhanced rounded-[var(--radius-lg)] p-4 sm:p-5"
         >
-            <div className="mb-4 flex items-center gap-2.5">
+            <div className="mb-3 sm:mb-4 flex items-center gap-2.5">
                 <div className="rounded-[var(--radius)] bg-[var(--color-warning)]/10 p-1.5">
                     <LockIcon className="h-4 w-4 text-[var(--color-warning)]" />
                 </div>
-                <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+                <h3 className="text-sm sm:text-base font-semibold text-[var(--color-text-primary)]">
                     {t('servers.sftp.set_password')}
                 </h3>
             </div>
@@ -267,7 +267,7 @@ export function SftpCredentials({ server }: SftpCredentialsProps) {
     };
 
     return (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2">
             <CredentialsSection
                 sftpHost={sftpHost}
                 sftpPort={sftpPort}

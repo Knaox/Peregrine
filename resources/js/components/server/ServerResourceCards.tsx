@@ -30,7 +30,7 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
 
     if (isLoading) {
         return (
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 lg:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
         );
@@ -48,9 +48,9 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
     const diskPercent = diskMax ? (diskBytes / diskMax) * 100 : 0;
 
     return (
-        <m.div variants={stagger} initial="initial" animate="animate" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <m.div variants={stagger} initial="initial" animate="animate" className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 lg:grid-cols-4">
             {/* CPU */}
-            <m.div variants={fadeUp} className="hover-lift rounded-[var(--radius-lg)] p-5 glass-card-enhanced">
+            <m.div variants={fadeUp} className="hover-lift rounded-[var(--radius-lg)] p-3 sm:p-5 glass-card-enhanced">
                 <div className="mb-3 flex items-center gap-3">
                     <IconCircle color="var(--color-primary)">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -65,7 +65,7 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
             </m.div>
 
             {/* Memory */}
-            <m.div variants={fadeUp} className="hover-lift rounded-[var(--radius-lg)] p-5 glass-card-enhanced">
+            <m.div variants={fadeUp} className="hover-lift rounded-[var(--radius-lg)] p-3 sm:p-5 glass-card-enhanced">
                 <div className="mb-3 flex items-center gap-3">
                     <IconCircle color="var(--color-info)">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -80,7 +80,7 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
             </m.div>
 
             {/* Disk */}
-            <m.div variants={fadeUp} className="hover-lift rounded-[var(--radius-lg)] p-5 glass-card-enhanced">
+            <m.div variants={fadeUp} className="hover-lift rounded-[var(--radius-lg)] p-3 sm:p-5 glass-card-enhanced">
                 <div className="mb-3 flex items-center gap-3">
                     <IconCircle color="var(--color-accent)">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -95,7 +95,7 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
             </m.div>
 
             {/* Network */}
-            <m.div variants={fadeUp} className="hover-lift rounded-[var(--radius-lg)] p-5 glass-card-enhanced">
+            <m.div variants={fadeUp} className="hover-lift rounded-[var(--radius-lg)] p-3 sm:p-5 glass-card-enhanced">
                 <div className="mb-3 flex items-center gap-3">
                     <IconCircle color="var(--color-success)">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

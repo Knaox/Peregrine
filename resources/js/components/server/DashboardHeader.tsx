@@ -26,14 +26,14 @@ export function DashboardHeader({ userName, isAdmin, serverCount }: DashboardHea
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="mb-8 flex items-end justify-between"
+            className="mb-5 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4"
         >
             <div>
                 <m.h1
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1, duration: 0.4 }}
-                    className="text-3xl font-bold text-[var(--color-text-primary)]"
+                    className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)]"
                 >
                     {t(greetingKey, { name: userName ?? '' })}
                 </m.h1>

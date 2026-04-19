@@ -94,7 +94,7 @@ export function ServerDatabasesPage() {
                     transition={{ duration: 0.25 }}
                     className="glass-card-enhanced rounded-[var(--radius-lg)] p-5"
                 >
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                         <div>
                             <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('servers.databases.name')}</label>
                             <input value={dbName} onChange={(e) => setDbName(e.target.value)} placeholder="s1_mydb" className={INPUT_CLS} />

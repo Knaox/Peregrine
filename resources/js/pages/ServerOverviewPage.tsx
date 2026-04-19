@@ -50,7 +50,7 @@ export function ServerOverviewPage() {
                 transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
                 className="relative overflow-hidden rounded-[var(--radius-xl)]"
                 style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div className="relative" style={{ minHeight: 260 }}>
+                <div className="relative" style={{ minHeight: 200 }}>
                     {server.egg?.banner_image ? (
                         <m.img src={server.egg.banner_image} alt={server.egg.name}
                             className="absolute inset-0 h-full w-full object-cover"
@@ -64,7 +64,7 @@ export function ServerOverviewPage() {
                     <div className="absolute bottom-0 left-1/4 h-40 w-1/2 pointer-events-none"
                         style={{ background: 'radial-gradient(ellipse, rgba(var(--color-primary-rgb), 0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
 
-                    <div className="relative flex h-full flex-col justify-between p-5 sm:p-6" style={{ minHeight: 260 }}>
+                    <div className="relative flex h-full flex-col justify-between p-4 sm:p-5 md:p-6" style={{ minHeight: 200 }}>
                         {/* Top: status + uptime */}
                         <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
                             className="flex items-center gap-3 flex-wrap">
@@ -93,7 +93,7 @@ export function ServerOverviewPage() {
                         {/* Bottom: name + actions */}
                         <div className="space-y-3">
                             <m.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.5 }}
-                                className="text-3xl sm:text-4xl font-extrabold text-white" style={{ textShadow: '0 2px 30px rgba(0,0,0,0.6)' }}>
+                                className="text-xl sm:text-3xl md:text-4xl font-extrabold text-white" style={{ textShadow: '0 2px 30px rgba(0,0,0,0.6)' }}>
                                 {server.name}
                             </m.h1>
                             <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
@@ -115,7 +115,7 @@ export function ServerOverviewPage() {
                                         {server.egg.name}
                                     </span>
                                 )}
-                                <div className="ml-auto"><ServerPowerControls serverId={server.id} state={state} /></div>
+                                <div className="sm:ml-auto"><ServerPowerControls serverId={server.id} state={state} /></div>
                             </m.div>
                         </div>
                     </div>

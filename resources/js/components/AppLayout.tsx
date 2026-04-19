@@ -36,10 +36,10 @@ export function AppLayout() {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
                         {/* Left: Logo + Nav */}
-                        <div className="flex items-center gap-8">
+                        <div className="flex items-center gap-3 sm:gap-8">
                             <Link
                                 to="/dashboard"
-                                className="group flex items-center gap-3 transition-all duration-300"
+                                className="group flex items-center gap-2 sm:gap-3 transition-all duration-300"
                             >
                                 <m.img
                                     src={branding.logo_url}
@@ -118,7 +118,7 @@ export function AppLayout() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="relative z-10 px-6 py-8 lg:px-10"
+                className="relative z-10 px-3 py-5 sm:px-6 sm:py-8 lg:px-10"
             >
                 <Outlet />
             </m.main>

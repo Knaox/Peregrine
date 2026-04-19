@@ -72,7 +72,7 @@ export function ServerDetailPage() {
 
     if (isLoading) {
         return (
-            <div className="flex h-screen items-center justify-center">
+            <div className="flex h-[100dvh] items-center justify-center">
                 <Spinner size="lg" />
             </div>
         );
@@ -80,7 +80,7 @@ export function ServerDetailPage() {
 
     if (isError || !server) {
         return (
-            <div className="flex h-screen flex-col items-center justify-center gap-4">
+            <div className="flex h-[100dvh] flex-col items-center justify-center gap-4">
                 <GlassCard className="px-8 py-6 text-center">
                     <p className="text-[var(--color-text-secondary)]">
                         {t('servers.detail.not_found')}
@@ -97,7 +97,7 @@ export function ServerDetailPage() {
     }
 
     return (
-        <div className={isTopLayout ? 'flex flex-col h-screen overflow-hidden' : 'flex h-screen overflow-hidden'}>
+        <div className={isTopLayout ? 'flex flex-col h-[100dvh] overflow-hidden' : 'flex h-[100dvh] overflow-hidden'}>
             <ServerSidebar server={server} />
             <m.main
                 initial={{ opacity: 0 }}
@@ -106,7 +106,7 @@ export function ServerDetailPage() {
                 className="relative flex-1 overflow-y-auto"
             >
                 <EggBackground imageUrl={server.egg?.banner_image} />
-                <div className="relative z-10 p-6">
+                <div className="relative z-10 p-3 pt-14 sm:p-4 sm:pt-14 md:p-6 md:pt-6 flex flex-col min-h-full">
                     <Routes>
                         {dynamicRoutes.map((route) =>
                             route.index

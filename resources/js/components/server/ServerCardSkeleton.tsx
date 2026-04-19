@@ -3,7 +3,7 @@
  */
 export function ServerCardSkeleton() {
     return (
-        <div className="flex h-36 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+        <div className="flex min-h-[8rem] sm:h-36 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
             {/* Banner skeleton */}
             <div className="banner-clip w-1/2 flex-shrink-0 skeleton-shimmer" />
 

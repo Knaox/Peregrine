@@ -57,8 +57,8 @@ function AllocationCard({ alloc, isSelected, onToggleSelect, onEditNotes, editin
             'glass-card-enhanced rounded-[var(--radius-lg)] p-4 transition-all duration-200',
             isSelected && 'ring-2 ring-[var(--color-primary)]/40',
         )}>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-3 min-w-0">
                     {!alloc.is_default && (
                         <input
                             type="checkbox"
@@ -71,7 +71,7 @@ function AllocationCard({ alloc, isSelected, onToggleSelect, onEditNotes, editin
                         <div className="flex items-center gap-2.5">
                             <div className="rounded-[var(--radius)] bg-[var(--color-surface-hover)] px-3 py-1.5">
                                 <span
-                                    className="text-base font-bold text-[var(--color-text-primary)]"
+                                    className="text-sm sm:text-base font-bold text-[var(--color-text-primary)] break-all"
                                     style={{ fontFamily: 'var(--font-mono)' }}
                                 >
                                     {alloc.ip_alias ?? alloc.ip}:{alloc.port}
@@ -123,7 +123,7 @@ function AllocationCard({ alloc, isSelected, onToggleSelect, onEditNotes, editin
                         )}
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     {!alloc.is_default && (
                         <Button variant="secondary" size="sm" isLoading={isPrimaryPending} onClick={onSetPrimary}>
                             {t('servers.network.set_primary')}
@@ -274,7 +274,7 @@ export function ServerNetworkPage() {
                         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                         className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
                     >
-                        <div className="glass-card-enhanced flex items-center gap-4 rounded-[var(--radius-lg)] px-5 py-3 shadow-[var(--shadow-lg)]">
+                        <div className="glass-card-enhanced flex items-center gap-3 sm:gap-4 rounded-[var(--radius-lg)] px-3 sm:px-5 py-3 shadow-[var(--shadow-lg)]">
                             <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                                 {t('servers.network.selected_count', { count: selected.size })}
                             </span>

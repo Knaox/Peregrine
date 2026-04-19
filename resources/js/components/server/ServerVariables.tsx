@@ -167,7 +167,7 @@ export function ServerVariables({ serverId }: ServerVariablesProps) {
     }
 
     return (
-        <GlassCard className="p-6 space-y-4">
+        <GlassCard className="p-4 sm:p-6 space-y-4">
             <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
                     {t('servers.variables.title')}
@@ -177,7 +177,7 @@ export function ServerVariables({ serverId }: ServerVariablesProps) {
                 </span>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
                 {variables.map((v) => (
                     <VariableCard
                         key={v.env_variable}

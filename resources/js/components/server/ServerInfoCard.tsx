@@ -39,9 +39,9 @@ export function ServerInfoCard({ server }: ServerInfoCardProps) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="glass-card-enhanced rounded-[var(--radius-lg)] px-5 py-4"
+            className="glass-card-enhanced rounded-[var(--radius-lg)] px-3 py-3 sm:px-5 sm:py-4"
         >
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+            <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-3">
                 {server.egg && (
                     <InfoItem icon={EggIcon} label={t('servers.detail.game')}>
                         <div className="flex items-center gap-1.5">

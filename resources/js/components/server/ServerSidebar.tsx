@@ -143,9 +143,14 @@ function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnTy
     return (
         <>
             <button type="button" onClick={() => setMobileOpen(!mobileOpen)}
-                className="fixed left-4 top-4 z-40 p-2 md:hidden cursor-pointer transition-all duration-150"
-                style={{ borderRadius: 'var(--radius)', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', color: 'var(--color-text-secondary)' }}>
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                className="fixed left-3 top-3 z-40 p-2.5 md:hidden cursor-pointer transition-all duration-150"
+                style={{ borderRadius: 'var(--radius)', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--color-text-secondary)' }}>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    {mobileOpen
+                        ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    }
+                </svg>
             </button>
             <AnimatePresence>
                 {mobileOpen && <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setMobileOpen(false)} role="presentation" />}
@@ -157,7 +162,7 @@ function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnTy
             <AnimatePresence>
                 {mobileOpen && (
                     <m.aside initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                        className="fixed left-0 top-0 z-40 h-screen w-56 overflow-y-auto md:hidden"
+                        className="fixed left-0 top-0 z-40 h-[100dvh] w-[min(16rem,80vw)] overflow-y-auto md:hidden"
                         style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
                         {navContent}
                     </m.aside>

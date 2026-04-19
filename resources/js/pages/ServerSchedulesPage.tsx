@@ -139,7 +139,7 @@ export function ServerSchedulesPage() {
                             {/* Preset selector with icons */}
                             <div>
                                 <label className="mb-2 block text-sm text-[var(--color-text-secondary)]">{t('servers.schedules.preset_label')}</label>
-                                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
                                     {Object.entries(PRESETS).map(([key]) => (
                                         <button
                                             key={key}
@@ -188,7 +188,7 @@ export function ServerSchedulesPage() {
                                         className="overflow-hidden"
                                     >
                                         <div className="glass-card-enhanced rounded-[var(--radius)] p-3" style={{ border: '1px dashed var(--color-border)' }}>
-                                            <div className="grid grid-cols-5 gap-3">
+                                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-5">
                                                 {(['minute', 'hour', 'day_of_month', 'month', 'day_of_week'] as const).map((field) => (
                                                     <div key={field}>
                                                         <label className="mb-1 block text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]">{t(`servers.schedules.${field}`)}</label>

@@ -78,7 +78,7 @@ export function FileEditor({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.97, y: 20 }}
                 transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-                className="fixed inset-4 sm:inset-8 lg:inset-12 z-50 flex flex-col rounded-[var(--radius-xl)] overflow-hidden"
+                className="fixed inset-0 sm:inset-4 md:inset-8 lg:inset-12 z-50 flex flex-col sm:rounded-[var(--radius-xl)] overflow-hidden"
                 style={{
                     background: 'var(--color-background)',
                     border: '1px solid var(--color-border)',
@@ -86,9 +86,9 @@ export function FileEditor({
                 }}
             >
                 {/* Header bar */}
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--color-border)]"
+                <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 border-b border-[var(--color-border)]"
                     style={{ background: 'var(--color-surface)' }}>
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                         <svg className="h-4 w-4 flex-shrink-0 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
@@ -119,7 +119,7 @@ export function FileEditor({
                     {/* Line numbers gutter */}
                     <div
                         ref={lineNumRef}
-                        className="flex-shrink-0 overflow-hidden select-none text-right pr-3 pl-4 pt-4 pb-4"
+                        className="hidden sm:block flex-shrink-0 overflow-hidden select-none text-right pr-3 pl-4 pt-4 pb-4"
                         style={{
                             fontFamily: 'var(--font-mono)',
                             fontSize: 13,
@@ -142,13 +142,13 @@ export function FileEditor({
                         onChange={(e) => onContentChange(e.target.value)}
                         onScroll={handleScroll}
                         className={clsx(
-                            'flex-1 p-4 resize-none focus:outline-none',
+                            'flex-1 p-2 sm:p-4 resize-none focus:outline-none',
                             'text-[var(--color-text-primary)] bg-transparent',
                             'selection:bg-[var(--color-primary)]/20',
                         )}
                         style={{
                             fontFamily: 'var(--font-mono)',
-                            fontSize: 13,
+                            fontSize: 'clamp(11px, 2.5vw, 13px)',
                             lineHeight: '1.65',
                             tabSize: 4,
                         }}
@@ -159,9 +159,9 @@ export function FileEditor({
                 </div>
 
                 {/* Status bar */}
-                <div className="flex items-center justify-between px-4 py-1.5 text-[10px] font-mono border-t border-[var(--color-border)]"
+                <div className="flex items-center justify-between px-3 sm:px-4 py-1.5 text-[10px] font-mono border-t border-[var(--color-border)]"
                     style={{ background: 'var(--color-surface)', color: 'var(--color-text-muted)' }}>
-                    <span>{filePath}</span>
+                    <span className="truncate mr-2">{filePath}</span>
                     <span>{lineCount} {lineCount === 1 ? 'line' : 'lines'}</span>
                 </div>
             </m.div>

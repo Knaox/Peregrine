@@ -12,7 +12,7 @@ export function ProfilePage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-            className="max-w-2xl mx-auto space-y-6"
+            className="max-w-2xl mx-auto space-y-4 sm:space-y-6"
         >
             <m.h1
                 initial={{ opacity: 0, x: -15 }}
@@ -27,7 +27,7 @@ export function ProfilePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15, duration: 0.4 }}
             >
-                <GlassCard className="p-6">
+                <GlassCard className="p-4 sm:p-6">
                     <ProfileForm />
                 </GlassCard>
             </m.div>
@@ -36,7 +36,7 @@ export function ProfilePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25, duration: 0.4 }}
             >
-                <GlassCard className="p-6">
+                <GlassCard className="p-4 sm:p-6">
                     <PasswordForm />
                 </GlassCard>
             </m.div>

@@ -56,7 +56,7 @@ function ServerGrid({
     return (
         <div
             ref={drag.getDropZoneRef(zoneId)}
-            className="grid gap-3 grid-cols-1 min-h-[48px]"
+            className="grid gap-2 sm:gap-3 grid-cols-1 min-h-[48px]"
             style={{
                 '--cols-tablet': cardConfig.columns.tablet,
                 '--cols-desktop': cardConfig.columns.desktop,
@@ -169,7 +169,7 @@ export function DashboardPage() {
 
                 {isLoading ? (
                     <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
-                        className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 py-4">
+                        className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 py-4">
                         <ServerCardSkeleton /><ServerCardSkeleton /><ServerCardSkeleton />
                     </m.div>
                 ) : servers.length === 0 ? (
@@ -183,11 +183,11 @@ export function DashboardPage() {
                         />
 
                         {hasSearch && filteredCount(servers, search) === 0 ? (
-                            <div className="rounded-[var(--radius-lg)] p-12 text-center glass-card-enhanced">
+                            <div className="rounded-[var(--radius-lg)] p-6 sm:p-12 text-center glass-card-enhanced">
                                 <p className="text-[var(--color-text-muted)]">{t('servers.list.search_empty')}</p>
                             </div>
                         ) : layout.hasCustomLayout ? (
-                            <div className="flex flex-col gap-2 pl-6">
+                            <div className="flex flex-col gap-2 pl-0 sm:pl-6">
                                 <div ref={drag.getDropZoneRef('category-list')} className="flex flex-col gap-2">
                                 <AnimatePresence mode="popLayout">
                                     {layout.categories.map((cat, catIdx) => (
@@ -232,7 +232,7 @@ export function DashboardPage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-2 pl-6">
+                            <div className="flex flex-col gap-2 pl-0 sm:pl-6">
                                 <ServerGrid
                                     servers={layout.uncategorizedServers}
                                     zoneId="uncategorized"

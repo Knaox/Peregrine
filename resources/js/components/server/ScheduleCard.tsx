@@ -58,7 +58,7 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
 
     return (
         <m.div variants={fadeUp} className="glass-card-enhanced hover-lift rounded-[var(--radius-lg)] p-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4">
                 <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex items-center gap-2">
                         <ClockIconSmall />
@@ -81,7 +81,7 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                         {schedule.last_run_at && <> &middot; {t('servers.schedules.last_run')}: {formatDate(schedule.last_run_at)}</>}
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     <button
                         type="button"
                         onClick={() => setExpanded(!expanded)}
@@ -111,8 +111,8 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                     >
                         <div className="mt-4 space-y-2 border-t pt-4" style={{ borderColor: 'var(--color-border)' }}>
                             {(schedule.tasks ?? []).map((task) => (
-                                <div key={task.id} className="flex items-center justify-between rounded-[var(--radius)] px-3 py-2 glass-card-enhanced">
-                                    <div className="flex items-center gap-3">
+                                <div key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-[var(--radius)] px-3 py-2 glass-card-enhanced">
+                                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                                         <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-primary)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--color-primary)]">
                                             {actionIcon(task.action)}
                                             {actionLabel(task.action)}

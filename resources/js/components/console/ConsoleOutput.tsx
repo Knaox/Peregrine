@@ -35,13 +35,13 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
     }, []);
 
     return (
-        <div className="relative flex-1 rounded-[var(--radius-lg)] overflow-hidden"
+        <div className="relative flex-1 min-h-0 flex flex-col rounded-[var(--radius-lg)] overflow-hidden"
             style={{ border: '1px solid var(--color-border)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.3)' }}>
 
             {/* Terminal header bar */}
-            <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--color-border)]"
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-[var(--color-border)] flex-shrink-0"
                 style={{ background: 'var(--color-surface)' }}>
-                <div className="flex items-center gap-1.5">
+                <div className="hidden sm:flex items-center gap-1.5">
                     <div className="h-3 w-3 rounded-full" style={{ background: 'var(--color-danger)', opacity: 0.8 }} />
                     <div className="h-3 w-3 rounded-full" style={{ background: 'var(--color-warning)', opacity: 0.8 }} />
                     <div className="h-3 w-3 rounded-full" style={{ background: 'var(--color-success)', opacity: 0.8 }} />
@@ -59,21 +59,22 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
             <div
                 ref={containerRef}
                 onScroll={handleScroll}
-                className="overflow-y-auto p-4"
+                className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-4"
                 style={{
-                    height: 'calc(100vh - 18rem)',
                     background: 'var(--color-background)',
                     fontFamily: 'var(--font-mono)',
-                    fontSize: 13,
+                    fontSize: 'clamp(11px, 2.5vw, 13px)',
                     lineHeight: 1.7,
+                    WebkitOverflowScrolling: 'touch',
+                    overscrollBehavior: 'contain',
                 }}
             >
                 {messages.map((msg, i) => {
                     const { color, bold } = colorize(msg.text);
                     return (
-                        <div key={msg.id} className="flex gap-3 group hover:bg-white/[0.02] rounded px-1 -mx-1"
+                        <div key={msg.id} className="flex gap-1.5 sm:gap-3 group hover:bg-white/[0.02] rounded px-1 -mx-1"
                             style={{ transition: 'background 100ms ease' }}>
-                            <span className="select-none text-[var(--color-text-muted)] opacity-30 flex-shrink-0 w-8 text-right text-[11px] pt-px">
+                            <span className="select-none text-[var(--color-text-muted)] opacity-30 flex-shrink-0 w-6 sm:w-8 text-right text-[10px] sm:text-[11px] pt-px hidden sm:block">
                                 {i + 1}
                             </span>
                             <span className="whitespace-pre-wrap break-all min-w-0"
@@ -103,8 +104,9 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
                         className={clsx(
                             'absolute bottom-3 right-3 cursor-pointer',
                             'rounded-[var(--radius-full)] glass-card-enhanced',
-                            'px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)]',
+                            'px-3 py-2 sm:py-1.5 text-xs font-medium text-[var(--color-text-secondary)]',
                             'hover:text-[var(--color-text-primary)]',
+                            'min-h-[44px] sm:min-h-0 flex items-center',
                         )}
                     >
                         <svg className="inline-block h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

@@ -64,39 +64,46 @@ export function ServerConsolePage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="flex h-[calc(100vh-6rem)] flex-col gap-3"
+            className="flex flex-1 flex-col gap-2 sm:gap-3 overflow-hidden min-h-0"
         >
             {/* Header bar */}
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-3 flex-wrap">
-                    {/* Server state pill */}
-                    <div className="inline-flex items-center gap-2 rounded-[var(--radius-full)] px-3 py-1.5 glass-card-enhanced"
-                        style={{ borderColor: STATE_COLORS[serverState] ?? 'var(--color-border)' }}>
-                        <StatusDot status={serverState === 'running' ? 'running' : serverState === 'starting' || serverState === 'stopping' ? 'starting' : 'offline'} size="sm" />
-                        <span className="text-xs font-semibold" style={{ color: STATE_COLORS[serverState] ?? 'var(--color-text-muted)' }}>
-                            {stateLabel}
+            <div className="flex flex-col gap-2 flex-shrink-0">
+                {/* Row 1: status + connection + clear */}
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                        {/* Server state pill */}
+                        <div className="inline-flex items-center gap-1.5 rounded-[var(--radius-full)] px-2.5 py-1 sm:px-3 sm:py-1.5 glass-card-enhanced"
+                            style={{ borderColor: STATE_COLORS[serverState] ?? 'var(--color-border)' }}>
+                            <StatusDot status={serverState === 'running' ? 'running' : serverState === 'starting' || serverState === 'stopping' ? 'starting' : 'offline'} size="sm" />
+                            <span className="text-xs font-semibold" style={{ color: STATE_COLORS[serverState] ?? 'var(--color-text-muted)' }}>
+                                {stateLabel}
+                            </span>
+                        </div>
+
+                        {/* Connection badge */}
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono"
+                            style={{ color: isConnected ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: isConnected ? 'var(--color-success)' : 'var(--color-danger)' }} />
+                            {isConnected ? t('servers.console.connected') : t('servers.console.disconnected')}
                         </span>
                     </div>
 
-                    {/* Connection badge */}
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-mono"
-                        style={{ color: isConnected ? 'var(--color-success)' : 'var(--color-danger)' }}>
-                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: isConnected ? 'var(--color-success)' : 'var(--color-danger)' }} />
-                        {isConnected ? t('servers.console.connected') : t('servers.console.disconnected')}
-                    </span>
+                    <Button variant="ghost" size="sm" onClick={clearMessages}
+                        className="glass-card-enhanced flex-shrink-0">
+                        <svg className="h-4 w-4 sm:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span className="hidden sm:inline">{t('servers.console.clear')}</span>
+                    </Button>
+                </div>
 
+                {/* Row 2: power controls */}
+                <div className="flex items-center">
                     <ServerPowerControls
                         serverId={serverId}
                         state={serverState as 'running' | 'stopped' | 'offline' | 'starting'}
                     />
                 </div>
-                <Button variant="ghost" size="sm" onClick={clearMessages}
-                    className="glass-card-enhanced">
-                    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    {t('servers.console.clear')}
-                </Button>
             </div>
 
             {/* Terminal */}

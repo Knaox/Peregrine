@@ -79,7 +79,7 @@ export function ServerCard({
             onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/servers/${server.id}`); }}
             onMouseMove={handleMouseMove}
             className={clsx(
-                'group relative h-36 cursor-pointer overflow-hidden border-glow rounded-[var(--radius-lg)]',
+                'group relative min-h-[8rem] sm:h-36 cursor-pointer overflow-hidden border-glow rounded-[var(--radius-lg)]',
                 !hasBanner && 'bg-[var(--color-surface)] border border-[var(--color-border)]',
                 hasBanner && 'border border-transparent',
                 'transition-[box-shadow,border-color] duration-300',
@@ -109,7 +109,7 @@ export function ServerCard({
             }} />
 
             {/* Content — overlays the background image */}
-            <div className="relative z-10 flex h-full min-w-0 flex-col justify-center gap-1.5 p-4 sm:p-5">
+            <div className="relative z-10 flex h-full min-w-0 flex-col justify-center gap-1 sm:gap-1.5 p-3 sm:p-4 md:p-5">
                 {/* Row 1: status + name */}
                 <div className="flex items-center gap-2">
                     {cardConfig.show_status_badge && <StatusDot status={state} size="sm" />}
@@ -134,7 +134,7 @@ export function ServerCard({
                 </div>
 
                 {/* Row 3: address + stats + power */}
-                <div className="flex items-center gap-3 flex-wrap mt-0.5">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap mt-0.5">
                     {cardConfig.show_ip_port && address && (
                         <button type="button" onClick={handleCopy}
                             className="inline-flex items-center gap-1 rounded-[var(--radius-full)] px-2 py-0.5 text-[11px] font-mono cursor-pointer transition-all duration-200"
