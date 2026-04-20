@@ -9,7 +9,7 @@
             "author": "Peregrine Team",
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.1",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/invitations-0.8.0/invitations-0.8.0.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.1/invitations-0.8.0.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/invitations",
             "tags": ["users", "permissions", "collaboration", "default"]
         }
