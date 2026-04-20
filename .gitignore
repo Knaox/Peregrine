@@ -41,3 +41,6 @@ public/fonts/filament/
 # Plugin asset symlinks — created at activation time by PluginManager,
 # never committed (point to absolute host paths).
 /public/plugins/
+
+# Release artifacts zipped at the repo root during marketplace publish steps.
+/*.zip
