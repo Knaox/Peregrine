@@ -27,7 +27,11 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # GHCR rejects uppercase repo names — use an explicit lowercase value
+  # instead of ${{ github.repository }} (which would be "Knaox/Peregrine").
+  IMAGE_NAME: knaox/peregrine
+  # Opt into Node.js 24 for the docker/* actions (silences deprecation warning).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ---------------------------------------------------------------
