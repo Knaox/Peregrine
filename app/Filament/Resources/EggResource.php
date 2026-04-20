@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Actions\ResourceDeleteAction;
 use App\Filament\Resources\EggResource\Pages;
 use App\Models\Egg;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\FileUpload;
@@ -83,8 +85,17 @@ class EggResource extends Resource
             ->filters([])
             ->recordActions([
                 EditAction::make(),
+                ResourceDeleteAction::row(
+                    'Warning: deleting an egg cascades to every server built from it (servers.egg_id has ON DELETE CASCADE). Use "Peregrine only" if you just want to drop the local copy.',
+                ),
             ])
-            ->toolbarActions([])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    ResourceDeleteAction::bulk(
+                        'Warning: each egg you delete will cascade to every server using it. Double-check before confirming.',
+                    ),
+                ]),
+            ])
             ->defaultSort('id', 'desc');
     }
 

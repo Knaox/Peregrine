@@ -19,9 +19,12 @@ class ThemeService
     {
         return [
             'mode' => $this->settingsService->get('theme_mode', 'dark'),
+            'preset' => $this->settingsService->get('theme_preset', 'orange'),
             'colors' => [
-                'primary' => $this->settingsService->get('theme_primary', '#e11d48'),
-                'primary_hover' => $this->settingsService->get('theme_primary_hover', '#f43f5e'),
+                'primary' => $this->settingsService->get('theme_primary', '#f97316'),
+                'primary_hover' => $this->settingsService->get('theme_primary_hover', '#fb923c'),
+                'secondary' => $this->settingsService->get('theme_secondary', '#8b5cf6'),
+                'ring' => $this->settingsService->get('theme_ring', '#fb923c'),
                 'danger' => $this->settingsService->get('theme_danger', '#ef4444'),
                 'warning' => $this->settingsService->get('theme_warning', '#f59e0b'),
                 'success' => $this->settingsService->get('theme_success', '#10b981'),
@@ -38,6 +41,8 @@ class ThemeService
             ],
             'radius' => $this->settingsService->get('theme_radius', '0.75rem'),
             'font' => $this->settingsService->get('theme_font', 'Inter'),
+            'shadow_intensity' => (int) $this->settingsService->get('theme_shadow_intensity', '50'),
+            'density' => $this->settingsService->get('theme_density', 'comfortable'),
             'custom_css' => $this->settingsService->get('theme_custom_css', ''),
         ];
     }
@@ -82,6 +87,21 @@ class ThemeService
         $vars['--radius-lg'] = ($radiusVal > 0 ? round($radiusVal * 1.33, 3) : 0) . $unit;
 
         $vars['--font-sans'] = $theme['font'] . ', system-ui, sans-serif';
+
+        // Shadow intensity: 0-100 → 0.0-1.0 scale for shadow alpha multiplier
+        $shadowPct = max(0, min(100, (int) $theme['shadow_intensity']));
+        $vars['--shadow-intensity'] = (string) round($shadowPct / 100, 3);
+
+        // Density: compact | comfortable | spacious → padding/gap multiplier
+        $vars['--density-scale'] = match ($theme['density']) {
+            'compact' => '0.75',
+            'spacious' => '1.25',
+            default => '1',
+        };
+
+        // Auto-derive secondary + ring RGB triplets for rgba() usage
+        $vars['--color-secondary-rgb'] = $this->hexToRgbTriplet($theme['colors']['secondary']);
+        $vars['--color-ring-rgb'] = $this->hexToRgbTriplet($theme['colors']['ring']);
 
         return $vars;
     }
@@ -201,7 +221,7 @@ class ThemeService
      */
     public function getPrimaryColor(): string
     {
-        return $this->settingsService->get('theme_primary', '#e11d48');
+        return $this->settingsService->get('theme_primary', '#f97316');
     }
 
     /**

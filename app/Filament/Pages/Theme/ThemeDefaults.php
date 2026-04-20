@@ -5,8 +5,12 @@ namespace App\Filament\Pages\Theme;
 final class ThemeDefaults
 {
     public const COLORS = [
-        'theme_primary' => '#e11d48',
-        'theme_primary_hover' => '#f43f5e',
+        'theme_preset' => 'orange',
+        'theme_mode' => 'dark',
+        'theme_primary' => '#f97316',
+        'theme_primary_hover' => '#fb923c',
+        'theme_secondary' => '#8b5cf6',
+        'theme_ring' => '#fb923c',
         'theme_danger' => '#ef4444',
         'theme_warning' => '#f59e0b',
         'theme_success' => '#10b981',
@@ -22,6 +26,8 @@ final class ThemeDefaults
         'theme_text_muted' => '#5a5370',
         'theme_radius' => '0.75rem',
         'theme_font' => 'Inter',
+        'theme_shadow_intensity' => '50',
+        'theme_density' => 'comfortable',
         'theme_custom_css' => '',
     ];
 

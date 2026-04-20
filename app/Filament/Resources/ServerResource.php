@@ -2,10 +2,9 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Actions\ResourceDeleteAction;
 use App\Filament\Resources\ServerResource\Pages;
 use App\Models\Server;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
@@ -151,11 +150,11 @@ class ServerResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
+                ResourceDeleteAction::row(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    ResourceDeleteAction::bulk(),
                 ]),
             ])
             ->defaultSort('id', 'desc');

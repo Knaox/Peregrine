@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Theme;
 
+use App\Support\ThemePresets;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -9,6 +10,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 
 final class ThemeFormSchema
 {
@@ -16,17 +18,41 @@ final class ThemeFormSchema
     public static function colorSections(): array
     {
         return [
+            Section::make('Presets')
+                ->description('Apply a named bundle of colors, surfaces and accents in one click — then fine-tune below.')
+                ->icon('heroicon-o-sparkles')
+                ->schema([
+                    Select::make('theme_preset')
+                        ->label('Theme Preset')
+                        ->options(ThemePresets::options())
+                        ->default('orange')
+                        ->live()
+                        ->afterStateUpdated(function (?string $state, Set $set): void {
+                            if (! $state || $state === 'custom') {
+                                return;
+                            }
+                            foreach (ThemePresets::get($state) as $key => $value) {
+                                $set($key, $value);
+                            }
+                        }),
+                    Select::make('theme_mode')->label('Color Mode')->options([
+                        'dark' => 'Dark', 'light' => 'Light', 'auto' => 'Auto (system)',
+                    ])->default('dark'),
+                ])->columns(2),
+
             Section::make('Brand Colors')
                 ->icon('heroicon-o-swatch')
                 ->collapsible()
                 ->schema([
                     ColorPicker::make('theme_primary')->label('Primary'),
                     ColorPicker::make('theme_primary_hover')->label('Primary Hover'),
+                    ColorPicker::make('theme_secondary')->label('Secondary / Accent'),
+                    ColorPicker::make('theme_ring')->label('Focus Ring'),
                     ColorPicker::make('theme_danger')->label('Danger'),
                     ColorPicker::make('theme_warning')->label('Warning'),
                     ColorPicker::make('theme_success')->label('Success'),
-                    ColorPicker::make('theme_info')->label('Info / Accent'),
-                ])->columns(3),
+                    ColorPicker::make('theme_info')->label('Info'),
+                ])->columns(4),
 
             Section::make('Background & Surfaces')
                 ->icon('heroicon-o-square-3-stack-3d')
@@ -49,7 +75,7 @@ final class ThemeFormSchema
                     ColorPicker::make('theme_text_muted')->label('Text Muted'),
                 ])->columns(3),
 
-            Section::make('Typography & Shape')
+            Section::make('Typography, Shape & Density')
                 ->icon('heroicon-o-pencil-square')
                 ->collapsible()
                 ->schema([
@@ -58,12 +84,28 @@ final class ThemeFormSchema
                         'Plus Jakarta Sans' => 'Plus Jakarta Sans',
                         'Space Grotesk' => 'Space Grotesk',
                         'Outfit' => 'Outfit',
+                        'Manrope' => 'Manrope',
+                        'Lexend' => 'Lexend',
+                        'DM Sans' => 'DM Sans',
+                        'Figtree' => 'Figtree',
                         'system-ui' => 'System Default',
                     ]),
                     Select::make('theme_radius')->label('Border Radius')->options([
-                        '0' => 'None', '0.25rem' => 'Small', '0.375rem' => 'Medium',
+                        '0' => 'None (sharp)', '0.25rem' => 'Small', '0.375rem' => 'Medium',
                         '0.75rem' => 'Large (default)', '1rem' => 'Extra Large', '1.5rem' => '2XL',
                     ]),
+                    Select::make('theme_density')->label('Density')->options([
+                        'compact' => 'Compact',
+                        'comfortable' => 'Comfortable (default)',
+                        'spacious' => 'Spacious',
+                    ])->helperText('Controls padding and spacing across cards, buttons and inputs.'),
+                    TextInput::make('theme_shadow_intensity')
+                        ->label('Shadow Intensity')
+                        ->numeric()
+                        ->minValue(0)
+                        ->maxValue(100)
+                        ->suffix('%')
+                        ->helperText('0 = flat, 100 = heavy shadows.'),
                 ])->columns(2),
 
             Section::make('Custom CSS')

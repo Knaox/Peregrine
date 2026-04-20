@@ -257,6 +257,18 @@ class PelicanApplicationService
         return PelicanNode::fromApiResponse($response->json());
     }
 
+    /**
+     * Delete a node from the Pelican panel.
+     *
+     * @throws RequestException
+     */
+    public function deleteNode(int $pelicanNodeId): void
+    {
+        $this->request()
+            ->delete("/api/application/nodes/{$pelicanNodeId}")
+            ->throw();
+    }
+
     // -------------------------------------------------------------------------
     // Eggs
     // -------------------------------------------------------------------------
@@ -286,6 +298,36 @@ class PelicanApplicationService
             ->throw();
 
         return PelicanEgg::fromApiResponse($response->json());
+    }
+
+    /**
+     * Delete an egg from the Pelican panel.
+     *
+     * @throws RequestException
+     */
+    public function deleteEgg(int $pelicanEggId): void
+    {
+        $this->request()
+            ->delete("/api/application/eggs/{$pelicanEggId}")
+            ->throw();
+    }
+
+    /**
+     * Update a user's password on the Pelican panel.
+     *
+     * @throws RequestException
+     */
+    public function updateUserPassword(int $pelicanUserId, string $password): void
+    {
+        $user = $this->getUser($pelicanUserId);
+        $this->request()
+            ->patch("/api/application/users/{$pelicanUserId}", [
+                'email' => $user->email,
+                'username' => $user->username,
+                'name' => $user->name,
+                'password' => $password,
+            ])
+            ->throw();
     }
 
     // Note: Pelican removed the /nests API. Nests are derived from eggs during sync.

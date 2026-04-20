@@ -43,7 +43,7 @@ export function LoginPage() {
             style={{ background: 'var(--color-background)' }}>
             {/* Gradient background */}
             <div className="absolute inset-0" style={{
-                backgroundImage: 'linear-gradient(-45deg, var(--color-background), #130d1e, var(--color-background), #1a0e24)',
+                backgroundImage: 'linear-gradient(-45deg, var(--color-background), var(--color-surface), var(--color-background), var(--color-surface-elevated))',
                 backgroundSize: '400% 400%', animation: 'gradient-shift 20s ease infinite',
             }} />
             <LoginParticles />
@@ -73,8 +73,8 @@ export function LoginPage() {
                 <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.25, duration: 0.4 }}
                     className="rounded-[var(--radius-xl)] p-6 sm:p-8"
-                    style={{ background: 'rgba(22, 19, 30, 0.85)', backdropFilter: 'blur(24px) saturate(180%)',
-                        border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+                    style={{ background: 'var(--color-glass)', backdropFilter: 'blur(24px) saturate(180%)',
+                        border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
 
                     {isOAuth ? (
                         <m.button type="button" onClick={() => { window.location.href = '/api/oauth/redirect'; }}

@@ -32,8 +32,12 @@ class ThemeSettings extends Page implements HasForms
     protected string $view = 'filament.pages.theme-settings';
 
     // Theme color properties
+    public ?string $theme_preset = 'orange';
+    public ?string $theme_mode = 'dark';
     public ?string $theme_primary = '';
     public ?string $theme_primary_hover = '';
+    public ?string $theme_secondary = '';
+    public ?string $theme_ring = '';
     public ?string $theme_danger = '';
     public ?string $theme_warning = '';
     public ?string $theme_success = '';
@@ -49,6 +53,8 @@ class ThemeSettings extends Page implements HasForms
     public ?string $theme_text_muted = '';
     public ?string $theme_radius = '';
     public ?string $theme_font = '';
+    public ?string $theme_shadow_intensity = '50';
+    public ?string $theme_density = 'comfortable';
     public ?string $theme_custom_css = '';
 
     // Card config properties

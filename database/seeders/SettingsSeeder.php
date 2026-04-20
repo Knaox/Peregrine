@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Setting;
+use App\Support\ThemePresets;
 use Illuminate\Database\Seeder;
 
 class SettingsSeeder extends Seeder
@@ -16,25 +17,8 @@ class SettingsSeeder extends Seeder
             'app_name' => 'Peregrine',
             'app_logo_path' => '/images/logo.webp',
             'app_favicon_path' => '/images/favicon.ico',
-            'theme_mode' => 'dark',
-            'theme_primary' => '#e11d48',
-            'theme_primary_hover' => '#f43f5e',
-            'theme_danger' => '#ef4444',
-            'theme_warning' => '#f59e0b',
-            'theme_success' => '#10b981',
-            'theme_info' => '#3b82f6',
-            'theme_background' => '#0c0a14',
-            'theme_surface' => '#16131e',
-            'theme_surface_hover' => '#1e1a2a',
-            'theme_surface_elevated' => '#1a1724',
-            'theme_border' => '#2a2535',
-            'theme_border_hover' => '#3a3445',
-            'theme_text_primary' => '#f1f0f5',
-            'theme_text_secondary' => '#8b849e',
-            'theme_text_muted' => '#5a5370',
-            'theme_radius' => '0.75rem',
-            'theme_font' => 'Inter',
-            'theme_custom_css' => '',
+            'theme_preset' => 'orange',
+            ...ThemePresets::get('orange'),
             'card_server_config' => json_encode([
                 'layout' => 'grid',
                 'columns' => ['desktop' => 3, 'tablet' => 2, 'mobile' => 1],

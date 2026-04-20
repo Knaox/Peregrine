@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Actions\ResourceDeleteAction;
 use App\Filament\Resources\NodeResource\Pages;
 use App\Models\Node;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -62,8 +64,13 @@ class NodeResource extends Resource
             ->filters([])
             ->recordActions([
                 ViewAction::make(),
+                ResourceDeleteAction::row(),
             ])
-            ->toolbarActions([])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    ResourceDeleteAction::bulk(),
+                ]),
+            ])
             ->defaultSort('id', 'desc');
     }
 

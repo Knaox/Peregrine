@@ -2,21 +2,25 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Actions\ResourceDeleteAction;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Services\Pelican\PelicanApplicationService;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Hash;
 use UnitEnum;
 
 class UserResource extends Resource
@@ -63,8 +67,9 @@ class UserResource extends Resource
                     ->schema([
                         TextInput::make('pelican_user_id')
                             ->label('Pelican User ID')
-                            ->disabled()
-                            ->numeric(),
+                            ->helperText('Manual override — changing this re-maps the user to a different Pelican account without touching Pelican.')
+                            ->numeric()
+                            ->nullable(),
                         TextInput::make('stripe_customer_id')
                             ->label('Stripe Customer ID')
                             ->maxLength(255),
@@ -125,11 +130,57 @@ class UserResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
+                Action::make('change_password')
+                    ->label('Change password')
+                    ->icon('heroicon-o-key')
+                    ->color('warning')
+                    ->schema([
+                        TextInput::make('password')
+                            ->label('New password')
+                            ->password()
+                            ->revealable()
+                            ->required()
+                            ->minLength(8),
+                        TextInput::make('password_confirmation')
+                            ->label('Confirm password')
+                            ->password()
+                            ->revealable()
+                            ->required()
+                            ->same('password'),
+                        Toggle::make('sync_pelican')
+                            ->label('Also update on Pelican')
+                            ->helperText('If this user is synced, push the new password to the Pelican account as well.')
+                            ->default(true),
+                    ])
+                    ->action(function (User $record, array $data): void {
+                        $record->forceFill(['password' => Hash::make($data['password'])])->save();
+
+                        if (($data['sync_pelican'] ?? false) && $record->pelican_user_id) {
+                            try {
+                                app(PelicanApplicationService::class)
+                                    ->updateUserPassword((int) $record->pelican_user_id, $data['password']);
+                            } catch (RequestException $e) {
+                                report($e);
+                                Notification::make()
+                                    ->title('Local password updated, Pelican sync failed')
+                                    ->body('The local password was changed but Pelican could not be updated. Check the logs.')
+                                    ->warning()
+                                    ->send();
+
+                                return;
+                            }
+                        }
+
+                        Notification::make()
+                            ->title('Password changed')
+                            ->success()
+                            ->send();
+                    }),
+                ResourceDeleteAction::row(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    ResourceDeleteAction::bulk(),
                 ]),
             ])
             ->defaultSort('id', 'desc');
