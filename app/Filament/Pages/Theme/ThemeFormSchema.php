@@ -175,7 +175,11 @@ final class ThemeFormSchema
                         }
                     })
                     ->columnSpanFull(),
-                Select::make('sidebar_position')->label('Position')->options(['left' => 'Left sidebar', 'top' => 'Top tabs']),
+                Select::make('sidebar_position')->label('Position')->options([
+                    'left' => 'Left sidebar',
+                    'top' => 'Top tabs',
+                    'dock' => 'Bottom dock',
+                ]),
                 Select::make('sidebar_style')->label('Style')->options(['default' => 'Default', 'compact' => 'Compact (rail)', 'pills' => 'Pills']),
                 Toggle::make('show_server_status')->label('Show status dot'),
                 Toggle::make('show_server_name')->label('Show server name'),

@@ -71,6 +71,7 @@ export function ServerDetailPage() {
     const pluginManifests = usePluginStore((s) => s.manifests);
     const serverPageComponents = usePluginStore((s) => s.serverPageComponents);
     const isTopLayout = sidebarConfig.position === 'top';
+    const isDockLayout = sidebarConfig.position === 'dock';
 
     const userPermissions = server?.permissions ?? null;
     const isOwner = !server?.role || server.role === 'owner' || userPermissions === null;
@@ -145,8 +146,20 @@ export function ServerDetailPage() {
         );
     }
 
+    const wrapperClass = isTopLayout
+        ? 'flex flex-col h-[100dvh] overflow-hidden'
+        : isDockLayout
+            ? 'relative h-[100dvh] overflow-hidden'
+            : 'flex h-[100dvh] overflow-hidden';
+
+    // Dock floats on top of the content; keep extra bottom padding so the
+    // last scroll item is not hidden behind it on small screens.
+    const contentPaddingClass = isDockLayout
+        ? 'relative z-10 p-3 pt-14 pb-28 sm:p-4 sm:pt-14 sm:pb-28 md:p-6 md:pt-6 md:pb-32 flex flex-col min-h-full'
+        : 'relative z-10 p-3 pt-14 sm:p-4 sm:pt-14 md:p-6 md:pt-6 flex flex-col min-h-full';
+
     return (
-        <div className={isTopLayout ? 'flex flex-col h-[100dvh] overflow-hidden' : 'flex h-[100dvh] overflow-hidden'}>
+        <div className={wrapperClass}>
             <ServerSidebar server={server} sidebarConfig={mergedConfig} />
             <m.main
                 initial={{ opacity: 0 }}
@@ -155,7 +168,7 @@ export function ServerDetailPage() {
                 className="relative flex-1 overflow-y-auto"
             >
                 <EggBackground imageUrl={server.egg?.banner_image} />
-                <div className="relative z-10 p-3 pt-14 sm:p-4 sm:pt-14 md:p-6 md:pt-6 flex flex-col min-h-full">
+                <div className={contentPaddingClass}>
                     <Routes>
                         {dynamicRoutes.map((route) =>
                             route.index

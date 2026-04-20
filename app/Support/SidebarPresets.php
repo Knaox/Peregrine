@@ -3,13 +3,17 @@
 namespace App\Support;
 
 /**
- * Named layout presets for the server-detail sidebar. Each preset bundles a
- * position (left/top), a style (default/compact/pills) and display flags so
- * admins can pick a complete visual identity in one click — unlike the legacy
- * position+style radios which only covered 2×3=6 combinations with no curation.
+ * Four radically different layouts for the server-detail navigation.
+ * Each preset changes the *position* of the nav on the screen, not just
+ * its visual accent:
  *
- * The entry list itself (order/icons/enabled) lives in sidebar_server_config
- * and is NOT overwritten by a preset — admins keep control of route visibility.
+ *   - classic → full left panel with labels
+ *   - rail    → narrow icon-only column pinned left (no labels)
+ *   - tabs    → horizontal tab bar above the content (no vertical sidebar)
+ *   - dock    → floating glass dock at the bottom-center of the viewport
+ *
+ * The entry list (order/icons/enabled) lives in sidebar_server_config and
+ * is NOT overwritten by a preset — admins keep control of route visibility.
  */
 final class SidebarPresets
 {
@@ -20,8 +24,8 @@ final class SidebarPresets
     {
         return [
             'classic' => [
-                'label' => 'Classic',
-                'description' => 'Left sidebar with full labels and a left-edge accent on the active route.',
+                'label' => 'Classic sidebar',
+                'description' => 'Full-width left panel with labels and a left-edge accent on the active route.',
                 'values' => [
                     'position' => 'left',
                     'style' => 'default',
@@ -30,8 +34,8 @@ final class SidebarPresets
                 ],
             ],
             'rail' => [
-                'label' => 'Rail (icon only)',
-                'description' => 'Narrow vertical rail on the left — icon-only entries with hover tooltips. Great on large screens when you want more room for the content.',
+                'label' => 'Floating rail',
+                'description' => 'Narrow 64px column on the left — icon-only with hover tooltips. Gives the content more breathing room.',
                 'values' => [
                     'position' => 'left',
                     'style' => 'compact',
@@ -39,23 +43,23 @@ final class SidebarPresets
                     'show_server_name' => false,
                 ],
             ],
-            'pills' => [
-                'label' => 'Pills',
-                'description' => 'Left sidebar with fully rounded pill buttons. Softer, modern vibe — each entry floats like a chip.',
-                'values' => [
-                    'position' => 'left',
-                    'style' => 'pills',
-                    'show_server_status' => true,
-                    'show_server_name' => true,
-                ],
-            ],
             'tabs' => [
-                'label' => 'Top tabs',
-                'description' => 'Horizontal tab bar above the content. Frees vertical space on the left — ideal for ultrawide monitors.',
+                'label' => 'Top tab bar',
+                'description' => 'Horizontal tabs above the content. No vertical sidebar — ideal for ultrawide monitors.',
                 'values' => [
                     'position' => 'top',
                     'style' => 'default',
                     'show_server_status' => false,
+                    'show_server_name' => false,
+                ],
+            ],
+            'dock' => [
+                'label' => 'Floating dock',
+                'description' => 'macOS-style glass dock floating at the bottom-center. The content takes the whole screen; the dock follows you while scrolling.',
+                'values' => [
+                    'position' => 'dock',
+                    'style' => 'pills',
+                    'show_server_status' => true,
                     'show_server_name' => false,
                 ],
             ],
@@ -85,8 +89,6 @@ final class SidebarPresets
     }
 
     /**
-     * Short helper text shown next to the dropdown.
-     *
      * @return array<string, string>
      */
     public static function descriptions(): array

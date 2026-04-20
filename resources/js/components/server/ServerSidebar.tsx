@@ -78,6 +78,110 @@ function TopTabs({ server, config }: ServerSidebarProps & { config: ReturnType<t
     );
 }
 
+function DockBar({ server, config }: ServerSidebarProps & { config: ReturnType<typeof useSidebarConfig> }) {
+    const { t } = useTranslation();
+    const { user, logout } = useAuthStore();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => { await logout(); navigate('/login'); };
+
+    return (
+        <>
+            {/* Top-left back pill — the dock is at the bottom, so the back affordance lives in the corner. */}
+            <div className="fixed left-3 top-3 z-40 flex items-center gap-2">
+                <button type="button" onClick={() => navigate('/dashboard')}
+                    title={t('servers.detail.back')}
+                    aria-label={t('servers.detail.back')}
+                    className="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer transition-all duration-150"
+                    style={{
+                        borderRadius: '9999px',
+                        background: 'rgba(0,0,0,0.5)',
+                        backdropFilter: 'blur(14px) saturate(180%)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: 'var(--color-text-secondary)',
+                    }}>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span className="hidden sm:inline">{t('servers.detail.back')}</span>
+                </button>
+                <div className="flex items-center gap-2 px-3 py-2"
+                    style={{
+                        borderRadius: '9999px',
+                        background: 'rgba(0,0,0,0.5)',
+                        backdropFilter: 'blur(14px) saturate(180%)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                    }}>
+                    {config.show_server_status && <StatusDot status={server.status} size="sm" />}
+                    <p className="truncate max-w-[180px] text-xs font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                        {config.show_server_name === false ? `#${server.id}` : server.name}
+                    </p>
+                </div>
+            </div>
+
+            {/* Floating dock pinned to bottom-center. */}
+            <m.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                className="fixed inset-x-0 bottom-4 z-40 flex justify-center pointer-events-none px-3"
+            >
+                <nav
+                    className="pointer-events-auto flex items-center gap-1 overflow-x-auto px-3 py-2"
+                    style={{
+                        borderRadius: '9999px',
+                        background: 'rgba(0,0,0,0.55)',
+                        backdropFilter: 'blur(18px) saturate(180%)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        boxShadow: '0 16px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+                    }}
+                >
+                    {config.entries.map((entry, i) => (
+                        <m.div
+                            key={entry.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.03, duration: 0.25 }}
+                        >
+                            <NavLink
+                                to={`/servers/${server.id}${entry.route_suffix}`}
+                                end={entry.route_suffix === ''}
+                                title={t(entry.label_key)}
+                                aria-label={t(entry.label_key)}
+                                className={({ isActive }) => clsx(
+                                    'flex items-center justify-center p-2.5 transition-all duration-200',
+                                    'hover:scale-110',
+                                    isActive && 'scale-110',
+                                )}
+                                style={({ isActive }) => isActive
+                                    ? { borderRadius: '9999px', background: 'rgba(var(--color-primary-rgb), 0.18)', color: 'var(--color-primary)', boxShadow: '0 0 18px rgba(var(--color-primary-rgb), 0.35)' }
+                                    : { borderRadius: '9999px', color: 'var(--color-text-secondary)' }}
+                            >
+                                {getIcon(entry.icon)}
+                            </NavLink>
+                        </m.div>
+                    ))}
+
+                    {user && (
+                        <>
+                            <div className="mx-1 h-6 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
+                            <button type="button" onClick={handleLogout}
+                                title={t('nav.logout')}
+                                aria-label={t('nav.logout')}
+                                className="flex items-center justify-center p-2.5 cursor-pointer transition-all duration-200 hover:scale-110 hover:text-[var(--color-danger)]"
+                                style={{ borderRadius: '9999px', color: 'var(--color-text-muted)' }}>
+                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                            </button>
+                        </>
+                    )}
+                </nav>
+            </m.div>
+        </>
+    );
+}
+
 function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnType<typeof useSidebarConfig> }) {
     const { t } = useTranslation();
     const { user, logout } = useAuthStore();
@@ -208,6 +312,7 @@ function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnTy
 export function ServerSidebar({ server, sidebarConfig }: ServerSidebarProps) {
     const defaultConfig = useSidebarConfig();
     const config = sidebarConfig ?? defaultConfig;
+    if (config.position === 'dock') return <DockBar server={server} config={config} />;
     if (config.position === 'top') return <TopTabs server={server} config={config} />;
     return <LeftSidebar server={server} config={config} />;
 }
