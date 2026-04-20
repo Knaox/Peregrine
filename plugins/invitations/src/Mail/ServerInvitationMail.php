@@ -58,7 +58,8 @@ final class ServerInvitationMail extends Mailable
         return $this->view('mail.layouts.base', [
             'slot' => $body,
             'appName' => $appName,
-            'logoUrl' => $appUrl . '/images/logo.svg',
+            'appUrl' => $appUrl,
+            'logoUrl' => $settings->getEmailLogoUrl(),
             'footerText' => $settings->get('email_footer_text', ''),
             'locale' => $this->mailLocale,
         ]);

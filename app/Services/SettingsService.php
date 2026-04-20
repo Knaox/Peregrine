@@ -75,6 +75,32 @@ class SettingsService
     }
 
     /**
+     * Return an absolute URL to the image used in transactional emails.
+     *
+     * Emails are rendered by mail clients that can't resolve relative paths,
+     * so the URL must carry an absolute scheme + host.
+     *
+     * Resolution order:
+     *   1. If the admin uploaded a custom favicon (app_favicon_path is NOT
+     *      the bundled default), use that — favicons are square and size
+     *      correctly at the 48px email header.
+     *   2. Otherwise, fall back to the bundled Peregrine logo.
+     */
+    public function getEmailLogoUrl(): string
+    {
+        $appUrl = rtrim((string) config('app.url', ''), '/');
+        $favicon = $this->get('app_favicon_path', null);
+
+        if ($favicon !== null && $favicon !== '' && ! str_starts_with((string) $favicon, '/images/')) {
+            $relative = $this->resolveAssetUrl($favicon);
+
+            return str_starts_with($relative, 'http') ? $relative : $appUrl . $relative;
+        }
+
+        return $appUrl . '/images/logo.svg';
+    }
+
+    /**
      * Convert a storage path to a public URL.
      * Paths starting with / or http are returned as-is (already absolute).
      * Other paths are prefixed with /storage/ (Filament FileUpload paths).
