@@ -4,6 +4,31 @@ set -e
 APP_ROOT=/var/www/html
 cd "$APP_ROOT"
 
+# -------------------------------------------------------------------
+# Strip empty env vars — Docker compose sends the var even when the
+# shell expansion ${VAR:-} is empty, and phpdotenv runs immutable:
+# it sees "DB_HOST is already set (to empty)" and REFUSES to load the
+# real value from .env. Result: the wizard completes, .env is correct,
+# but requests still try `mysql:host=;port=3306` because php-fpm only
+# sees the empty Docker-provided value.
+# Unsetting empty vars lets the .env values take over as intended.
+# -------------------------------------------------------------------
+for var in APP_URL APP_NAME \
+           DB_CONNECTION DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD \
+           REDIS_HOST REDIS_PORT REDIS_PASSWORD \
+           CACHE_STORE QUEUE_CONNECTION SESSION_DRIVER \
+           MAIL_MAILER MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD \
+           MAIL_FROM_ADDRESS MAIL_FROM_NAME \
+           PELICAN_URL PELICAN_ADMIN_API_KEY PELICAN_CLIENT_API_KEY \
+           OAUTH_CLIENT_ID OAUTH_CLIENT_SECRET OAUTH_AUTHORIZE_URL \
+           OAUTH_TOKEN_URL OAUTH_USER_URL \
+           STRIPE_WEBHOOK_SECRET; do
+    eval "val=\"\${$var:-}\""
+    if [ -z "$val" ]; then
+        unset "$var"
+    fi
+done
+
 # Persistent dirs that must exist on a fresh named volume.
 mkdir -p storage/app/public/branding \
          storage/framework/cache/data \

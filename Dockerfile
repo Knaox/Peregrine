@@ -75,9 +75,10 @@ RUN composer dump-autoload --optimize --no-dev \
               storage/logs/*.log \
               /tmp/composer-cache /root/.composer
 
-# Nginx + supervisord + entrypoint
-RUN rm -f /etc/nginx/http.d/default.conf 2>/dev/null || true
+# Nginx + php-fpm + supervisord + entrypoint
+RUN rm -f /etc/nginx/http.d/default.conf /usr/local/etc/php-fpm.d/www.conf.default 2>/dev/null || true
 COPY docker/nginx/peregrine.conf /etc/nginx/http.d/peregrine.conf
+COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/entrypoint.sh /usr/local/bin/peregrine-entrypoint
 
@@ -86,9 +87,13 @@ RUN chmod +x /usr/local/bin/peregrine-entrypoint \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Runtime defaults (overridable via docker run -e / compose)
+# Runtime defaults (overridable via docker run -e / compose).
+# LOG_CHANNEL=stderr + LOG_STDERR_FORMATTER pipe every Laravel log entry
+# to the container's stderr → visible in `docker logs` / Portainer.
 ENV DOCKER=true \
-    PANEL_INSTALLED=false
+    PANEL_INSTALLED=false \
+    LOG_CHANNEL=stderr \
+    LOG_STDERR_FORMATTER=Monolog\\Formatter\\JsonFormatter
 
 EXPOSE 8080
 
