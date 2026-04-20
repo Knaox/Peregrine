@@ -39,13 +39,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->userMenuItems([
                 MenuItem::make()
-                    ->label('Panel joueur')
+                    ->label('Player panel')
                     ->url('/')
                     ->icon('heroicon-o-arrow-left'),
             ])
             ->sidebarCollapsibleOnDesktop()
             ->navigationItems([
-                NavigationItem::make('Panel joueur')
+                NavigationItem::make('Player panel')
                     ->url('/')
                     ->icon('heroicon-o-arrow-left')
                     ->sort(100),

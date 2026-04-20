@@ -71,23 +71,52 @@ class About extends Page
         }
 
         try {
-            $response = Http::timeout(8)
-                ->withHeaders(['Accept' => 'application/vnd.github+json', 'User-Agent' => 'Peregrine-Panel'])
+            $headers = ['Accept' => 'application/vnd.github+json', 'User-Agent' => 'Peregrine-Panel'];
+
+            // Try /releases/latest first — it only returns published (non-prerelease) releases.
+            $response = Http::timeout(8)->withHeaders($headers)
                 ->get("https://api.github.com/repos/{$repo}/releases/latest");
 
-            if (! $response->ok()) {
+            $data = null;
+
+            if ($response->ok()) {
+                $data = [
+                    'tag_name' => (string) $response->json('tag_name', ''),
+                    'html_url' => (string) $response->json('html_url', ''),
+                    'published_at' => (string) $response->json('published_at', ''),
+                ];
+            } elseif ($response->status() === 404) {
+                // No stable release yet — fall back to the full list (includes pre-releases).
+                $listResponse = Http::timeout(8)->withHeaders($headers)
+                    ->get("https://api.github.com/repos/{$repo}/releases", ['per_page' => 1]);
+
+                if ($listResponse->ok()) {
+                    $first = $listResponse->json(0);
+                    if (is_array($first) && ! empty($first['tag_name'])) {
+                        $data = [
+                            'tag_name' => (string) $first['tag_name'],
+                            'html_url' => (string) ($first['html_url'] ?? ''),
+                            'published_at' => (string) ($first['published_at'] ?? ''),
+                        ];
+                    } else {
+                        // Repo exists but has no releases published. Show empty state — not an error.
+                        Cache::put($cacheKey, ['tag_name' => '', 'html_url' => '', 'published_at' => ''], now()->addMinutes(10));
+                        $this->applyLatest(['tag_name' => '', 'html_url' => '', 'published_at' => '']);
+                        return;
+                    }
+                } else {
+                    $this->checkError = "Repository {$repo} not found or has no releases.";
+                    return;
+                }
+            } else {
                 $this->checkError = "GitHub API returned {$response->status()}.";
                 return;
             }
 
-            $data = [
-                'tag_name' => (string) $response->json('tag_name', ''),
-                'html_url' => (string) $response->json('html_url', ''),
-                'published_at' => (string) $response->json('published_at', ''),
-            ];
-
-            Cache::put($cacheKey, $data, now()->addHours(1));
-            $this->applyLatest($data);
+            if ($data !== null) {
+                Cache::put($cacheKey, $data, now()->addHours(1));
+                $this->applyLatest($data);
+            }
         } catch (\Throwable $e) {
             $this->checkError = $e->getMessage();
         }
