@@ -65,10 +65,27 @@ class Plugins extends Page implements HasForms
 
         try {
             $marketplace = app(MarketplaceService::class);
-            $this->marketplacePlugins = $marketplace->getAvailable();
+            $this->marketplacePlugins = $marketplace->listWithStatus();
         } catch (\Throwable) {
             $this->marketplacePlugins = [];
         }
+    }
+
+    public function refreshMarketplace(): void
+    {
+        try {
+            app(MarketplaceService::class)->clearCache();
+        } catch (\Throwable) {
+            // noop — cache store unavailable is non-fatal.
+        }
+
+        $this->loadMarketplace();
+
+        Notification::make()
+            ->title('Marketplace refreshed')
+            ->body(count($this->marketplacePlugins) . ' plugin(s) listed.')
+            ->success()
+            ->send();
     }
 
     public function activatePlugin(string $id): void

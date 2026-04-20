@@ -44,27 +44,63 @@ class MarketplaceService
     }
 
     /**
-     * Get plugins available in the registry but not yet installed locally.
+     * Every plugin listed in the marketplace, annotated with local state
+     * (is_installed + installed_version + update_available). Returned even
+     * for plugins shipped by default, so the admin can see the canonical
+     * version from the registry.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function listWithStatus(): array
+    {
+        $registry = $this->fetchRegistry();
+        $discovered = $this->pluginManager->discover();
+        $dbPlugins = \App\Models\Plugin::all()->keyBy('plugin_id');
+        $result = [];
+
+        foreach ($registry as $entry) {
+            $id = $entry['id'] ?? null;
+
+            if (! $id) {
+                continue;
+            }
+
+            $local = $discovered[$id] ?? null;
+            $dbRecord = $dbPlugins->get($id);
+            $installedVersion = $dbRecord?->version ?? ($local['version'] ?? null);
+            $registryVersion = $entry['version'] ?? null;
+
+            $entry['is_installed'] = $local !== null;
+            $entry['installed_version'] = $installedVersion;
+            $entry['update_available'] = $installedVersion !== null
+                && $registryVersion !== null
+                && version_compare((string) $registryVersion, (string) $installedVersion, '>');
+
+            $result[] = $entry;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Back-compat wrapper: only entries that are NOT yet on disk.
      *
      * @return array<int, array<string, mixed>>
      */
     public function getAvailable(): array
     {
-        $registry = $this->fetchRegistry();
-        $discovered = $this->pluginManager->discover();
-        $available = [];
+        return array_values(array_filter(
+            $this->listWithStatus(),
+            static fn (array $e): bool => empty($e['is_installed']),
+        ));
+    }
 
-        foreach ($registry as $entry) {
-            $id = $entry['id'] ?? null;
-
-            if (! $id || isset($discovered[$id])) {
-                continue;
-            }
-
-            $available[] = $entry;
-        }
-
-        return $available;
+    /**
+     * Drop the cached registry so the next fetch pulls from GitHub.
+     */
+    public function clearCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
     }
 
     /**

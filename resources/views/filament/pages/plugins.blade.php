@@ -111,12 +111,24 @@
 
     {{-- Marketplace tab --}}
     @if($activeTab === 'marketplace')
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 0.75rem;">
+            <button wire:click="refreshMarketplace" type="button"
+                style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; border-radius: 0.5rem; cursor: pointer; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.1);">
+                <svg style="width: 0.875rem; height: 0.875rem;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span wire:loading.remove wire:target="refreshMarketplace">Refresh registry</span>
+                <span wire:loading wire:target="refreshMarketplace">Refreshing...</span>
+            </button>
+        </div>
+
         @if(empty($marketplacePlugins))
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 0; color: rgba(255,255,255,0.4);">
                 <svg style="width: 3rem; height: 3rem; margin-bottom: 0.75rem; opacity: 0.3;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
                 </svg>
-                <p style="font-size: 0.875rem;">No plugins available in the marketplace.</p>
+                <p style="font-size: 0.875rem;">No plugins found in the registry.</p>
+                <p style="font-size: 0.75rem; margin-top: 0.25rem; opacity: 0.6;">Check <code style="padding: 0.125rem 0.375rem; background: rgba(255,255,255,0.08); border-radius: 0.25rem;">{{ config('panel.marketplace.registry_url') }}</code></p>
             </div>
         @else
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;">
@@ -131,6 +143,17 @@
                                 <span style="font-size: 0.625rem; font-family: monospace; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45);">
                                     v{{ $mp['version'] }}
                                 </span>
+                                @if($mp['is_installed'] ?? false)
+                                    @if($mp['update_available'] ?? false)
+                                        <span style="font-size: 0.625rem; font-weight: 500; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(245,158,11,0.15); color: rgb(252,211,77);">
+                                            Update available (v{{ $mp['installed_version'] }} → v{{ $mp['version'] }})
+                                        </span>
+                                    @else
+                                        <span style="font-size: 0.625rem; font-weight: 500; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(34,197,94,0.15); color: rgb(134,239,172);">
+                                            Installed
+                                        </span>
+                                    @endif
+                                @endif
                                 @if($mp['official'] ?? false)
                                     <span style="font-size: 0.625rem; font-weight: 500; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(59,130,246,0.12); color: rgb(96,165,250);">
                                         Official
@@ -155,14 +178,20 @@
                         @endif
 
                         <div style="margin-top: auto; padding-top: 0.5rem;">
-                            <button wire:click="installFromMarketplace('{{ $mp['id'] }}')"
-                                wire:loading.attr="disabled"
-                                style="padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; border-radius: 0.5rem; cursor: pointer; background: rgba(var(--primary-500), 0.12); color: rgb(var(--primary-400)); border: 1px solid rgba(var(--primary-500), 0.2); transition: all 150ms;"
-                                onmouseenter="this.style.background='rgba(var(--primary-500), 0.2)'"
-                                onmouseleave="this.style.background='rgba(var(--primary-500), 0.12)'">
-                                <span wire:loading.remove wire:target="installFromMarketplace('{{ $mp['id'] }}')">Install</span>
-                                <span wire:loading wire:target="installFromMarketplace('{{ $mp['id'] }}')">Installing...</span>
-                            </button>
+                            @if($mp['is_installed'] ?? false)
+                                <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">
+                                    Manage from the "Installed" tab.
+                                </span>
+                            @else
+                                <button wire:click="installFromMarketplace('{{ $mp['id'] }}')"
+                                    wire:loading.attr="disabled"
+                                    style="padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 500; border-radius: 0.5rem; cursor: pointer; background: rgba(var(--primary-500), 0.12); color: rgb(var(--primary-400)); border: 1px solid rgba(var(--primary-500), 0.2); transition: all 150ms;"
+                                    onmouseenter="this.style.background='rgba(var(--primary-500), 0.2)'"
+                                    onmouseleave="this.style.background='rgba(var(--primary-500), 0.12)'">
+                                    <span wire:loading.remove wire:target="installFromMarketplace('{{ $mp['id'] }}')">Install</span>
+                                    <span wire:loading wire:target="installFromMarketplace('{{ $mp['id'] }}')">Installing...</span>
+                                </button>
+                            @endif
                         </div>
                     </div>
                 @endforeach
