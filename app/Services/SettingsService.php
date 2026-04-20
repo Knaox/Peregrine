@@ -20,9 +20,16 @@ class SettingsService
             self::CACHE_PREFIX . $key,
             self::CACHE_TTL,
             function () use ($key, $default): mixed {
-                $setting = Setting::where('key', $key)->first();
+                // Guarded: during `composer package:discover` / early boot the
+                // DB may not be reachable (Docker build, fresh install). Fall
+                // back to the caller-provided default rather than crashing.
+                try {
+                    $setting = Setting::where('key', $key)->first();
 
-                return $setting?->value ?? $default;
+                    return $setting?->value ?? $default;
+                } catch (\Throwable) {
+                    return $default;
+                }
             },
         );
     }

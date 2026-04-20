@@ -1,0 +1,102 @@
+# ------------------------------------------------------------------
+# Peregrine — all-in-one compose (app + MySQL + Redis)
+#
+# Turnkey file for Portainer: paste, deploy, open port 8080.
+# Everything needed for a production-grade install is bundled here:
+#   - ghcr.io/knaox/peregrine:latest  (official image)
+#   - mysql:8.4                       (database)
+#   - redis:7-alpine                  (cache + queue)
+#
+#   docker compose -f docker-compose.full.yml up -d
+#   open http://localhost:8080        (run the Setup Wizard)
+#
+# During the Setup Wizard, fill the Database step with:
+#   Host:     mysql       Port: 3306
+#   Database: peregrine   User: peregrine   Password: <the one set below>
+# The wizard pre-fills these if DOCKER=true is detected.
+# ------------------------------------------------------------------
+
+services:
+  peregrine:
+    image: ghcr.io/knaox/peregrine:latest
+    container_name: peregrine
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "${PEREGRINE_PORT:-8080}:8080"
+    environment:
+      APP_NAME: Peregrine
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      DOCKER: "true"
+      # Database — points at the bundled MySQL service below.
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-peregrine}
+      DB_USERNAME: ${DB_USERNAME:-peregrine}
+      DB_PASSWORD: ${DB_PASSWORD:-peregrine}
+      # Cache + queue — Redis.
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # Optional mailer.
+      MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@peregrine.local}
+      MAIL_FROM_NAME: "${MAIL_FROM_NAME:-Peregrine}"
+    volumes:
+      - peregrine_storage:/var/www/html/storage
+      - peregrine_plugins:/var/www/html/plugins
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  mysql:
+    image: mysql:8.4
+    container_name: peregrine-mysql
+    restart: unless-stopped
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-peregrine}
+      MYSQL_USER: ${DB_USERNAME:-peregrine}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-peregrine}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-peregrine-root}
+    volumes:
+      - peregrine_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: peregrine-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - peregrine_redis:/data
+
+volumes:
+  peregrine_storage:
+  peregrine_plugins:
+  peregrine_mysql:
+  peregrine_redis:

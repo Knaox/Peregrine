@@ -1,31 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <!-- Peregrine Falcon - Minimalist style like Pelican logo -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 50" width="420" height="50">
+  <defs>
+    <linearGradient id="ig" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fb7185"/>
+      <stop offset="100%" style="stop-color:#e11d48"/>
+    </linearGradient>
+  </defs>
 
-  <!-- Falcon silhouette - diving pose (stoop) -->
-  <path d="M24 4 C22 4, 19 6, 18 9 L17 12 L10 18 C8 20, 9 22, 11 21 L16 18 L15 24 L12 30 C10 33, 11 35, 13 33 L17 28 L18 34 L17 40 C16 43, 18 44, 20 42 L22 36 L24 44 L26 36 L28 42 C30 44, 32 43, 31 40 L30 34 L31 28 L35 33 C37 35, 38 33, 36 30 L33 24 L32 18 L37 21 C39 22, 40 20, 38 18 L31 12 L30 9 C29 6, 26 4, 24 4Z"
-    fill="#f97316"/>
+  <g transform="translate(22, 25)">
+    <path d="M-18 8 L-10 -6 L-5 1 L0 -12 L6 -2 L12 -8 L18 8 Z" 
+          fill="url(#ig)" opacity="0.25"/>
+    <path d="
+      M-10 -14 L-10 14 L3 14 C10 14, 14 10, 14 6
+      C14 3, 11 0, 7 -1 C10 -2, 12 -4, 12 -7
+      C12 -11, 9 -14, 3 -14 Z
+      M-3 -8 L3 -8 C5 -8, 7 -7, 7 -5 C7 -4, 5 -3, 3 -3 L-3 -3 Z
+      M-3 3 L4 3 C7 3, 8 4, 8 6 C8 8, 7 9, 4 9 L-3 9 Z
+    " fill="url(#ig)" fill-rule="evenodd"/>
+    <path d="M15 -12 L18 -9 L15 -6 L12 -9 Z" fill="#fb7185" opacity="0.8"/>
+  </g>
 
-  <!-- Dark hood (peregrine falcon characteristic malar stripe) -->
-  <path d="M24 4 C22 4, 19 6, 18 9 L20 10 C21 7, 23 5, 24 5 C25 5, 27 7, 28 10 L30 9 C29 6, 26 4, 24 4Z"
-    fill="#1e293b"/>
-
-  <!-- Malar stripe left -->
-  <path d="M20 10 L18 14 L20 13Z" fill="#1e293b"/>
-  <!-- Malar stripe right -->
-  <path d="M28 10 L30 14 L28 13Z" fill="#1e293b"/>
-
-  <!-- Eye left -->
-  <circle cx="21.5" cy="9.5" r="1.2" fill="#fbbf24"/>
-  <circle cx="21.8" cy="9.3" r="0.5" fill="#1e293b"/>
-
-  <!-- Eye right -->
-  <circle cx="26.5" cy="9.5" r="1.2" fill="#fbbf24"/>
-  <circle cx="26.8" cy="9.3" r="0.5" fill="#1e293b"/>
-
-  <!-- Beak -->
-  <path d="M23 11 L24 13.5 L25 11" fill="#fbbf24" stroke="#fbbf24" stroke-width="0.3" stroke-linejoin="round"/>
-
-  <!-- Chest lighter area -->
-  <path d="M21 16 C21 20, 23 28, 24 32 C25 28, 27 20, 27 16 C26 15, 22 15, 21 16Z"
-    fill="#fdba74" opacity="0.5"/>
+  <text x="48" y="33" font-family="'Inter', 'SF Pro Display', system-ui, sans-serif" font-size="30" font-weight="800" letter-spacing="-0.5"><tspan fill="#f1f0f5">Biome</tspan><tspan fill="#e11d48">bounty</tspan></text>
 </svg>

@@ -1,50 +1,56 @@
+# ------------------------------------------------------------------
+# Peregrine — standard compose (app only)
+#
+# Turnkey file for Portainer: paste, deploy, open port 8080.
+# Runs the official ghcr.io/knaox/peregrine image with SQLite bundled
+# inside a named volume — zero external database required.
+#
+#   docker compose up -d
+#   open http://localhost:8080   (run the Setup Wizard)
+#
+# Prefer bundled MySQL + Redis? Use docker-compose.full.yml instead.
+# Want to edit the source? Use docker-compose.dev.yml.
+# ------------------------------------------------------------------
+
 services:
-  app:
-    build:
-      context: ./docker/php
-    volumes:
-      - ./:/var/www/html
-    depends_on:
-      - mysql
-      - redis
-    networks:
-      - peregrine
-
-  nginx:
-    image: nginx:alpine
+  peregrine:
+    image: ghcr.io/knaox/peregrine:latest
+    container_name: peregrine
+    restart: unless-stopped
     ports:
-      - "${DOCKER_APP_PORT:-8080}:80"
-    depends_on:
-      - app
-    volumes:
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./public:/var/www/html/public
-    networks:
-      - peregrine
-
-  mysql:
-    image: mysql:8
-    ports:
-      - "${DOCKER_DB_PORT:-3306}:3306"
+      - "${PEREGRINE_PORT:-8080}:8080"
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      APP_NAME: Peregrine
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      DOCKER: "true"
+      # SQLite by default. Point at your own MySQL via the admin later if you like.
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /var/www/html/storage/database/database.sqlite
+      CACHE_STORE: ${CACHE_STORE:-file}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
+      SESSION_DRIVER: ${SESSION_DRIVER:-file}
+      # Optional mailer — fill at deploy time, otherwise emails go to the log.
+      MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@peregrine.local}
+      MAIL_FROM_NAME: "${MAIL_FROM_NAME:-Peregrine}"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - peregrine
-
-  redis:
-    image: redis:alpine
-    networks:
-      - peregrine
+      # Persistent storage (SQLite file, uploaded branding, session files, logs).
+      - peregrine_storage:/var/www/html/storage
+      # Marketplace-installed plugins survive container restarts.
+      - peregrine_plugins:/var/www/html/plugins
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
 
 volumes:
-  mysql_data:
-
-networks:
-  peregrine:
-    driver: bridge
+  peregrine_storage:
+  peregrine_plugins:
