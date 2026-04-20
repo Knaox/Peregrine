@@ -149,15 +149,23 @@ jobs:
 
       - name: Create multi-arch manifest
         working-directory: /tmp/digests
+        env:
+          # Pass the JSON through env to avoid GitHub expanding it straight
+          # into the shell (parens/quotes in JSON break bash parsing).
+          METADATA_JSON: ${{ steps.meta.outputs.json }}
+          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         run: |
-          docker buildx imagetools create \
-            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "${{ steps.meta.outputs.json }}") \
-            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+          tags="$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$METADATA_JSON")"
+          digests="$(printf "$IMAGE_REF@sha256:%s " *)"
+          echo "tags: $tags"
+          echo "digests: $digests"
+          docker buildx imagetools create $tags $digests
 
       - name: Inspect image
-        run: |
-          docker buildx imagetools inspect \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+        env:
+          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: docker buildx imagetools inspect "$IMAGE_REF:$VERSION"
 
   # ---------------------------------------------------------------
   # Weekly GHCR cleanup — delete untagged versions > 7 days old
