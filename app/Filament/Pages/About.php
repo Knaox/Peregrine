@@ -73,53 +73,60 @@ class About extends Page
         try {
             $headers = ['Accept' => 'application/vnd.github+json', 'User-Agent' => 'Peregrine-Panel'];
 
-            // Try /releases/latest first — it only returns published (non-prerelease) releases.
-            $response = Http::timeout(8)->withHeaders($headers)
-                ->get("https://api.github.com/repos/{$repo}/releases/latest");
+            // Always walk /releases so we can skip plugin-release tags (invitations-0.8.0, bridge-1.2.3, ...)
+            // which share this repo. Panel releases must start with an optional v + digits + ".digits".
+            $listResponse = Http::timeout(8)->withHeaders($headers)
+                ->get("https://api.github.com/repos/{$repo}/releases", ['per_page' => 30]);
 
-            $data = null;
-
-            if ($response->ok()) {
-                $data = [
-                    'tag_name' => (string) $response->json('tag_name', ''),
-                    'html_url' => (string) $response->json('html_url', ''),
-                    'published_at' => (string) $response->json('published_at', ''),
-                ];
-            } elseif ($response->status() === 404) {
-                // No stable release yet — fall back to the full list (includes pre-releases).
-                $listResponse = Http::timeout(8)->withHeaders($headers)
-                    ->get("https://api.github.com/repos/{$repo}/releases", ['per_page' => 1]);
-
-                if ($listResponse->ok()) {
-                    $first = $listResponse->json(0);
-                    if (is_array($first) && ! empty($first['tag_name'])) {
-                        $data = [
-                            'tag_name' => (string) $first['tag_name'],
-                            'html_url' => (string) ($first['html_url'] ?? ''),
-                            'published_at' => (string) ($first['published_at'] ?? ''),
-                        ];
-                    } else {
-                        // Repo exists but has no releases published. Show empty state — not an error.
-                        Cache::put($cacheKey, ['tag_name' => '', 'html_url' => '', 'published_at' => ''], now()->addMinutes(10));
-                        $this->applyLatest(['tag_name' => '', 'html_url' => '', 'published_at' => '']);
-                        return;
-                    }
-                } else {
-                    $this->checkError = "Repository {$repo} not found or has no releases.";
-                    return;
-                }
-            } else {
-                $this->checkError = "GitHub API returned {$response->status()}.";
+            if ($listResponse->status() === 404) {
+                $this->checkError = "Repository {$repo} not found.";
                 return;
             }
 
-            if ($data !== null) {
-                Cache::put($cacheKey, $data, now()->addHours(1));
-                $this->applyLatest($data);
+            if (! $listResponse->ok()) {
+                $this->checkError = "GitHub API returned {$listResponse->status()}.";
+                return;
             }
+
+            $releases = $listResponse->json() ?: [];
+            $panelRelease = null;
+
+            foreach ($releases as $release) {
+                if (! is_array($release)) continue;
+                $tag = (string) ($release['tag_name'] ?? '');
+                if ($tag === '' || ! $this->isPanelReleaseTag($tag)) continue;
+                $panelRelease = $release;
+                break; // API returns newest first.
+            }
+
+            if ($panelRelease === null) {
+                // Repo exists but no panel release tag yet — not an error, just an empty state.
+                $empty = ['tag_name' => '', 'html_url' => '', 'published_at' => ''];
+                Cache::put($cacheKey, $empty, now()->addMinutes(10));
+                $this->applyLatest($empty);
+                return;
+            }
+
+            $data = [
+                'tag_name' => (string) $panelRelease['tag_name'],
+                'html_url' => (string) ($panelRelease['html_url'] ?? ''),
+                'published_at' => (string) ($panelRelease['published_at'] ?? ''),
+            ];
+
+            Cache::put($cacheKey, $data, now()->addHours(1));
+            $this->applyLatest($data);
         } catch (\Throwable $e) {
             $this->checkError = $e->getMessage();
         }
+    }
+
+    /**
+     * Accept tags like "v1.0.0", "1.0.0-alpha.1", "v2.3.4-rc.2". Reject plugin
+     * releases like "invitations-0.8.0" or "bridge-1.2.3" that share the repo.
+     */
+    private function isPanelReleaseTag(string $tag): bool
+    {
+        return (bool) preg_match('/^v?\d+\.\d+\.\d+/', $tag);
     }
 
     /**

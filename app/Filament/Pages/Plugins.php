@@ -54,7 +54,47 @@ class Plugins extends Page implements HasForms
 
     public function loadPlugins(): void
     {
-        $this->plugins = app(PluginManager::class)->allWithStatus();
+        $installed = app(PluginManager::class)->allWithStatus();
+
+        // Annotate each installed plugin with marketplace upgrade info.
+        try {
+            $registry = app(MarketplaceService::class)->listWithStatus();
+            $registryById = collect($registry)->keyBy('id');
+
+            foreach ($installed as &$p) {
+                $entry = $registryById->get($p['id']);
+                $p['latest_version'] = $entry['version'] ?? null;
+                $p['update_available'] = $entry !== null
+                    && !empty($entry['update_available']);
+            }
+            unset($p);
+        } catch (\Throwable) {
+            // Offline / registry unavailable — list without upgrade hints.
+        }
+
+        $this->plugins = $installed;
+    }
+
+    public function updatePlugin(string $id): void
+    {
+        try {
+            app(MarketplaceService::class)->update($id);
+
+            Notification::make()
+                ->title('Plugin updated')
+                ->body("'{$id}' has been upgraded to the latest version.")
+                ->success()
+                ->send();
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->title('Update failed')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+
+        $this->loadPlugins();
+        $this->loadMarketplace();
     }
 
     public function loadMarketplace(): void

@@ -9,7 +9,8 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY resources/ ./resources/
-COPY vite.config.ts tsconfig.json tailwind.config.ts postcss.config.js ./
+COPY public/ ./public/
+COPY vite.config.ts tsconfig.json postcss.config.js ./
 RUN pnpm run build
 
 # Stage 2: Application

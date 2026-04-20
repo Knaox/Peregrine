@@ -70,6 +70,21 @@
                             <p style="font-size: 0.75rem; color: rgba(255,255,255,0.45); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ $plugin['description'] }}</p>
                         @endif
 
+                        {{-- Update banner --}}
+                        @if($plugin['update_available'] ?? false)
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 0.5rem; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2);">
+                                <span style="font-size: 0.6875rem; color: rgb(252,211,77);">
+                                    Update available: v{{ $plugin['version'] }} → v{{ $plugin['latest_version'] }}
+                                </span>
+                                <button wire:click="updatePlugin('{{ $plugin['id'] }}')"
+                                    wire:loading.attr="disabled"
+                                    style="padding: 0.25rem 0.625rem; font-size: 0.6875rem; font-weight: 600; border-radius: 0.375rem; cursor: pointer; background: rgb(245,158,11); color: #1a1a1a; border: none; white-space: nowrap;">
+                                    <span wire:loading.remove wire:target="updatePlugin('{{ $plugin['id'] }}')">Update</span>
+                                    <span wire:loading wire:target="updatePlugin('{{ $plugin['id'] }}')">...</span>
+                                </button>
+                            </div>
+                        @endif
+
                         {{-- Actions --}}
                         <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: auto; padding-top: 0.5rem;">
                             @if($plugin['is_active'])
@@ -177,11 +192,20 @@
                             </div>
                         @endif
 
-                        <div style="margin-top: auto; padding-top: 0.5rem;">
+                        <div style="margin-top: auto; padding-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
                             @if($mp['is_installed'] ?? false)
-                                <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">
-                                    Manage from the "Installed" tab.
-                                </span>
+                                @if($mp['update_available'] ?? false)
+                                    <button wire:click="updatePlugin('{{ $mp['id'] }}')"
+                                        wire:loading.attr="disabled"
+                                        style="padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 600; border-radius: 0.5rem; cursor: pointer; background: rgb(245,158,11); color: #1a1a1a; border: none;">
+                                        <span wire:loading.remove wire:target="updatePlugin('{{ $mp['id'] }}')">Update to v{{ $mp['version'] }}</span>
+                                        <span wire:loading wire:target="updatePlugin('{{ $mp['id'] }}')">Updating...</span>
+                                    </button>
+                                @else
+                                    <span style="font-size: 0.75rem; color: rgba(34,197,94,0.8);">
+                                        ✓ Installed
+                                    </span>
+                                @endif
                             @else
                                 <button wire:click="installFromMarketplace('{{ $mp['id'] }}')"
                                     wire:loading.attr="disabled"
