@@ -4,6 +4,9 @@ export interface DatabaseConfig {
     database: string;
     username: string;
     password: string;
+    /** When true, Peregrine drops every table before migrating. Use when the
+     *  selected DB still has leftovers from a previous install. */
+    fresh?: boolean;
 }
 
 export interface AdminConfig {

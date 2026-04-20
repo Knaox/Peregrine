@@ -117,10 +117,20 @@ class SetupService
      * ships with fakerphp/faker (a require-dev dep, intentionally stripped
      * from the production composer install). Calling SettingsSeeder directly
      * keeps us within the production-safe surface.
+     *
+     * @param  bool  $fresh  When true, drops every table first. Use when the
+     *                       selected database contains leftovers from a
+     *                       previous Peregrine install and you accept the
+     *                       data loss.
      */
-    public function runMigrations(): void
+    public function runMigrations(bool $fresh = false): void
     {
-        Artisan::call('migrate', ['--force' => true]);
+        if ($fresh) {
+            Artisan::call('migrate:fresh', ['--force' => true]);
+        } else {
+            Artisan::call('migrate', ['--force' => true]);
+        }
+
         Artisan::call('db:seed', [
             '--class' => \Database\Seeders\SettingsSeeder::class,
             '--force' => true,

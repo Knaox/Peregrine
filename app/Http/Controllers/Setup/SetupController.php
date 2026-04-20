@@ -70,8 +70,12 @@ class SetupController extends Controller
             // 1. Reconfigure DB connection at runtime (no .env write yet — artisan serve restarts on .env change)
             $this->setupService->reconfigureDatabase($dbHost, $dbPort, $dbName, $dbUser, $dbPass);
 
-            // 2. Run migrations + seed using the runtime config
-            $this->setupService->runMigrations();
+            // 2. Run migrations + seed using the runtime config. If the admin
+            // ticked "Fresh install" because the selected DB already holds
+            // leftovers from a previous install, drop every table first.
+            $this->setupService->runMigrations(
+                fresh: (bool) ($validated['database']['fresh'] ?? false),
+            );
 
             // 3. Create admin user
             $this->setupService->createAdminUser(

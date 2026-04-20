@@ -20,6 +20,7 @@ class InstallRequest extends FormRequest
             'database.name' => ['required', 'string'],
             'database.username' => ['required', 'string'],
             'database.password' => ['nullable', 'string'],
+            'database.fresh' => ['sometimes', 'boolean'],
 
             // Admin
             'admin.name' => ['required', 'string', 'max:255'],

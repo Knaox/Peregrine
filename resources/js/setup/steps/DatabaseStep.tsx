@@ -44,9 +44,11 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
         // eslint-disable-next-line react-hooks/exhaustive-deps -- only on mount
     }, []);
 
-    const updateField = (field: keyof DatabaseConfig, value: string | number) => {
-        reset();
-        setDbReady(false);
+    const updateField = (field: keyof DatabaseConfig, value: string | number | boolean) => {
+        if (field !== 'fresh') {
+            reset();
+            setDbReady(false);
+        }
         onChange({
             database: { ...data.database, [field]: value },
         });
@@ -140,6 +142,25 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                         className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                     />
                 </FormField>
+
+                <label
+                    className="flex items-start gap-3 p-3 rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)]/40 cursor-pointer"
+                >
+                    <input
+                        type="checkbox"
+                        checked={Boolean(data.database.fresh)}
+                        onChange={(e) => updateField('fresh', e.target.checked)}
+                        className="mt-0.5 h-4 w-4 accent-[var(--color-danger)] cursor-pointer"
+                    />
+                    <span className="text-sm">
+                        <span className="font-medium text-[var(--color-text-primary)]">
+                            {t('setup.database.fresh', { defaultValue: 'Fresh install — drop every existing table in this database before migrating' })}
+                        </span>
+                        <span className="block text-xs text-[var(--color-text-muted)] mt-0.5">
+                            {t('setup.database.fresh_hint', { defaultValue: 'Tick this if you hit "Table already exists" — the selected database will be wiped. All data in it is lost.' })}
+                        </span>
+                    </span>
+                </label>
             </div>
 
             {!dbReady && (
