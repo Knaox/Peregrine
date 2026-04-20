@@ -215,49 +215,65 @@ Reverse-proxy with nginx / Caddy / Traefik as you normally would.
 
 ## 🧾 Configuration
 
-Almost everything is editable at runtime via **Admin → Settings** and **Admin → Appearance**. The `.env` only holds what Laravel needs before it can boot.
+Peregrine is configured **through the browser**, not through `.env`. The first time you open the panel, an `EnsureInstalled` middleware redirects you to `/setup` as long as `PANEL_INSTALLED` is not `true`. The 7-step wizard then writes all the database, Pelican, auth, and Bridge variables for you, and flips `PANEL_INSTALLED=true` at the end.
 
-### Minimum env vars (the Setup Wizard writes these for you)
+### What you set manually (before the first boot)
+
+Only `APP_URL` is practically required — it's the absolute base URL used by email links, OAuth callbacks, and the update checker.
 
 ```env
-APP_NAME=Peregrine
-APP_URL=https://games.example.com
-PANEL_INSTALLED=true
+APP_NAME=Peregrine                  # optional, default "Peregrine"
+APP_URL=https://games.example.com   # absolute URL of your install
+APP_ENV=production                  # optional
+APP_DEBUG=false                     # optional
 
-DB_CONNECTION=mysql
-DB_HOST=mysql
-DB_DATABASE=peregrine
-DB_USERNAME=peregrine
-DB_PASSWORD=change-me
+# Leave PANEL_INSTALLED unset (or =false) on first boot so the wizard kicks in.
+# PANEL_INSTALLED=false
 
-PELICAN_URL=https://pelican.example.com
-PELICAN_ADMIN_API_KEY=         # admin API key — NEVER exposed to browsers
-PELICAN_CLIENT_API_KEY=        # client API key — proxied through Peregrine
-
-AUTH_MODE=local                # or "oauth"
+# Mailer — not covered by the wizard. Set these so invitations can be sent.
 MAIL_MAILER=smtp
+MAIL_HOST=
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_FROM_ADDRESS=no-reply@games.example.com
+MAIL_FROM_NAME=Peregrine
 ```
 
-### Optional env vars
+### What the Setup Wizard writes for you
+
+At the end of the 7 steps, Peregrine writes these to `.env` and sets `PANEL_INSTALLED=true`:
+
+| Step | Writes |
+|---|---|
+| Database (step 2, live-tests the connection) | `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` |
+| Admin account (step 3) | Creates the initial admin user directly in the DB |
+| Pelican (step 4, live-tests the API key) | `PELICAN_URL`, `PELICAN_ADMIN_API_KEY`, `PELICAN_CLIENT_API_KEY` |
+| Auth mode (step 5) | `AUTH_MODE` + `OAUTH_*` if you pick OAuth |
+| Bridge (step 6, optional) | `BRIDGE_ENABLED`, `STRIPE_WEBHOOK_SECRET` |
+| Summary (step 7) | Flips `PANEL_INSTALLED=true` and runs migrations |
+
+No need to write any of those yourself — if you do, the wizard uses your values as defaults in the form.
+
+### Optional env vars (after install)
 
 ```env
-# OAuth SSO
-OAUTH_CLIENT_ID=
-OAUTH_CLIENT_SECRET=
-OAUTH_AUTHORIZE_URL=
-OAUTH_TOKEN_URL=
-OAUTH_USER_URL=
-
-# Stripe webhook → auto-provisioning
-BRIDGE_ENABLED=false
-STRIPE_WEBHOOK_SECRET=
-
-# Marketplace + updates
+# Marketplace + self-update check
 MARKETPLACE_REGISTRY_URL=https://raw.githubusercontent.com/Knaox/peregrine-plugins/main/registry.json
 UPDATE_REPO=Knaox/Peregrine
+
+# Queue / cache / session drivers (override compose defaults)
+QUEUE_CONNECTION=redis
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+REDIS_HOST=redis
 ```
 
-See [`.env.example`](.env.example) for the full list.
+### Re-running the Setup Wizard
+
+Flip `PANEL_INSTALLED=false` (or unset it) in `.env`, reload the panel — you'll be redirected to `/setup` again. Existing data is preserved.
+
+See [`.env.example`](.env.example) for the full list of recognised variables.
 
 ---
 
