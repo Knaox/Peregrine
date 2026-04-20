@@ -109,11 +109,22 @@ class SetupService
     }
 
     /**
-     * Run all pending database migrations.
+     * Run all pending database migrations, then invoke only the production-safe
+     * seeders explicitly.
+     *
+     * We can't use `--seed` because DatabaseSeeder falls back on
+     * User::factory() — factories rely on the global `fake()` helper which
+     * ships with fakerphp/faker (a require-dev dep, intentionally stripped
+     * from the production composer install). Calling SettingsSeeder directly
+     * keeps us within the production-safe surface.
      */
     public function runMigrations(): void
     {
-        Artisan::call('migrate', ['--force' => true, '--seed' => true]);
+        Artisan::call('migrate', ['--force' => true]);
+        Artisan::call('db:seed', [
+            '--class' => \Database\Seeders\SettingsSeeder::class,
+            '--force' => true,
+        ]);
     }
 
     /**
