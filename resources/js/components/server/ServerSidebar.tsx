@@ -16,6 +16,11 @@ function getLinkStyle(style: string, isActive: boolean, isTop: boolean): React.C
             ? { borderBottom: '2px solid var(--color-primary)', color: 'var(--color-primary)', background: 'transparent' }
             : { borderBottom: '2px solid transparent', color: 'var(--color-text-secondary)' };
     }
+    if (style === 'compact') {
+        return isActive
+            ? { borderRadius: 'var(--radius)', background: 'rgba(var(--color-primary-rgb), 0.15)', color: 'var(--color-primary)', boxShadow: '0 0 14px rgba(var(--color-primary-rgb), 0.2)' }
+            : { borderRadius: 'var(--radius)', color: 'var(--color-text-secondary)' };
+    }
     if (style === 'pills') {
         return isActive
             ? { borderRadius: '9999px', background: 'rgba(var(--color-primary-rgb), 0.15)', color: 'var(--color-primary)', boxShadow: '0 0 12px rgba(var(--color-primary-rgb), 0.1)' }
@@ -30,6 +35,7 @@ function NavLinks({ entries, serverId, style, isTop, onNavClick }: {
     entries: SidebarEntry[]; serverId: number; style: string; isTop: boolean; onNavClick?: () => void;
 }) {
     const { t } = useTranslation();
+    const isRail = style === 'compact' && !isTop;
     return (
         <>
             {entries.map((entry, i) => (
@@ -43,15 +49,19 @@ function NavLinks({ entries, serverId, style, isTop, onNavClick }: {
                         to={`/servers/${serverId}${entry.route_suffix}`}
                         end={entry.route_suffix === ''}
                         onClick={onNavClick}
+                        title={isRail ? t(entry.label_key) : undefined}
+                        aria-label={isRail ? t(entry.label_key) : undefined}
                         className={({ isActive }) => clsx(
-                            'flex items-center gap-2.5 text-sm font-medium transition-all duration-150',
-                            isTop ? 'px-4 py-2.5' : 'px-3 py-2.5',
+                            'flex items-center text-sm font-medium transition-all duration-150',
+                            isRail ? 'justify-center p-2.5' : 'gap-2.5',
+                            !isRail && (isTop ? 'px-4 py-2.5' : 'px-3 py-2.5'),
                             !isActive && (style === 'pills' ? 'hover:bg-white/[0.06]' : 'hover:bg-white/[0.04]'),
                         )}
                         style={({ isActive }) => getLinkStyle(style, isActive, isTop)}
                     >
                         {getIcon(entry.icon)}
-                        {style !== 'compact' && t(entry.label_key)}
+                        {!isRail && !isTop && t(entry.label_key)}
+                        {isTop && t(entry.label_key)}
                     </NavLink>
                 </m.div>
             ))}
@@ -73,22 +83,27 @@ function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnTy
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const isRail = config.style === 'compact';
 
     const handleLogout = async () => { await logout(); navigate('/login'); };
 
     const navContent = (
         <div className="flex h-full flex-col">
             <button type="button" onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 px-4 py-3 text-xs cursor-pointer transition-all duration-150 hover:bg-white/[0.04]"
+                title={isRail ? t('servers.detail.back') : undefined}
+                className={clsx(
+                    'flex items-center text-xs cursor-pointer transition-all duration-150 hover:bg-white/[0.04]',
+                    isRail ? 'justify-center py-3' : 'gap-2 px-4 py-3',
+                )}
                 style={{ color: 'var(--color-text-muted)' }}>
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                {t('servers.detail.back')}
+                {!isRail && t('servers.detail.back')}
             </button>
 
-            <div className="px-4 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="flex items-center gap-3">
+            <div className={clsx('py-4', isRail ? 'px-2' : 'px-4')} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className={clsx('flex items-center', isRail ? 'justify-center' : 'gap-3')}>
                     {server.egg?.banner_image ? (
                         <img src={server.egg.banner_image} alt={server.egg.name} className="h-10 w-10 object-cover" style={{ borderRadius: 10 }} />
                     ) : (
@@ -96,45 +111,63 @@ function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnTy
                             <span className="text-xs font-bold" style={{ color: 'var(--color-text-muted)' }}>{server.egg?.name?.charAt(0) ?? '?'}</span>
                         </div>
                     )}
-                    <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                            {config.show_server_status && <StatusDot status={server.status} size="sm" />}
-                            {config.show_server_name && <p className="truncate text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>{server.name}</p>}
+                    {!isRail && (
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                                {config.show_server_status && <StatusDot status={server.status} size="sm" />}
+                                {config.show_server_name && <p className="truncate text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>{server.name}</p>}
+                            </div>
+                            <p className="truncate" style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>#{server.id}</p>
                         </div>
-                        <p className="truncate" style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>#{server.id}</p>
-                    </div>
+                    )}
                 </div>
             </div>
 
-            <div className="px-5 mt-6 mb-2">
-                <span style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' as const, opacity: 0.35, color: 'var(--color-text-secondary)', fontWeight: 600 }}>
-                    {t('servers.sidebar.principal')}
-                </span>
-            </div>
+            {!isRail && (
+                <div className="px-5 mt-6 mb-2">
+                    <span style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' as const, opacity: 0.35, color: 'var(--color-text-secondary)', fontWeight: 600 }}>
+                        {t('servers.sidebar.principal')}
+                    </span>
+                </div>
+            )}
 
-            <nav className="flex-1 overflow-y-auto px-3 space-y-0.5">
+            <nav className={clsx('flex-1 overflow-y-auto space-y-0.5', isRail ? 'px-2 mt-3' : 'px-3')}>
                 <NavLinks entries={config.entries} serverId={server.id} style={config.style} isTop={false} onNavClick={() => setMobileOpen(false)} />
             </nav>
 
             {user && (
-                <div className="mt-auto px-3 pb-3 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div className="flex items-center gap-3 px-2 py-2">
+                <div className={clsx('mt-auto pb-3 pt-4', isRail ? 'px-2' : 'px-3')} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div className={clsx('flex items-center py-2', isRail ? 'justify-center' : 'gap-3 px-2')}>
                         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                            title={isRail ? user.name : undefined}
                             style={{ background: 'var(--color-primary)', boxShadow: '0 0 16px var(--color-primary-glow)' }}>
                             {user.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-medium" style={{ color: 'var(--color-text-primary)' }}>{user.name}</p>
-                            <p className="truncate" style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>{user.email}</p>
-                        </div>
+                        {!isRail && (
+                            <>
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-xs font-medium" style={{ color: 'var(--color-text-primary)' }}>{user.name}</p>
+                                    <p className="truncate" style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>{user.email}</p>
+                                </div>
+                                <button type="button" onClick={handleLogout} title={t('nav.logout')}
+                                    className="cursor-pointer transition-colors duration-150 hover:text-[var(--color-danger)]"
+                                    style={{ color: 'var(--color-text-muted)' }}>
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                </button>
+                            </>
+                        )}
+                    </div>
+                    {isRail && (
                         <button type="button" onClick={handleLogout} title={t('nav.logout')}
-                            className="cursor-pointer transition-colors duration-150 hover:text-[var(--color-danger)]"
-                            style={{ color: 'var(--color-text-muted)' }}>
+                            className="mt-2 flex w-full items-center justify-center p-2 cursor-pointer transition-colors duration-150 hover:text-[var(--color-danger)]"
+                            style={{ borderRadius: 'var(--radius)', color: 'var(--color-text-muted)' }}>
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
                         </button>
-                    </div>
+                    )}
                 </div>
             )}
         </div>
@@ -155,7 +188,7 @@ function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnTy
             <AnimatePresence>
                 {mobileOpen && <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setMobileOpen(false)} role="presentation" />}
             </AnimatePresence>
-            <aside className="w-56 flex-shrink-0 h-full overflow-y-auto hidden md:flex md:flex-col"
+            <aside className={clsx('flex-shrink-0 h-full overflow-y-auto hidden md:flex md:flex-col', isRail ? 'w-16' : 'w-56')}
                 style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(12px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
                 {navContent}
             </aside>

@@ -177,13 +177,21 @@ class SyncService
                 $eggId = Egg::where('pelican_egg_id', $pelicanServer->eggId)->value('id');
             }
 
-            Server::create([
+            $server = Server::create([
                 'pelican_server_id' => $pelicanServer->id,
                 'identifier' => $pelicanServer->identifier,
                 'user_id' => $userId,
                 'name' => $pelicanServer->name,
                 'status' => $pelicanServer->isSuspended ? 'suspended' : 'active',
                 'egg_id' => $eggId,
+            ]);
+
+            // Register the owner in the server_user pivot so the dashboard
+            // (which queries via User::accessibleServers()) surfaces the
+            // imported server. Without this row the server exists but is
+            // invisible to everyone except admin Filament.
+            $server->accessUsers()->syncWithoutDetaching([
+                $userId => ['role' => 'owner', 'permissions' => null],
             ]);
 
             $imported++;

@@ -74,6 +74,7 @@ class ThemeSettings extends Page implements HasForms
     public ?int $columns_mobile = 1;
 
     // Sidebar config properties
+    public ?string $sidebar_preset = 'classic';
     public ?string $sidebar_position = 'left';
     public ?string $sidebar_style = 'default';
     public bool $show_server_status = true;
@@ -112,6 +113,7 @@ class ThemeSettings extends Page implements HasForms
 
         $sidebar = $themeService->getSidebarConfig();
         $values += [
+            'sidebar_preset' => $settings->get('sidebar_preset', 'classic'),
             'sidebar_position' => $sidebar['position'] ?? 'left',
             'sidebar_style' => $sidebar['style'] ?? 'default',
             'show_server_status' => $sidebar['show_server_status'] ?? true,
@@ -140,6 +142,7 @@ class ThemeSettings extends Page implements HasForms
             $settings->set($key, $data[$key] ?? null);
         }
 
+        $settings->set('sidebar_preset', $data['sidebar_preset'] ?? 'classic');
         $settings->set('card_server_config', json_encode($this->buildCardConfig($data)));
         $settings->set('sidebar_server_config', json_encode($this->buildSidebarConfig($data)));
         $settings->clearCache();
@@ -167,6 +170,7 @@ class ThemeSettings extends Page implements HasForms
         foreach (ThemeDefaults::COLORS as $key => $value) {
             $settings->set($key, $value);
         }
+        $settings->set('sidebar_preset', 'classic');
         $settings->set('card_server_config', json_encode(ThemeDefaults::CARD_CONFIG));
         $settings->set('sidebar_server_config', json_encode(ThemeDefaults::SIDEBAR_CONFIG));
         $settings->clearCache();

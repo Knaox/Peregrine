@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Theme;
 
+use App\Support\SidebarPresets;
 use App\Support\ThemePresets;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Repeater;
@@ -154,8 +155,28 @@ final class ThemeFormSchema
             ->icon('heroicon-o-bars-3-bottom-left')
             ->collapsible()
             ->schema([
+                Select::make('sidebar_preset')
+                    ->label('Sidebar Preset')
+                    ->helperText('Pick a complete layout — position, style and header together. Choose Custom to fine-tune each field.')
+                    ->options(SidebarPresets::options())
+                    ->default('classic')
+                    ->live()
+                    ->afterStateUpdated(function (?string $state, Set $set): void {
+                        if (! $state || $state === 'custom') {
+                            return;
+                        }
+                        foreach (SidebarPresets::get($state) as $key => $value) {
+                            $target = match ($key) {
+                                'position' => 'sidebar_position',
+                                'style' => 'sidebar_style',
+                                default => $key,
+                            };
+                            $set($target, $value);
+                        }
+                    })
+                    ->columnSpanFull(),
                 Select::make('sidebar_position')->label('Position')->options(['left' => 'Left sidebar', 'top' => 'Top tabs']),
-                Select::make('sidebar_style')->label('Style')->options(['default' => 'Default', 'compact' => 'Compact', 'pills' => 'Pills']),
+                Select::make('sidebar_style')->label('Style')->options(['default' => 'Default', 'compact' => 'Compact (rail)', 'pills' => 'Pills']),
                 Toggle::make('show_server_status')->label('Show status dot'),
                 Toggle::make('show_server_name')->label('Show server name'),
                 Repeater::make('entries')->label('Sidebar Links')->schema([
@@ -170,7 +191,7 @@ final class ThemeFormSchema
                     ]),
                     TextInput::make('route_suffix')->label('Route'),
                     Toggle::make('enabled')->label('On'),
-                ])->columns(5)->reorderable()->addable(false)->deletable(false),
+                ])->columns(5)->reorderable()->addable(false)->deletable(false)->columnSpanFull(),
             ])->columns(2);
     }
 }
