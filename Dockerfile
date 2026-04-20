@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1.6
 #
-# Peregrine — production image
-# Multi-stage: (1) pnpm frontend build, (2) PHP-FPM + nginx runtime.
+# Peregrine — production image (~300 MB per arch on Alpine)
+# Two stages: (1) pnpm frontend build, (2) PHP-FPM + nginx + supervisord runtime.
 # Published to ghcr.io/knaox/peregrine by .github/workflows/docker.yml.
-# The final image self-serves HTTP on :8080 — no external nginx needed.
+# Self-serves HTTP on :8080 — no external nginx required.
 
 # ---------------------------------------------------------------
-# Stage 1 — frontend
+# Stage 1 — frontend (node, throw-away)
 # ---------------------------------------------------------------
 FROM node:22-alpine AS frontend-build
 
@@ -15,7 +15,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /build
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --prefer-offline
 
 COPY resources/ ./resources/
 COPY public/ ./public/
@@ -24,27 +24,31 @@ RUN pnpm run build
 
 
 # ---------------------------------------------------------------
-# Stage 2 — PHP-FPM + nginx runtime
+# Stage 2 — runtime (Alpine php-fpm + nginx + supervisord)
 # ---------------------------------------------------------------
-FROM php:8.3-fpm AS app
+FROM php:8.3-fpm-alpine AS app
 
-# System deps, nginx, supervisord, PHP extensions
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        libpng-dev libjpeg-dev libfreetype6-dev libicu-dev libzip-dev \
-        unzip git curl ca-certificates nginx supervisor \
+# Runtime libs + build deps for PHP extensions; build deps removed at the end.
+RUN apk add --no-cache \
+        nginx supervisor curl ca-certificates \
+        icu-libs freetype libpng libjpeg-turbo libzip \
+    && apk add --no-cache --virtual .build-deps \
+        $PHPIZE_DEPS icu-dev freetype-dev libpng-dev \
+        libjpeg-turbo-dev libzip-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" pdo_mysql bcmath gd intl zip pcntl \
     && pecl install redis \
     && docker-php-ext-enable redis \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apk del .build-deps \
+    && rm -rf /tmp/* /var/cache/apk/*
 
+# Bring composer in from its own image (no apk pkg for PHP 8.3 Alpine).
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Two-phase composer install for layer caching + safe Laravel boot during
-# package:discover (no DB / cache / session available during build).
+# Safe Laravel defaults during package:discover — no DB, no cache, no session
+# available at build time. SettingsService::get() catches DB exceptions too.
 ENV APP_ENV=production \
     APP_DEBUG=false \
     CACHE_STORE=array \
@@ -52,28 +56,34 @@ ENV APP_ENV=production \
     QUEUE_CONNECTION=sync \
     DB_CONNECTION=sqlite \
     DB_DATABASE=:memory: \
-    COMPOSER_ALLOW_SUPERUSER=1
+    COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_CACHE_DIR=/tmp/composer-cache
 
-# Phase A — vendor deps only (cached unless composer.json/lock change)
+# Phase A — composer deps (cached unless composer.{json,lock} change)
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --prefer-dist --no-autoloader --no-scripts --no-progress
 
-# Phase B — app code, regenerate optimized autoloader + package:discover
+# Phase B — app code, regenerate optimized autoloader + run package:discover
 COPY . .
 COPY --from=frontend-build /build/public/build ./public/build
 
 RUN composer dump-autoload --optimize --no-dev \
-    && php artisan package:discover --ansi
+    && php -d memory_limit=-1 artisan package:discover --ansi \
+    && rm -rf tests .github docs marketplace \
+              docker-compose.dev.yml docker-compose.full.yml \
+              phpunit.xml phpunit.xml.dist \
+              storage/logs/*.log \
+              /tmp/composer-cache /root/.composer
 
-# Nginx + supervisor configs shipped with the app
-RUN rm -f /etc/nginx/sites-enabled/default /etc/nginx/conf.d/default.conf
-COPY docker/nginx/peregrine.conf /etc/nginx/conf.d/peregrine.conf
-COPY docker/supervisord.conf /etc/supervisor/conf.d/peregrine.conf
+# Nginx + supervisord + entrypoint
+RUN rm -f /etc/nginx/http.d/default.conf 2>/dev/null || true
+COPY docker/nginx/peregrine.conf /etc/nginx/http.d/peregrine.conf
+COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/entrypoint.sh /usr/local/bin/peregrine-entrypoint
-RUN chmod +x /usr/local/bin/peregrine-entrypoint
 
-# Laravel writable dirs
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+RUN chmod +x /usr/local/bin/peregrine-entrypoint \
+    && mkdir -p /run/nginx \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Runtime defaults (overridable via docker run -e / compose)
@@ -86,4 +96,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=5 \
     CMD curl -fsS http://localhost:8080/up || exit 1
 
 ENTRYPOINT ["peregrine-entrypoint"]
-CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+CMD ["supervisord", "-c", "/etc/supervisord.conf"]

@@ -1,0 +1,67 @@
+# ---------------------------------------------------------------
+# Keep the build context small — avoid 100 MB+ uploads per build.
+# ---------------------------------------------------------------
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# CI / contributors / docs / marketplace metadata (not runtime)
+.github
+CLAUDE.md
+marketplace
+
+# IDE / editor
+.idea
+.vscode
+.zed
+.fleet
+.nova
+.phpactor.json
+.phpunit.cache
+.phpunit.result.cache
+
+# Dependencies (rebuilt inside the stages)
+/node_modules
+/vendor
+
+# Local env / secrets — never ship
+.env
+.env.*
+!.env.example
+auth.json
+
+# Runtime state that should never leak into the image
+/storage/app/public/branding/*
+!/storage/app/public/branding/.gitkeep
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*.log
+/storage/pail
+/storage/database/*.sqlite*
+/bootstrap/cache/*.php
+/public/build
+/public/hot
+/public/storage
+/public/plugins
+
+# Tests / dev tooling
+/tests
+phpunit.xml
+phpunit.xml.dist
+pint.json
+.phpstorm.meta.php
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# Alt compose files — only docker-compose.yml is needed inside the image
+/docker-compose.dev.yml
+/docker-compose.full.yml
+
+# Release artefacts
+/*.zip
+/*.tar.gz
