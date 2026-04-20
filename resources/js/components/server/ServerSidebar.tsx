@@ -55,7 +55,7 @@ function NavLinks({ entries, serverId, style, isTop, onNavClick }: {
                             'flex items-center text-sm font-medium transition-all duration-150',
                             isRail ? 'justify-center p-2.5' : 'gap-2.5',
                             !isRail && (isTop ? 'px-4 py-2.5' : 'px-3 py-2.5'),
-                            !isActive && (style === 'pills' ? 'hover:bg-white/[0.06]' : 'hover:bg-white/[0.04]'),
+                            !isActive && 'hover:bg-[var(--surface-overlay-hover)]',
                         )}
                         style={({ isActive }) => getLinkStyle(style, isActive, isTop)}
                     >
@@ -95,9 +95,9 @@ function DockBar({ server, config }: ServerSidebarProps & { config: ReturnType<t
                     className="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer transition-all duration-150"
                     style={{
                         borderRadius: '9999px',
-                        background: 'rgba(0,0,0,0.5)',
+                        background: 'var(--color-glass)',
                         backdropFilter: 'blur(14px) saturate(180%)',
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        border: '1px solid var(--color-glass-border)',
                         color: 'var(--color-text-secondary)',
                     }}>
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -108,9 +108,9 @@ function DockBar({ server, config }: ServerSidebarProps & { config: ReturnType<t
                 <div className="flex items-center gap-2 px-3 py-2"
                     style={{
                         borderRadius: '9999px',
-                        background: 'rgba(0,0,0,0.5)',
+                        background: 'var(--color-glass)',
                         backdropFilter: 'blur(14px) saturate(180%)',
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        border: '1px solid var(--color-glass-border)',
                     }}>
                     {config.show_server_status && <StatusDot status={server.status} size="sm" />}
                     <p className="truncate max-w-[180px] text-xs font-semibold" style={{ color: 'var(--color-text-primary)' }}>
@@ -164,7 +164,7 @@ function DockBar({ server, config }: ServerSidebarProps & { config: ReturnType<t
 
                     {user && (
                         <>
-                            <div className="mx-1 h-6 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
+                            <div className="mx-1 h-6 w-px" style={{ background: 'var(--color-border)' }} />
                             <button type="button" onClick={handleLogout}
                                 title={t('nav.logout')}
                                 aria-label={t('nav.logout')}
@@ -240,7 +240,7 @@ function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnTy
             </nav>
 
             {user && (
-                <div className={clsx('mt-auto pb-3 pt-4', isRail ? 'px-2' : 'px-3')} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className={clsx('mt-auto pb-3 pt-4', isRail ? 'px-2' : 'px-3')} style={{ borderTop: '1px solid var(--color-border)' }}>
                     <div className={clsx('flex items-center py-2', isRail ? 'justify-center' : 'gap-3 px-2')}>
                         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                             title={isRail ? user.name : undefined}

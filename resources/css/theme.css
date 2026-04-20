@@ -91,15 +91,38 @@ body {
         radial-gradient(ellipse at 20% 50%, rgba(var(--color-primary-rgb), 0.06) 0%, transparent 55%),
         radial-gradient(ellipse at 80% 20%, rgba(var(--color-secondary-rgb, 139, 92, 246), 0.05) 0%, transparent 55%);
 }
-[data-theme="light"] .glass-card-enhanced {
-    box-shadow: var(--shadow-md);
-    border-color: var(--color-border);
-}
-/* Inset highlights read as dirt on white surfaces — flip to a dark faint
-   line in light mode so the glass cards don't pick up a "smeared" look. */
+/* Light-mode theme tweaks — glass surfaces dissolve on white (blur + near-white
+   tint = no depth), so we switch to solid + shadow-based elevation. Inset
+   highlights also flip to a faint dark line; a white inset reads as dirt on
+   white cards. */
 [data-theme="light"] {
+    --color-glass: #ffffff;
+    --color-glass-border: var(--color-border);
     --glass-highlight: inset 0 1px 0 rgba(0, 0, 0, 0.04);
     --glass-highlight-strong: inset 0 1px 0 rgba(0, 0, 0, 0.06);
+}
+[data-theme="light"] .glass-card-enhanced {
+    background: #ffffff;
+    backdrop-filter: none;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+}
+/* Shimmer sweep on progress bars is a white-on-dark accent — flip to a
+   dark sweep on light so it reads against the light fill. */
+[data-theme="light"] .progress-bar-glow::after {
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.08), transparent);
+}
+/* Skeleton shimmer uses --color-surface + --color-surface-hover. Both are
+   near-white in light mode, so the shimmer is invisible. Give it a tinted
+   step so the loading state is still perceptible. */
+[data-theme="light"] .skeleton-shimmer {
+    background: linear-gradient(
+        90deg,
+        var(--color-surface-hover) 0%,
+        var(--color-surface) 40%,
+        var(--color-surface-hover) 80%
+    );
+    background-size: 200% 100%;
 }
 
 /* Status pulse animation */

@@ -26,9 +26,9 @@ export function AppLayout() {
     return (
         <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-primary)]">
             {/* Enhanced navbar with glass effect */}
-            <nav className="sticky top-0 z-50 border-b border-[var(--color-border)]/50"
+            <nav className="sticky top-0 z-50 border-b border-[var(--color-border)]"
                 style={{
-                    background: 'rgba(var(--color-primary-rgb), 0.02)',
+                    background: 'var(--color-glass)',
                     backdropFilter: 'blur(20px) saturate(180%)',
                     boxShadow: 'var(--glass-highlight), var(--shadow-sm)',
                 }}

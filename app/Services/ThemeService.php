@@ -195,7 +195,9 @@ class ThemeService
         // body so the constellation + orbs get a unified tint. Dark: opaque
         // black-purple to sit on top of the page bg. Light: very soft white
         // brume that lets the body bg and orbs show through without masking.
-        $vars['--ambient-overlay']        = $isLight ? 'rgba(250, 250, 250, 0.55)' : 'rgba(12, 10, 20, 0.75)';
+        // In light mode the overlay would just wash the page — skip it entirely.
+        // The orbes + body background provide enough ambiance on their own.
+        $vars['--ambient-overlay']        = $isLight ? 'transparent' : 'rgba(12, 10, 20, 0.75)';
 
         return $vars;
     }

@@ -20,7 +20,7 @@ function PowerButton({ label, onClick, disabled, variant }: {
                 'transition-all duration-200',
                 'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100',
                 variant === 'start' && 'bg-[var(--color-success)] text-white font-semibold hover:shadow-[0_0_16px_var(--color-success-glow)] hover:scale-[1.03]',
-                variant === 'restart' && 'border border-white/20 text-white hover:bg-white/10 hover:border-white/30 hover:scale-[1.03]',
+                variant === 'restart' && 'border border-[var(--color-border-hover)] text-[var(--color-text-primary)] hover:bg-[var(--surface-overlay-hover)] hover:scale-[1.03]',
                 variant === 'stop' && 'bg-[var(--color-danger)] text-white font-semibold hover:shadow-[0_0_16px_var(--color-danger-glow)] hover:scale-[1.03]',
                 variant === 'kill' && 'text-[var(--color-danger)] text-[13px] hover:bg-[var(--color-danger)]/10 hover:scale-[1.03]',
             )}
