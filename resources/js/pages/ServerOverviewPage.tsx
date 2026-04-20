@@ -95,7 +95,7 @@ export function ServerOverviewPage() {
                         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--color-surface-hover), var(--color-background))' }} />
                     )}
                     <div className="absolute inset-0" style={{
-                        background: 'linear-gradient(to bottom, transparent 0%, var(--banner-overlay-soft) 35%, var(--banner-overlay) 75%, var(--color-background) 100%)',
+                        background: 'linear-gradient(to bottom, transparent 0%, var(--banner-overlay-soft) 40%, var(--banner-overlay) 70%, var(--color-background) 95%)',
                     }} />
                     <div className="absolute bottom-0 left-1/4 h-40 w-1/2 pointer-events-none"
                         style={{ background: 'radial-gradient(ellipse, rgba(var(--color-primary-rgb), 0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />

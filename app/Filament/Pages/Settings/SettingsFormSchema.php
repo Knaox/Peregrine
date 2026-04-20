@@ -37,13 +37,21 @@ final class SettingsFormSchema
                     ])
                     ->default('40'),
                 FileUpload::make('logo_url')
-                    ->label('Logo')
+                    ->label('Logo (dark mode)')
                     ->image()
                     ->directory('branding')
                     ->disk('public')
                     ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
                     ->maxSize(3072)
-                    ->helperText('Upload SVG, PNG, JPEG or WebP (max 3MB).'),
+                    ->helperText('Default logo — shown in dark mode. Upload SVG, PNG, JPEG or WebP (max 3MB).'),
+                FileUpload::make('logo_url_light')
+                    ->label('Logo (light mode)')
+                    ->image()
+                    ->directory('branding')
+                    ->disk('public')
+                    ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
+                    ->maxSize(3072)
+                    ->helperText('Optional — shown to users in light mode. If empty, the dark-mode logo is used for both.'),
                 FileUpload::make('favicon_url')
                     ->label('Favicon')
                     ->image()

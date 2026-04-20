@@ -1,28 +1,49 @@
 import { AnimatedBackground } from '@/components/AnimatedBackground';
+import { useThemeModeStore } from '@/stores/themeModeStore';
 
 interface EggBackgroundProps {
     imageUrl?: string | null;
     opacity?: number;
+    /** When true, render nothing. Used on pages that already show the banner
+     * in their own hero (ServerOverviewPage) to avoid duplicated bleed. */
+    disabled?: boolean;
 }
 
 /**
  * Contextual background for server pages.
- * - With egg image: renders the image at visible opacity (no AnimatedBackground underneath to avoid overlay stacking)
- * - Without egg image: falls back to AnimatedBackground orbs
+ * - With egg image: renders the image full-page as a subtle ambience behind
+ *   the content (mode-aware opacity + blend keeps it readable).
+ * - Without egg image: falls back to AnimatedBackground orbs.
+ *
+ * Mode-aware opacity + blend: luminosity at 25% works on dark surfaces, multiply
+ * at 15% gives a subtle pastel tint on a white page.
  */
-export function EggBackground({ imageUrl, opacity = 0.25 }: EggBackgroundProps) {
+export function EggBackground({ imageUrl, opacity, disabled = false }: EggBackgroundProps) {
+    const effective = useThemeModeStore((s) => s.effective);
+    const isLight = effective === 'light';
+
+    if (disabled) {
+        return null;
+    }
+
     if (!imageUrl) {
         return <AnimatedBackground />;
     }
 
+    const effectiveOpacity = opacity ?? (isLight ? 0.15 : 0.25);
+    const blendMode: 'luminosity' | 'multiply' = isLight ? 'multiply' : 'luminosity';
+
     return (
-        <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
-            {/* Egg image — visible, desaturated to blend with dark theme */}
+        <div
+            className="pointer-events-none absolute inset-0 z-0"
+            aria-hidden="true"
+        >
+            {/* Egg image — visible but subdued; blend mode flips per theme */}
             <img
                 src={imageUrl}
                 alt=""
                 className="absolute inset-0 h-full w-full object-cover"
-                style={{ opacity, mixBlendMode: 'luminosity' }}
+                style={{ opacity: effectiveOpacity, mixBlendMode: blendMode }}
             />
 
             {/* Gradient overlay: fades out toward edges, preserves center visibility */}

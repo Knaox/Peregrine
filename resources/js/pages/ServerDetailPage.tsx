@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from 'react';
-import { useParams, Link, Routes, Route, Navigate } from 'react-router-dom';
+import { useParams, Link, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useServer } from '@/hooks/useServer';
@@ -66,8 +66,12 @@ function buildRoutes(
 export function ServerDetailPage() {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
+    const location = useLocation();
     const serverId = Number(id);
     const { data: server, isLoading, isError } = useServer(serverId);
+    // Overview already shows the banner in its own hero — disable the shared
+    // EggBackground there to avoid painting the same image twice.
+    const isOverviewRoute = location.pathname === `/servers/${serverId}`;
     const sidebarConfig = useSidebarConfig();
     const pluginManifests = usePluginStore((s) => s.manifests);
     const serverPageComponents = usePluginStore((s) => s.serverPageComponents);
@@ -147,28 +151,42 @@ export function ServerDetailPage() {
         );
     }
 
+    // Dock keeps a flex column wrapper too — the main element relies on
+    // `flex-1` to claim the full viewport height and own the scroll box.
+    // Without it, `overflow-y-auto` has nothing to overflow and the page
+    // becomes unscrollable.
     const wrapperClass = isTopLayout
-        ? 'flex flex-col h-[100dvh] overflow-hidden'
+        ? 'relative flex flex-col h-[100dvh] overflow-hidden'
         : isDockLayout
-            ? 'relative h-[100dvh] overflow-hidden'
-            : 'flex h-[100dvh] overflow-hidden';
+            ? 'relative flex flex-col h-[100dvh] overflow-hidden'
+            : 'relative flex h-[100dvh] overflow-hidden';
 
-    // Dock floats on top of the content; keep extra bottom padding so the
-    // last scroll item is not hidden behind it on small screens.
-    const contentPaddingClass = isDockLayout
-        ? 'relative z-10 p-3 pt-14 pb-28 sm:p-4 sm:pt-14 sm:pb-28 md:p-6 md:pt-6 md:pb-32 flex flex-col min-h-full'
-        : 'relative z-10 p-3 pt-14 sm:p-4 sm:pt-14 md:p-6 md:pt-6 flex flex-col min-h-full';
+    // pt-14 is reserved space for the mobile hamburger toggle (top-left) —
+    // only Classic / Rail render a hamburger, so skip it for Dock and Top
+    // layouts. This lets the hero banner reach the viewport top in those
+    // presets. Dock keeps extra bottom padding so scrolled content isn't
+    // hidden behind the floating dock + top-left context pill.
+    const hasMobileHamburger = !isTopLayout && !isDockLayout;
+    const contentPaddingClass = [
+        'relative z-10 flex flex-col min-h-full p-3 sm:p-4 md:p-6',
+        hasMobileHamburger && 'pt-14 sm:pt-14 md:pt-6',
+        isDockLayout && 'pt-20 sm:pt-20 md:pt-20 pb-28 sm:pb-28 md:pb-32',
+    ].filter(Boolean).join(' ');
 
     return (
         <div className={wrapperClass}>
+            {/* Viewport-anchored background — sits BEHIND the scrollable main
+                so the egg banner stays in its hero-area band regardless of
+                content scroll. Moving it inside <main> made it scroll with
+                the content and revealed the mask cutoff as a hard line. */}
+            <EggBackground imageUrl={server.egg?.banner_image} disabled={isOverviewRoute} />
             <ServerSidebar server={server} sidebarConfig={mergedConfig} />
             <m.main
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
-                className="relative flex-1 overflow-y-auto"
+                className="relative flex-1 overflow-y-auto z-10"
             >
-                <EggBackground imageUrl={server.egg?.banner_image} />
                 <div className={contentPaddingClass}>
                     <Routes>
                         {dynamicRoutes.map((route) =>

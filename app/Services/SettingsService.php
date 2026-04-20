@@ -60,21 +60,30 @@ class SettingsService
     /**
      * Get all branding-related settings.
      *
-     * @return array{app_name: string|null, logo_url: string|null, favicon_url: string|null}
+     * @return array{app_name: string|null, logo_url: string|null, logo_url_light: string|null, favicon_url: string|null}
      */
     public function getBranding(): array
     {
         return Cache::remember('branding_full', self::CACHE_TTL, function (): array {
             $logo = $this->get('app_logo_path', '/images/logo.webp');
+            // Light-mode logo: optional. When unset, falls back to the main
+            // logo so existing installs keep working.
+            $logoLight = $this->get('app_logo_path_light', '');
             $favicon = $this->get('app_favicon_path', '/images/favicon.ico');
 
             $headerLinks = json_decode($this->get('header_links', '[]') ?? '[]', true) ?: [];
+
+            $logoUrl = $this->resolveAssetUrl($logo);
+            $logoUrlLight = $logoLight !== '' && $logoLight !== null
+                ? $this->resolveAssetUrl($logoLight)
+                : $logoUrl;
 
             return [
                 'app_name' => $this->get('app_name', 'Peregrine'),
                 'show_app_name' => $this->get('show_app_name', 'true') === 'true',
                 'logo_height' => (int) $this->get('logo_height', '40'),
-                'logo_url' => $this->resolveAssetUrl($logo),
+                'logo_url' => $logoUrl,
+                'logo_url_light' => $logoUrlLight,
                 'favicon_url' => $this->resolveAssetUrl($favicon),
                 'header_links' => $headerLinks,
             ];

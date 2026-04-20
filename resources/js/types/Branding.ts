@@ -12,6 +12,7 @@ export interface Branding {
     show_app_name: boolean;
     logo_height: number;
     logo_url: string;
+    logo_url_light: string;
     favicon_url: string;
     header_links: HeaderLink[];
 }

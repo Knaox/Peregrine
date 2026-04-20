@@ -94,12 +94,16 @@ body {
 /* Light-mode theme tweaks — glass surfaces dissolve on white (blur + near-white
    tint = no depth), so we switch to solid + shadow-based elevation. Inset
    highlights also flip to a faint dark line; a white inset reads as dirt on
-   white cards. */
+   white cards. Overlay tokens get a bump so gauge tracks, hover chips and
+   skeleton bars actually register on a light surface. */
 [data-theme="light"] {
     --color-glass: #ffffff;
     --color-glass-border: var(--color-border);
     --glass-highlight: inset 0 1px 0 rgba(0, 0, 0, 0.04);
     --glass-highlight-strong: inset 0 1px 0 rgba(0, 0, 0, 0.06);
+    --surface-overlay-soft: rgba(0, 0, 0, 0.06);
+    --surface-overlay-strong: rgba(0, 0, 0, 0.15);
+    --surface-overlay-hover: rgba(0, 0, 0, 0.08);
 }
 [data-theme="light"] .glass-card-enhanced {
     background: #ffffff;

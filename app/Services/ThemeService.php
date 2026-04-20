@@ -199,6 +199,12 @@ class ThemeService
         // The orbes + body background provide enough ambiance on their own.
         $vars['--ambient-overlay']        = $isLight ? 'transparent' : 'rgba(12, 10, 20, 0.75)';
 
+        // Egg banner bleed — luminosity blend at 25% opacity works on dark but
+        // leaves a distracting texture on a light page. Drop opacity and flip
+        // to multiply (darkens light into the egg image instead of revealing it).
+        $vars['--egg-bg-opacity'] = $isLight ? '0.15' : '0.25';
+        $vars['--egg-bg-blend']   = $isLight ? 'multiply' : 'luminosity';
+
         return $vars;
     }
 

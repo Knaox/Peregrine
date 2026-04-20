@@ -12,13 +12,14 @@ interface OverviewQuickActionsProps {
 /**
  * Row of quick-action buttons below the hero banner.
  * Excludes the "overview" entry (we're already on it).
- * Shows the first 5 enabled sidebar entries as glass pill buttons.
+ * Renders every enabled sidebar entry (core + plugins) so nothing gets
+ * silently dropped — the flex-wrap container handles overflow.
  */
 export function OverviewQuickActions({ serverId, entries }: OverviewQuickActionsProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const actions = entries.filter((e) => e.id !== 'overview').slice(0, 6);
+    const actions = entries.filter((e) => e.id !== 'overview');
 
     if (actions.length === 0) return null;
 

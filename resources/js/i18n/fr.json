@@ -392,7 +392,11 @@
         "not_found": "Serveur introuvable.",
         "sidebar": {
             "principal": "Principal",
-            "management": "Gestion"
+            "management": "Gestion",
+            "collapse": "Réduire la barre latérale",
+            "expand": "Développer la barre latérale",
+            "open": "Ouvrir le menu",
+            "close": "Fermer le menu"
         },
         "detail": {
             "overview": "Vue d'ensemble",
@@ -435,6 +439,7 @@
         "settings": "Paramètres",
         "profile": "Profil",
         "logout": "Déconnexion",
+        "user_menu": "Menu utilisateur",
         "greeting_morning": "Bonjour, {{name}}",
         "greeting_afternoon": "Bon après-midi, {{name}}",
         "greeting_evening": "Bonsoir, {{name}}",

@@ -3,7 +3,6 @@
     // Resolve everything theme/branding-related up-front so the <html> element
     // itself can carry data-theme, preventing a one-frame FOUC.
     $branding = app(\App\Services\SettingsService::class)->getBranding();
-    $logoUrl = $branding['logo_url'] ?? '/images/logo.webp';
     $logoHeight = $branding['logo_height'] ?? 40;
     $appName = $branding['app_name'] ?? config('app.name', 'Peregrine');
     $showName = $branding['show_app_name'] ?? true;
@@ -12,6 +11,12 @@
     $userThemeMode = auth()->user()->theme_mode ?? 'auto';
     $initialMode = $userThemeMode === 'light' ? 'light' : 'dark';
     $initialCssVars = $themeService->getCssVariablesForMode($initialMode);
+
+    // Pick the logo matching the resolved initial mode so the splash (rendered
+    // server-side, before React) doesn't flash the wrong variant.
+    $logoUrl = $initialMode === 'light' && ! empty($branding['logo_url_light'])
+        ? $branding['logo_url_light']
+        : ($branding['logo_url'] ?? '/images/logo.webp');
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $initialMode }}">
 <head>

@@ -14,6 +14,7 @@ class BrandingResource extends JsonResource
             'show_app_name' => $this->resource['show_app_name'] ?? true,
             'logo_height' => $this->resource['logo_height'] ?? 40,
             'logo_url' => $this->resource['logo_url'] ?? '/images/logo.webp',
+            'logo_url_light' => $this->resource['logo_url_light'] ?? ($this->resource['logo_url'] ?? '/images/logo.webp'),
             'favicon_url' => $this->resource['favicon_url'] ?? '/images/favicon.ico',
             'header_links' => $this->resource['header_links'] ?? [],
         ];

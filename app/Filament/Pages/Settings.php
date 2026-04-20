@@ -34,6 +34,8 @@ class Settings extends Page implements HasForms
     /** @var array<int, string>|null */
     public ?array $logo_url = [];
     /** @var array<int, string>|null */
+    public ?array $logo_url_light = [];
+    /** @var array<int, string>|null */
     public ?array $favicon_url = [];
     public bool $show_app_name = true;
     public ?string $logo_height = '40';
@@ -74,8 +76,10 @@ class Settings extends Page implements HasForms
         $this->logo_height = $settings->get('logo_height', '40');
 
         $logoPath = $settings->get('app_logo_path', '');
+        $logoLightPath = $settings->get('app_logo_path_light', '');
         $faviconPath = $settings->get('app_favicon_path', '');
         $logoForForm = ($logoPath && ! str_starts_with($logoPath, '/')) ? [$logoPath] : [];
+        $logoLightForForm = ($logoLightPath && ! str_starts_with($logoLightPath, '/')) ? [$logoLightPath] : [];
         $faviconForForm = ($faviconPath && ! str_starts_with($faviconPath, '/')) ? [$faviconPath] : [];
 
         $this->header_links = json_decode($settings->get('header_links', '[]') ?? '[]', true) ?: [];
@@ -104,6 +108,7 @@ class Settings extends Page implements HasForms
             'show_app_name' => $this->show_app_name,
             'logo_height' => $this->logo_height,
             'logo_url' => $logoForForm,
+            'logo_url_light' => $logoLightForForm,
             'favicon_url' => $faviconForForm,
             'header_links' => $this->header_links,
             'pelican_url' => $this->pelican_url,
@@ -156,6 +161,12 @@ class Settings extends Page implements HasForms
                 $settings->set('app_logo_path', $path);
             }
         }
+
+        // Light-mode logo: optional; empty/cleared value persists as '' so the
+        // frontend falls back to the main logo.
+        $logoLightValue = $data['logo_url_light'] ?? null;
+        $logoLightPath = is_array($logoLightValue) ? (array_values($logoLightValue)[0] ?? null) : $logoLightValue;
+        $settings->set('app_logo_path_light', $logoLightPath ?: '');
 
         $faviconValue = $data['favicon_url'] ?? null;
         if ($faviconValue) {

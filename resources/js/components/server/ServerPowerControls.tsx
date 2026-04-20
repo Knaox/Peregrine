@@ -18,11 +18,12 @@ function PowerButton({ label, onClick, disabled, variant }: {
             className={clsx(
                 'inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 text-xs sm:text-sm rounded-lg cursor-pointer',
                 'transition-all duration-200',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]',
                 'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100',
                 variant === 'start' && 'bg-[var(--color-success)] text-white font-semibold hover:shadow-[0_0_16px_var(--color-success-glow)] hover:scale-[1.03]',
-                variant === 'restart' && 'border border-[var(--color-border-hover)] text-[var(--color-text-primary)] hover:bg-[var(--surface-overlay-hover)] hover:scale-[1.03]',
+                variant === 'restart' && 'bg-[var(--color-surface)] border border-[var(--color-border-hover)] text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-primary)]/60 hover:scale-[1.03]',
                 variant === 'stop' && 'bg-[var(--color-danger)] text-white font-semibold hover:shadow-[0_0_16px_var(--color-danger-glow)] hover:scale-[1.03]',
-                variant === 'kill' && 'text-[var(--color-danger)] text-[13px] hover:bg-[var(--color-danger)]/10 hover:scale-[1.03]',
+                variant === 'kill' && 'text-[var(--color-danger)] text-[13px] px-2 py-1.5 rounded hover:bg-[var(--color-danger)]/10 hover:underline underline-offset-4 hover:scale-[1.03]',
             )}
         >
             {disabled && (

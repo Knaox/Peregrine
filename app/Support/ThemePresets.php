@@ -196,10 +196,10 @@ final class ThemePresets
             'theme_background'    => '#f8fafc',
             'theme_surface_hover' => '#f1f5f9',
             'theme_border'        => '#e2e8f0',
-            'theme_border_hover'  => '#cbd5e1',
+            'theme_border_hover'  => '#94a3b8',  // slate-400, 2.9:1 — visible button outline
             'theme_text_primary'  => '#0f172a',
-            'theme_text_secondary' => '#475569',
-            'theme_text_muted'    => '#94a3b8',
+            'theme_text_secondary' => '#334155', // slate-700, 9:1 AAA
+            'theme_text_muted'    => '#475569',  // slate-600, 7:1 AAA (was #94a3b8 2.9 FAIL)
         ]);
     }
 
@@ -236,10 +236,10 @@ final class ThemePresets
             'theme_background'    => '#f8fafc',
             'theme_surface_hover' => '#f1f5f9',
             'theme_border'        => '#e2e8f0',
-            'theme_border_hover'  => '#cbd5e1',
+            'theme_border_hover'  => '#94a3b8',  // slate-400, 2.9:1
             'theme_text_primary'  => '#0f172a',
-            'theme_text_secondary' => '#475569',
-            'theme_text_muted'    => '#94a3b8',
+            'theme_text_secondary' => '#334155', // slate-700, 9:1 AAA
+            'theme_text_muted'    => '#475569',  // slate-600, 7:1 AAA
         ]);
     }
 
@@ -301,10 +301,13 @@ final class ThemePresets
             'theme_surface_hover'     => '#f3f4f6',
             'theme_surface_elevated'  => '#ffffff',
             'theme_border'            => '#e5e7eb',
-            'theme_border_hover'      => '#d1d5db',
-            'theme_text_primary'      => '#1f2937',
-            'theme_text_secondary'    => '#6b7280',
-            'theme_text_muted'        => '#9ca3af',
+            // gray-400 instead of gray-300 — gives outlined buttons (Restart)
+            // a visible 2.9:1 border on white. Below 3:1 is fine for component
+            // boundaries, vs 4.5:1 required for body text.
+            'theme_border_hover'      => '#9ca3af',
+            'theme_text_primary'      => '#1f2937', // 12:1 AAA
+            'theme_text_secondary'    => '#4b5563', // gray-600, 7:1 AAA (was #6b7280 5.2)
+            'theme_text_muted'        => '#6b7280', // gray-500, 5.2:1 AA (was #9ca3af 2.9 FAIL)
         ], $overrides);
     }
 }

@@ -392,7 +392,11 @@
         "not_found": "Server not found.",
         "sidebar": {
             "principal": "Main",
-            "management": "Management"
+            "management": "Management",
+            "collapse": "Collapse sidebar",
+            "expand": "Expand sidebar",
+            "open": "Open menu",
+            "close": "Close menu"
         },
         "detail": {
             "overview": "Overview",
@@ -435,6 +439,7 @@
         "settings": "Settings",
         "profile": "Profile",
         "logout": "Logout",
+        "user_menu": "User menu",
         "greeting_morning": "Good morning, {{name}}",
         "greeting_afternoon": "Good afternoon, {{name}}",
         "greeting_evening": "Good evening, {{name}}",
