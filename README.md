@@ -18,7 +18,7 @@
   <p>
     <a href="#-install-in-60-seconds">Install in 60 s</a> ·
     <a href="#-features">Features</a> ·
-    <a href="#-copy-paste-docker-compose">Compose files</a> ·
+    <a href="#-install-in-60-seconds">Compose files</a> ·
     <a href="#-updates">Updates</a> ·
     <a href="#-plugins">Plugins</a> ·
     <a href="#-developing-locally">Developing</a> ·
@@ -59,9 +59,11 @@ docker run -d --name peregrine \
 
 Open `http://localhost:8080` and run the Setup Wizard.
 
-### Option B — the official `docker-compose.yml`
+### Option B — the official `docker-compose.yml` (SQLite or external DB)
 
 Save this as `docker-compose.yml`, run `docker compose up -d`. Also works as a **Portainer Stack** — paste and Deploy.
+
+By default this runs Peregrine alone with a bundled **SQLite** file in a named volume. To point at an **external MySQL / MariaDB / PostgreSQL** instead, set the `DB_*` env vars at deploy time (Portainer → Environment variables, or a `.env` next to the compose) — no file edit needed, the compose already references `${DB_HOST}` etc.
 
 ```yaml
 services:
@@ -74,6 +76,13 @@ services:
     environment:
       APP_URL: http://localhost:8080
       DOCKER: "true"
+      # Default = SQLite. Override these to use an external DB.
+      DB_CONNECTION: ${DB_CONNECTION:-sqlite}
+      DB_HOST: ${DB_HOST:-}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:-/var/www/html/storage/database/database.sqlite}
+      DB_USERNAME: ${DB_USERNAME:-}
+      DB_PASSWORD: ${DB_PASSWORD:-}
     volumes:
       - peregrine_storage:/var/www/html/storage
       - peregrine_plugins:/var/www/html/plugins
@@ -83,7 +92,63 @@ volumes:
   peregrine_plugins:
 ```
 
-### Option C — all-in-one stack (app + MySQL + Redis)
+Example Portainer stack env vars for an external MySQL:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=mydb.example.com
+DB_PORT=3306
+DB_DATABASE=peregrine
+DB_USERNAME=peregrine
+DB_PASSWORD=super-secret
+```
+
+### Option C — app + Redis (external database)
+
+You already run a managed MySQL / MariaDB and just want **Redis** (cache + queue + sessions) bundled with Peregrine. Shipped as [`docker-compose.redis.yml`](docker-compose.redis.yml).
+
+```yaml
+services:
+  peregrine:
+    image: ghcr.io/knaox/peregrine:latest
+    container_name: peregrine
+    restart: unless-stopped
+    depends_on:
+      redis: { condition: service_started }
+    ports:
+      - "8080:8080"
+    environment:
+      APP_URL: http://localhost:8080
+      DOCKER: "true"
+      DB_CONNECTION: mysql
+      DB_HOST: ${DB_HOST}           # ← set me (managed DB hostname)
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:-peregrine}
+      DB_USERNAME: ${DB_USERNAME:-peregrine}
+      DB_PASSWORD: ${DB_PASSWORD}    # ← set me
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+      REDIS_HOST: redis
+    volumes:
+      - peregrine_storage:/var/www/html/storage
+      - peregrine_plugins:/var/www/html/plugins
+
+  redis:
+    image: redis:7-alpine
+    container_name: peregrine-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - peregrine_redis:/data
+
+volumes:
+  peregrine_storage:
+  peregrine_plugins:
+  peregrine_redis:
+```
+
+### Option D — all-in-one stack (app + MySQL + Redis)
 
 Production-grade bundle. Turnkey — Portainer-paste-ready. Redis for cache/queue/session, MySQL 8.4 for durability.
 
@@ -158,9 +223,9 @@ In the Setup Wizard, fill the **Database** step with:
 | User | `peregrine` |
 | Password | *the one from `DB_PASSWORD`* |
 
-Both compose files are shipped in the repo: [`docker-compose.yml`](docker-compose.yml) + [`docker-compose.full.yml`](docker-compose.full.yml).
+All three compose files are shipped in the repo: [`docker-compose.yml`](docker-compose.yml) (simple), [`docker-compose.redis.yml`](docker-compose.redis.yml) (app + Redis, external DB), [`docker-compose.full.yml`](docker-compose.full.yml) (all-in-one).
 
-### Option D — bare metal (no Docker)
+### Option E — bare metal (no Docker)
 
 ```bash
 git clone https://github.com/Knaox/Peregrine.git

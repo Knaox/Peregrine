@@ -2,14 +2,27 @@
 # Peregrine — standard compose (app only)
 #
 # Turnkey file for Portainer: paste, deploy, open port 8080.
-# Runs the official ghcr.io/knaox/peregrine image with SQLite bundled
-# inside a named volume — zero external database required.
+# Runs the official ghcr.io/knaox/peregrine image.
+#
+# By default: SQLite bundled inside a named volume — zero extra services.
+#
+# Want an external MySQL? Set these env vars at deploy time (Portainer
+# "Environment variables", or a .env next to this file) and Peregrine
+# will use them instead of SQLite:
+#
+#   DB_CONNECTION=mysql
+#   DB_HOST=mydb.example.com
+#   DB_PORT=3306
+#   DB_DATABASE=peregrine
+#   DB_USERNAME=peregrine
+#   DB_PASSWORD=super-secret
 #
 #   docker compose up -d
 #   open http://localhost:8080   (run the Setup Wizard)
 #
-# Prefer bundled MySQL + Redis? Use docker-compose.full.yml instead.
-# Want to edit the source? Use docker-compose.dev.yml.
+# Other variants:
+#   docker-compose.redis.yml → external DB + bundled Redis
+#   docker-compose.full.yml  → bundled MySQL + Redis (all-in-one)
 # ------------------------------------------------------------------
 
 services:
@@ -20,14 +33,20 @@ services:
     ports:
       - "${PEREGRINE_PORT:-8080}:8080"
     environment:
-      APP_NAME: Peregrine
+      APP_NAME: ${APP_NAME:-Peregrine}
       APP_ENV: production
       APP_DEBUG: "false"
       APP_URL: ${APP_URL:-http://localhost:8080}
       DOCKER: "true"
-      # SQLite by default. Point at your own MySQL via the admin later if you like.
-      DB_CONNECTION: sqlite
-      DB_DATABASE: /var/www/html/storage/database/database.sqlite
+      # Database — SQLite is the default, override any of these to point at
+      # an external MySQL / MariaDB / PostgreSQL host.
+      DB_CONNECTION: ${DB_CONNECTION:-sqlite}
+      DB_HOST: ${DB_HOST:-}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:-/var/www/html/storage/database/database.sqlite}
+      DB_USERNAME: ${DB_USERNAME:-}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      # Cache + queue + sessions
       CACHE_STORE: ${CACHE_STORE:-file}
       QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
       SESSION_DRIVER: ${SESSION_DRIVER:-file}
