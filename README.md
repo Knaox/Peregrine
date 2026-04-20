@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/Knaox/Peregrine/main/public/images/logo.svg" width="360" alt="Peregrine" />
+  <img src="https://raw.githubusercontent.com/Knaox/Peregrine/main/public/images/logo.webp" width="360" alt="Peregrine" />
 
   <h3>Open-source game-server management panel powered by <a href="https://pelican.dev">Pelican</a>.</h3>
   <p>Beautiful player interface · full admin panel · granular permissions · plugin marketplace · Docker-first.</p>
