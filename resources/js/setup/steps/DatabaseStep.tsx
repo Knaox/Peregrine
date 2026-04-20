@@ -30,6 +30,7 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                             port: (res.defaults.port as number) ?? data.database.port,
                             database: (res.defaults.database as string) ?? data.database.database,
                             username: (res.defaults.username as string) ?? data.database.username,
+                            password: (res.defaults.password as string) ?? data.database.password,
                         },
                     });
                     if (res.db_ready) {

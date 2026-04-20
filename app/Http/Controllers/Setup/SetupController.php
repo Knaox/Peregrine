@@ -135,6 +135,10 @@ class SetupController extends Controller
             'port' => (int) env('DB_PORT', 3306),
             'database' => env('DB_DATABASE', 'peregrine'),
             'username' => env('DB_USERNAME', 'peregrine'),
+            // Return the password from the container env so the wizard can
+            // pre-fill it. Only ever exposed on the /setup flow, which the
+            // EnsureInstalled middleware disables once PANEL_INSTALLED=true.
+            'password' => (string) env('DB_PASSWORD', ''),
         ] : [];
 
         // Test if the current DB config already works
@@ -146,7 +150,7 @@ class SetupController extends Controller
                     port: $defaults['port'],
                     database: $defaults['database'],
                     username: $defaults['username'],
-                    password: env('DB_PASSWORD', ''),
+                    password: $defaults['password'],
                 );
             } catch (\Throwable) {
                 $dbReady = false;
