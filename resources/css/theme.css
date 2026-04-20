@@ -33,6 +33,21 @@
     --color-glass-border: #2a2535;
     --shadow-intensity: 0.5;
     --density-scale: 1;
+
+    /* Mode-dependent overlay tokens — these are overridden at runtime by
+       ThemeService::buildCssVariables() based on the effective mode. The
+       dark-mode values below are safe fallbacks used before /api/settings/theme
+       resolves (first paint after boot). */
+    --banner-overlay: rgba(12, 10, 20, 0.92);
+    --banner-overlay-soft: rgba(12, 10, 20, 0.55);
+    --surface-overlay-soft: rgba(255, 255, 255, 0.08);
+    --surface-overlay-strong: rgba(255, 255, 255, 0.15);
+    --surface-overlay-hover: rgba(255, 255, 255, 0.06);
+    --shadow-inset: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+    --modal-scrim: rgba(0, 0, 0, 0.7);
+    --text-on-banner: #ffffff;
+    --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+    --ambient-overlay: rgba(12, 10, 20, 0.75);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, calc(0.3 * var(--shadow-intensity) * 2));
     --shadow-md: 0 4px 12px rgba(0, 0, 0, calc(0.4 * var(--shadow-intensity) * 2));
     --shadow-lg: 0 8px 30px rgba(0, 0, 0, calc(0.5 * var(--shadow-intensity) * 2));
@@ -62,9 +77,29 @@ body {
     background-color: var(--color-background);
     background-image:
         radial-gradient(ellipse at 20% 50%, rgba(var(--color-primary-rgb), 0.04) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(100, 60, 140, 0.03) 0%, transparent 50%);
+        radial-gradient(ellipse at 80% 20%, rgba(var(--color-secondary-rgb, 139, 92, 246), 0.03) 0%, transparent 50%);
     background-attachment: fixed;
     font-family: var(--font-sans);
+    color: var(--color-text-primary);
+}
+
+/* Light-mode body — softer ambient gradient so the off-white doesn't clash
+   with the accent orbs. Glass highlights are ignored in light mode (inset
+   highlights read as dirt on white surfaces). */
+[data-theme="light"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(var(--color-primary-rgb), 0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 20%, rgba(var(--color-secondary-rgb, 139, 92, 246), 0.05) 0%, transparent 55%);
+}
+[data-theme="light"] .glass-card-enhanced {
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-border);
+}
+/* Inset highlights read as dirt on white surfaces — flip to a dark faint
+   line in light mode so the glass cards don't pick up a "smeared" look. */
+[data-theme="light"] {
+    --glass-highlight: inset 0 1px 0 rgba(0, 0, 0, 0.04);
+    --glass-highlight-strong: inset 0 1px 0 rgba(0, 0, 0, 0.06);
 }
 
 /* Status pulse animation */

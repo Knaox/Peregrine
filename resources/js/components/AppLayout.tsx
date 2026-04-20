@@ -30,7 +30,7 @@ export function AppLayout() {
                 style={{
                     background: 'rgba(var(--color-primary-rgb), 0.02)',
                     backdropFilter: 'blur(20px) saturate(180%)',
-                    boxShadow: 'var(--glass-highlight), 0 1px 3px rgba(0,0,0,0.3)',
+                    boxShadow: 'var(--glass-highlight), var(--shadow-sm)',
                 }}
             >
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

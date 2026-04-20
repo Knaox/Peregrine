@@ -15,11 +15,11 @@ export function GlassCard({
                 'transition-all duration-300',
                 hover && [
                     'hover:border-[var(--color-border-hover)]',
-                    'hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
+                    'hover:shadow-[var(--shadow-lg)]',
                     'hover:-translate-y-0.5',
                     'cursor-pointer',
                 ],
-                glow && 'hover:shadow-[0_0_24px_var(--color-primary-glow),0_8px_32px_rgba(0,0,0,0.3)]',
+                glow && 'hover:shadow-[0_0_24px_var(--color-primary-glow),var(--shadow-lg)]',
                 onClick && !hover && 'cursor-pointer',
                 className,
             )}

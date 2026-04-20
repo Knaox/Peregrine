@@ -83,7 +83,7 @@ export function ServerCard({
                 !hasBanner && 'bg-[var(--color-surface)] border border-[var(--color-border)]',
                 hasBanner && 'border border-transparent',
                 'transition-[box-shadow,border-color] duration-300',
-                'hover:border-[var(--color-border-hover)] hover:shadow-[0_8px_40px_rgba(0,0,0,0.4),var(--shadow-glow)]',
+                'hover:border-[var(--color-border-hover)] hover:shadow-[var(--shadow-lg),var(--shadow-glow)]',
                 isDragging && 'opacity-50',
                 isSelected && 'ring-2 ring-[var(--color-primary)] ring-offset-1 ring-offset-[var(--color-background)]',
             )}
@@ -96,9 +96,9 @@ export function ServerCard({
                         alt=""
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                     />
-                    {/* Gradient overlay — dark from right to left so text is readable */}
+                    {/* Gradient overlay — base color follows the mode so text stays readable on both dark and light UIs. */}
                     <div className="absolute inset-0" style={{
-                        background: 'linear-gradient(to right, rgba(12,10,20,0.55) 0%, rgba(12,10,20,0.75) 35%, rgba(12,10,20,0.92) 65%, rgba(12,10,20,0.97) 100%)',
+                        background: 'linear-gradient(to right, var(--banner-overlay-soft) 0%, var(--banner-overlay) 65%, var(--banner-overlay) 100%)',
                     }} />
                 </>
             )}
@@ -139,8 +139,8 @@ export function ServerCard({
                         <button type="button" onClick={handleCopy}
                             className="inline-flex items-center gap-1 rounded-[var(--radius-full)] px-2 py-0.5 text-[11px] font-mono cursor-pointer transition-all duration-200"
                             style={{
-                                background: copied ? 'rgba(var(--color-success-rgb), 0.2)' : 'rgba(255,255,255,0.08)',
-                                color: copied ? 'var(--color-success)' : hasBanner ? 'rgba(255,255,255,0.7)' : 'var(--color-text-secondary)',
+                                background: copied ? 'rgba(var(--color-success-rgb), 0.2)' : hasBanner ? 'rgba(255,255,255,0.15)' : 'var(--surface-overlay-soft)',
+                                color: copied ? 'var(--color-success)' : hasBanner ? 'var(--text-on-banner)' : 'var(--color-text-secondary)',
                                 backdropFilter: 'blur(8px)',
                             }}>
                             {copied ? (
@@ -189,7 +189,7 @@ export function ServerCard({
                         'border cursor-pointer transition-all duration-200',
                         isSelected
                             ? 'border-[var(--color-primary)] bg-[var(--color-primary)] ring-2 ring-[var(--color-primary-glow)]'
-                            : 'border-white/30 bg-black/40 backdrop-blur-sm',
+                            : 'border-[var(--color-border-hover)] bg-[var(--modal-scrim)] backdrop-blur-sm',
                     )}>
                     {isSelected && (
                         <svg className="h-3.5 w-3.5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>

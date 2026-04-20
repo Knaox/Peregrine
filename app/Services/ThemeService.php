@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\ThemePresets;
 use Illuminate\Support\Facades\Cache;
 
 class ThemeService
@@ -49,12 +50,85 @@ class ThemeService
 
     public function getCssVariables(): array
     {
-        return Cache::remember('theme_css_vars', 3600, fn () => $this->buildCssVariables());
+        return Cache::remember('theme_css_vars', 3600, fn () => $this->buildCssVariables($this->buildTheme()));
     }
 
-    private function buildCssVariables(): array
+    /**
+     * CSS variables for a single given mode of the active brand preset.
+     * Used by Blade server-rendering to emit the first-paint theme before
+     * React mounts — avoids the "brand color flash" problem where the
+     * Tailwind/theme.css fallback (orange) shows until /api/settings/theme
+     * resolves.
+     *
+     * @return array<string, string>
+     */
+    public function getCssVariablesForMode(string $mode): array
     {
-        $theme = $this->buildTheme();
+        $variants = $this->getModeVariants();
+
+        return $variants[$mode] ?? $variants['dark'];
+    }
+
+    /**
+     * CSS variables for BOTH modes of the currently-selected brand preset.
+     * The client picks which set to apply based on the user's theme_mode
+     * (or prefers-color-scheme when mode='auto').
+     *
+     * @return array{dark: array<string, string>, light: array<string, string>}
+     */
+    public function getModeVariants(): array
+    {
+        return Cache::remember('theme_mode_variants', 3600, function (): array {
+            $preset = $this->settingsService->get('theme_preset', 'orange');
+
+            return [
+                'dark' => $this->buildCssVariables($this->buildThemeFromPreset($preset, 'dark')),
+                'light' => $this->buildCssVariables($this->buildThemeFromPreset($preset, 'light')),
+            ];
+        });
+    }
+
+    /**
+     * Build a theme array from a preset id + mode, without touching the
+     * admin-saved settings. Used to surface both dark/light variants of the
+     * current brand preset to the frontend.
+     */
+    private function buildThemeFromPreset(string $presetId, string $mode): array
+    {
+        $values = ThemePresets::get($presetId, $mode);
+
+        return [
+            'mode' => $values['theme_mode'] ?? $mode,
+            'preset' => $presetId,
+            'colors' => [
+                'primary' => $values['theme_primary'],
+                'primary_hover' => $values['theme_primary_hover'],
+                'secondary' => $values['theme_secondary'],
+                'ring' => $values['theme_ring'],
+                'danger' => $values['theme_danger'],
+                'warning' => $values['theme_warning'],
+                'success' => $values['theme_success'],
+                'info' => $values['theme_info'],
+                'background' => $values['theme_background'],
+                'surface' => $values['theme_surface'],
+                'surface_hover' => $values['theme_surface_hover'],
+                'surface_elevated' => $values['theme_surface_elevated'],
+                'border' => $values['theme_border'],
+                'border_hover' => $values['theme_border_hover'],
+                'text_primary' => $values['theme_text_primary'],
+                'text_secondary' => $values['theme_text_secondary'],
+                'text_muted' => $values['theme_text_muted'],
+            ],
+            'radius' => $this->settingsService->get('theme_radius', $values['theme_radius']),
+            'font' => $this->settingsService->get('theme_font', $values['theme_font']),
+            'shadow_intensity' => (int) $this->settingsService->get('theme_shadow_intensity', $values['theme_shadow_intensity']),
+            'density' => $this->settingsService->get('theme_density', $values['theme_density']),
+            'custom_css' => '',
+        ];
+    }
+
+    private function buildCssVariables(array $theme): array
+    {
         $vars = [];
         foreach ($theme['colors'] as $key => $value) {
             $cssKey = str_replace('_', '-', $key);
@@ -102,6 +176,26 @@ class ThemeService
         // Auto-derive secondary + ring RGB triplets for rgba() usage
         $vars['--color-secondary-rgb'] = $this->hexToRgbTriplet($theme['colors']['secondary']);
         $vars['--color-ring-rgb'] = $this->hexToRgbTriplet($theme['colors']['ring']);
+
+        // Mode-dependent overlay + scrim tokens so components don't need to
+        // hardcode rgba(0,0,0,...) or rgba(255,255,255,...) for glass effects.
+        $isLight = ($theme['mode'] ?? 'dark') === 'light';
+        // Banner overlays sit on top of an egg image (always visually busy),
+        // so both modes use a dark gradient to keep the white text legible.
+        $vars['--banner-overlay']         = 'rgba(12, 10, 20, 0.92)';
+        $vars['--banner-overlay-soft']    = 'rgba(12, 10, 20, 0.55)';
+        $vars['--surface-overlay-soft']   = $isLight ? 'rgba(0, 0, 0, 0.04)'       : 'rgba(255, 255, 255, 0.08)';
+        $vars['--surface-overlay-strong'] = $isLight ? 'rgba(0, 0, 0, 0.08)'       : 'rgba(255, 255, 255, 0.15)';
+        $vars['--surface-overlay-hover']  = $isLight ? 'rgba(0, 0, 0, 0.06)'       : 'rgba(255, 255, 255, 0.06)';
+        $vars['--shadow-inset']           = $isLight ? 'inset 0 2px 8px rgba(0, 0, 0, 0.05)' : 'inset 0 2px 8px rgba(0, 0, 0, 0.3)';
+        $vars['--modal-scrim']            = $isLight ? 'rgba(15, 23, 42, 0.35)'    : 'rgba(0, 0, 0, 0.7)';
+        $vars['--text-on-banner']         = '#ffffff'; // banners always darkened enough to keep white text
+        $vars['--scrollbar-thumb']        = $isLight ? 'rgba(0, 0, 0, 0.2)'        : 'rgba(255, 255, 255, 0.15)';
+        // Ambient background veil: the AnimatedBackground draws this on top of
+        // body so the constellation + orbs get a unified tint. Dark: opaque
+        // black-purple to sit on top of the page bg. Light: very soft white
+        // brume that lets the body bg and orbs show through without masking.
+        $vars['--ambient-overlay']        = $isLight ? 'rgba(250, 250, 250, 0.55)' : 'rgba(12, 10, 20, 0.75)';
 
         return $vars;
     }
@@ -231,5 +325,6 @@ class ThemeService
     {
         Cache::forget('theme_full');
         Cache::forget('theme_css_vars');
+        Cache::forget('theme_mode_variants');
     }
 }

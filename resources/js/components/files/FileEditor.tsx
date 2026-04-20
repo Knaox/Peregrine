@@ -68,7 +68,8 @@ export function FileEditor({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
+                className="fixed inset-0 backdrop-blur-sm z-40"
+                style={{ background: 'var(--modal-scrim)' }}
                 onClick={onClose}
                 role="presentation"
             />
@@ -83,7 +84,7 @@ export function FileEditor({
                 style={{
                     background: 'var(--color-background)',
                     border: '1px solid var(--color-border)',
-                    boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
+                    boxShadow: 'var(--shadow-lg)',
                 }}
             >
                 {/* Header bar */}

@@ -46,7 +46,7 @@ export function CircularGauge({
                 {/* Background track */}
                 <circle
                     cx={size / 2} cy={size / 2} r={radius}
-                    fill="none" stroke="rgba(255,255,255,0.06)"
+                    fill="none" stroke="var(--surface-overlay-strong)"
                     strokeWidth={strokeWidth} strokeLinecap="round"
                 />
                 {/* Active arc */}

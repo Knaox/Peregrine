@@ -53,7 +53,7 @@ export function RegisterPage() {
             <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4"
                 style={{ background: 'var(--color-background)' }}>
                 <div className="absolute inset-0" style={{
-                    backgroundImage: 'linear-gradient(-45deg, var(--color-background), #130d1e, var(--color-background), #1a0e24)',
+                    backgroundImage: 'linear-gradient(-45deg, var(--color-background), var(--color-surface), var(--color-background), var(--color-surface-elevated))',
                     backgroundSize: '400% 400%', animation: 'gradient-shift 20s ease infinite',
                 }} />
                 <LoginParticles />
@@ -63,8 +63,8 @@ export function RegisterPage() {
                         style={{ height: 48, maxWidth: 200, filter: 'drop-shadow(0 0 24px rgba(var(--color-primary-rgb), 0.4))' }} />
                     <h1 className="text-xl font-semibold text-[var(--color-text-primary)] mb-4">{branding.app_name}</h1>
                     <div className="rounded-[var(--radius-xl)] p-6" style={{
-                        background: 'rgba(22, 19, 30, 0.85)', backdropFilter: 'blur(24px) saturate(180%)',
-                        border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)',
+                        background: 'var(--color-glass)', backdropFilter: 'blur(24px) saturate(180%)',
+                        border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.05)',
                     }}>
                         <p className="mb-5 text-sm text-[var(--color-text-muted)]">{t('auth.register.disabled')}</p>
                         <Link to="/login" className="inline-block rounded-[var(--radius)] bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_20px_var(--color-primary-glow)] transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]">
@@ -107,8 +107,8 @@ export function RegisterPage() {
                 <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.25 }}
                     className="rounded-[var(--radius-xl)] p-6 sm:p-8"
-                    style={{ background: 'rgba(22, 19, 30, 0.85)', backdropFilter: 'blur(24px) saturate(180%)',
-                        border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+                    style={{ background: 'var(--color-glass)', backdropFilter: 'blur(24px) saturate(180%)',
+                        border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <AnimatePresence>

@@ -14,6 +14,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'locale' => $this->locale,
+            'theme_mode' => $this->theme_mode ?? 'auto',
             'is_admin' => $this->is_admin,
             'pelican_user_id' => $this->pelican_user_id,
             'created_at' => $this->created_at?->toISOString(),

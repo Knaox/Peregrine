@@ -131,13 +131,13 @@ export function AnimatedBackground() {
                 <div className="absolute h-[500px] w-[500px] rounded-full"
                     style={{ top: '-10%', left: '-5%', background: 'radial-gradient(circle, rgba(var(--color-primary-rgb), 0.3) 0%, transparent 70%)', animation: 'orb-float-1 30s ease-in-out infinite' }} />
                 <div className="absolute h-[450px] w-[450px] rounded-full"
-                    style={{ top: '10%', right: '-10%', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)', animation: 'orb-float-2 35s ease-in-out infinite' }} />
+                    style={{ top: '10%', right: '-10%', background: 'radial-gradient(circle, rgba(var(--color-info-rgb), 0.18) 0%, transparent 70%)', animation: 'orb-float-2 35s ease-in-out infinite' }} />
                 <div className="absolute h-[400px] w-[400px] rounded-full"
-                    style={{ top: '50%', left: '30%', background: 'radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%)', animation: 'orb-float-3 25s ease-in-out infinite' }} />
+                    style={{ top: '50%', left: '30%', background: 'radial-gradient(circle, rgba(var(--color-secondary-rgb), 0.15) 0%, transparent 70%)', animation: 'orb-float-3 25s ease-in-out infinite' }} />
             </div>
 
-            {/* Dark overlay */}
-            <div className="absolute inset-0" style={{ background: 'rgba(12, 10, 20, 0.75)' }} />
+            {/* Ambient veil — dark in dark mode, soft light in light mode. */}
+            <div className="absolute inset-0" style={{ background: 'var(--ambient-overlay)' }} />
 
             {/* Noise texture */}
             <svg className="absolute inset-0 h-full w-full opacity-[0.05]">

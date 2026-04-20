@@ -7,7 +7,7 @@ export async function fetchProfile(): Promise<User> {
     return data;
 }
 
-export async function updateProfile(data: { name?: string; locale?: string }): Promise<User> {
+export async function updateProfile(data: { name?: string; locale?: string; theme_mode?: 'auto' | 'light' | 'dark' }): Promise<User> {
     const response = await request<{ data: User }>('/api/user/profile', {
         method: 'PUT',
         body: JSON.stringify(data),

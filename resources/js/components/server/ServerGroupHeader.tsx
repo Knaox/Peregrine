@@ -15,7 +15,7 @@ export function ServerGroupHeader({ name, count, eggImage }: ServerGroupHeaderPr
                     <img
                         src={eggImage}
                         alt=""
-                        className="h-6 w-6 rounded-[var(--radius-sm)] object-cover ring-1 ring-[var(--color-border)] shadow-[0_0_8px_rgba(0,0,0,0.3)]"
+                        className="h-6 w-6 rounded-[var(--radius-sm)] object-cover ring-1 ring-[var(--color-border)] shadow-[var(--shadow-sm)]"
                     />
                 )}
                 <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[var(--color-text-secondary)]">

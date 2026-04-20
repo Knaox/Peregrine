@@ -35,6 +35,9 @@ class SettingsController extends Controller
         return response()->json([
             'data' => $themeService->getTheme(),
             'css_variables' => $themeService->getCssVariables(),
+            // Both dark + light CSS variables for the active brand preset so the
+            // client can swap on user.theme_mode without a round-trip.
+            'mode_variants' => $themeService->getModeVariants(),
             'card_config' => $themeService->getCardConfig(),
             'sidebar_config' => $themeService->getSidebarConfig(),
         ]);

@@ -51,6 +51,8 @@ export function useSidebarConfig(): SidebarConfig {
     const config = data.sidebar_config;
     const sortedEntries = [...config.entries]
         .filter((e) => e.enabled)
+        // Normalize: old rows or hand-edited JSON may have route_suffix=null
+        .map((e) => ({ ...e, route_suffix: e.route_suffix ?? '' }))
         .sort((a, b) => a.order - b.order);
 
     return { ...config, entries: sortedEntries };

@@ -15,7 +15,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 
-#[Fillable(['name', 'email', 'password', 'locale', 'dashboard_layout', 'is_admin', 'pelican_user_id', 'stripe_customer_id', 'oauth_provider', 'oauth_id'])]
+#[Fillable(['name', 'email', 'password', 'locale', 'theme_mode', 'dashboard_layout', 'is_admin', 'pelican_user_id', 'stripe_customer_id', 'oauth_provider', 'oauth_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -33,6 +33,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'locale' => 'string',
+            'theme_mode' => 'string',
             'pelican_user_id' => 'integer',
             'is_admin' => 'boolean',
             'dashboard_layout' => 'array',

@@ -44,7 +44,8 @@ function buildRoutes(
         const Component = PAGE_COMPONENTS[entry.id] ?? pluginPageResolver(entry.id);
         if (!Component) continue;
 
-        const suffix = entry.route_suffix.replace(/^\//, '');
+        // Guard against malformed entries (plugins or hand-edited JSON) with a missing route_suffix.
+        const suffix = (entry.route_suffix ?? '').replace(/^\//, '');
 
         if (!suffix || suffix === '') {
             routes.push({ path: '', element: <Component />, index: true });

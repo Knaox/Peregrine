@@ -17,6 +17,7 @@ class UpdateProfileRequest extends FormRequest
         return [
             'name' => ['sometimes', 'string', 'max:255'],
             'locale' => ['sometimes', 'string', Rule::in(['en', 'fr'])],
+            'theme_mode' => ['sometimes', 'string', Rule::in(['auto', 'light', 'dark'])],
         ];
     }
 }

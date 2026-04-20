@@ -130,10 +130,10 @@ function DockBar({ server, config }: ServerSidebarProps & { config: ReturnType<t
                     className="pointer-events-auto flex items-center gap-1 overflow-x-auto px-3 py-2"
                     style={{
                         borderRadius: '9999px',
-                        background: 'rgba(0,0,0,0.55)',
+                        background: 'var(--color-glass)',
                         backdropFilter: 'blur(18px) saturate(180%)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        boxShadow: '0 16px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+                        border: '1px solid var(--color-glass-border)',
+                        boxShadow: 'var(--shadow-lg), var(--glass-highlight)',
                     }}
                 >
                     {config.entries.map((entry, i) => (
@@ -206,7 +206,7 @@ function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnTy
                 {!isRail && t('servers.detail.back')}
             </button>
 
-            <div className={clsx('py-4', isRail ? 'px-2' : 'px-4')} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className={clsx('py-4', isRail ? 'px-2' : 'px-4')} style={{ borderBottom: '1px solid var(--color-border)' }}>
                 <div className={clsx('flex items-center', isRail ? 'justify-center' : 'gap-3')}>
                     {server.egg?.banner_image ? (
                         <img src={server.egg.banner_image} alt={server.egg.name} className="h-10 w-10 object-cover" style={{ borderRadius: 10 }} />
@@ -281,7 +281,7 @@ function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnTy
         <>
             <button type="button" onClick={() => setMobileOpen(!mobileOpen)}
                 className="fixed left-3 top-3 z-40 p-2.5 md:hidden cursor-pointer transition-all duration-150"
-                style={{ borderRadius: 'var(--radius)', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--color-text-secondary)' }}>
+                style={{ borderRadius: 'var(--radius)', background: 'var(--color-glass)', backdropFilter: 'blur(12px)', border: '1px solid var(--color-glass-border)', color: 'var(--color-text-secondary)' }}>
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     {mobileOpen
                         ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -290,17 +290,17 @@ function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnTy
                 </svg>
             </button>
             <AnimatePresence>
-                {mobileOpen && <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setMobileOpen(false)} role="presentation" />}
+                {mobileOpen && <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-30 backdrop-blur-sm md:hidden" style={{ background: 'var(--modal-scrim)' }} onClick={() => setMobileOpen(false)} role="presentation" />}
             </AnimatePresence>
             <aside className={clsx('flex-shrink-0 h-full overflow-y-auto hidden md:flex md:flex-col', isRail ? 'w-16' : 'w-56')}
-                style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(12px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                style={{ background: 'var(--color-glass)', backdropFilter: 'blur(12px)', borderRight: '1px solid var(--color-glass-border)' }}>
                 {navContent}
             </aside>
             <AnimatePresence>
                 {mobileOpen && (
                     <m.aside initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                         className="fixed left-0 top-0 z-40 h-[100dvh] w-[min(16rem,80vw)] overflow-y-auto md:hidden"
-                        style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                        style={{ background: 'var(--color-glass)', backdropFilter: 'blur(20px)', borderRight: '1px solid var(--color-glass-border)' }}>
                         {navContent}
                     </m.aside>
                 )}

@@ -442,6 +442,7 @@
     },
     "profile": {
         "title": "Profil",
+        "info": "Vos informations",
         "name": "Nom",
         "email": "E-mail",
         "locale": "Langue",
@@ -457,6 +458,13 @@
         "locale_options": {
             "en": "English",
             "fr": "Français"
+        },
+        "theme_mode": {
+            "label": "Apparence",
+            "hint": "Préférence personnelle — n'affecte que votre compte, pas les autres utilisateurs.",
+            "auto": "Système",
+            "light": "Clair",
+            "dark": "Sombre"
         }
     },
     "invitations": {

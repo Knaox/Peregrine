@@ -36,7 +36,7 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
 
     return (
         <div className="relative flex-1 min-h-0 flex flex-col rounded-[var(--radius-lg)] overflow-hidden"
-            style={{ border: '1px solid var(--color-border)', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.3)' }}>
+            style={{ border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-inset)' }}>
 
             {/* Terminal header bar */}
             <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-[var(--color-border)] flex-shrink-0"

@@ -8,7 +8,7 @@ import { CircularGauge } from '@/components/server/CircularGauge';
 function SkeletonCard() {
     return (
         <div className="rounded-[var(--radius-lg)] p-5" style={{
-            background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.06)',
+            background: 'var(--color-surface)', border: '1px solid var(--color-border)',
         }}>
             <div className="space-y-3">
                 <div className="h-4 w-20 rounded skeleton-shimmer" />

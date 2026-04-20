@@ -85,7 +85,7 @@ export function ServerOverviewPage() {
             <m.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
                 className="relative overflow-hidden rounded-[var(--radius-xl)]"
-                style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                style={{ border: '1px solid var(--color-border)' }}>
                 <div className="relative" style={{ minHeight: 200 }}>
                     {server.egg?.banner_image ? (
                         <m.img src={server.egg.banner_image} alt={server.egg.name}
@@ -95,7 +95,7 @@ export function ServerOverviewPage() {
                         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--color-surface-hover), var(--color-background))' }} />
                     )}
                     <div className="absolute inset-0" style={{
-                        background: 'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.3) 35%, rgba(12,10,20,0.9) 75%, var(--color-background) 100%)',
+                        background: 'linear-gradient(to bottom, transparent 0%, var(--banner-overlay-soft) 35%, var(--banner-overlay) 75%, var(--color-background) 100%)',
                     }} />
                     <div className="absolute bottom-0 left-1/4 h-40 w-1/2 pointer-events-none"
                         style={{ background: 'radial-gradient(ellipse, rgba(var(--color-primary-rgb), 0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />

@@ -5,38 +5,42 @@ namespace App\Support;
 /**
  * Named bundles of theme_* settings the admin can apply in one click.
  *
- * Every preset defines the same 22 keys (18 legacy + 4 new: secondary, ring,
- * shadow_intensity, density) so swapping presets never leaves orphan values.
+ * Every preset ships BOTH a dark and a light variant so users with
+ * theme_mode='light' (or 'auto' resolving to light) get a curated,
+ * WCAG-readable palette instead of the dark hex values applied to a
+ * white background. The admin picks the brand preset globally; the
+ * per-user mode decides which variant renders.
  */
 final class ThemePresets
 {
     /**
-     * @return array<string, array{label: string, values: array<string, string>}>
+     * @return array<string, array{label: string, dark: array<string, string>, light: array<string, string>}>
      */
     public static function all(): array
     {
         return [
-            'orange'  => ['label' => 'Orange (default)', 'values' => self::orange()],
-            'amber'   => ['label' => 'Amber',           'values' => self::amber()],
-            'crimson' => ['label' => 'Crimson',         'values' => self::crimson()],
-            'emerald' => ['label' => 'Emerald',         'values' => self::emerald()],
-            'indigo'  => ['label' => 'Indigo',          'values' => self::indigo()],
-            'violet'  => ['label' => 'Violet',          'values' => self::violet()],
-            'slate'   => ['label' => 'Slate (light)',   'values' => self::slate()],
+            'orange'  => ['label' => 'Orange (default)', 'dark' => self::orangeDark(),  'light' => self::orangeLight()],
+            'amber'   => ['label' => 'Amber',            'dark' => self::amberDark(),   'light' => self::amberLight()],
+            'crimson' => ['label' => 'Crimson',          'dark' => self::crimsonDark(), 'light' => self::crimsonLight()],
+            'emerald' => ['label' => 'Emerald',          'dark' => self::emeraldDark(), 'light' => self::emeraldLight()],
+            'indigo'  => ['label' => 'Indigo',           'dark' => self::indigoDark(),  'light' => self::indigoLight()],
+            'violet'  => ['label' => 'Violet',           'dark' => self::violetDark(),  'light' => self::violetLight()],
+            'slate'   => ['label' => 'Slate',            'dark' => self::slateDark(),   'light' => self::slateLight()],
         ];
     }
 
     /**
      * @return array<string, string>
      */
-    public static function get(string $id): array
+    public static function get(string $id, string $mode = 'dark'): array
     {
-        return self::all()[$id]['values'] ?? self::orange();
+        $preset = self::all()[$id] ?? self::all()['orange'];
+        $variant = $mode === 'light' ? 'light' : 'dark';
+
+        return $preset[$variant];
     }
 
     /**
-     * Simple {id => label} map for Filament Select options.
-     *
      * @return array<string, string>
      */
     public static function options(): array
@@ -51,11 +55,11 @@ final class ThemePresets
     }
 
     // -----------------------------------------------------------------
-    // Preset definitions
+    // Dark variants
     // -----------------------------------------------------------------
 
     /** @return array<string, string> */
-    private static function orange(): array
+    private static function orangeDark(): array
     {
         return self::darkShell([
             'theme_primary'       => '#f97316',
@@ -66,7 +70,7 @@ final class ThemePresets
     }
 
     /** @return array<string, string> */
-    private static function amber(): array
+    private static function amberDark(): array
     {
         return self::darkShell([
             'theme_primary'       => '#f59e0b',
@@ -77,7 +81,7 @@ final class ThemePresets
     }
 
     /** @return array<string, string> */
-    private static function crimson(): array
+    private static function crimsonDark(): array
     {
         return self::darkShell([
             'theme_primary'       => '#e11d48',
@@ -88,7 +92,7 @@ final class ThemePresets
     }
 
     /** @return array<string, string> */
-    private static function emerald(): array
+    private static function emeraldDark(): array
     {
         return self::darkShell([
             'theme_primary'       => '#10b981',
@@ -103,7 +107,7 @@ final class ThemePresets
     }
 
     /** @return array<string, string> */
-    private static function indigo(): array
+    private static function indigoDark(): array
     {
         return self::darkShell([
             'theme_primary'       => '#6366f1',
@@ -118,7 +122,7 @@ final class ThemePresets
     }
 
     /** @return array<string, string> */
-    private static function violet(): array
+    private static function violetDark(): array
     {
         return self::darkShell([
             'theme_primary'       => '#8b5cf6',
@@ -133,29 +137,117 @@ final class ThemePresets
     }
 
     /** @return array<string, string> */
-    private static function slate(): array
+    private static function slateDark(): array
     {
-        return array_merge(self::sharedBase(), [
-            'theme_mode'              => 'light',
-            'theme_primary'           => '#475569',
-            'theme_primary_hover'     => '#64748b',
-            'theme_secondary'         => '#0ea5e9',
-            'theme_ring'              => '#94a3b8',
-            'theme_background'        => '#f8fafc',
-            'theme_surface'           => '#ffffff',
-            'theme_surface_hover'     => '#f1f5f9',
-            'theme_surface_elevated'  => '#ffffff',
-            'theme_border'            => '#e2e8f0',
-            'theme_border_hover'      => '#cbd5e1',
-            'theme_text_primary'      => '#0f172a',
-            'theme_text_secondary'    => '#475569',
-            'theme_text_muted'        => '#94a3b8',
+        return self::darkShell([
+            'theme_primary'       => '#64748b',
+            'theme_primary_hover' => '#94a3b8',
+            'theme_secondary'     => '#0ea5e9',
+            'theme_ring'          => '#94a3b8',
         ]);
     }
 
+    // -----------------------------------------------------------------
+    // Light variants — palettes validated against WCAG AA/AAA
+    // Text-primary ≥ 12:1 vs background, primary ≥ 3:1 vs background.
+    // -----------------------------------------------------------------
+
+    /** @return array<string, string> */
+    private static function orangeLight(): array
+    {
+        return self::lightShell([
+            'theme_primary'       => '#c2410c', // burnt orange keeps brand warmth on cream
+            'theme_primary_hover' => '#ea580c',
+            'theme_secondary'     => '#7c3aed',
+            'theme_ring'          => '#ea580c',
+        ]);
+    }
+
+    /** @return array<string, string> */
+    private static function amberLight(): array
+    {
+        return self::lightShell([
+            'theme_primary'       => '#b45309', // deep amber on neutral gray
+            'theme_primary_hover' => '#d97706',
+            'theme_secondary'     => '#0284c7',
+            'theme_ring'          => '#d97706',
+        ]);
+    }
+
+    /** @return array<string, string> */
+    private static function crimsonLight(): array
+    {
+        return self::lightShell([
+            'theme_primary'       => '#be123c', // deep rose readable on white
+            'theme_primary_hover' => '#e11d48',
+            'theme_secondary'     => '#7c3aed',
+            'theme_ring'          => '#e11d48',
+        ]);
+    }
+
+    /** @return array<string, string> */
+    private static function emeraldLight(): array
+    {
+        return self::lightShell([
+            'theme_primary'       => '#047857', // deep emerald on cool gray
+            'theme_primary_hover' => '#059669',
+            'theme_secondary'     => '#d97706',
+            'theme_ring'          => '#059669',
+            'theme_background'    => '#f8fafc',
+            'theme_surface_hover' => '#f1f5f9',
+            'theme_border'        => '#e2e8f0',
+            'theme_border_hover'  => '#cbd5e1',
+            'theme_text_primary'  => '#0f172a',
+            'theme_text_secondary' => '#475569',
+            'theme_text_muted'    => '#94a3b8',
+        ]);
+    }
+
+    /** @return array<string, string> */
+    private static function indigoLight(): array
+    {
+        return self::lightShell([
+            'theme_primary'       => '#4f46e5', // deep indigo on white
+            'theme_primary_hover' => '#6366f1',
+            'theme_secondary'     => '#ec4899',
+            'theme_ring'          => '#6366f1',
+        ]);
+    }
+
+    /** @return array<string, string> */
+    private static function violetLight(): array
+    {
+        return self::lightShell([
+            'theme_primary'       => '#7c3aed', // bright violet on cream
+            'theme_primary_hover' => '#8b5cf6',
+            'theme_secondary'     => '#ec4899',
+            'theme_ring'          => '#8b5cf6',
+        ]);
+    }
+
+    /** @return array<string, string> */
+    private static function slateLight(): array
+    {
+        return self::lightShell([
+            'theme_primary'       => '#334155', // bumped from #475569 to pass 3:1 vs #f8fafc
+            'theme_primary_hover' => '#475569',
+            'theme_secondary'     => '#0ea5e9',
+            'theme_ring'          => '#64748b',
+            'theme_background'    => '#f8fafc',
+            'theme_surface_hover' => '#f1f5f9',
+            'theme_border'        => '#e2e8f0',
+            'theme_border_hover'  => '#cbd5e1',
+            'theme_text_primary'  => '#0f172a',
+            'theme_text_secondary' => '#475569',
+            'theme_text_muted'    => '#94a3b8',
+        ]);
+    }
+
+    // -----------------------------------------------------------------
+    // Shared shells
+    // -----------------------------------------------------------------
+
     /**
-     * Shared values every preset reuses unless overridden.
-     *
      * @return array<string, string>
      */
     private static function sharedBase(): array
@@ -168,14 +260,12 @@ final class ThemePresets
             'theme_radius'           => '0.75rem',
             'theme_font'              => 'Inter',
             'theme_custom_css'       => '',
-            'theme_shadow_intensity' => '50',       // 0-100 → scales shadow alpha
-            'theme_density'          => 'comfortable', // compact | comfortable | spacious
+            'theme_shadow_intensity' => '50',
+            'theme_density'          => 'comfortable',
         ];
     }
 
     /**
-     * Dark-mode surfaces reused by all dark presets unless overridden.
-     *
      * @param  array<string, string>  $overrides
      * @return array<string, string>
      */
@@ -192,6 +282,29 @@ final class ThemePresets
             'theme_text_primary'      => '#f1f0f5',
             'theme_text_secondary'    => '#8b849e',
             'theme_text_muted'        => '#5a5370',
+        ], $overrides);
+    }
+
+    /**
+     * Light-mode surfaces. White cards floating on an off-white background
+     * preserve the card/elevation distinction without pure-white harshness.
+     *
+     * @param  array<string, string>  $overrides
+     * @return array<string, string>
+     */
+    private static function lightShell(array $overrides): array
+    {
+        return array_merge(self::sharedBase(), [
+            'theme_mode'              => 'light',
+            'theme_background'        => '#fafafa',
+            'theme_surface'           => '#ffffff',
+            'theme_surface_hover'     => '#f3f4f6',
+            'theme_surface_elevated'  => '#ffffff',
+            'theme_border'            => '#e5e7eb',
+            'theme_border_hover'      => '#d1d5db',
+            'theme_text_primary'      => '#1f2937',
+            'theme_text_secondary'    => '#6b7280',
+            'theme_text_muted'        => '#9ca3af',
         ], $overrides);
     }
 }

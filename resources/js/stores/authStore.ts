@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import i18n from '@/i18n/config';
+import { useThemeModeStore } from '@/stores/themeModeStore';
 import type { User } from '@/types/User';
 import { fetchCurrentUser, login as apiLogin, logout as apiLogout, register as apiRegister } from '@/services/api';
 
@@ -25,6 +26,18 @@ function applyLocale(user: User | null): void {
     void i18n.changeLanguage(user.locale);
 }
 
+/**
+ * Sync the user's saved theme_mode into the theme store so the UI follows
+ * the DB preference (across devices). Guest/no-preference falls back to
+ * whatever the visitor picked on this device (localStorage) or 'auto'.
+ */
+function applyThemeMode(user: User | null): void {
+    if (!user?.theme_mode) return;
+    const store = useThemeModeStore.getState();
+    if (store.mode === user.theme_mode) return;
+    store.setMode(user.theme_mode);
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     isLoading: true,
@@ -34,6 +47,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
             const { user } = await fetchCurrentUser();
             applyLocale(user);
+            applyThemeMode(user);
             set({ user, isAuthenticated: !!user, isLoading: false });
         } catch {
             set({ user: null, isAuthenticated: false, isLoading: false });
@@ -43,12 +57,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     login: async (email, password, remember = false) => {
         const { user } = await apiLogin(email, password, remember);
         applyLocale(user);
+        applyThemeMode(user);
         set({ user, isAuthenticated: true });
     },
 
     register: async (data) => {
         const { user } = await apiRegister(data);
         applyLocale(user);
+        applyThemeMode(user);
         set({ user, isAuthenticated: true });
     },
 

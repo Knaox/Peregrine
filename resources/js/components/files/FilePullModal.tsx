@@ -34,7 +34,8 @@ export function FilePullModal({ open, directory, isPending, onSubmit, onClose }:
             {open && (
                 <m.div
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4"
+                    style={{ background: 'var(--modal-scrim)' }}
                     onClick={handleClose}
                 >
                     <m.div
