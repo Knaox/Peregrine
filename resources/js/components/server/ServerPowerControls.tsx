@@ -36,7 +36,7 @@ function PowerButton({ label, onClick, disabled, variant }: {
     );
 }
 
-export function ServerPowerControls({ serverId, state }: ServerPowerControlsProps) {
+export function ServerPowerControls({ serverId, state, canStart = true, canStop = true, canRestart = true }: ServerPowerControlsProps) {
     const { t } = useTranslation();
     const { sendPower, isPending } = usePowerAction();
 
@@ -53,16 +53,16 @@ export function ServerPowerControls({ serverId, state }: ServerPowerControlsProp
 
     return (
         <div className="flex flex-wrap items-center gap-2">
-            {isStopped && (
+            {isStopped && canStart && (
                 <PowerButton label={t('servers.actions.start')} variant="start" disabled={isPending} onClick={() => handlePower('start')} />
             )}
-            {isRunning && (
-                <>
-                    <PowerButton label={t('servers.actions.restart')} variant="restart" disabled={isPending} onClick={() => handlePower('restart')} />
-                    <PowerButton label={t('servers.actions.stop')} variant="stop" disabled={isPending} onClick={() => handlePower('stop')} />
-                </>
+            {isRunning && canRestart && (
+                <PowerButton label={t('servers.actions.restart')} variant="restart" disabled={isPending} onClick={() => handlePower('restart')} />
             )}
-            {!isStopped && (
+            {isRunning && canStop && (
+                <PowerButton label={t('servers.actions.stop')} variant="stop" disabled={isPending} onClick={() => handlePower('stop')} />
+            )}
+            {!isStopped && canStop && (
                 <PowerButton label={t('servers.actions.kill')} variant="kill" disabled={isPending} onClick={() => handlePower('kill')} />
             )}
         </div>

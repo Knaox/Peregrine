@@ -18,7 +18,7 @@ class ServerScheduleController extends Controller
 
     public function index(Server $server): JsonResponse
     {
-        $this->authorize('view', $server);
+        $this->authorize('readSchedule', $server);
 
         $data = Cache::remember("server_schedules:{$server->identifier}", 300, function () use ($server): array {
             $schedules = $this->scheduleService->listSchedules($server->identifier);
@@ -68,6 +68,8 @@ class ServerScheduleController extends Controller
 
     public function update(CreateScheduleRequest $request, Server $server, int $schedule): JsonResponse
     {
+        $this->authorize('updateSchedule', $server);
+
         $result = $this->scheduleService->updateSchedule(
             $server->identifier,
             $schedule,
@@ -81,7 +83,7 @@ class ServerScheduleController extends Controller
 
     public function execute(Server $server, int $schedule): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('updateSchedule', $server);
 
         $this->scheduleService->executeSchedule($server->identifier, $schedule);
 
@@ -92,7 +94,7 @@ class ServerScheduleController extends Controller
 
     public function destroy(Server $server, int $schedule): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('deleteSchedule', $server);
 
         $this->scheduleService->deleteSchedule($server->identifier, $schedule);
 
@@ -122,7 +124,7 @@ class ServerScheduleController extends Controller
 
     public function destroyTask(Server $server, int $schedule, int $task): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('updateSchedule', $server);
 
         $this->scheduleService->deleteTask($server->identifier, $schedule, $task);
 

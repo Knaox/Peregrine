@@ -18,7 +18,7 @@ class ServerBackupController extends Controller
 
     public function index(Server $server): JsonResponse
     {
-        $this->authorize('view', $server);
+        $this->authorize('readBackup', $server);
 
         $data = Cache::remember("server_backups:{$server->identifier}", 120, function () use ($server): array {
             $backups = $this->backupService->listBackups($server->identifier);
@@ -50,7 +50,7 @@ class ServerBackupController extends Controller
 
     public function download(Server $server, string $backup): JsonResponse
     {
-        $this->authorize('view', $server);
+        $this->authorize('downloadBackup', $server);
 
         $url = $this->backupService->getBackupDownloadUrl(
             $server->identifier,
@@ -62,7 +62,7 @@ class ServerBackupController extends Controller
 
     public function toggleLock(Server $server, string $backup): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('deleteBackup', $server);
 
         $result = $this->backupService->toggleBackupLock(
             $server->identifier,
@@ -76,7 +76,7 @@ class ServerBackupController extends Controller
 
     public function restore(Request $request, Server $server, string $backup): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('restoreBackup', $server);
 
         $this->backupService->restoreBackup(
             $server->identifier,
@@ -91,7 +91,7 @@ class ServerBackupController extends Controller
 
     public function destroy(Server $server, string $backup): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('deleteBackup', $server);
 
         $this->backupService->deleteBackup($server->identifier, $backup);
 

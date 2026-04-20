@@ -6,4 +6,9 @@ export interface FileActionMenuProps {
     onDelete: () => void;
     onCompress: () => void;
     onDecompress: () => void;
+    onChmod: () => void;
+    /** Optional permission flags; undefined = allowed (backward compatible). */
+    canUpdate?: boolean;
+    canDelete?: boolean;
+    canArchive?: boolean;
 }

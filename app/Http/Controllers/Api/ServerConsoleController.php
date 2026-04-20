@@ -27,6 +27,10 @@ class ServerConsoleController extends Controller
 
     public function websocket(Request $request, Server $server): JsonResponse
     {
+        // The WebSocket is a multi-purpose channel (console + stats). Any user
+        // with server access may open it; content-level gating (console view,
+        // command send, stats) is enforced by the frontend and the dedicated
+        // command endpoint (which requires control.console).
         $this->authorize('view', $server);
 
         $credentials = $this->clientService->getWebsocket($server->identifier);
@@ -41,7 +45,7 @@ class ServerConsoleController extends Controller
 
     public function resources(Request $request, Server $server): JsonResponse
     {
-        $this->authorize('view', $server);
+        $this->authorize('readStats', $server);
 
         $resources = $this->clientService->getServerResources($server->identifier);
 

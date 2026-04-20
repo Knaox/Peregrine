@@ -8,7 +8,7 @@ class FileDeleteRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('manageFiles', $this->route('server'));
+        return $this->user()->can('deleteFile', $this->route('server'));
     }
 
     public function rules(): array

@@ -8,7 +8,7 @@ class CreateFolderRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('manageFiles', $this->route('server'));
+        return $this->user()->can('createFile', $this->route('server'));
     }
 
     public function rules(): array

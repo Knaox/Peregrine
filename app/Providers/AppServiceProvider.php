@@ -16,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(\App\Services\PluginManager::class);
     }
 
     /**
@@ -45,5 +45,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('server-actions', function (Request $request) {
             return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Boot active plugins
+        if (config('panel.installed')) {
+            app(\App\Services\PluginManager::class)->bootPlugins();
+        }
     }
 }

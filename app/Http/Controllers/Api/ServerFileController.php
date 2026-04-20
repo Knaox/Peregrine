@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Server\CreateFolderRequest;
+use App\Http\Requests\Server\FileChmodRequest;
 use App\Http\Requests\Server\FileCompressRequest;
 use App\Http\Requests\Server\FileDecompressRequest;
 use App\Http\Requests\Server\FileDeleteRequest;
+use App\Http\Requests\Server\FilePullRequest;
 use App\Http\Requests\Server\FileRenameRequest;
 use App\Http\Requests\Server\FileWriteRequest;
 use App\Models\Server;
@@ -23,7 +25,7 @@ class ServerFileController extends Controller
 
     public function list(Request $request, Server $server): JsonResponse
     {
-        $this->authorize('manageFiles', $server);
+        $this->authorize('readFile', $server);
 
         $directory = $request->query('directory', '/');
         $rawFiles = $this->clientService->listFiles($server->identifier, $directory);
@@ -44,7 +46,7 @@ class ServerFileController extends Controller
 
     public function content(Request $request, Server $server): Response
     {
-        $this->authorize('manageFiles', $server);
+        $this->authorize('readFileContent', $server);
 
         $file = $request->query('file');
         if (!$file) {
@@ -123,7 +125,7 @@ class ServerFileController extends Controller
 
     public function uploadUrl(Request $request, Server $server): JsonResponse
     {
-        $this->authorize('manageFiles', $server);
+        $this->authorize('createFile', $server);
 
         $url = $this->clientService->getUploadUrl($server->identifier);
 
@@ -145,7 +147,7 @@ class ServerFileController extends Controller
 
     public function download(Request $request, Server $server): JsonResponse
     {
-        $this->authorize('manageFiles', $server);
+        $this->authorize('readFile', $server);
 
         $file = $request->query('file');
         if (!$file) {
@@ -159,7 +161,7 @@ class ServerFileController extends Controller
 
     public function copy(Request $request, Server $server): JsonResponse
     {
-        $this->authorize('manageFiles', $server);
+        $this->authorize('createFile', $server);
 
         $location = $request->input('location');
         if (!$location) {
@@ -169,5 +171,37 @@ class ServerFileController extends Controller
         $this->clientService->copyFile($server->identifier, $location);
 
         return response()->json(['message' => 'success']);
+    }
+
+    public function chmod(FileChmodRequest $request, Server $server): JsonResponse
+    {
+        $validated = $request->validated();
+
+        // Normalize mode: accept "755" / "0755" / 493 — Pelican expects integer.
+        $files = array_map(static function (array $f): array {
+            $mode = $f['mode'];
+            if (is_string($mode)) {
+                $mode = (int) octdec(ltrim($mode, '0') ?: '0');
+            }
+            return ['file' => $f['file'], 'mode' => (int) $mode];
+        }, $validated['files']);
+
+        $this->clientService->chmodFiles($server->identifier, $validated['root'], $files);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function pull(FilePullRequest $request, Server $server): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $this->clientService->pullFile(
+            $server->identifier,
+            $validated['url'],
+            $validated['directory'] ?? null,
+            $validated['filename'] ?? null,
+        );
+
+        return response()->json(['success' => true]);
     }
 }

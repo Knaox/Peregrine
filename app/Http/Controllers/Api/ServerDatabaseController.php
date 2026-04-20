@@ -17,7 +17,7 @@ class ServerDatabaseController extends Controller
 
     public function index(Server $server): JsonResponse
     {
-        $this->authorize('view', $server);
+        $this->authorize('readDatabase', $server);
 
         $data = Cache::remember("server_databases:{$server->identifier}", 120, function () use ($server): array {
             $databases = $this->databaseService->listDatabases($server->identifier);
@@ -48,7 +48,7 @@ class ServerDatabaseController extends Controller
 
     public function rotatePassword(Server $server, string $database): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('updateDatabase', $server);
 
         $result = $this->databaseService->rotateDatabasePassword(
             $server->identifier,
@@ -62,7 +62,7 @@ class ServerDatabaseController extends Controller
 
     public function destroy(Server $server, string $database): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('deleteDatabase', $server);
 
         $this->databaseService->deleteDatabase($server->identifier, $database);
 

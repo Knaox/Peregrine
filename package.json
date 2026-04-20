@@ -4,6 +4,7 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
+        "build:plugin": "vite build --config vite.plugin.config.ts",
         "type-check": "tsc --noEmit"
     },
     "dependencies": {

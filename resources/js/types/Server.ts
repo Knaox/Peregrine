@@ -1,5 +1,6 @@
 export interface Server {
     id: number;
+    identifier: string;
     name: string;
     status: 'active' | 'suspended' | 'terminated' | 'running' | 'stopped' | 'offline';
     pelican_server_id: number | null;
@@ -31,4 +32,8 @@ export interface Server {
         disk: number;
     } | null;
     created_at: string;
+    /** User's role on this server: owner has all permissions, subuser has limited */
+    role?: 'owner' | 'subuser';
+    /** Subuser permissions array — null means owner (all permissions) */
+    permissions?: string[] | null;
 }

@@ -6,19 +6,30 @@ import { AnimatePresence, m } from 'motion/react';
 import { useFileManager } from '@/hooks/useFileManager';
 import { useFileEditor } from '@/hooks/useFileEditor';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { useServer } from '@/hooks/useServer';
+import { useServerPermissions } from '@/hooks/useServerPermissions';
 import {
     renameFiles, deleteFiles, compressFiles, decompressFile, writeFile, createFolder,
+    chmodFiles, pullFile,
 } from '@/services/fileApi';
 import { FileToolbar } from '@/components/files/FileToolbar';
 import { FileBreadcrumb } from '@/components/files/FileBreadcrumb';
 import { FileList } from '@/components/files/FileList';
 import { FileEditor } from '@/components/files/FileEditor';
 import { FileBulkBar } from '@/components/files/FileBulkBar';
+import { FilePullModal } from '@/components/files/FilePullModal';
 
 export function ServerFilesPage() {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
+
+    const { data: server } = useServer(serverId);
+    const perms = useServerPermissions(server);
+    const canCreate = perms.has('file.create');
+    const canUpdate = perms.has('file.update');
+    const canDeleteFiles = perms.has('file.delete');
+    const canArchive = perms.has('file.archive');
 
     const { files, isLoading, currentDirectory, navigateTo, refresh } = useFileManager(serverId);
     const editor = useFileEditor();
@@ -57,41 +68,66 @@ export function ServerFilesPage() {
         mutationFn: (name: string) => decompressFile(serverId, currentDirectory, name),
         onSuccess: refresh,
     });
+    const chmodMutation = useMutation({
+        mutationFn: (params: { name: string; mode: string }) => chmodFiles(serverId, currentDirectory, [{ file: params.name, mode: params.mode }]),
+        onSuccess: refresh,
+    });
+    const pullMutation = useMutation({
+        mutationFn: (params: { url: string; filename: string | undefined }) => pullFile(serverId, params.url, currentDirectory, params.filename),
+        onSuccess: () => { setPullOpen(false); refresh(); },
+    });
+
+    const [pullOpen, setPullOpen] = useState(false);
 
     const handleOpenFile = (path: string) => { editor.openFile(serverId, path); };
     const handleRename = (name: string) => {
+        if (!canUpdate) return;
         const newName = window.prompt(t('servers.files.create_name'), name);
         if (!newName || newName === name) return;
         renameMutation.mutate({ from: name, to: newName });
     };
     const handleDelete = (name: string) => {
+        if (!canDeleteFiles) return;
         if (window.confirm(t('servers.files.confirm_delete', { name }))) deleteMutation.mutate([name]);
     };
-    const handleCompress = (name: string) => { compressMutation.mutate([name]); };
-    const handleDecompress = (name: string) => { decompressMutation.mutate(name); };
+    const handleCompress = (name: string) => { if (canArchive) compressMutation.mutate([name]); };
+    const handleDecompress = (name: string) => { if (canArchive) decompressMutation.mutate(name); };
+    const handleChmod = (name: string) => {
+        if (!canUpdate) return;
+        const mode = window.prompt(t('servers.files.chmod_prompt'), '755');
+        if (!mode || !/^[0-7]{3,4}$/.test(mode.trim())) return;
+        chmodMutation.mutate({ name, mode: mode.trim() });
+    };
     const handleBulkDelete = () => {
+        if (!canDeleteFiles) return;
         const names = Array.from(selectedFiles);
         if (window.confirm(t('servers.files.confirm_delete', { name: `${names.length} files` }))) deleteMutation.mutate(names);
     };
-    const handleBulkCompress = () => { compressMutation.mutate(Array.from(selectedFiles)); };
+    const handleBulkCompress = () => { if (canArchive) compressMutation.mutate(Array.from(selectedFiles)); };
     const handleNewFile = () => {
+        if (!canCreate) return;
         const name = window.prompt(t('servers.files.create_name'));
         if (!name) return;
         writeFile(serverId, currentDirectory === '/' ? `/${name}` : `${currentDirectory}/${name}`, '').then(refresh);
     };
     const handleNewFolder = () => {
+        if (!canCreate) return;
         const name = window.prompt(t('servers.files.create_name'));
         if (!name) return;
         createFolder(serverId, currentDirectory, name).then(refresh);
     };
-    const handleSaveFile = () => { editor.saveFile(serverId).then(refresh); };
+    const handleSaveFile = () => { if (canUpdate) editor.saveFile(serverId).then(refresh); };
 
     return (
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-4 pb-16">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{t('servers.files.title')}</h2>
-                <FileToolbar onNewFile={handleNewFile} onNewFolder={handleNewFolder} onRefresh={refresh} />
+                <FileToolbar
+                    onNewFile={handleNewFile} onNewFolder={handleNewFolder} onRefresh={refresh}
+                    onPull={canCreate ? () => setPullOpen(true) : undefined}
+                    canCreate={canCreate}
+                />
             </div>
 
             {/* Breadcrumb */}
@@ -136,6 +172,8 @@ export function ServerFilesPage() {
                     selectedFiles={selectedFiles} onToggleSelect={toggleSelect} onToggleSelectAll={toggleSelectAll}
                     onNavigate={handleNavigate} onOpenFile={handleOpenFile}
                     onRename={handleRename} onDelete={handleDelete} onCompress={handleCompress} onDecompress={handleDecompress}
+                    onChmod={handleChmod}
+                    canUpdate={canUpdate} canDelete={canDeleteFiles} canArchive={canArchive}
                 />
             </div>
 
@@ -143,13 +181,21 @@ export function ServerFilesPage() {
             <AnimatePresence>
                 {editor.editingFile && (
                     <FileEditor filePath={editor.editingFile} content={editor.content} isDirty={editor.isDirty} isSaving={editor.isSaving}
-                        onContentChange={editor.updateContent} onSave={handleSaveFile} onClose={editor.closeFile} />
+                        onContentChange={editor.updateContent} onSave={handleSaveFile} onClose={editor.closeFile}
+                        canEdit={canUpdate} />
                 )}
             </AnimatePresence>
 
             <FileBulkBar
                 selectedCount={selectedFiles.size} onDelete={handleBulkDelete} onCompress={handleBulkCompress}
                 onDeselectAll={deselectAll} isDeleting={deleteMutation.isPending} isCompressing={compressMutation.isPending}
+                canDelete={canDeleteFiles} canArchive={canArchive}
+            />
+
+            <FilePullModal
+                open={pullOpen} directory={currentDirectory} isPending={pullMutation.isPending}
+                onSubmit={(url, filename) => pullMutation.mutate({ url, filename })}
+                onClose={() => setPullOpen(false)}
             />
         </m.div>
     );

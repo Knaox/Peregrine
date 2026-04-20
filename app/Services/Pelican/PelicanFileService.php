@@ -103,4 +103,44 @@ class PelicanFileService
             ->post("/api/client/servers/{$serverIdentifier}/files/copy", ['location' => $location])
             ->throw();
     }
+
+    /**
+     * Batch chmod. $files is an array of ['file' => string, 'mode' => int|string].
+     *
+     * @param array<int, array{file: string, mode: int|string}> $files
+     */
+    public function chmodFiles(string $serverIdentifier, string $root, array $files): void
+    {
+        $this->request()
+            ->post("/api/client/servers/{$serverIdentifier}/files/chmod", [
+                'root' => $root,
+                'files' => $files,
+            ])
+            ->throw();
+    }
+
+    /**
+     * Pull a remote URL into the server filesystem (daemon-side download).
+     * `foreground=false` lets Wings stream in the background so the HTTP
+     * call returns quickly; Peregrine's listing will pick it up on refresh.
+     */
+    public function pullFile(
+        string $serverIdentifier,
+        string $url,
+        ?string $directory = null,
+        ?string $filename = null,
+        bool $useHeader = true,
+    ): void {
+        $payload = ['url' => $url, 'use_header' => $useHeader, 'foreground' => false];
+        if ($directory !== null && $directory !== '') {
+            $payload['directory'] = $directory;
+        }
+        if ($filename !== null && $filename !== '') {
+            $payload['filename'] = $filename;
+        }
+
+        $this->request()->timeout(30)
+            ->post("/api/client/servers/{$serverIdentifier}/files/pull", $payload)
+            ->throw();
+    }
 }

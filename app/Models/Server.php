@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Server extends Model
 {
@@ -62,5 +63,38 @@ class Server extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(ServerPlan::class, 'plan_id');
+    }
+
+    /**
+     * All users with access to this server (owners + subusers).
+     */
+    public function accessUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'server_user')
+            ->withPivot(['role', 'permissions'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Get permissions for a specific user on this server.
+     * Returns null for owners (= all permissions), array for subusers.
+     *
+     * @return array<int, string>|null
+     */
+    public function permissionsForUser(User $user): ?array
+    {
+        $pivot = $this->accessUsers()->where('user_id', $user->id)->first();
+
+        if (! $pivot) {
+            return null;
+        }
+
+        if ($pivot->pivot->role === 'owner') {
+            return null; // owner = all permissions
+        }
+
+        $perms = $pivot->pivot->permissions;
+
+        return is_string($perms) ? json_decode($perms, true) : ($perms ?? []);
     }
 }

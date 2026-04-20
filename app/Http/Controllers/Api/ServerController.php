@@ -21,7 +21,7 @@ class ServerController extends Controller
     public function index(Request $request): JsonResponse
     {
         $servers = $request->user()
-            ->servers()
+            ->accessibleServers()
             ->with(['egg', 'plan'])
             ->orderBy('name')
             ->get();
@@ -31,6 +31,11 @@ class ServerController extends Controller
             $data['allocation'] = $server->identifier
                 ? $this->getCachedAllocation($server->identifier)
                 : null;
+            $data['role'] = $server->pivot->role ?? 'owner';
+            $data['permissions'] = $server->pivot->role === 'subuser'
+                ? (is_string($server->pivot->permissions) ? json_decode($server->pivot->permissions, true) : $server->pivot->permissions)
+                : null;
+
             return $data;
         });
 
@@ -85,23 +90,29 @@ class ServerController extends Controller
             }
         }
 
+        // Determine user's role and permissions for this server
+        $permissions = $server->permissionsForUser($request->user());
+        $role = $permissions === null ? 'owner' : 'subuser';
+
         return (new ServerResource($server))->additional([
             'allocation' => $allocation,
             'sftp_details' => $sftpDetails,
             'limits' => $limits,
+            'role' => $role,
+            'permissions' => $permissions,
         ]);
     }
 
     public function startupVariables(Request $request, Server $server): JsonResponse
     {
-        $this->authorize('view', $server);
+        $this->authorize('readStartup', $server);
         $variables = $this->clientService->getStartupVariables($server->identifier);
         return response()->json(['data' => $variables]);
     }
 
     public function updateStartupVariable(Request $request, Server $server): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('updateStartup', $server);
         $validated = $request->validate(['key' => ['required', 'string'], 'value' => ['required', 'string']]);
         $this->clientService->updateStartupVariable($server->identifier, $validated['key'], $validated['value']);
         return response()->json(['success' => true]);
@@ -109,7 +120,7 @@ class ServerController extends Controller
 
     public function batchStats(Request $request): JsonResponse
     {
-        $servers = $request->user()->servers()->whereNotNull('identifier')->get();
+        $servers = $request->user()->accessibleServers()->whereNotNull('identifier')->get();
         $stats = [];
 
         foreach ($servers as $server) {

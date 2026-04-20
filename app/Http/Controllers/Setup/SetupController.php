@@ -80,6 +80,17 @@ class SetupController extends Controller
                 password: $validated['admin']['password'],
             );
 
+            // 3.5 Activate the default "invitations" plugin (best effort — a
+            // failure here must not break setup). It ships with Peregrine
+            // and runs its own migrations on activate().
+            try {
+                if (app(\App\Services\PluginManager::class)->getManifest('invitations')) {
+                    app(\App\Services\PluginManager::class)->activate('invitations');
+                }
+            } catch (\Throwable) {
+                // ignore — admin can activate it manually from the Plugins page.
+            }
+
             // 4. Send the response BEFORE writing .env (because artisan serve will restart)
             // We use register_shutdown_function to write the .env after the response is sent
             register_shutdown_function(function () use ($validated, $dbHost, $dbPort, $dbName, $dbUser, $dbPass) {

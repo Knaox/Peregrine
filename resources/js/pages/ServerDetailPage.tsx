@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useParams, Link, Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useServer } from '@/hooks/useServer';
 import { useSidebarConfig } from '@/hooks/useSidebarConfig';
+import { usePluginStore } from '@/plugins/pluginStore';
+import { SIDEBAR_ENTRY_PERMISSIONS } from '@/utils/serverPermissions';
 import { Spinner } from '@/components/ui/Spinner';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { ServerSidebar } from '@/components/server/ServerSidebar';
@@ -18,7 +20,7 @@ import { ServerSchedulesPage } from '@/pages/ServerSchedulesPage';
 import { ServerNetworkPage } from '@/pages/ServerNetworkPage';
 import type { SidebarEntry } from '@/hooks/useSidebarConfig';
 
-/** Map sidebar entry IDs to page components */
+/** Map sidebar entry IDs to page components (core pages only) */
 const PAGE_COMPONENTS: Record<string, React.ComponentType> = {
     overview: ServerOverviewPage,
     console: ServerConsolePage,
@@ -30,12 +32,16 @@ const PAGE_COMPONENTS: Record<string, React.ComponentType> = {
     network: ServerNetworkPage,
 };
 
-function buildRoutes(entries: SidebarEntry[]) {
+function buildRoutes(
+    entries: SidebarEntry[],
+    pluginPageResolver: (id: string) => React.ComponentType | undefined,
+) {
     const routes: { path: string; element: React.ReactNode; index: boolean }[] = [];
     let hasIndex = false;
 
     for (const entry of entries) {
-        const Component = PAGE_COMPONENTS[entry.id];
+        // Try core pages first, then plugin pages
+        const Component = PAGE_COMPONENTS[entry.id] ?? pluginPageResolver(entry.id);
         if (!Component) continue;
 
         const suffix = entry.route_suffix.replace(/^\//, '');
@@ -48,7 +54,6 @@ function buildRoutes(entries: SidebarEntry[]) {
         }
     }
 
-    // Fallback: if no index route, redirect to first entry
     if (!hasIndex && routes.length > 0) {
         const firstPath = routes[0]?.path ?? '';
         routes.unshift({ path: '', element: <Navigate to={firstPath} replace />, index: true });
@@ -63,11 +68,55 @@ export function ServerDetailPage() {
     const serverId = Number(id);
     const { data: server, isLoading, isError } = useServer(serverId);
     const sidebarConfig = useSidebarConfig();
+    const pluginManifests = usePluginStore((s) => s.manifests);
+    const serverPageComponents = usePluginStore((s) => s.serverPageComponents);
     const isTopLayout = sidebarConfig.position === 'top';
 
+    const userPermissions = server?.permissions ?? null;
+    const isOwner = !server?.role || server.role === 'owner' || userPermissions === null;
+
+    // Merge core sidebar entries with plugin-provided entries, filtered by permissions
+    const mergedEntries = useMemo(() => {
+        const pluginEntries: SidebarEntry[] = [];
+
+        for (const manifest of pluginManifests) {
+            for (const se of manifest.server_sidebar_entries ?? []) {
+                pluginEntries.push({
+                    id: se.id,
+                    label_key: se.label_key,
+                    icon: se.icon,
+                    enabled: true,
+                    route_suffix: se.route_suffix,
+                    order: se.order ?? 100,
+                });
+            }
+        }
+
+        const all = [...sidebarConfig.entries, ...pluginEntries].sort((a, b) => a.order - b.order);
+
+        // If owner, show everything. If subuser, filter by permissions.
+        if (isOwner) return all;
+
+        return all.filter((entry) => {
+            const requiredPerm = SIDEBAR_ENTRY_PERMISSIONS[entry.id];
+            if (!requiredPerm) return true; // overview = always visible
+            return userPermissions?.includes(requiredPerm) ?? false;
+        });
+    }, [sidebarConfig.entries, pluginManifests, isOwner, userPermissions]);
+
+    const mergedConfig = useMemo(
+        () => ({ ...sidebarConfig, entries: mergedEntries }),
+        [sidebarConfig, mergedEntries],
+    );
+
+    const pluginPageResolver = useCallback(
+        (pageId: string) => serverPageComponents[pageId],
+        [serverPageComponents],
+    );
+
     const dynamicRoutes = useMemo(
-        () => buildRoutes(sidebarConfig.entries),
-        [sidebarConfig.entries],
+        () => buildRoutes(mergedEntries, pluginPageResolver),
+        [mergedEntries, pluginPageResolver],
     );
 
     if (isLoading) {
@@ -98,7 +147,7 @@ export function ServerDetailPage() {
 
     return (
         <div className={isTopLayout ? 'flex flex-col h-[100dvh] overflow-hidden' : 'flex h-[100dvh] overflow-hidden'}>
-            <ServerSidebar server={server} />
+            <ServerSidebar server={server} sidebarConfig={mergedConfig} />
             <m.main
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

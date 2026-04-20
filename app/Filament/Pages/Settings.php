@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Pages\Settings\SettingsFormSchema;
 use App\Services\SettingsService;
 use App\Services\SetupService;
+use Illuminate\Support\Facades\Mail;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -54,6 +55,16 @@ class Settings extends Page implements HasForms
     public bool $bridge_enabled = false;
     public ?string $stripe_webhook_secret = '';
 
+    // SMTP
+    public ?string $mail_mailer = 'smtp';
+    public ?string $mail_host = '';
+    public ?string $mail_port = '587';
+    public ?string $mail_encryption = 'tls';
+    public ?string $mail_username = '';
+    public ?string $mail_password = '';
+    public ?string $mail_from_address = '';
+    public ?string $mail_from_name = '';
+
     public function mount(): void
     {
         $settings = app(SettingsService::class);
@@ -79,6 +90,15 @@ class Settings extends Page implements HasForms
         $this->bridge_enabled = (bool) config('services.bridge.enabled', false);
         $this->stripe_webhook_secret = config('services.stripe.webhook_secret', '');
 
+        $this->mail_mailer = config('mail.default', 'smtp');
+        $this->mail_host = config('mail.mailers.smtp.host', '');
+        $this->mail_port = (string) config('mail.mailers.smtp.port', '587');
+        $this->mail_encryption = env('MAIL_ENCRYPTION', 'tls');
+        $this->mail_username = config('mail.mailers.smtp.username', '');
+        $this->mail_password = config('mail.mailers.smtp.password', '');
+        $this->mail_from_address = config('mail.from.address', '');
+        $this->mail_from_name = config('mail.from.name', '');
+
         $this->form->fill([
             'app_name' => $this->app_name,
             'show_app_name' => $this->show_app_name,
@@ -95,6 +115,14 @@ class Settings extends Page implements HasForms
             'oauth_redirect_url' => $this->oauth_redirect_url,
             'bridge_enabled' => $this->bridge_enabled,
             'stripe_webhook_secret' => $this->stripe_webhook_secret,
+            'mail_mailer' => $this->mail_mailer,
+            'mail_host' => $this->mail_host,
+            'mail_port' => $this->mail_port,
+            'mail_encryption' => $this->mail_encryption,
+            'mail_username' => $this->mail_username,
+            'mail_password' => $this->mail_password,
+            'mail_from_address' => $this->mail_from_address,
+            'mail_from_name' => $this->mail_from_name,
         ]);
     }
 
@@ -105,6 +133,7 @@ class Settings extends Page implements HasForms
             SettingsFormSchema::pelican(),
             SettingsFormSchema::authentication(),
             SettingsFormSchema::bridge(),
+            SettingsFormSchema::smtp(),
         ]);
     }
 
@@ -157,6 +186,21 @@ class Settings extends Page implements HasForms
         if (! empty($data['bridge_enabled']) && ! empty($data['stripe_webhook_secret'])) {
             $envValues['STRIPE_WEBHOOK_SECRET'] = $data['stripe_webhook_secret'];
         }
+
+        // SMTP → .env
+        $envValues['MAIL_MAILER'] = $data['mail_mailer'] ?? 'smtp';
+        if (($data['mail_mailer'] ?? 'smtp') === 'smtp') {
+            $envValues['MAIL_HOST'] = $data['mail_host'] ?? '';
+            $envValues['MAIL_PORT'] = $data['mail_port'] ?? '587';
+            $envValues['MAIL_ENCRYPTION'] = $data['mail_encryption'] ?? 'tls';
+            $envValues['MAIL_USERNAME'] = $data['mail_username'] ?? '';
+            if (! empty($data['mail_password'])) {
+                $envValues['MAIL_PASSWORD'] = $data['mail_password'];
+            }
+        }
+        $envValues['MAIL_FROM_ADDRESS'] = $data['mail_from_address'] ?? '';
+        $envValues['MAIL_FROM_NAME'] = $data['mail_from_name'] ?? config('app.name', 'Peregrine');
+
         if (! empty($envValues)) {
             $setup->writeEnv($envValues);
         }
@@ -168,10 +212,57 @@ class Settings extends Page implements HasForms
             ->success()->send();
     }
 
+    public function testSmtp(): void
+    {
+        $userEmail = auth()->user()?->email;
+
+        if (! $userEmail) {
+            Notification::make()->title('No email')->body('Cannot determine your email.')->danger()->send();
+
+            return;
+        }
+
+        try {
+            Mail::raw(
+                'This is a test email from ' . config('app.name', 'Peregrine') . ".\n\nIf you received this, your SMTP is working.\n\nSent at: " . now()->toDateTimeString(),
+                function ($message) use ($userEmail): void {
+                    $message->to($userEmail)->subject(config('app.name', 'Peregrine') . ' — SMTP Test');
+                },
+            );
+
+            Notification::make()
+                ->title('Test email sent')
+                ->body("A test email was sent to {$userEmail}.")
+                ->success()
+                ->send();
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->title('SMTP test failed')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
     protected function getFormActions(): array
     {
         return [
             Action::make('save')->label('Save Settings')->submit('save'),
+        ];
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('testSmtp')
+                ->label('Test SMTP')
+                ->color('gray')
+                ->icon('heroicon-o-envelope')
+                ->requiresConfirmation()
+                ->modalHeading('Send test email')
+                ->modalDescription('A test email will be sent to your admin email address.')
+                ->modalSubmitActionLabel('Send test')
+                ->action(fn () => $this->testSmtp()),
         ];
     }
 }

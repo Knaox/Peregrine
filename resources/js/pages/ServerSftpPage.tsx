@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useServer } from '@/hooks/useServer';
+import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { SftpCredentials } from '@/components/server/SftpCredentials';
 import { Spinner } from '@/components/ui/Spinner';
 
@@ -18,12 +19,31 @@ export function ServerSftpPage() {
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
     const { data: server, isLoading } = useServer(serverId);
+    const perms = useServerPermissions(server);
 
     if (isLoading || !server) {
         return (
             <div className="flex justify-center py-12">
                 <Spinner size="lg" />
             </div>
+        );
+    }
+
+    if (!perms.has('file.sftp')) {
+        return (
+            <m.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-col items-center justify-center py-20 text-center"
+            >
+                <div className="rounded-full bg-[var(--color-surface-hover)] p-4 mb-4">
+                    <KeyIcon className="h-10 w-10 text-[var(--color-text-muted)]" />
+                </div>
+                <p className="text-sm font-medium text-[var(--color-text-secondary)]">
+                    {t('errors.no_permission')}
+                </p>
+            </m.div>
         );
     }
 

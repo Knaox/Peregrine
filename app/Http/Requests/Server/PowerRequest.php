@@ -8,7 +8,15 @@ class PowerRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('controlPower', $this->route('server'));
+        $server = $this->route('server');
+        $ability = match ((string) $this->input('signal')) {
+            'start' => 'startServer',
+            'stop', 'kill' => 'stopServer',
+            'restart' => 'restartServer',
+            default => 'startServer',
+        };
+
+        return $this->user()->can($ability, $server);
     }
 
     public function rules(): array

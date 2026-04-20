@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, m } from 'motion/react';
 import { useSchedules } from '@/hooks/useSchedules';
+import { useServer } from '@/hooks/useServer';
+import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { formatDate } from '@/utils/format';
 import { Button } from '@/components/ui/Button';
 import { AddTaskForm, actionIcon } from '@/components/server/AddTaskForm';
@@ -44,6 +46,10 @@ interface ScheduleCardProps {
 export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
     const { t } = useTranslation();
     const { execute, remove, removeTask } = useSchedules(serverId);
+    const { data: server } = useServer(serverId);
+    const perms = useServerPermissions(server);
+    const canUpdate = perms.has('schedule.update');
+    const canDelete = perms.has('schedule.delete');
     const [expanded, setExpanded] = useState(false);
     const [showAddTask, setShowAddTask] = useState(false);
 
@@ -90,12 +96,16 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                         {t('servers.schedules.tasks')} ({taskCount})
                         <ChevronIcon expanded={expanded} />
                     </button>
-                    <Button variant="secondary" size="sm" isLoading={execute.isPending} onClick={() => execute.mutate(schedule.id)}>
-                        {t('servers.schedules.run_now')}
-                    </Button>
-                    <Button variant="danger" size="sm" isLoading={remove.isPending} onClick={() => {
-                        if (window.confirm(t('servers.schedules.confirm_delete', { name: schedule.name }))) remove.mutate(schedule.id);
-                    }}>{t('servers.schedules.delete')}</Button>
+                    {canUpdate && (
+                        <Button variant="secondary" size="sm" isLoading={execute.isPending} onClick={() => execute.mutate(schedule.id)}>
+                            {t('servers.schedules.run_now')}
+                        </Button>
+                    )}
+                    {canDelete && (
+                        <Button variant="danger" size="sm" isLoading={remove.isPending} onClick={() => {
+                            if (window.confirm(t('servers.schedules.confirm_delete', { name: schedule.name }))) remove.mutate(schedule.id);
+                        }}>{t('servers.schedules.delete')}</Button>
+                    )}
                 </div>
             </div>
 
@@ -120,23 +130,27 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                                         {task.payload && <code className="text-xs text-[var(--color-text-secondary)]" style={{ fontFamily: 'var(--font-mono)' }}>{task.payload}</code>}
                                         {task.time_offset > 0 && <span className="text-[10px] text-[var(--color-text-muted)]">+{task.time_offset}s</span>}
                                     </div>
-                                    <Button variant="ghost" size="sm" isLoading={removeTask.isPending} onClick={() => removeTask.mutate({ scheduleId: schedule.id, taskId: task.id })}>
-                                        {t('servers.schedules.task_delete')}
-                                    </Button>
+                                    {canUpdate && (
+                                        <Button variant="ghost" size="sm" isLoading={removeTask.isPending} onClick={() => removeTask.mutate({ scheduleId: schedule.id, taskId: task.id })}>
+                                            {t('servers.schedules.task_delete')}
+                                        </Button>
+                                    )}
                                 </div>
                             ))}
 
-                            <AnimatePresence>
-                                {showAddTask ? (
-                                    <AddTaskForm serverId={serverId} scheduleId={schedule.id} onDone={() => setShowAddTask(false)} />
-                                ) : (
-                                    <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                        <Button variant="secondary" size="sm" onClick={() => setShowAddTask(true)}>
-                                            + {t('servers.schedules.add_task')}
-                                        </Button>
-                                    </m.div>
-                                )}
-                            </AnimatePresence>
+                            {canUpdate && (
+                                <AnimatePresence>
+                                    {showAddTask ? (
+                                        <AddTaskForm serverId={serverId} scheduleId={schedule.id} onDone={() => setShowAddTask(false)} />
+                                    ) : (
+                                        <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                            <Button variant="secondary" size="sm" onClick={() => setShowAddTask(true)}>
+                                                + {t('servers.schedules.add_task')}
+                                            </Button>
+                                        </m.div>
+                                    )}
+                                </AnimatePresence>
+                            )}
                         </div>
                     </m.div>
                 )}

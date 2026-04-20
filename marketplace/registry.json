@@ -1,0 +1,17 @@
+{
+    "_comment": "Seed registry for the Peregrine plugin marketplace. Copy this file to the root of the Knaox/peregrine-plugins GitHub repo (branch main) so that Peregrine panels fetching https://raw.githubusercontent.com/Knaox/peregrine-plugins/main/registry.json can discover available plugins.",
+    "plugins": [
+        {
+            "id": "invitations",
+            "name": "Server Invitations",
+            "version": "0.8.0",
+            "description": "Invite users to your servers by email with granular Pelican permissions. Edit permissions of active subusers and pending invitations. Ships with Peregrine by default.",
+            "author": "Peregrine Team",
+            "license": "MIT",
+            "min_peregrine_version": "1.0.0-alpha.1",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/invitations-0.8.0/invitations-0.8.0.zip",
+            "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/invitations",
+            "tags": ["users", "permissions", "collaboration", "default"]
+        }
+    ]
+}

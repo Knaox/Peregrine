@@ -36,7 +36,8 @@ function getFileIcon(name: string, isDir: boolean): React.ReactNode {
 export function FileList({
     files, currentDirectory, isLoading,
     selectedFiles, onToggleSelect, onToggleSelectAll,
-    onNavigate, onOpenFile, onRename, onDelete, onCompress, onDecompress,
+    onNavigate, onOpenFile, onRename, onDelete, onCompress, onDecompress, onChmod,
+    canUpdate = true, canDelete = true, canArchive = true,
 }: FileListProps) {
     const { t } = useTranslation();
     const allSelected = files.length > 0 && selectedFiles.size === files.length;
@@ -133,7 +134,9 @@ export function FileList({
                             <div className="w-8 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                                 <FileActionMenu name={file.name} isFile={file.is_file} isArchive={isArchive(file.name)}
                                     onRename={() => onRename(file.name)} onDelete={() => onDelete(file.name)}
-                                    onCompress={() => onCompress(file.name)} onDecompress={() => onDecompress(file.name)} />
+                                    onCompress={() => onCompress(file.name)} onDecompress={() => onDecompress(file.name)}
+                                    onChmod={() => onChmod(file.name)}
+                                    canUpdate={canUpdate} canDelete={canDelete} canArchive={canArchive} />
                             </div>
                         </m.div>
                     );

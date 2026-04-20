@@ -30,21 +30,25 @@ function VariableCard({
     variable,
     onSave,
     isSaving,
+    canEdit,
 }: {
     variable: StartupVariable;
     onSave: (key: string, value: string) => void;
     isSaving: boolean;
+    canEdit: boolean;
 }) {
     const { t } = useTranslation();
     const currentValue = variable.server_value ?? variable.default_value ?? '';
     const [value, setValue] = useState(currentValue);
     const isBoolean = isBooleanRule(variable.rules);
     const hasChanged = value !== currentValue;
+    const editable = canEdit && variable.is_editable;
 
     const handleToggle = useCallback(() => {
+        if (!editable) return;
         const next = value === '1' ? '0' : '1';
         setValue(next);
-    }, [value]);
+    }, [value, editable]);
 
     const handleSave = useCallback(() => {
         onSave(variable.env_variable, value);
@@ -79,7 +83,7 @@ function VariableCard({
                     type="button"
                     role="switch"
                     aria-checked={value === '1'}
-                    disabled={!variable.is_editable}
+                    disabled={!editable}
                     onClick={handleToggle}
                     className={clsx(
                         'relative inline-flex h-6 w-11 shrink-0 rounded-full',
@@ -88,7 +92,7 @@ function VariableCard({
                         value === '1'
                             ? 'bg-[var(--color-primary)]'
                             : 'bg-[var(--color-border)]',
-                        !variable.is_editable && 'opacity-50 cursor-not-allowed',
+                        !editable && 'opacity-50 cursor-not-allowed',
                     )}
                 >
                     <span
@@ -105,6 +109,7 @@ function VariableCard({
                     type="text"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
+                    readOnly={!editable}
                     disabled={!variable.is_editable}
                     className={clsx(
                         'w-full px-3 py-2 text-sm',
@@ -113,7 +118,7 @@ function VariableCard({
                         'border border-[var(--color-border)]',
                         'transition-all duration-[var(--transition-fast)]',
                         'focus:outline-none focus:ring-2 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary-glow)]',
-                        !variable.is_editable && 'opacity-50 cursor-not-allowed',
+                        !editable && 'opacity-50 cursor-not-allowed',
                     )}
                 />
             )}
@@ -127,7 +132,7 @@ function VariableCard({
                 </div>
             )}
 
-            {hasChanged && variable.is_editable && (
+            {hasChanged && editable && (
                 <m.button
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -148,7 +153,7 @@ function VariableCard({
     );
 }
 
-export function ServerVariables({ serverId }: ServerVariablesProps) {
+export function ServerVariables({ serverId, canEdit = true }: ServerVariablesProps) {
     const { t } = useTranslation();
     const { variables, isLoading, updateVariable, isUpdating } = useStartupVariables(serverId);
 
@@ -168,13 +173,24 @@ export function ServerVariables({ serverId }: ServerVariablesProps) {
 
     return (
         <GlassCard className="p-4 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
                     {t('servers.variables.title')}
                 </h2>
-                <span className="text-xs text-[var(--color-text-muted)]">
-                    {t('servers.variables.count', { count: variables.length })}
-                </span>
+                <div className="flex items-center gap-2">
+                    {!canEdit && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded"
+                            style={{ background: 'rgba(var(--color-text-muted-rgb, 100 116 139), 0.15)', color: 'var(--color-text-secondary)' }}>
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            {t('servers.files.read_only')}
+                        </span>
+                    )}
+                    <span className="text-xs text-[var(--color-text-muted)]">
+                        {t('servers.variables.count', { count: variables.length })}
+                    </span>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
@@ -184,6 +200,7 @@ export function ServerVariables({ serverId }: ServerVariablesProps) {
                         variable={v}
                         onSave={(key, value) => updateVariable({ key, value })}
                         isSaving={isUpdating}
+                        canEdit={canEdit}
                     />
                 ))}
             </div>

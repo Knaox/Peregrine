@@ -8,7 +8,7 @@ class CreateTaskRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('server'));
+        return $this->user()->can('updateSchedule', $this->route('server'));
     }
 
     public function rules(): array

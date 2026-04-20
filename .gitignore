@@ -26,3 +26,18 @@ Thumbs.db
 public/css/filament/
 public/js/filament/
 public/fonts/filament/
+
+# Installed plugins — only the shipped "invitations" plugin is part of the
+# upstream repo. Locally installed plugins from the marketplace live in
+# plugins/ but must not be committed.
+/plugins/*
+!/plugins/autoload.php
+!/plugins/invitations/
+!/plugins/invitations/**
+# The plugin's built bundle IS committed (so fresh clones can activate it
+# without a pnpm build), but node_modules stays ignored.
+/plugins/invitations/frontend/node_modules
+
+# Plugin asset symlinks — created at activation time by PluginManager,
+# never committed (point to absolute host paths).
+/public/plugins/

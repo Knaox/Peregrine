@@ -172,8 +172,9 @@ function LeftSidebar({ server, config }: ServerSidebarProps & { config: ReturnTy
     );
 }
 
-export function ServerSidebar({ server }: ServerSidebarProps) {
-    const config = useSidebarConfig();
+export function ServerSidebar({ server, sidebarConfig }: ServerSidebarProps) {
+    const defaultConfig = useSidebarConfig();
+    const config = sidebarConfig ?? defaultConfig;
     if (config.position === 'top') return <TopTabs server={server} config={config} />;
     return <LeftSidebar server={server} config={config} />;
 }

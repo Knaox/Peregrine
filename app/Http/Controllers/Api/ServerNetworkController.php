@@ -17,7 +17,7 @@ class ServerNetworkController extends Controller
 
     public function index(Server $server): JsonResponse
     {
-        $this->authorize('view', $server);
+        $this->authorize('readAllocation', $server);
 
         $data = Cache::remember("server_network:{$server->identifier}", 600, function () use ($server): array {
             $allocations = $this->networkService->listAllocations($server->identifier);
@@ -33,7 +33,7 @@ class ServerNetworkController extends Controller
 
     public function store(Server $server): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('createAllocation', $server);
 
         try {
             $result = $this->networkService->addAllocation($server->identifier);
@@ -51,7 +51,7 @@ class ServerNetworkController extends Controller
 
     public function updateNotes(Request $request, Server $server, int $allocation): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('updateAllocation', $server);
 
         $result = $this->networkService->updateAllocationNotes(
             $server->identifier,
@@ -66,7 +66,7 @@ class ServerNetworkController extends Controller
 
     public function setPrimary(Server $server, int $allocation): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('updateAllocation', $server);
 
         $result = $this->networkService->setPrimaryAllocation(
             $server->identifier,
@@ -81,7 +81,7 @@ class ServerNetworkController extends Controller
 
     public function destroy(Server $server, int $allocation): JsonResponse
     {
-        $this->authorize('update', $server);
+        $this->authorize('deleteAllocation', $server);
 
         $this->networkService->deleteAllocation($server->identifier, $allocation);
 

@@ -6,4 +6,6 @@ export interface FileEditorProps {
     onContentChange: (content: string) => void;
     onSave: () => void;
     onClose: () => void;
+    /** When false the textarea becomes read-only and the Save button is hidden. */
+    canEdit?: boolean;
 }

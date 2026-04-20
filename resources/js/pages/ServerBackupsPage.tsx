@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useBackups } from '@/hooks/useBackups';
+import { useServer } from '@/hooks/useServer';
+import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { formatBytes, formatDate } from '@/utils/format';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
@@ -71,6 +73,12 @@ export function ServerBackupsPage() {
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
     const { data: backups, isLoading, create, remove, lock, restore, download } = useBackups(serverId);
+    const { data: server } = useServer(serverId);
+    const perms = useServerPermissions(server);
+    const canCreate = perms.has('backup.create');
+    const canDownload = perms.has('backup.download');
+    const canRestore = perms.has('backup.restore');
+    const canDelete = perms.has('backup.delete');
 
     const [showCreate, setShowCreate] = useState(false);
     const [bkName, setBkName] = useState('');
@@ -94,9 +102,11 @@ export function ServerBackupsPage() {
                     </div>
                     <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{t('servers.backups.title')}</h2>
                 </div>
-                <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
-                    {t('servers.backups.create')}
-                </Button>
+                {canCreate && (
+                    <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
+                        {t('servers.backups.create')}
+                    </Button>
+                )}
             </div>
 
             {/* Create form */}
@@ -164,25 +174,27 @@ export function ServerBackupsPage() {
                                     </div>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    {bk.is_successful && (
+                                    {bk.is_successful && canDownload && (
                                         <Button variant="secondary" size="sm" onClick={() => void download(bk.uuid)}>
                                             {t('servers.backups.download')}
                                         </Button>
                                     )}
-                                    {bk.is_successful && (
+                                    {bk.is_successful && canRestore && (
                                         <Button variant="secondary" size="sm" isLoading={restore.isPending} onClick={() => {
                                             if (window.confirm(t('servers.backups.restore_confirm'))) restore.mutate({ backupId: bk.uuid });
                                         }}>
                                             {t('servers.backups.restore')}
                                         </Button>
                                     )}
-                                    <Button variant="ghost" size="sm" isLoading={lock.isPending} onClick={() => lock.mutate(bk.uuid)}>
-                                        {bk.is_locked
-                                            ? <><UnlockIcon className="h-3.5 w-3.5" /> {t('servers.backups.unlock')}</>
-                                            : <><LockIcon className="h-3.5 w-3.5" /> {t('servers.backups.lock')}</>
-                                        }
-                                    </Button>
-                                    {!bk.is_locked && (
+                                    {canDelete && (
+                                        <Button variant="ghost" size="sm" isLoading={lock.isPending} onClick={() => lock.mutate(bk.uuid)}>
+                                            {bk.is_locked
+                                                ? <><UnlockIcon className="h-3.5 w-3.5" /> {t('servers.backups.unlock')}</>
+                                                : <><LockIcon className="h-3.5 w-3.5" /> {t('servers.backups.lock')}</>
+                                            }
+                                        </Button>
+                                    )}
+                                    {!bk.is_locked && canDelete && (
                                         <Button variant="danger" size="sm" isLoading={remove.isPending} onClick={() => {
                                             if (window.confirm(t('servers.backups.confirm_delete', { name: bk.name }))) remove.mutate(bk.uuid);
                                         }}>

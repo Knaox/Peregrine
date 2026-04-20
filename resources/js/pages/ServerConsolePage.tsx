@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useWingsWebSocket } from '@/hooks/useWingsWebSocket';
 import { useCommandHistory } from '@/hooks/useCommandHistory';
+import { useServer } from '@/hooks/useServer';
+import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { Button } from '@/components/ui/Button';
 import { ServerPowerControls } from '@/components/server/ServerPowerControls';
@@ -24,6 +26,13 @@ export function ServerConsolePage() {
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
 
+    const { data: server } = useServer(serverId);
+    const perms = useServerPermissions(server);
+    const canConsole = perms.has('control.console');
+    const canStart = perms.has('control.start');
+    const canStop = perms.has('control.stop');
+    const canRestart = perms.has('control.restart');
+
     const { messages, serverState, isConnected, sendCommand, clearMessages } = useWingsWebSocket(serverId, {
         console: true, stats: true,
     });
@@ -31,6 +40,7 @@ export function ServerConsolePage() {
     const { addCommand, navigateUp, navigateDown } = useCommandHistory(serverId);
 
     const handleSend = (command: string) => {
+        if (!canConsole) return;
         sendCommand(command);
         addCommand(command);
     };
@@ -102,6 +112,7 @@ export function ServerConsolePage() {
                     <ServerPowerControls
                         serverId={serverId}
                         state={serverState as 'running' | 'stopped' | 'offline' | 'starting'}
+                        canStart={canStart} canStop={canStop} canRestart={canRestart}
                     />
                 </div>
             </div>
@@ -110,12 +121,14 @@ export function ServerConsolePage() {
             <ConsoleOutput messages={enrichedMessages} />
 
             {/* Command input */}
-            <ConsoleInput
-                onSend={handleSend}
-                onHistoryUp={navigateUp}
-                onHistoryDown={navigateDown}
-                disabled={!isConnected}
-            />
+            {canConsole && (
+                <ConsoleInput
+                    onSend={handleSend}
+                    onHistoryUp={navigateUp}
+                    onHistoryDown={navigateDown}
+                    disabled={!isConnected}
+                />
+            )}
         </m.div>
     );
 }

@@ -128,6 +128,13 @@ La synchronisation avec Pelican se fait via l'admin Filament (boutons UI) ou via
 - Le Bridge est le premier plugin — même pattern pour tous les futurs plugins
 - Les routes des plugins sont dynamiques : plugin désactivé = routes absentes = absent de la doc Scramble
 
+#### Plugin mail / jobs — contrat queue-safe
+- **Aucune classe de plugin (Mailable, Job, Event) ne doit JAMAIS être sérialisée dans la queue.** Les payloads figés dans la table `jobs` survivent aux changements de code et finissent en `__PHP_Incomplete_Class` sur unserialize.
+- Pour dispatcher un mail depuis un plugin : `App\Jobs\SendPluginMail::dispatch($email, Plugins\Foo\Mail\BarMail::class, [...scalaires...])`. Le Mailable est reconstruit au `handle()` — seuls des primitives voyagent dans la queue.
+- Le Mailable d'un plugin **ne doit PAS** implémenter `ShouldQueue`. Seul `SendPluginMail` (core) l'implémente. Marquer la classe `final` pour empêcher la régression.
+- Après activation/désactivation d'un plugin, `PluginManager` lance automatiquement `queue:restart` (workers daemon relèvent leur autoload map) et purge les jobs orphelins référençant le namespace du plugin.
+- En cas de résidus après un refactor incompatible : `php artisan plugin:purge-stale-jobs {plugin_id}` nettoie `jobs` + `failed_jobs`.
+
 ### Documentation API
 - Scramble auto-génère la doc OpenAPI 3.1.0 sur `/docs/api`
 - Scanne les routes enregistrées dynamiquement — plugins activés/désactivés pris en compte automatiquement

@@ -104,3 +104,26 @@ export async function createFolder(
         body: JSON.stringify({ root, name }),
     });
 }
+
+export async function chmodFiles(
+    serverId: number,
+    root: string,
+    files: Array<{ file: string; mode: string }>,
+): Promise<void> {
+    await request(`/api/servers/${serverId}/files/chmod`, {
+        method: 'POST',
+        body: JSON.stringify({ root, files }),
+    });
+}
+
+export async function pullFile(
+    serverId: number,
+    url: string,
+    directory?: string,
+    filename?: string,
+): Promise<void> {
+    await request(`/api/servers/${serverId}/files/pull`, {
+        method: 'POST',
+        body: JSON.stringify({ url, directory, filename }),
+    });
+}

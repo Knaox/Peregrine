@@ -20,6 +20,9 @@
         "coming_soon": "Bientôt disponible",
         "back": "Retour"
     },
+    "errors": {
+        "no_permission": "Vous n'avez pas la permission d'afficher cette page."
+    },
     "setup": {
         "title": "Installation de Peregrine",
         "subtitle": "Configurez votre panel de gestion de serveurs de jeux",
@@ -158,11 +161,11 @@
             "deselect_all": "Tout désélectionner",
             "copy_ip": "Copier l'adresse",
             "copied": "Copié !",
-            "add_category": "Nouvelle categorie",
-            "category_placeholder": "Nom de la categorie...",
-            "delete_category_confirm": "Supprimer cette categorie ? Les serveurs seront deplaces vers Non classe.",
-            "drop_here": "Deposez les serveurs ici",
-            "reset_layout": "Reinitialiser la disposition"
+            "add_category": "Nouvelle catégorie",
+            "category_placeholder": "Nom de la catégorie...",
+            "delete_category_confirm": "Supprimer cette catégorie ? Les serveurs seront déplacés vers Non classé.",
+            "drop_here": "Déposez les serveurs ici",
+            "reset_layout": "Réinitialiser la disposition"
         },
         "bulk": {
             "start_all": "Tout démarrer",
@@ -242,7 +245,15 @@
             "copy": "Copier",
             "copy_success": "Fichier copié.",
             "selected_count": "{{count}} sélectionné(s)",
-            "deselect_all": "Tout désélectionner"
+            "deselect_all": "Tout désélectionner",
+            "read_only": "Lecture seule",
+            "chmod": "Permissions (chmod)",
+            "chmod_prompt": "Entrez le mode octal (ex : 755)",
+            "pull": "Télécharger depuis une URL",
+            "pull_url": "URL distante",
+            "pull_filename": "Enregistrer sous (optionnel)",
+            "pull_start": "Démarrer le téléchargement",
+            "pull_target_dir": "Dossier cible : {{dir}}"
         },
         "sftp": {
             "title": "Accès SFTP",
@@ -446,6 +457,62 @@
         "locale_options": {
             "en": "English",
             "fr": "Français"
+        }
+    },
+    "invitations": {
+        "modal": {
+            "title": "Inviter par email",
+            "email": "Adresse email",
+            "email_placeholder": "utilisateur@exemple.com",
+            "permissions": "Permissions",
+            "no_permissions": "Veuillez sélectionner au moins une permission.",
+            "send": "Envoyer l'invitation",
+            "active_invitations": "Invitations actives",
+            "expires": "Expire le",
+            "revoke": "Révoquer"
+        },
+        "page": {
+            "title": "Utilisateurs & Invitations",
+            "subtitle": "Gérez qui a accès à ce serveur",
+            "invite_button": "Inviter un utilisateur",
+            "empty": "Aucune invitation en attente",
+            "empty_hint": "Invitez quelqu'un par email pour lui donner accès à ce serveur.",
+            "pending_invitations": "Invitations en attente",
+            "status_pending": "En attente",
+            "perms": "perms",
+            "active_users": "Utilisateurs actifs",
+            "status_active": "Actif",
+            "remove": "Retirer",
+            "confirm_remove": "Retirer cet utilisateur du serveur ?",
+            "you": "Vous"
+        },
+        "edit": {
+            "button": "Modifier",
+            "subuser_title": "Modifier les permissions de l'utilisateur",
+            "invitation_title": "Modifier les permissions de l'invitation",
+            "save": "Enregistrer"
+        },
+        "accept": {
+            "title": "Invitation serveur",
+            "invited_to": "{{inviter}} vous a invité à rejoindre {{server}}.",
+            "permissions": "Permissions que vous recevrez :",
+            "expires": "Cette invitation expire le {{date}}.",
+            "button": "Accepter l'invitation",
+            "wrong_email": "Vous êtes connecté en tant que {{current}}, mais cette invitation est pour {{expected}}.",
+            "logout": "Se déconnecter",
+            "create_account": "Créer un compte",
+            "login": "Se connecter",
+            "login_hint": "Connectez-vous avec votre compte existant, puis acceptez l'invitation.",
+            "go_to_login": "Aller à la connexion",
+            "register_and_accept": "Créer un compte et accepter",
+            "name": "Nom",
+            "email": "Email",
+            "password": "Mot de passe",
+            "password_confirm": "Confirmer le mot de passe",
+            "invalid": "Lien d'invitation invalide.",
+            "expired": "Cette invitation a expiré ou a été révoquée.",
+            "already_accepted": "Cette invitation a déjà été acceptée.",
+            "go_home": "Aller au tableau de bord"
         }
     }
 }

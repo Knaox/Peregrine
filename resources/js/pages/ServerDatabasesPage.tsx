@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useDatabases } from '@/hooks/useDatabases';
+import { useServer } from '@/hooks/useServer';
+import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { getDatabaseHostString } from '@/types/Database';
 import { copyToClipboard } from '@/utils/clipboard';
 import { Spinner } from '@/components/ui/Spinner';
@@ -42,6 +44,12 @@ export function ServerDatabasesPage() {
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
     const { data: databases, isLoading, create, rotate, remove } = useDatabases(serverId);
+    const { data: server } = useServer(serverId);
+    const perms = useServerPermissions(server);
+    const canCreate = perms.has('database.create');
+    const canUpdate = perms.has('database.update');
+    const canDelete = perms.has('database.delete');
+    const canViewPassword = perms.has('database.view_password');
 
     const [showCreate, setShowCreate] = useState(false);
     const [dbName, setDbName] = useState('');
@@ -81,9 +89,11 @@ export function ServerDatabasesPage() {
                     </div>
                     <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{t('servers.databases.title')}</h2>
                 </div>
-                <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
-                    {t('servers.databases.create')}
-                </Button>
+                {canCreate && (
+                    <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
+                        {t('servers.databases.create')}
+                    </Button>
+                )}
             </div>
 
             {/* Create form */}
@@ -141,7 +151,7 @@ export function ServerDatabasesPage() {
                                     <p className="text-xs text-[var(--color-text-muted)]">
                                         {getDatabaseHostString(db)} &middot; {db.username}
                                     </p>
-                                    {db.password && (
+                                    {db.password && canViewPassword && (
                                         <div className="flex items-center gap-2">
                                             <code className="text-xs text-[var(--color-text-secondary)]" style={{ fontFamily: 'var(--font-mono)' }}>
                                                 {visiblePasswords.has(db.id) ? db.password : '••••••••'}
@@ -168,16 +178,20 @@ export function ServerDatabasesPage() {
                                     )}
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <Button variant="secondary" size="sm" isLoading={rotate.isPending} onClick={() => rotate.mutate(db.id)}>
-                                        {t('servers.databases.rotate_password')}
-                                    </Button>
-                                    <Button variant="danger" size="sm" isLoading={remove.isPending} onClick={() => {
-                                        if (window.confirm(t('servers.databases.confirm_delete', { name: db.name }))) {
-                                            remove.mutate(db.id);
-                                        }
-                                    }}>
-                                        {t('servers.databases.delete')}
-                                    </Button>
+                                    {canUpdate && (
+                                        <Button variant="secondary" size="sm" isLoading={rotate.isPending} onClick={() => rotate.mutate(db.id)}>
+                                            {t('servers.databases.rotate_password')}
+                                        </Button>
+                                    )}
+                                    {canDelete && (
+                                        <Button variant="danger" size="sm" isLoading={remove.isPending} onClick={() => {
+                                            if (window.confirm(t('servers.databases.confirm_delete', { name: db.name }))) {
+                                                remove.mutate(db.id);
+                                            }
+                                        }}>
+                                            {t('servers.databases.delete')}
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </m.div>

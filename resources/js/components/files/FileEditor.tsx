@@ -18,6 +18,7 @@ function extractFileName(filePath: string): string {
 export function FileEditor({
     filePath, content, isDirty, isSaving,
     onContentChange, onSave, onClose,
+    canEdit = true,
 }: FileEditorProps) {
     const { t } = useTranslation();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -26,10 +27,10 @@ export function FileEditor({
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if ((e.metaKey || e.ctrlKey) && e.key === 's') {
             e.preventDefault();
-            if (isDirty && !isSaving) onSave();
+            if (canEdit && isDirty && !isSaving) onSave();
         }
         if (e.key === 'Escape') onClose();
-    }, [isDirty, isSaving, onSave, onClose]);
+    }, [canEdit, isDirty, isSaving, onSave, onClose]);
 
     useEffect(() => {
         document.addEventListener('keydown', handleKeyDown);
@@ -99,15 +100,28 @@ export function FileEditor({
                             style={{ background: 'rgba(var(--color-accent-rgb), 0.1)', color: 'var(--color-accent)' }}>
                             {langLabel}
                         </span>
-                        {isDirty && <Badge color="orange">{t('servers.files.modified_badge')}</Badge>}
+                        {isDirty && canEdit && <Badge color="orange">{t('servers.files.modified_badge')}</Badge>}
+                        {!canEdit && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded"
+                                style={{ background: 'rgba(var(--color-text-muted-rgb, 100 116 139), 0.15)', color: 'var(--color-text-secondary)' }}>
+                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                {t('servers.files.read_only')}
+                            </span>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="hidden sm:block text-[10px] text-[var(--color-text-muted)] font-mono">
-                            {isDirty ? 'Ctrl+S' : ''}
-                        </span>
-                        <Button variant="primary" size="sm" disabled={!isDirty} isLoading={isSaving} onClick={onSave}>
-                            {t('servers.files.save')}
-                        </Button>
+                        {canEdit && (
+                            <>
+                                <span className="hidden sm:block text-[10px] text-[var(--color-text-muted)] font-mono">
+                                    {isDirty ? 'Ctrl+S' : ''}
+                                </span>
+                                <Button variant="primary" size="sm" disabled={!isDirty} isLoading={isSaving} onClick={onSave}>
+                                    {t('servers.files.save')}
+                                </Button>
+                            </>
+                        )}
                         <Button variant="ghost" size="sm" onClick={onClose}>
                             {t('servers.files.close')}
                         </Button>
@@ -141,6 +155,7 @@ export function FileEditor({
                         value={content}
                         onChange={(e) => onContentChange(e.target.value)}
                         onScroll={handleScroll}
+                        readOnly={!canEdit}
                         className={clsx(
                             'flex-1 p-2 sm:p-4 resize-none focus:outline-none',
                             'text-[var(--color-text-primary)] bg-transparent',

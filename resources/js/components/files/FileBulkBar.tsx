@@ -9,14 +9,16 @@ interface FileBulkBarProps {
     onDeselectAll: () => void;
     isDeleting: boolean;
     isCompressing: boolean;
+    canDelete?: boolean;
+    canArchive?: boolean;
 }
 
-export function FileBulkBar({ selectedCount, onDelete, onCompress, onDeselectAll, isDeleting, isCompressing }: FileBulkBarProps) {
+export function FileBulkBar({ selectedCount, onDelete, onCompress, onDeselectAll, isDeleting, isCompressing, canDelete = true, canArchive = true }: FileBulkBarProps) {
     const { t } = useTranslation();
 
     return (
         <AnimatePresence>
-            {selectedCount > 0 && (
+            {selectedCount > 0 && (canDelete || canArchive) && (
                 <m.div
                     initial={{ opacity: 0, y: 20, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -28,12 +30,16 @@ export function FileBulkBar({ selectedCount, onDelete, onCompress, onDeselectAll
                     <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                         {t('servers.files.selected_count', { count: selectedCount })}
                     </span>
-                    <Button variant="secondary" size="sm" isLoading={isCompressing} onClick={onCompress}>
-                        {t('servers.files.compress')}
-                    </Button>
-                    <Button variant="danger" size="sm" isLoading={isDeleting} onClick={onDelete}>
-                        {t('servers.files.delete')}
-                    </Button>
+                    {canArchive && (
+                        <Button variant="secondary" size="sm" isLoading={isCompressing} onClick={onCompress}>
+                            {t('servers.files.compress')}
+                        </Button>
+                    )}
+                    {canDelete && (
+                        <Button variant="danger" size="sm" isLoading={isDeleting} onClick={onDelete}>
+                            {t('servers.files.delete')}
+                        </Button>
+                    )}
                     <button type="button" onClick={onDeselectAll}
                         className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors cursor-pointer">
                         {t('servers.files.deselect_all')}

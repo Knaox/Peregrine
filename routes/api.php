@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MarketplaceController;
 use App\Http\Controllers\Api\OAuthController;
+use App\Http\Controllers\Api\PluginController;
 use App\Http\Controllers\Api\ServerBackupController;
 use App\Http\Controllers\Api\ServerConsoleController;
 use App\Http\Controllers\Api\ServerController;
@@ -35,6 +37,9 @@ Route::prefix('oauth')->group(function () {
     Route::get('redirect', [OAuthController::class, 'redirect']);
     Route::get('callback', [OAuthController::class, 'callback']);
 });
+
+// Plugins (public — active plugins for frontend)
+Route::get('plugins', [PluginController::class, 'index']);
 
 // Settings (public)
 Route::prefix('settings')->group(function () {
@@ -77,6 +82,8 @@ Route::middleware('auth')->group(function () {
         Route::post('copy', [ServerFileController::class, 'copy']);
         Route::get('upload-url', [ServerFileController::class, 'uploadUrl']);
         Route::post('create-folder', [ServerFileController::class, 'createFolder']);
+        Route::post('chmod', [ServerFileController::class, 'chmod']);
+        Route::post('pull', [ServerFileController::class, 'pull']);
     });
 
     // Server databases
@@ -108,6 +115,24 @@ Route::middleware('auth')->group(function () {
     Route::post('servers/{server}/network/{allocation}/notes', [ServerNetworkController::class, 'updateNotes']);
     Route::post('servers/{server}/network/{allocation}/primary', [ServerNetworkController::class, 'setPrimary']);
     Route::delete('servers/{server}/network/{allocation}', [ServerNetworkController::class, 'destroy']);
+
+    // Admin: plugins management
+    Route::middleware('admin')->prefix('admin/plugins')->group(function () {
+        Route::get('/', [PluginController::class, 'all']);
+        Route::post('{pluginId}/activate', [PluginController::class, 'activate']);
+        Route::post('{pluginId}/deactivate', [PluginController::class, 'deactivate']);
+        Route::delete('{pluginId}', [PluginController::class, 'uninstall']);
+        Route::get('{pluginId}/settings', [PluginController::class, 'settings']);
+        Route::put('{pluginId}/settings', [PluginController::class, 'updateSettings']);
+    });
+
+    // Admin: marketplace
+    Route::middleware('admin')->prefix('admin/marketplace')->group(function () {
+        Route::get('/', [MarketplaceController::class, 'index']);
+        Route::post('{pluginId}/install', [MarketplaceController::class, 'install']);
+        Route::post('{pluginId}/update', [MarketplaceController::class, 'update']);
+        Route::get('check-updates', [MarketplaceController::class, 'checkUpdates']);
+    });
 
     // User profile
     Route::get('user/profile', [UserController::class, 'show']);

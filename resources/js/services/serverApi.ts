@@ -11,6 +11,8 @@ interface ServerResponse {
     allocation?: { ip: string; port: number } | null;
     sftp_details?: { ip: string; port: number; username: string } | null;
     limits?: { memory: number; cpu: number; disk: number } | null;
+    role?: 'owner' | 'subuser';
+    permissions?: string[] | null;
 }
 
 export async function fetchServer(id: number): Promise<Server> {
@@ -26,6 +28,8 @@ export async function fetchServer(id: number): Promise<Server> {
     if (response.limits) {
         server.limits = response.limits;
     }
+    server.role = response.role ?? 'owner';
+    server.permissions = response.permissions ?? null;
     return server;
 }
 

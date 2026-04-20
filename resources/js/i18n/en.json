@@ -20,6 +20,9 @@
         "coming_soon": "Coming soon",
         "back": "Back"
     },
+    "errors": {
+        "no_permission": "You don't have permission to view this page."
+    },
     "setup": {
         "title": "Peregrine Setup",
         "subtitle": "Configure your game server panel",
@@ -242,7 +245,15 @@
             "copy": "Copy",
             "copy_success": "File copied.",
             "selected_count": "{{count}} selected",
-            "deselect_all": "Deselect all"
+            "deselect_all": "Deselect all",
+            "read_only": "Read-only",
+            "chmod": "Permissions (chmod)",
+            "chmod_prompt": "Enter octal mode (e.g. 755)",
+            "pull": "Pull from URL",
+            "pull_url": "Remote URL",
+            "pull_filename": "Save as (optional)",
+            "pull_start": "Start download",
+            "pull_target_dir": "Target directory: {{dir}}"
         },
         "sftp": {
             "title": "SFTP Access",
@@ -446,6 +457,62 @@
         "locale_options": {
             "en": "English",
             "fr": "Francais"
+        }
+    },
+    "invitations": {
+        "modal": {
+            "title": "Invite by email",
+            "email": "Email address",
+            "email_placeholder": "user@example.com",
+            "permissions": "Permissions",
+            "no_permissions": "Please select at least one permission.",
+            "send": "Send invitation",
+            "active_invitations": "Active invitations",
+            "expires": "Expires",
+            "revoke": "Revoke"
+        },
+        "page": {
+            "title": "Users & Invitations",
+            "subtitle": "Manage who has access to this server",
+            "invite_button": "Invite user",
+            "empty": "No pending invitations",
+            "empty_hint": "Invite someone by email to give them access to this server.",
+            "pending_invitations": "Pending invitations",
+            "status_pending": "Pending",
+            "perms": "perms",
+            "active_users": "Active users",
+            "status_active": "Active",
+            "remove": "Remove",
+            "confirm_remove": "Remove this user from the server?",
+            "you": "You"
+        },
+        "edit": {
+            "button": "Edit",
+            "subuser_title": "Edit user permissions",
+            "invitation_title": "Edit invitation permissions",
+            "save": "Save"
+        },
+        "accept": {
+            "title": "Server invitation",
+            "invited_to": "{{inviter}} invited you to join {{server}}.",
+            "permissions": "Permissions you will receive:",
+            "expires": "This invitation expires on {{date}}.",
+            "button": "Accept invitation",
+            "wrong_email": "You are logged in as {{current}}, but this invitation is for {{expected}}.",
+            "logout": "Log out",
+            "create_account": "Create account",
+            "login": "Sign in",
+            "login_hint": "Log in with your existing account, then accept the invitation.",
+            "go_to_login": "Go to login",
+            "register_and_accept": "Create account and accept",
+            "name": "Name",
+            "email": "Email",
+            "password": "Password",
+            "password_confirm": "Confirm password",
+            "invalid": "Invalid invitation link.",
+            "expired": "This invitation has expired or has been revoked.",
+            "already_accepted": "This invitation has already been accepted.",
+            "go_home": "Go to dashboard"
         }
     }
 }

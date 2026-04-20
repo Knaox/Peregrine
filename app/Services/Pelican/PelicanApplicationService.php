@@ -89,6 +89,26 @@ class PelicanApplicationService
         return $this->fetchAllPages('/api/application/users', PelicanUser::class);
     }
 
+    /**
+     * Find a user by email on the Pelican panel.
+     *
+     * @throws RequestException
+     */
+    public function findUserByEmail(string $email): ?PelicanUser
+    {
+        $response = $this->request()
+            ->get('/api/application/users', ['filter[email]' => $email])
+            ->throw();
+
+        $data = $response->json('data') ?? [];
+
+        if (empty($data)) {
+            return null;
+        }
+
+        return PelicanUser::fromApiResponse($data[0]);
+    }
+
     // -------------------------------------------------------------------------
     // Servers
     // -------------------------------------------------------------------------

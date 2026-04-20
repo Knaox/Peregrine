@@ -2,11 +2,12 @@ import { useCallback, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, m } from 'motion/react';
-import clsx from 'clsx';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useServer } from '@/hooks/useServer';
+import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
-import type { Allocation } from '@/types/Allocation';
+import { AllocationCard } from '@/components/network/AllocationCard';
 
 function GlobeIcon({ className }: { className?: string }) {
     return (
@@ -17,126 +18,12 @@ function GlobeIcon({ className }: { className?: string }) {
     );
 }
 
-function StarIcon({ className }: { className?: string }) {
-    return (
-        <svg className={className} viewBox="0 0 24 24" fill="currentColor" stroke="none">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-        </svg>
-    );
-}
-
 function PlusIcon({ className }: { className?: string }) {
     return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
-    );
-}
-
-function AllocationCard({ alloc, isSelected, onToggleSelect, onEditNotes, editingNotes, notesValue, onNotesChange, onSaveNotes, onCancelEdit, isNotesSaving, onSetPrimary, isPrimaryPending, onDelete, isDeletePending }: {
-    alloc: Allocation;
-    isSelected: boolean;
-    onToggleSelect: () => void;
-    onEditNotes: () => void;
-    editingNotes: boolean;
-    notesValue: string;
-    onNotesChange: (v: string) => void;
-    onSaveNotes: () => void;
-    onCancelEdit: () => void;
-    isNotesSaving: boolean;
-    onSetPrimary: () => void;
-    isPrimaryPending: boolean;
-    onDelete: () => void;
-    isDeletePending: boolean;
-}) {
-    const { t } = useTranslation();
-
-    return (
-        <div className={clsx(
-            'glass-card-enhanced rounded-[var(--radius-lg)] p-4 transition-all duration-200',
-            isSelected && 'ring-2 ring-[var(--color-primary)]/40',
-        )}>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                    {!alloc.is_default && (
-                        <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={onToggleSelect}
-                            className="cursor-pointer rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                        />
-                    )}
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2.5">
-                            <div className="rounded-[var(--radius)] bg-[var(--color-surface-hover)] px-3 py-1.5">
-                                <span
-                                    className="text-sm sm:text-base font-bold text-[var(--color-text-primary)] break-all"
-                                    style={{ fontFamily: 'var(--font-mono)' }}
-                                >
-                                    {alloc.ip_alias ?? alloc.ip}:{alloc.port}
-                                </span>
-                            </div>
-                            {alloc.is_default && (
-                                <span className="inline-flex items-center gap-1 rounded-[var(--radius)] bg-[var(--color-primary)]/15 px-2 py-1 text-xs font-semibold text-[var(--color-primary)]">
-                                    <StarIcon className="h-3 w-3" />
-                                    {t('servers.network.primary')}
-                                </span>
-                            )}
-                        </div>
-                        {editingNotes ? (
-                            <div className="flex items-center gap-2">
-                                <input
-                                    value={notesValue}
-                                    onChange={(e) => onNotesChange(e.target.value)}
-                                    placeholder={t('servers.network.notes_placeholder')}
-                                    className="rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary-glow)]"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') onSaveNotes();
-                                        if (e.key === 'Escape') onCancelEdit();
-                                    }}
-                                    autoFocus
-                                />
-                                <Button variant="primary" size="sm" isLoading={isNotesSaving} onClick={onSaveNotes}>
-                                    {t('common.save')}
-                                </Button>
-                                <button
-                                    type="button"
-                                    onClick={onCancelEdit}
-                                    className="cursor-pointer text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
-                                >
-                                    {t('common.cancel')}
-                                </button>
-                            </div>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={onEditNotes}
-                                className="cursor-pointer flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
-                            >
-                                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                </svg>
-                                {alloc.notes || t('servers.network.notes')}
-                            </button>
-                        )}
-                    </div>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                    {!alloc.is_default && (
-                        <Button variant="secondary" size="sm" isLoading={isPrimaryPending} onClick={onSetPrimary}>
-                            {t('servers.network.set_primary')}
-                        </Button>
-                    )}
-                    {!alloc.is_default && (
-                        <Button variant="danger" size="sm" isLoading={isDeletePending} onClick={onDelete}>
-                            {t('servers.network.delete')}
-                        </Button>
-                    )}
-                </div>
-            </div>
-        </div>
     );
 }
 
@@ -162,6 +49,11 @@ export function ServerNetworkPage() {
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
     const { data: allocations, isLoading, add, updateNotes, setPrimary, remove } = useNetwork(serverId);
+    const { data: server } = useServer(serverId);
+    const perms = useServerPermissions(server);
+    const canCreate = perms.has('allocation.create');
+    const canUpdate = perms.has('allocation.update');
+    const canDelete = perms.has('allocation.delete');
 
     const [editingNotes, setEditingNotes] = useState<number | null>(null);
     const [notesValue, setNotesValue] = useState('');
@@ -177,16 +69,19 @@ export function ServerNetworkPage() {
     const deselectAll = useCallback(() => setSelected(new Set()), []);
 
     const startEditNotes = (allocId: number, current: string | null) => {
+        if (!canUpdate) return;
         setEditingNotes(allocId);
         setNotesValue(current ?? '');
     };
     const saveNotes = (allocId: number) => {
+        if (!canUpdate) return;
         updateNotes.mutate({ allocationId: allocId, notes: notesValue }, {
             onSuccess: () => setEditingNotes(null),
         });
     };
 
     const handleBulkDelete = () => {
+        if (!canDelete) return;
         if (!window.confirm(t('servers.network.bulk_confirm', { count: selected.size }))) return;
         const ids = Array.from(selected);
         ids.forEach((allocId) => remove.mutate(allocId));
@@ -214,10 +109,12 @@ export function ServerNetworkPage() {
                         {t('servers.network.title')}
                     </h2>
                 </div>
-                <Button variant="primary" size="sm" isLoading={add.isPending} onClick={() => add.mutate()}>
-                    <PlusIcon className="h-4 w-4" />
-                    {t('servers.network.add')}
-                </Button>
+                {canCreate && (
+                    <Button variant="primary" size="sm" isLoading={add.isPending} onClick={() => add.mutate()}>
+                        <PlusIcon className="h-4 w-4" />
+                        {t('servers.network.add')}
+                    </Button>
+                )}
             </div>
 
             {/* Error banner */}
@@ -258,6 +155,8 @@ export function ServerNetworkPage() {
                                     }
                                 }}
                                 isDeletePending={remove.isPending}
+                                canUpdate={canUpdate}
+                                canDelete={canDelete}
                             />
                         </m.div>
                     ))}
@@ -266,7 +165,7 @@ export function ServerNetworkPage() {
 
             {/* Bulk action bar */}
             <AnimatePresence>
-                {selected.size > 0 && (
+                {selected.size > 0 && canDelete && (
                     <m.div
                         initial={{ opacity: 0, y: 40, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}

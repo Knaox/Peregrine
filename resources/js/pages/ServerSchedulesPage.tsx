@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, m } from 'motion/react';
 import { useSchedules } from '@/hooks/useSchedules';
+import { useServer } from '@/hooks/useServer';
+import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { ScheduleCard } from '@/components/server/ScheduleCard';
@@ -55,6 +57,9 @@ export function ServerSchedulesPage() {
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
     const { data: schedules, isLoading, create, addTask } = useSchedules(serverId);
+    const { data: server } = useServer(serverId);
+    const perms = useServerPermissions(server);
+    const canCreate = perms.has('schedule.create');
 
     const [showCreate, setShowCreate] = useState(false);
     const [preset, setPreset] = useState('restart_daily');
@@ -116,7 +121,9 @@ export function ServerSchedulesPage() {
                     </div>
                     <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{t('servers.schedules.title')}</h2>
                 </div>
-                <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>{t('servers.schedules.create')}</Button>
+                {canCreate && (
+                    <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>{t('servers.schedules.create')}</Button>
+                )}
             </div>
 
             {/* Create form with AnimatePresence */}

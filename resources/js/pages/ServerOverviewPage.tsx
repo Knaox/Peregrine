@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
@@ -6,6 +6,8 @@ import { copyToClipboard } from '@/utils/clipboard';
 import { useServer } from '@/hooks/useServer';
 import { useWingsWebSocket } from '@/hooks/useWingsWebSocket';
 import { useSidebarConfig } from '@/hooks/useSidebarConfig';
+import { usePluginStore } from '@/plugins/pluginStore';
+import { SIDEBAR_ENTRY_PERMISSIONS } from '@/utils/serverPermissions';
 import { Spinner } from '@/components/ui/Spinner';
 import { ServerPowerControls } from '@/components/server/ServerPowerControls';
 import { ServerResourceCards } from '@/components/server/ServerResourceCards';
@@ -13,6 +15,7 @@ import { ServerInfoCard } from '@/components/server/ServerInfoCard';
 import { ServerVariables } from '@/components/server/ServerVariables';
 import { OverviewQuickActions } from '@/components/server/OverviewQuickActions';
 import { formatUptime } from '@/utils/format';
+import type { SidebarEntry } from '@/hooks/useSidebarConfig';
 
 type ServerState = 'running' | 'active' | 'stopped' | 'offline' | 'suspended' | 'terminated' | 'starting';
 
@@ -24,6 +27,7 @@ export function ServerOverviewPage() {
     const { data: server, isLoading: serverLoading } = useServer(serverId);
     const { resources, serverState: wsState } = useWingsWebSocket(serverId, { stats: true });
     const sidebarConfig = useSidebarConfig();
+    const pluginManifests = usePluginStore((s) => s.manifests);
     const [copied, setCopied] = useState(false);
 
     if (serverLoading || !server) {
@@ -35,6 +39,38 @@ export function ServerOverviewPage() {
     const address = server.allocation ? `${server.allocation.ip}:${server.allocation.port}` : null;
     const isRunningState = state === 'running' || state === 'active';
     const uptime = resources?.uptime;
+
+    // Permission helpers
+    const perms = server.permissions ?? null;
+    const isOwner = !server.role || server.role === 'owner' || perms === null;
+    const hasPerm = (p: string) => isOwner || (perms?.includes(p) ?? false);
+
+    const canStart = hasPerm('control.start');
+    const canStop = hasPerm('control.stop');
+    const canRestart = hasPerm('control.restart');
+    const canPower = canStart || canStop || canRestart;
+    const canViewStats = hasPerm('overview.stats');
+    const canViewStartup = hasPerm('startup.read');
+    const canEditStartup = hasPerm('startup.update');
+    const canViewConfig = hasPerm('overview.server-info') || hasPerm('settings.rename');
+
+    const filteredEntries = useMemo(() => {
+        // Merge core + plugin sidebar entries
+        const pluginEntries: SidebarEntry[] = [];
+        for (const manifest of pluginManifests) {
+            for (const se of manifest.server_sidebar_entries ?? []) {
+                pluginEntries.push({ id: se.id, label_key: se.label_key, icon: se.icon, enabled: true, route_suffix: se.route_suffix, order: se.order ?? 100 });
+            }
+        }
+        const all = [...sidebarConfig.entries, ...pluginEntries].sort((a, b) => a.order - b.order);
+
+        if (isOwner) return all;
+        return all.filter((e) => {
+            const req = SIDEBAR_ENTRY_PERMISSIONS[e.id];
+            if (!req) return true;
+            return perms?.includes(req) ?? false;
+        });
+    }, [sidebarConfig.entries, pluginManifests, isOwner, perms]);
 
     const handleCopy = () => {
         if (!address) return;
@@ -115,24 +151,32 @@ export function ServerOverviewPage() {
                                         {server.egg.name}
                                     </span>
                                 )}
-                                <div className="sm:ml-auto"><ServerPowerControls serverId={server.id} state={state} /></div>
+                                {canPower && (
+                                    <div className="sm:ml-auto"><ServerPowerControls serverId={server.id} state={state} canStart={canStart} canStop={canStop} canRestart={canRestart} /></div>
+                                )}
                             </m.div>
                         </div>
                     </div>
                 </div>
             </m.div>
 
-            {/* Quick actions — shortcuts to other pages */}
-            <OverviewQuickActions serverId={serverId} entries={sidebarConfig.entries} />
+            {/* Quick actions — filtered by permissions */}
+            <OverviewQuickActions serverId={serverId} entries={filteredEntries} />
 
-            {/* Stats — use plan limits or Pelican limits as fallback */}
-            <section><ServerResourceCards resources={resources} plan={server.plan ?? (server.limits ? { ram: server.limits.memory, cpu: server.limits.cpu, disk: server.limits.disk } : null)} isLoading={!resources} /></section>
+            {/* Stats — visible if overview.stats permission */}
+            {canViewStats && (
+                <section><ServerResourceCards resources={resources} plan={server.plan ?? (server.limits ? { ram: server.limits.memory, cpu: server.limits.cpu, disk: server.limits.disk } : null)} isLoading={!resources} /></section>
+            )}
 
-            {/* Variables first (more important for config), then Info */}
-            <section><ServerVariables serverId={serverId} /></section>
+            {/* Variables — only if user has startup.read permission */}
+            {canViewStartup && (
+                <section><ServerVariables serverId={serverId} canEdit={canEditStartup} /></section>
+            )}
 
-            {/* Server info — compact */}
-            <section><ServerInfoCard server={server} /></section>
+            {/* Server info — only if owner or has settings permission */}
+            {canViewConfig && (
+                <section><ServerInfoCard server={server} /></section>
+            )}
         </m.div>
     );
 }

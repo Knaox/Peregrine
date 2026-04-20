@@ -1,0 +1,37 @@
+{
+    "id": "invitations",
+    "name": "Server Invitations",
+    "version": "0.8.0",
+    "description": "Invite users to your servers by email with granular permissions. Supports editing permissions of active users and pending invitations.",
+    "author": "Peregrine Team",
+    "license": "MIT",
+    "min_peregrine_version": "1.0.0",
+    "service_provider": "InvitationsServiceProvider",
+    "frontend": {
+        "bundle": "frontend/dist/bundle.js",
+        "nav": [],
+        "server_sidebar_entries": [
+            {
+                "id": "users",
+                "label_key": "invitations.page.title",
+                "icon": "users",
+                "route_suffix": "/users",
+                "order": 8
+            }
+        ]
+    },
+    "settings_schema": [
+        {
+            "key": "invitation_expiry_days",
+            "type": "number",
+            "label": "Invitation expiry (days)",
+            "default": 7
+        },
+        {
+            "key": "max_invitations_per_hour",
+            "type": "number",
+            "label": "Max invitations per hour per user",
+            "default": 10
+        }
+    ]
+}
