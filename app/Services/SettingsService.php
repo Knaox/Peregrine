@@ -104,7 +104,7 @@ class SettingsService
             return str_starts_with($relative, 'http') ? $relative : $appUrl . $relative;
         }
 
-        return $appUrl . '/images/logo.svg';
+        return $appUrl . '/images/logo.webp';
     }
 
     /**

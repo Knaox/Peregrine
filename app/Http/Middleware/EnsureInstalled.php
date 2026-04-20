@@ -10,7 +10,7 @@ class EnsureInstalled
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $installed = config('panel.installed');
+        $installed = config('panel.installed') || $this->installedMarkerExists();
 
         if (!$installed && !$request->is('setup', 'setup/*', 'api/setup/*', 'livewire*', 'filament*', 'docs/*')) {
             if ($request->expectsJson()) {
@@ -24,5 +24,19 @@ class EnsureInstalled
         }
 
         return $next($request);
+    }
+
+    /**
+     * Fallback check for "installed" that doesn't rely on env().
+     *
+     * phpdotenv runs in immutable mode: once a php-fpm worker has loaded
+     * PANEL_INSTALLED=false at boot, writing the .env mid-process doesn't
+     * update the value for that worker. The Setup Wizard drops a sentinel
+     * file on success — its presence is the source of truth until the
+     * workers cycle and re-read the .env.
+     */
+    private function installedMarkerExists(): bool
+    {
+        return file_exists(storage_path('.installed'));
     }
 }

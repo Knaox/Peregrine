@@ -22,7 +22,17 @@ class SetupService
     public function writeEnv(array $values): void
     {
         $envPath = base_path('.env');
-        $contents = file_exists($envPath) ? file_get_contents($envPath) : '';
+
+        // Follow symlinks so we write to the actual file on disk. The Docker
+        // image symlinks /var/www/html/.env to storage/.env (persistent volume);
+        // if we rename a temp file onto the symlink path, we replace the link
+        // itself instead of updating the target.
+        $realPath = is_link($envPath) ? (string) readlink($envPath) : $envPath;
+        if (! str_starts_with($realPath, '/')) {
+            $realPath = dirname($envPath) . '/' . $realPath;
+        }
+
+        $contents = file_exists($realPath) ? (string) file_get_contents($realPath) : '';
 
         foreach ($values as $key => $value) {
             $escapedValue = $this->escapeEnvValue($value);
@@ -37,10 +47,16 @@ class SetupService
             }
         }
 
-        // Write atomically: write to temp file, then rename.
-        $tmpPath = $envPath . '.tmp';
-        file_put_contents($tmpPath, $contents, LOCK_EX);
-        rename($tmpPath, $envPath);
+        // Write atomically next to the real path, then rename there so we
+        // never replace a symlink with a regular file.
+        $tmpPath = $realPath . '.tmp';
+        if (@file_put_contents($tmpPath, $contents, LOCK_EX) === false) {
+            // Fallback: direct write (less atomic but fine for a tiny .env).
+            file_put_contents($realPath, $contents, LOCK_EX);
+            return;
+        }
+
+        rename($tmpPath, $realPath);
     }
 
     /**

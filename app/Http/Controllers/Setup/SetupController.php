@@ -95,7 +95,14 @@ class SetupController extends Controller
                 // ignore — admin can activate it manually from the Plugins page.
             }
 
-            // 4. Send the response BEFORE writing .env (because artisan serve will restart)
+            // 4. Drop an "installed" sentinel file NOW (before the response is
+            // sent). phpdotenv runs in immutable mode, so writing PANEL_INSTALLED=true
+            // to .env mid-process doesn't take effect until php-fpm workers cycle.
+            // EnsureInstalled middleware checks this sentinel alongside the env
+            // value so the redirect loop stops on the very next page load.
+            @touch(storage_path('.installed'));
+
+            // 5. Send the response BEFORE writing .env (because artisan serve will restart)
             // We use register_shutdown_function to write the .env after the response is sent
             register_shutdown_function(function () use ($validated, $dbHost, $dbPort, $dbName, $dbUser, $dbPass) {
                 $this->setupService->writeEnv([
