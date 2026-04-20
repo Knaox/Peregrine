@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Kept as a placeholder — the canonical logo is logo.webp. Any code that
+     still resolves /images/logo.svg (stale Vite / lightningcss cache, etc.)
+     gets a valid, trivially small SVG instead of 500ing. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1">
+  <rect width="1" height="1" fill="transparent"/>
+</svg>
