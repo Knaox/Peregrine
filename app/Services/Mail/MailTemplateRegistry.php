@@ -40,9 +40,9 @@ final class MailTemplateRegistry
                 'group' => 'Auth',
                 'label' => '2FA enabled',
                 'description' => 'Sent when a user activates two-factor authentication on their account.',
-                'variables' => ['name', 'app_name', 'timestamp', 'ip', 'user_agent', 'manage_url'],
-                'default_subject_en' => '2FA enabled on your {app_name} account',
-                'default_subject_fr' => '2FA activée sur votre compte {app_name}',
+                'variables' => ['name', 'server_name', 'timestamp', 'ip', 'user_agent', 'manage_url'],
+                'default_subject_en' => '2FA enabled on your {server_name} account',
+                'default_subject_fr' => '2FA activée sur votre compte {server_name}',
                 'default_body_en' => self::body2faEnabledEn(),
                 'default_body_fr' => self::body2faEnabledFr(),
             ],
@@ -51,9 +51,9 @@ final class MailTemplateRegistry
                 'group' => 'Auth',
                 'label' => '2FA disabled',
                 'description' => 'Sent when a user turns off two-factor authentication.',
-                'variables' => ['name', 'app_name', 'timestamp', 'ip', 'user_agent', 'manage_url'],
-                'default_subject_en' => '2FA disabled on your {app_name} account',
-                'default_subject_fr' => '2FA désactivée sur votre compte {app_name}',
+                'variables' => ['name', 'server_name', 'timestamp', 'ip', 'user_agent', 'manage_url'],
+                'default_subject_en' => '2FA disabled on your {server_name} account',
+                'default_subject_fr' => '2FA désactivée sur votre compte {server_name}',
                 'default_body_en' => self::body2faDisabledEn(),
                 'default_body_fr' => self::body2faDisabledFr(),
             ],
@@ -62,9 +62,9 @@ final class MailTemplateRegistry
                 'group' => 'Auth',
                 'label' => 'Recovery codes regenerated',
                 'description' => 'Sent when a user regenerates their 2FA recovery codes.',
-                'variables' => ['name', 'app_name', 'timestamp', 'ip', 'user_agent', 'manage_url'],
-                'default_subject_en' => 'Your {app_name} recovery codes were regenerated',
-                'default_subject_fr' => 'Vos codes de récupération {app_name} ont été régénérés',
+                'variables' => ['name', 'server_name', 'timestamp', 'ip', 'user_agent', 'manage_url'],
+                'default_subject_en' => 'Your {server_name} recovery codes were regenerated',
+                'default_subject_fr' => 'Vos codes de récupération {server_name} ont été régénérés',
                 'default_body_en' => self::bodyRecoveryEn(),
                 'default_body_fr' => self::bodyRecoveryFr(),
             ],
@@ -73,9 +73,9 @@ final class MailTemplateRegistry
                 'group' => 'Auth',
                 'label' => 'OAuth provider linked',
                 'description' => 'Sent when a social provider (Google, Discord, LinkedIn, Shop) is linked to a user account.',
-                'variables' => ['name', 'provider', 'app_name', 'timestamp', 'ip', 'user_agent', 'manage_url'],
-                'default_subject_en' => '{provider} linked to your {app_name} account',
-                'default_subject_fr' => '{provider} lié à votre compte {app_name}',
+                'variables' => ['name', 'provider', 'server_name', 'timestamp', 'ip', 'user_agent', 'manage_url'],
+                'default_subject_en' => '{provider} linked to your {server_name} account',
+                'default_subject_fr' => '{provider} lié à votre compte {server_name}',
                 'default_body_en' => self::bodyLinkedEn(),
                 'default_body_fr' => self::bodyLinkedFr(),
             ],
@@ -84,9 +84,9 @@ final class MailTemplateRegistry
                 'group' => 'Auth',
                 'label' => 'OAuth provider unlinked',
                 'description' => 'Sent when a social provider is removed from a user account.',
-                'variables' => ['name', 'provider', 'app_name', 'timestamp', 'ip', 'user_agent', 'manage_url'],
-                'default_subject_en' => '{provider} unlinked from your {app_name} account',
-                'default_subject_fr' => '{provider} délié de votre compte {app_name}',
+                'variables' => ['name', 'provider', 'server_name', 'timestamp', 'ip', 'user_agent', 'manage_url'],
+                'default_subject_en' => '{provider} unlinked from your {server_name} account',
+                'default_subject_fr' => '{provider} délié de votre compte {server_name}',
                 'default_body_en' => self::bodyUnlinkedEn(),
                 'default_body_fr' => self::bodyUnlinkedFr(),
             ],
@@ -123,7 +123,7 @@ final class MailTemplateRegistry
     {
         return self::bodyMeta(
             '<h1>2FA activated</h1>'
-            .'<p>Hi {name}, two-factor authentication was just turned on for your {app_name} account.</p>'
+            .'<p>Hi {name}, two-factor authentication was just turned on for your {server_name} account.</p>'
         );
     }
 
@@ -131,7 +131,7 @@ final class MailTemplateRegistry
     {
         return self::bodyMeta(
             '<h1>2FA activée</h1>'
-            .'<p>Bonjour {name}, la double authentification vient d\'être activée sur votre compte {app_name}.</p>'
+            .'<p>Bonjour {name}, la double authentification vient d\'être activée sur votre compte {server_name}.</p>'
         );
     }
 
@@ -139,7 +139,7 @@ final class MailTemplateRegistry
     {
         return self::bodyMeta(
             '<h1>2FA turned off</h1>'
-            .'<p>Hi {name}, two-factor authentication was just turned off for your {app_name} account.</p>'
+            .'<p>Hi {name}, two-factor authentication was just turned off for your {server_name} account.</p>'
         );
     }
 
@@ -147,7 +147,7 @@ final class MailTemplateRegistry
     {
         return self::bodyMeta(
             '<h1>2FA désactivée</h1>'
-            .'<p>Bonjour {name}, la double authentification vient d\'être désactivée sur votre compte {app_name}.</p>'
+            .'<p>Bonjour {name}, la double authentification vient d\'être désactivée sur votre compte {server_name}.</p>'
         );
     }
 
@@ -155,7 +155,7 @@ final class MailTemplateRegistry
     {
         return self::bodyMeta(
             '<h1>New recovery codes generated</h1>'
-            .'<p>Hi {name}, a new set of 2FA recovery codes was just generated for your {app_name} account. '
+            .'<p>Hi {name}, a new set of 2FA recovery codes was just generated for your {server_name} account. '
             .'Previous codes no longer work.</p>'
         );
     }
@@ -164,7 +164,7 @@ final class MailTemplateRegistry
     {
         return self::bodyMeta(
             '<h1>Nouveaux codes de récupération</h1>'
-            .'<p>Bonjour {name}, un nouvel ensemble de codes de récupération 2FA a été généré pour votre compte {app_name}. '
+            .'<p>Bonjour {name}, un nouvel ensemble de codes de récupération 2FA a été généré pour votre compte {server_name}. '
             .'Les anciens codes ne fonctionnent plus.</p>'
         );
     }
@@ -173,7 +173,7 @@ final class MailTemplateRegistry
     {
         return self::bodyMeta(
             '<h1>{provider} linked</h1>'
-            .'<p>Hi {name}, <strong>{provider}</strong> was just linked as a sign-in method on your {app_name} account.</p>'
+            .'<p>Hi {name}, <strong>{provider}</strong> was just linked as a sign-in method on your {server_name} account.</p>'
         );
     }
 
@@ -181,7 +181,7 @@ final class MailTemplateRegistry
     {
         return self::bodyMeta(
             '<h1>{provider} lié</h1>'
-            .'<p>Bonjour {name}, <strong>{provider}</strong> vient d\'être lié comme méthode de connexion sur votre compte {app_name}.</p>'
+            .'<p>Bonjour {name}, <strong>{provider}</strong> vient d\'être lié comme méthode de connexion sur votre compte {server_name}.</p>'
         );
     }
 
@@ -189,7 +189,7 @@ final class MailTemplateRegistry
     {
         return self::bodyMeta(
             '<h1>{provider} unlinked</h1>'
-            .'<p>Hi {name}, <strong>{provider}</strong> was just removed as a sign-in method on your {app_name} account.</p>'
+            .'<p>Hi {name}, <strong>{provider}</strong> was just removed as a sign-in method on your {server_name} account.</p>'
         );
     }
 
@@ -197,7 +197,7 @@ final class MailTemplateRegistry
     {
         return self::bodyMeta(
             '<h1>{provider} délié</h1>'
-            .'<p>Bonjour {name}, <strong>{provider}</strong> vient d\'être retiré comme méthode de connexion de votre compte {app_name}.</p>'
+            .'<p>Bonjour {name}, <strong>{provider}</strong> vient d\'être retiré comme méthode de connexion de votre compte {server_name}.</p>'
         );
     }
 }
