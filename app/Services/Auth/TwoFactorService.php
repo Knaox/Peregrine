@@ -76,6 +76,19 @@ class TwoFactorService
             return [];
         }
 
+        // Atomically mark confirmed_at — only one winner if two parallel
+        // confirm requests race (controller check + service write were not
+        // atomic, leading to double "2FA enabled" emails). The loser gets
+        // an empty array back and skips the event dispatch.
+        $affected = User::query()
+            ->where('id', $user->id)
+            ->whereNull('two_factor_confirmed_at')
+            ->update(['two_factor_confirmed_at' => now()]);
+
+        if ($affected === 0) {
+            return [];
+        }
+
         $plaintext = $this->freshRecoveryCodes();
 
         $user->saveAppAuthenticationSecret($secret);
@@ -83,9 +96,8 @@ class TwoFactorService
             fn (string $code): string => Hash::make($code),
             $plaintext,
         ));
-        $user->forceFill(['two_factor_confirmed_at' => now()])->save();
 
-        event(new TwoFactorEnabled($user, request()->ip(), (string) request()->userAgent()));
+        event(new TwoFactorEnabled($user->refresh(), request()->ip(), (string) request()->userAgent()));
 
         return $plaintext;
     }

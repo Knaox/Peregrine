@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Plugin;
+use App\Services\Mail\MailTemplateRegistry;
 use App\Services\SettingsService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -32,7 +33,7 @@ class EmailTemplates extends Page implements HasForms
 
     protected string $view = 'filament.pages.email-templates';
 
-    // Invitation template fields
+    // Invitation template fields — legacy layout kept as-is for backward compat
     public ?string $invitation_subject_en = '';
 
     public ?string $invitation_subject_fr = '';
@@ -44,29 +45,36 @@ class EmailTemplates extends Page implements HasForms
     // Global email settings
     public ?string $email_footer_text = '';
 
+    /**
+     * Auth notifications templates — driven by MailTemplateRegistry.
+     * Shape: [template_id => [subject_en, subject_fr, body_en, body_fr]].
+     *
+     * @var array<string, array<string, string>>
+     */
+    public array $template_values = [];
+
     public function mount(): void
     {
         $settings = app(SettingsService::class);
 
-        $this->form->fill([
-            'invitation_subject_en' => $settings->get(
-                'email_tpl_invitation_subject_en',
-                "You've been invited to join {server_name}",
-            ),
-            'invitation_subject_fr' => $settings->get(
-                'email_tpl_invitation_subject_fr',
-                'Vous avez été invité à rejoindre {server_name}',
-            ),
-            'invitation_body_en' => $settings->get(
-                'email_tpl_invitation_body_en',
-                $this->defaultBodyEn(),
-            ),
-            'invitation_body_fr' => $settings->get(
-                'email_tpl_invitation_body_fr',
-                $this->defaultBodyFr(),
-            ),
+        $legacy = [
+            'invitation_subject_en' => $settings->get('email_tpl_invitation_subject_en', "You've been invited to join {server_name}"),
+            'invitation_subject_fr' => $settings->get('email_tpl_invitation_subject_fr', 'Vous avez été invité à rejoindre {server_name}'),
+            'invitation_body_en' => $settings->get('email_tpl_invitation_body_en', $this->defaultBodyEn()),
+            'invitation_body_fr' => $settings->get('email_tpl_invitation_body_fr', $this->defaultBodyFr()),
             'email_footer_text' => $settings->get('email_footer_text', ''),
-        ]);
+        ];
+
+        foreach (MailTemplateRegistry::all() as $tpl) {
+            $this->template_values[$tpl['id']] = [
+                'subject_en' => (string) $settings->get("email_tpl_{$tpl['id']}_subject_en", $tpl['default_subject_en']),
+                'subject_fr' => (string) $settings->get("email_tpl_{$tpl['id']}_subject_fr", $tpl['default_subject_fr']),
+                'body_en' => (string) $settings->get("email_tpl_{$tpl['id']}_body_en", $tpl['default_body_en']),
+                'body_fr' => (string) $settings->get("email_tpl_{$tpl['id']}_body_fr", $tpl['default_body_fr']),
+            ];
+        }
+
+        $this->form->fill(array_merge($legacy, ['template_values' => $this->template_values]));
     }
 
     public function form(Schema $schema): Schema
@@ -83,36 +91,55 @@ class EmailTemplates extends Page implements HasForms
                 ]),
         ];
 
+        // Auth templates — one section per entry in MailTemplateRegistry
+        foreach (MailTemplateRegistry::all() as $tpl) {
+            $sections[] = $this->authTemplateSection($tpl);
+        }
+
         // Only show invitation templates if the invitations plugin is active
         if ($this->isPluginActive('invitations')) {
             $sections[] = Section::make('Invitation Email — English')
                 ->description('Template for server invitation emails (EN). Use variables: {inviter_name}, {server_name}, {permissions_list}, {accept_url}, {expires_at}, {app_name}.')
                 ->icon('heroicon-o-envelope')
                 ->collapsible()
+                ->collapsed()
                 ->schema([
-                    TextInput::make('invitation_subject_en')
-                        ->label('Subject')
-                        ->helperText('Variables: {server_name}, {inviter_name}, {app_name}'),
-                    Textarea::make('invitation_body_en')
-                        ->label('Body (HTML)')
-                        ->rows(12)
-                        ->helperText('HTML content. Variables: {inviter_name}, {server_name}, {permissions_list}, {accept_url}, {expires_at}, {app_name}'),
+                    TextInput::make('invitation_subject_en')->label('Subject'),
+                    Textarea::make('invitation_body_en')->label('Body (HTML)')->rows(12),
                 ]);
 
             $sections[] = Section::make('Invitation Email — French')
-                ->description('Template sent to recipients with a French locale. Variables: {inviter_name}, {server_name}, {permissions_list}, {accept_url}, {expires_at}, {app_name}.')
+                ->description('Template sent to recipients with a French locale.')
                 ->icon('heroicon-o-envelope')
                 ->collapsible()
+                ->collapsed()
                 ->schema([
-                    TextInput::make('invitation_subject_fr')
-                        ->label('Subject'),
-                    Textarea::make('invitation_body_fr')
-                        ->label('Body (HTML)')
-                        ->rows(12),
+                    TextInput::make('invitation_subject_fr')->label('Subject'),
+                    Textarea::make('invitation_body_fr')->label('Body (HTML)')->rows(12),
                 ]);
         }
 
         return $schema->schema($sections);
+    }
+
+    /**
+     * @param  array<string, mixed>  $tpl
+     */
+    private function authTemplateSection(array $tpl): Section
+    {
+        $varsHelper = 'Variables: '.implode(', ', array_map(fn ($v) => '{'.$v.'}', (array) $tpl['variables']));
+
+        return Section::make("[{$tpl['group']}] {$tpl['label']}")
+            ->description($tpl['description'].' — '.$varsHelper)
+            ->icon('heroicon-o-envelope')
+            ->collapsible()
+            ->collapsed()
+            ->schema([
+                TextInput::make("template_values.{$tpl['id']}.subject_en")->label('Subject (EN)'),
+                TextInput::make("template_values.{$tpl['id']}.subject_fr")->label('Subject (FR)'),
+                Textarea::make("template_values.{$tpl['id']}.body_en")->label('Body EN (HTML)')->rows(10),
+                Textarea::make("template_values.{$tpl['id']}.body_fr")->label('Body FR (HTML)')->rows(10),
+            ]);
     }
 
     private function isPluginActive(string $pluginId): bool
@@ -129,33 +156,45 @@ class EmailTemplates extends Page implements HasForms
         $data = $this->form->getState();
         $settings = app(SettingsService::class);
 
-        $keys = [
-            'email_tpl_invitation_subject_en',
-            'email_tpl_invitation_subject_fr',
-            'email_tpl_invitation_body_en',
-            'email_tpl_invitation_body_fr',
-            'email_footer_text',
+        $legacyKeys = [
+            'email_tpl_invitation_subject_en' => 'invitation_subject_en',
+            'email_tpl_invitation_subject_fr' => 'invitation_subject_fr',
+            'email_tpl_invitation_body_en' => 'invitation_body_en',
+            'email_tpl_invitation_body_fr' => 'invitation_body_fr',
+            'email_footer_text' => 'email_footer_text',
         ];
 
-        foreach ($keys as $key) {
-            $formKey = str_replace('email_tpl_', '', $key);
+        foreach ($legacyKeys as $key => $formKey) {
             $settings->set($key, $data[$formKey] ?? '');
+        }
+
+        // Auth templates — write each field only when it differs from the
+        // registry default. Keeps the settings table tidy and lets the
+        // registry drive future copy changes on first-time installs.
+        foreach (MailTemplateRegistry::all() as $tpl) {
+            $values = $data['template_values'][$tpl['id']] ?? [];
+            foreach (['subject_en', 'subject_fr', 'body_en', 'body_fr'] as $field) {
+                $key = "email_tpl_{$tpl['id']}_{$field}";
+                $default = $tpl["default_{$field}"];
+                $current = (string) ($values[$field] ?? '');
+
+                if ($current === '' || $current === $default) {
+                    $settings->forget($key);
+                } else {
+                    $settings->set($key, $current);
+                }
+            }
         }
 
         $settings->clearCache();
 
-        Notification::make()
-            ->title('Email templates saved')
-            ->success()
-            ->send();
+        Notification::make()->title('Email templates saved')->success()->send();
     }
 
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')
-                ->label('Save Templates')
-                ->submit('save'),
+            Action::make('save')->label('Save Templates')->submit('save'),
             Action::make('reset')
                 ->label('Reset to Defaults')
                 ->color('gray')
@@ -173,14 +212,19 @@ class EmailTemplates extends Page implements HasForms
         $settings->set('email_tpl_invitation_body_en', $this->defaultBodyEn());
         $settings->set('email_tpl_invitation_body_fr', $this->defaultBodyFr());
         $settings->set('email_footer_text', '');
-        $settings->clearCache();
 
+        // Auth templates: clear the setting rows so the registry defaults
+        // take over on next read.
+        foreach (MailTemplateRegistry::all() as $tpl) {
+            foreach (['subject_en', 'subject_fr', 'body_en', 'body_fr'] as $field) {
+                $settings->forget("email_tpl_{$tpl['id']}_{$field}");
+            }
+        }
+
+        $settings->clearCache();
         $this->mount();
 
-        Notification::make()
-            ->title('Templates reset to defaults')
-            ->success()
-            ->send();
+        Notification::make()->title('Templates reset to defaults')->success()->send();
     }
 
     private function defaultBodyEn(): string

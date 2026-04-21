@@ -3,6 +3,9 @@
 namespace App\Notifications;
 
 use App\Models\User;
+use App\Services\Mail\MailTemplateRegistry;
+use App\Services\Mail\MailTemplateService;
+use App\Services\SettingsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -30,14 +33,26 @@ class TwoFactorDisabledNotification extends Notification implements ShouldQueue
         $locale = $notifiable->locale ?? 'en';
         $appUrl = rtrim((string) config('app.url', ''), '/');
 
+        $rendered = app(MailTemplateService::class)->render(
+            MailTemplateRegistry::AUTH_2FA_DISABLED,
+            $locale,
+            [
+                'name' => $notifiable->name,
+                'timestamp' => now()->format('Y-m-d H:i:s e'),
+                'ip' => $this->ip ?? 'unknown',
+                'user_agent' => mb_substr($this->userAgent ?: 'unknown', 0, 160),
+                'manage_url' => $appUrl.'/settings/security',
+            ],
+        );
+
         return (new MailMessage)
-            ->subject(__('auth.2fa.mail.disabled.subject', locale: $locale))
-            ->greeting(__('auth.2fa.mail.greeting', ['name' => $notifiable->name], $locale))
-            ->line(__('auth.2fa.mail.disabled.body', locale: $locale))
-            ->line(__('auth.2fa.mail.meta.timestamp', ['time' => now()->format('Y-m-d H:i:s e')], $locale))
-            ->line(__('auth.2fa.mail.meta.ip', ['ip' => $this->ip ?? 'unknown'], $locale))
-            ->line(__('auth.2fa.mail.meta.user_agent', ['ua' => mb_substr($this->userAgent ?: 'unknown', 0, 160)], $locale))
-            ->action(__('auth.2fa.mail.cta.review_security', locale: $locale), $appUrl.'/settings/security')
-            ->line(__('auth.2fa.mail.footer.not_me', locale: $locale));
+            ->subject($rendered['subject'])
+            ->view('emails.templated', [
+                'subject' => $rendered['subject'],
+                'bodyHtml' => $rendered['body_html'],
+                'locale' => $locale,
+                'brand' => app(SettingsService::class)->get('app_name', 'Peregrine'),
+                'footerText' => (string) app(SettingsService::class)->get('email_footer_text', ''),
+            ]);
     }
 }
