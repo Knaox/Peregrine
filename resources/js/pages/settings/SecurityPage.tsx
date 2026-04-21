@@ -7,6 +7,7 @@ import {
 } from '@/hooks/useTwoFactor';
 import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
 import { RecoveryCodesDisplay } from '@/components/auth/RecoveryCodesDisplay';
+import { LinkedAccountsList } from '@/components/auth/LinkedAccountsList';
 
 /**
  * User-facing 2FA management sub-page. Reached from Profile. The user can:
@@ -153,6 +154,18 @@ export function SecurityPage() {
                         </div>
                     </div>
                 )}
+            </section>
+
+            <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 space-y-4">
+                <div>
+                    <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
+                        {t('settings.security.linked_accounts_title')}
+                    </h2>
+                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                        {t('settings.security.linked_accounts_description')}
+                    </p>
+                </div>
+                <LinkedAccountsList />
             </section>
         </div>
     );

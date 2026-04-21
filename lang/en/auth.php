@@ -21,6 +21,28 @@ return [
     'logout' => 'Sign Out',
     'failed' => 'These credentials do not match our records.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
+    'providers' => [
+        'shop' => 'Shop',
+        'google' => 'Google',
+        'discord' => 'Discord',
+        'linkedin' => 'LinkedIn',
+    ],
+    'social' => [
+        'email_not_verified' => 'This email has not been verified by the provider.',
+        'register_on_shop_first' => 'Please register on the Shop first.',
+        'cannot_unlink_last_method' => 'Cannot unlink your only sign-in method.',
+        'provider_disabled' => 'This sign-in provider is not enabled.',
+        'mail' => [
+            'linked' => [
+                'subject' => ':provider linked to your account',
+                'body' => ':provider was just linked as a sign-in method on your account.',
+            ],
+            'unlinked' => [
+                'subject' => ':provider unlinked from your account',
+                'body' => ':provider was just removed as a sign-in method on your account.',
+            ],
+        ],
+    ],
     '2fa' => [
         'required_admin_setup' => '2FA is required for admin accounts. Please set it up before continuing.',
         'invalid_code' => 'That code is invalid or expired.',

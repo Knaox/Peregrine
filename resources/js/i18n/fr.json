@@ -128,6 +128,7 @@
             "title": "Connexion",
             "button": "Se connecter",
             "oauth_button": "Se connecter avec {{provider}}",
+            "or": "ou",
             "email": "Adresse e-mail",
             "password": "Mot de passe",
             "remember": "Se souvenir de moi",
@@ -135,6 +136,19 @@
             "no_account": "Pas encore de compte ?",
             "create_account": "Créer un compte",
             "error": "E-mail ou mot de passe invalide."
+        },
+        "providers": {
+            "shop": "Shop",
+            "google": "Google",
+            "discord": "Discord",
+            "linkedin": "LinkedIn"
+        },
+        "social": {
+            "register_on_shop_first": "Aucun compte trouvé. Inscrivez-vous d'abord sur le Shop, puis revenez vous connecter ici.",
+            "email_not_verified": "Le fournisseur n'a pas vérifié cet e-mail. Connectez-vous avec votre méthode principale puis liez ce compte depuis votre profil.",
+            "cannot_unlink_last_method": "C'est votre seule méthode de connexion — définissez un mot de passe ou liez un autre fournisseur avant de délier.",
+            "provider_disabled": "Ce fournisseur de connexion n'est pas disponible.",
+            "oauth_failed": "Échec de la connexion. Veuillez réessayer."
         },
         "register": {
             "title": "Créer un compte",
@@ -192,6 +206,12 @@
                 "enabled": "Activée",
                 "disabled": "Désactivée",
                 "enabled_on": "Activée le {{date}}"
+            },
+            "setup_page": {
+                "title": "Configurer la double authentification",
+                "subtitle": "Protégez votre compte avec une seconde étape. Moins d'une minute.",
+                "enforced_banner": "Votre administrateur exige la double authentification pour les comptes admin. Vous ne pouvez pas accéder au panel admin tant qu'elle n'est pas configurée.",
+                "skip_for_now": "Ignorer pour le moment"
             }
         }
     },
@@ -500,6 +520,13 @@
         "locale": "Langue",
         "save": "Enregistrer",
         "saved": "Profil mis à jour.",
+        "security_card": {
+            "title": "Sécurité",
+            "has_2fa": "La double authentification est active sur votre compte. Gérez vos fournisseurs liés, régénérez des codes de récupération ou désactivez la 2FA.",
+            "no_2fa": "Ajoutez une étape supplémentaire à votre connexion avec une application TOTP (Google Authenticator, Authy, 1Password…). Moins d'une minute.",
+            "setup_cta": "Configurer la 2FA",
+            "manage_cta": "Gérer"
+        },
         "password": {
             "title": "Changer le mot de passe",
             "current": "Mot de passe actuel",
@@ -580,7 +607,13 @@
             "title": "Sécurité",
             "subtitle": "Gérez votre mot de passe et la double authentification.",
             "two_factor_section_title": "Double authentification",
-            "two_factor_section_description": "Ajoutez une étape supplémentaire à votre connexion via une application TOTP."
+            "two_factor_section_description": "Ajoutez une étape supplémentaire à votre connexion via une application TOTP.",
+            "linked_accounts_title": "Fournisseurs de connexion liés",
+            "linked_accounts_description": "Comptes sociaux liés à votre profil. Vous pouvez vous connecter avec n'importe lequel.",
+            "no_providers_enabled": "Aucun fournisseur de connexion n'est activé sur ce panel.",
+            "not_linked": "Non lié",
+            "link": "Lier",
+            "unlink": "Délier"
         }
     },
     "admin": {

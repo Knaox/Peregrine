@@ -23,10 +23,17 @@ class SettingsController extends Controller
         ]);
     }
 
+    /**
+     * Legacy endpoint kept for the password form — resolves the binary mode
+     * from the new multi-flag settings. The richer /api/auth/providers exposes
+     * per-provider data for new UI code.
+     */
     public function authMode(): JsonResponse
     {
+        $localEnabled = $this->settingsService->get('auth_local_enabled', 'true') === 'true';
+
         return response()->json([
-            'mode' => config('auth-mode.mode'),
+            'mode' => $localEnabled ? 'local' : 'oauth',
         ]);
     }
 

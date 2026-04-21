@@ -7,12 +7,14 @@ import { useAuthStore } from '@/stores/authStore';
 import { useBranding } from '@/hooks/useBranding';
 import { ApiError } from '@/services/api';
 import { LoginParticles } from '@/components/LoginParticles';
+import { useAuthProviders } from '@/hooks/useAuthProviders';
 
 export function RegisterPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { register } = useAuthStore();
     const branding = useBranding();
+    const providers = useAuthProviders();
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -23,8 +25,11 @@ export function RegisterPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [focusedField, setFocusedField] = useState<string | null>(null);
 
-    const authMode = document.querySelector('meta[name="auth-mode"]')?.getAttribute('content') ?? 'local';
-    const isOAuth = authMode === 'oauth';
+    // Registration closes when Shop mode is on (users come from the Shop) or
+    // when the admin toggles off local registration explicitly. While the
+    // providers query resolves, default to open so the form doesn't flash.
+    const registrationDisabled = providers.data !== undefined
+        && ! providers.data.local_registration_enabled;
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -48,7 +53,7 @@ export function RegisterPage() {
 
     const fieldError = (f: string) => errors[f]?.[0];
 
-    if (isOAuth) {
+    if (registrationDisabled) {
         return (
             <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4"
                 style={{ background: 'var(--color-background)' }}>

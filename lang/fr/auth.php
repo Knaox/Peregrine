@@ -21,6 +21,28 @@ return [
     'logout' => 'Déconnexion',
     'failed' => 'Ces identifiants ne correspondent pas à nos enregistrements.',
     'throttle' => 'Trop de tentatives de connexion. Veuillez réessayer dans :seconds secondes.',
+    'providers' => [
+        'shop' => 'Shop',
+        'google' => 'Google',
+        'discord' => 'Discord',
+        'linkedin' => 'LinkedIn',
+    ],
+    'social' => [
+        'email_not_verified' => 'Cet e-mail n\'a pas été vérifié par le fournisseur.',
+        'register_on_shop_first' => 'Veuillez d\'abord vous inscrire sur le Shop.',
+        'cannot_unlink_last_method' => 'Impossible de délier votre seul moyen de connexion.',
+        'provider_disabled' => 'Ce fournisseur de connexion n\'est pas activé.',
+        'mail' => [
+            'linked' => [
+                'subject' => ':provider lié à votre compte',
+                'body' => ':provider vient d\'être lié comme méthode de connexion sur votre compte.',
+            ],
+            'unlinked' => [
+                'subject' => ':provider délié de votre compte',
+                'body' => ':provider vient d\'être retiré comme méthode de connexion de votre compte.',
+            ],
+        ],
+    ],
     '2fa' => [
         'required_admin_setup' => 'La double authentification est requise pour les comptes administrateurs. Veuillez la configurer avant de continuer.',
         'invalid_code' => 'Ce code est invalide ou expiré.',

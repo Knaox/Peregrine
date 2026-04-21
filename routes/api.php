@@ -1,10 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AdminServersController;
+use App\Http\Controllers\Api\Auth\SocialAuthController;
 use App\Http\Controllers\Api\Auth\TwoFactorController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MarketplaceController;
-use App\Http\Controllers\Api\OAuthController;
 use App\Http\Controllers\Api\PluginController;
 use App\Http\Controllers\Api\ServerBackupController;
 use App\Http\Controllers\Api\ServerConsoleController;
@@ -43,12 +43,19 @@ Route::prefix('auth')->group(function () {
         Route::post('disable', [TwoFactorController::class, 'disable']);
         Route::post('recovery-codes/regenerate', [TwoFactorController::class, 'regenerateRecoveryCodes']);
     });
-});
 
-// OAuth routes
-Route::prefix('oauth')->group(function () {
-    Route::get('redirect', [OAuthController::class, 'redirect']);
-    Route::get('callback', [OAuthController::class, 'callback']);
+    // Social auth (Shop + Google + Discord + LinkedIn) — configurable via Filament
+    Route::get('providers', [SocialAuthController::class, 'listProviders']);
+    Route::get('social/{provider}/redirect', [SocialAuthController::class, 'redirect'])
+        ->middleware('throttle:social-redirect')
+        ->where('provider', 'shop|google|discord|linkedin');
+    Route::get('social/{provider}/callback', [SocialAuthController::class, 'callback'])
+        ->where('provider', 'shop|google|discord|linkedin');
+    Route::middleware('auth')->group(function () {
+        Route::get('identities', [SocialAuthController::class, 'listLinked']);
+        Route::delete('social/{provider}/unlink', [SocialAuthController::class, 'unlink'])
+            ->where('provider', 'shop|google|discord|linkedin');
+    });
 });
 
 // Plugins (public — active plugins for frontend)

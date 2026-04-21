@@ -4,6 +4,11 @@ import type {
     TwoFactorChallengeSuccess,
     TwoFactorSetupResponse,
 } from '@/types/TwoFactor';
+import type {
+    AuthProviderId,
+    AuthProvidersResponse,
+    LinkedIdentitiesResponse,
+} from '@/types/AuthProvider';
 
 export async function twoFactorSetup(): Promise<TwoFactorSetupResponse> {
     return request('/api/auth/2fa/setup', { method: 'POST' });
@@ -41,4 +46,20 @@ export async function twoFactorDisable(input: {
 
 export async function twoFactorRegenerateRecoveryCodes(): Promise<RecoveryCodesResponse> {
     return request('/api/auth/2fa/recovery-codes/regenerate', { method: 'POST' });
+}
+
+export async function fetchAuthProviders(): Promise<AuthProvidersResponse> {
+    return request('/api/auth/providers');
+}
+
+export async function fetchLinkedIdentities(): Promise<LinkedIdentitiesResponse> {
+    return request('/api/auth/identities');
+}
+
+export async function unlinkProvider(provider: AuthProviderId): Promise<{ success: true }> {
+    return request(`/api/auth/social/${provider}/unlink`, { method: 'DELETE' });
+}
+
+export function socialRedirectUrl(provider: AuthProviderId): string {
+    return `/api/auth/social/${provider}/redirect`;
 }

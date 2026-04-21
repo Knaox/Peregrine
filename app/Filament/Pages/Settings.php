@@ -47,11 +47,10 @@ class Settings extends Page implements HasForms
     public ?string $pelican_admin_api_key = '';
     public ?string $pelican_client_api_key = '';
 
-    // Authentication
-    public ?string $auth_mode = 'local';
-    public ?string $oauth_client_id = '';
-    public ?string $oauth_client_secret = '';
-    public ?string $oauth_redirect_url = '';
+    // Authentication moved to the dedicated AuthSettings page — manages the
+    // full multi-provider config (2FA enforcement, Shop, Google, Discord,
+    // LinkedIn) via the settings table rather than .env. Nothing auth-related
+    // remains here.
 
     // Bridge
     public bool $bridge_enabled = false;
@@ -90,10 +89,6 @@ class Settings extends Page implements HasForms
         $this->pelican_url = config('services.pelican.url', '');
         $this->pelican_admin_api_key = config('services.pelican.admin_api_key', '');
         $this->pelican_client_api_key = config('panel.client_api_key', '');
-        $this->auth_mode = config('auth.mode', 'local');
-        $this->oauth_client_id = config('services.oauth.client_id', '');
-        $this->oauth_client_secret = config('services.oauth.client_secret', '');
-        $this->oauth_redirect_url = config('services.oauth.redirect_url', '');
         $this->bridge_enabled = (bool) config('services.bridge.enabled', false);
         $this->stripe_webhook_secret = config('services.stripe.webhook_secret', '');
 
@@ -119,10 +114,6 @@ class Settings extends Page implements HasForms
             'pelican_url' => $this->pelican_url,
             'pelican_admin_api_key' => $this->pelican_admin_api_key,
             'pelican_client_api_key' => $this->pelican_client_api_key,
-            'auth_mode' => $this->auth_mode,
-            'oauth_client_id' => $this->oauth_client_id,
-            'oauth_client_secret' => $this->oauth_client_secret,
-            'oauth_redirect_url' => $this->oauth_redirect_url,
             'bridge_enabled' => $this->bridge_enabled,
             'stripe_webhook_secret' => $this->stripe_webhook_secret,
             'mail_mailer' => $this->mail_mailer,
@@ -139,10 +130,10 @@ class Settings extends Page implements HasForms
 
     public function form(Schema $schema): Schema
     {
+        // Authentication section moved to the dedicated AuthSettings page.
         return $schema->schema([
             SettingsFormSchema::appearance(),
             SettingsFormSchema::pelican(),
-            SettingsFormSchema::authentication(),
             SettingsFormSchema::bridge(),
             SettingsFormSchema::smtp(),
             SettingsFormSchema::developer(),
@@ -194,12 +185,8 @@ class Settings extends Page implements HasForms
         if (isset($data['pelican_client_api_key']) && $data['pelican_client_api_key'] !== '') {
             $envValues['PELICAN_CLIENT_API_KEY'] = $data['pelican_client_api_key'];
         }
-        $envValues['AUTH_MODE'] = $data['auth_mode'] ?? 'local';
-        if (($data['auth_mode'] ?? 'local') === 'oauth') {
-            $envValues['OAUTH_CLIENT_ID'] = $data['oauth_client_id'] ?? '';
-            $envValues['OAUTH_CLIENT_SECRET'] = $data['oauth_client_secret'] ?? '';
-            $envValues['OAUTH_REDIRECT_URL'] = $data['oauth_redirect_url'] ?? '';
-        }
+        // Auth config is owned by the dedicated AuthSettings page — kept
+        // out of .env so admins can swap provider keys without a redeploy.
         $envValues['BRIDGE_ENABLED'] = ($data['bridge_enabled'] ?? false) ? 'true' : 'false';
         if (! empty($data['bridge_enabled']) && ! empty($data['stripe_webhook_secret'])) {
             $envValues['STRIPE_WEBHOOK_SECRET'] = $data['stripe_webhook_secret'];

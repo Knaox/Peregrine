@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Services\SettingsService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
@@ -9,7 +10,7 @@ class RegisterRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return config('auth-mode.mode') === 'local';
+        return app(SettingsService::class)->get('auth_local_registration_enabled', 'true') === 'true';
     }
 
     public function rules(): array

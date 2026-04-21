@@ -7,12 +7,15 @@ import { useAuthStore } from '@/stores/authStore';
 import { useBranding } from '@/hooks/useBranding';
 import { ApiError } from '@/services/api';
 import { LoginParticles } from '@/components/LoginParticles';
+import { useAuthProviders } from '@/hooks/useAuthProviders';
+import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons';
 
 export function LoginPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { login } = useAuthStore();
     const branding = useBranding();
+    const providers = useAuthProviders();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -21,8 +24,11 @@ export function LoginPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [focusedField, setFocusedField] = useState<string | null>(null);
 
-    const authMode = document.querySelector('meta[name="auth-mode"]')?.getAttribute('content') ?? 'local';
-    const isOAuth = authMode === 'oauth';
+    // Dynamic providers drive the button rendering. Local form is gated on the
+    // auth_local_enabled flag. Falls back to local-only while the query runs.
+    const localEnabled = providers.data?.local_enabled ?? true;
+    const localRegistrationEnabled = providers.data?.local_registration_enabled ?? true;
+    const enabledProviders = providers.data?.providers ?? [];
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -80,55 +86,65 @@ export function LoginPage() {
                     style={{ background: 'var(--color-glass)', backdropFilter: 'blur(24px) saturate(180%)',
                         border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
 
-                    {isOAuth ? (
-                        <m.button type="button" onClick={() => { window.location.href = '/api/oauth/redirect'; }}
-                            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                            className="w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] cursor-pointer transition-all duration-200 hover:border-[var(--color-primary)]/50 hover:shadow-[var(--shadow-glow)]">
-                            {t('auth.login.oauth_button', { provider: 'Shop' })}
-                        </m.button>
-                    ) : (
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <AnimatePresence>
-                                {error && (
-                                    <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-2.5 text-sm text-[var(--color-danger)]">
-                                        {error}
-                                    </m.div>
-                                )}
-                            </AnimatePresence>
+                    <div className="space-y-4">
+                        {enabledProviders.length > 0 && (
+                            <SocialLoginButtons providers={enabledProviders} />
+                        )}
 
-                            <AuthField id="email" type="email" value={email} label={t('auth.login.email')}
-                                onChange={setEmail} focused={focusedField === 'email'}
-                                onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)} />
-                            <AuthField id="password" type="password" value={password} label={t('auth.login.password')}
-                                onChange={setPassword} focused={focusedField === 'password'}
-                                onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)} />
-
-                            <label className="flex items-center gap-2 cursor-pointer group pt-1">
-                                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}
-                                    className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-primary)] cursor-pointer" />
-                                <span className="text-sm text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors">
-                                    {t('auth.login.remember')}
+                        {localEnabled && enabledProviders.length > 0 && (
+                            <div className="flex items-center gap-3 py-1">
+                                <div className="flex-1 h-px bg-[var(--color-border)]" />
+                                <span className="text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
+                                    {t('auth.login.or')}
                                 </span>
-                            </label>
+                                <div className="flex-1 h-px bg-[var(--color-border)]" />
+                            </div>
+                        )}
 
-                            <button type="submit" disabled={isSubmitting}
-                                className={clsx(
-                                    'w-full rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white cursor-pointer',
-                                    'shadow-[0_4px_20px_var(--color-primary-glow)]',
-                                    'transition-all duration-200',
-                                    'hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]',
-                                    'active:scale-[0.98]',
-                                    'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
-                                )}>
-                                {isSubmitting ? t('common.loading') : t('auth.login.button')}
-                            </button>
-                        </form>
-                    )}
+                        {localEnabled && (
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <AnimatePresence>
+                                    {error && (
+                                        <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-2.5 text-sm text-[var(--color-danger)]">
+                                            {error}
+                                        </m.div>
+                                    )}
+                                </AnimatePresence>
+
+                                <AuthField id="email" type="email" value={email} label={t('auth.login.email')}
+                                    onChange={setEmail} focused={focusedField === 'email'}
+                                    onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)} />
+                                <AuthField id="password" type="password" value={password} label={t('auth.login.password')}
+                                    onChange={setPassword} focused={focusedField === 'password'}
+                                    onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)} />
+
+                                <label className="flex items-center gap-2 cursor-pointer group pt-1">
+                                    <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}
+                                        className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-primary)] cursor-pointer" />
+                                    <span className="text-sm text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors">
+                                        {t('auth.login.remember')}
+                                    </span>
+                                </label>
+
+                                <button type="submit" disabled={isSubmitting}
+                                    className={clsx(
+                                        'w-full rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white cursor-pointer',
+                                        'shadow-[0_4px_20px_var(--color-primary-glow)]',
+                                        'transition-all duration-200',
+                                        'hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]',
+                                        'active:scale-[0.98]',
+                                        'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
+                                    )}>
+                                    {isSubmitting ? t('common.loading') : t('auth.login.button')}
+                                </button>
+                            </form>
+                        )}
+                    </div>
                 </m.div>
 
-                {!isOAuth && (
+                {localEnabled && localRegistrationEnabled && (
                     <p className="mt-5 text-center text-sm text-[var(--color-text-muted)]">
                         {t('auth.login.no_account')}{' '}
                         <Link to="/register" className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors">

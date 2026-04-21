@@ -93,25 +93,6 @@ final class SettingsFormSchema
             ])->columns(1);
     }
 
-    public static function authentication(): Section
-    {
-        return Section::make('Authentication')
-            ->description('Configure how users authenticate.')
-            ->icon('heroicon-o-lock-closed')
-            ->schema([
-                Radio::make('auth_mode')->label('Authentication Mode')->options([
-                    'local' => 'Local (email & password)',
-                    'oauth' => 'OAuth (SSO)',
-                ])->default('local')->live(),
-                TextInput::make('oauth_client_id')->label('OAuth Client ID')->maxLength(255)
-                    ->visible(fn (Get $get): bool => $get('auth_mode') === 'oauth'),
-                TextInput::make('oauth_client_secret')->label('OAuth Client Secret')->password()->revealable()->maxLength(255)
-                    ->visible(fn (Get $get): bool => $get('auth_mode') === 'oauth'),
-                TextInput::make('oauth_redirect_url')->label('OAuth Redirect URL')->url()->maxLength(255)
-                    ->visible(fn (Get $get): bool => $get('auth_mode') === 'oauth'),
-            ])->columns(1);
-    }
-
     public static function smtp(): Section
     {
         return Section::make('SMTP / Email')
