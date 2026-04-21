@@ -29,7 +29,27 @@ class UserController extends Controller
     public function update(UpdateProfileRequest $request): JsonResponse
     {
         $user = $request->user();
-        $user->update($request->validated());
+        $validated = $request->validated();
+        $oldEmail = $user->email;
+
+        $user->update($validated);
+
+        // Propagate email changes to Pelican so the two stay in sync. Pelican
+        // uses the email for SFTP notifications / account recovery. Silent on
+        // failure so a temporary Pelican outage doesn't break the profile
+        // save — next successful sync closes the gap.
+        if (isset($validated['email'])
+            && $validated['email'] !== $oldEmail
+            && $user->pelican_user_id !== null
+        ) {
+            try {
+                $this->pelicanService->updateUser($user->pelican_user_id, [
+                    'email' => $validated['email'],
+                ]);
+            } catch (\Throwable) {
+                // Log and move on — see `sync:health` to surface drift.
+            }
+        }
 
         return response()->json([
             'data' => new UserResource($user->fresh()),
