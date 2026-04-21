@@ -22,6 +22,7 @@ import { ServerSftpPage } from '@/pages/ServerSftpPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { InviteAcceptPage } from '@/pages/InviteAcceptPage';
 import { TwoFactorChallengePage } from '@/pages/TwoFactorChallengePage';
+import { TwoFactorSetupPage } from '@/pages/TwoFactorSetupPage';
 import { SecurityPage } from '@/pages/settings/SecurityPage';
 import { AdminServersPage } from '@/pages/AdminServersPage';
 
@@ -47,6 +48,8 @@ function App() {
                             <Route path="/2fa/challenge" element={<TwoFactorChallengePage />} />
                             <Route path="/invite/:token" element={<InviteAcceptPage />} />
                             <Route element={<ProtectedRoute />}>
+                                {/* Standalone full-screen setup page — no sidebar. */}
+                                <Route path="/2fa/setup" element={<TwoFactorSetupPage />} />
                                 <Route element={<AppLayout />}>
                                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                     <Route path="/dashboard" element={<DashboardPage />} />

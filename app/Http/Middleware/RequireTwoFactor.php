@@ -35,7 +35,7 @@ class RequireTwoFactor
         if ($required && ! $user->hasTwoFactor()) {
             return new JsonResponse([
                 'error' => 'auth.2fa.required_admin_setup',
-                'setup_url' => '/settings/security',
+                'setup_url' => '/2fa/setup?enforced=1',
             ], 403);
         }
 
