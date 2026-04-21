@@ -1,44 +1,59 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useAuthStore } from '@/stores/authStore';
 import { useBranding } from '@/hooks/useBranding';
 import { ApiError } from '@/services/api';
+import { twoFactorChallenge } from '@/services/authApi';
 import { TwoFactorChallengeForm } from '@/components/auth/TwoFactorChallengeForm';
 
 /**
- * Post-password 2FA challenge page.
- *
- * The user lands here after a successful password login when their account
- * has 2FA enabled. The authStore holds the pendingChallengeId from the login
- * response; on submit we call `submitChallenge` which validates, logs the
- * user in server-side, and returns the redirect target.
+ * 2FA challenge page — reached after either a password login (authStore holds
+ * the pending challenge id) or an OAuth callback (backend redirects here with
+ * ?id=... in the URL). We prefer the URL token when present so the OAuth
+ * round-trip works even though the store is empty on a fresh page load.
  */
 export function TwoFactorChallengePage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const branding = useBranding();
+    const [searchParams] = useSearchParams();
     const { pendingChallengeId, submitChallenge } = useAuthStore();
     const [error, setError] = useState('');
 
-    if (pendingChallengeId === null) {
-        // No pending challenge — the user landed here directly (refresh, bookmark).
-        // Bounce to login.
-        navigate('/login', { replace: true });
+    const challengeId = useMemo(
+        () => searchParams.get('id') ?? pendingChallengeId,
+        [searchParams, pendingChallengeId],
+    );
+
+    useEffect(() => {
+        if (challengeId === null) {
+            navigate('/login', { replace: true });
+        }
+    }, [challengeId, navigate]);
+
+    if (challengeId === null) {
         return null;
     }
 
     const handle = async (code: string): Promise<void> => {
         setError('');
         try {
+            // When the id came from the URL, authStore doesn't hold it — call
+            // the endpoint directly and reload the app so the new session is
+            // picked up by every hook on the next mount.
+            if (pendingChallengeId === null) {
+                await twoFactorChallenge(challengeId, code);
+                window.location.href = '/dashboard';
+                return;
+            }
             const redirectTo = await submitChallenge(code);
             navigate(redirectTo, { replace: true });
         } catch (err) {
             if (err instanceof ApiError) {
                 if (err.status === 410) {
                     setError(t('auth.2fa.challenge.expired'));
-                    // Force re-login once the user acknowledges.
                     setTimeout(() => navigate('/login', { replace: true }), 2500);
                     return;
                 }

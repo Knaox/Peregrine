@@ -45,12 +45,8 @@ Route::prefix('auth')->group(function () {
     });
 
     // Social auth (Shop + Google + Discord + LinkedIn) — configurable via Filament
+    // NOTE: redirect/callback are declared in routes/web.php (session-backed OAuth state).
     Route::get('providers', [SocialAuthController::class, 'listProviders']);
-    Route::get('social/{provider}/redirect', [SocialAuthController::class, 'redirect'])
-        ->middleware('throttle:social-redirect')
-        ->where('provider', 'shop|google|discord|linkedin');
-    Route::get('social/{provider}/callback', [SocialAuthController::class, 'callback'])
-        ->where('provider', 'shop|google|discord|linkedin');
     Route::middleware('auth')->group(function () {
         Route::get('identities', [SocialAuthController::class, 'listLinked']);
         Route::delete('social/{provider}/unlink', [SocialAuthController::class, 'unlink'])
