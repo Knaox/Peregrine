@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { fetchWebSocketCredentials } from '@/services/serverApi';
+import { useWsRetryState, type WsFailure } from '@/hooks/useWsRetryState';
 import type { ServerResources } from '@/types/ServerResources';
 import type { ConsoleMessage } from '@/types/ConsoleMessage';
 
 const MAX_MESSAGES = 1000;
 const ANSI_REGEX = /\x1b\[[0-9;]*[a-zA-Z]/g;
 const KEEPALIVE_INTERVAL = 10_000;
-const MAX_BACKOFF = 30_000;
 
 interface WsEvent {
     event: string;
@@ -25,6 +25,8 @@ interface UseWingsWebSocketReturn {
     resources: ServerResources | undefined;
     serverState: string;
     isConnected: boolean;
+    /** True once the retry policy has given up (rate-limited or permission-denied). */
+    isGaveUp: boolean;
     sendCommand: (command: string) => void;
     clearMessages: () => void;
 }
@@ -37,13 +39,14 @@ export function useWingsWebSocket(
     const [resources, setResources] = useState<ServerResources | undefined>(undefined);
     const [serverState, setServerState] = useState<string>('offline');
     const [isConnected, setIsConnected] = useState(false);
+    const [isGaveUp, setIsGaveUp] = useState(false);
 
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const keepaliveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-    const backoff = useRef(1000);
     const msgId = useRef(0);
     const alive = useRef(false);
+    const retry = useWsRetryState();
 
     const clearMessages = useCallback(() => setMessages([]), []);
 
@@ -76,13 +79,17 @@ export function useWingsWebSocket(
         }
     }, []);
 
-    const scheduleReconnect = useCallback(() => {
+    const scheduleReconnect = useCallback((signal: WsFailure) => {
         if (!alive.current) return;
-        const delay = backoff.current;
-        backoff.current = Math.min(delay * 2, MAX_BACKOFF);
+        if (retry.shouldGiveUp(signal)) {
+            setIsGaveUp(true);
+            return;
+        }
+        const delay = retry.nextDelay();
         reconnectTimer.current = setTimeout(() => {
             void connect();
         }, delay);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const startKeepalive = useCallback((ws: WebSocket) => {
@@ -101,8 +108,8 @@ export function useWingsWebSocket(
         let credentials;
         try {
             credentials = await fetchWebSocketCredentials(serverId);
-        } catch {
-            if (alive.current) scheduleReconnect();
+        } catch (error) {
+            if (alive.current) scheduleReconnect({ type: 'credentials_error', error });
             return;
         }
 
@@ -127,7 +134,7 @@ export function useWingsWebSocket(
             switch (data.event) {
                 case 'auth success':
                     setIsConnected(true);
-                    backoff.current = 1000;
+                    retry.markConnected();
                     startKeepalive(ws);
                     // Request initial data
                     ws.send(JSON.stringify({ event: 'send stats', args: [] }));
@@ -197,14 +204,14 @@ export function useWingsWebSocket(
             }
         };
 
-        ws.onclose = () => {
+        ws.onclose = (event: CloseEvent) => {
             setIsConnected(false);
             wsRef.current = null;
             if (keepaliveTimer.current) {
                 clearInterval(keepaliveTimer.current);
                 keepaliveTimer.current = null;
             }
-            if (alive.current) scheduleReconnect();
+            if (alive.current) scheduleReconnect({ type: 'close', code: event.code });
         };
 
         ws.onerror = () => {
@@ -225,5 +232,5 @@ export function useWingsWebSocket(
         };
     }, [connect, cleanup]);
 
-    return { messages, resources, serverState, isConnected, sendCommand, clearMessages };
+    return { messages, resources, serverState, isConnected, isGaveUp, sendCommand, clearMessages };
 }
