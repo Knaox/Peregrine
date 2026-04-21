@@ -23,12 +23,13 @@ export interface PelicanConfig {
 }
 
 export interface AuthConfig {
-    mode: 'local' | 'oauth';
-    oauth_client_id: string;
-    oauth_client_secret: string;
-    oauth_authorize_url: string;
-    oauth_token_url: string;
-    oauth_user_url: string;
+    /**
+     * When true, new users can register locally via /register with an
+     * email + password. When false, account creation is closed — new users
+     * must arrive via an OAuth provider configured post-install in
+     * /admin/auth-settings.
+     */
+    allow_local_registration: boolean;
 }
 
 export interface BridgeConfig {

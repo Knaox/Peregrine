@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Setup\InstallRequest;
 use App\Http\Requests\Setup\TestDatabaseRequest;
 use App\Http\Requests\Setup\TestPelicanRequest;
+use App\Services\SettingsService;
 use App\Services\SetupService;
 use Illuminate\Http\JsonResponse;
 
@@ -95,6 +96,14 @@ class SetupController extends Controller
                 // ignore — admin can activate it manually from the Plugins page.
             }
 
+            // 3.6 Override the default `auth_local_registration_enabled` if
+            // the admin toggled it off in the wizard. AuthSettingsSeeder ran
+            // with the 'true' default during step 2 — flip it only when
+            // explicitly disabled, no-op otherwise.
+            if (($validated['auth']['allow_local_registration'] ?? true) === false) {
+                app(SettingsService::class)->set('auth_local_registration_enabled', 'false');
+            }
+
             // 4. Drop an "installed" sentinel file NOW (before the response is
             // sent). phpdotenv runs in immutable mode, so writing PANEL_INSTALLED=true
             // to .env mid-process doesn't take effect until php-fpm workers cycle.
@@ -117,12 +126,10 @@ class SetupController extends Controller
                     'PELICAN_URL' => $validated['pelican']['url'],
                     'PELICAN_ADMIN_API_KEY' => $validated['pelican']['api_key'],
                     'PELICAN_CLIENT_API_KEY' => $validated['pelican']['client_api_key'],
-                    'AUTH_MODE' => $validated['auth']['mode'],
-                    'OAUTH_CLIENT_ID' => $validated['auth']['oauth_client_id'] ?? '',
-                    'OAUTH_CLIENT_SECRET' => $validated['auth']['oauth_client_secret'] ?? '',
-                    'OAUTH_AUTHORIZE_URL' => $validated['auth']['oauth_authorize_url'] ?? '',
-                    'OAUTH_TOKEN_URL' => $validated['auth']['oauth_token_url'] ?? '',
-                    'OAUTH_USER_URL' => $validated['auth']['oauth_user_url'] ?? '',
+                    // Auth config no longer lives in .env — it's in the
+                    // `settings` table, managed via /admin/auth-settings.
+                    // AUTH_MODE + OAUTH_* are dropped here (they'd just
+                    // clutter .env without being read anywhere).
                     'BRIDGE_ENABLED' => $validated['bridge']['enabled'] ? 'true' : 'false',
                     'STRIPE_WEBHOOK_SECRET' => $validated['bridge']['stripe_webhook_secret'] ?? '',
                 ]);

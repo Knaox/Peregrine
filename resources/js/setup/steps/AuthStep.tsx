@@ -1,19 +1,20 @@
 import { useTranslation } from 'react-i18next';
-import type { AuthConfig, StepProps } from '../types';
-import { FormField } from '../components/FormField';
+import type { StepProps } from '../types';
 
+/**
+ * Simplified auth step — a single toggle for local registration.
+ *
+ * OAuth providers (Shop, Google, Discord, LinkedIn) and 2FA are configured
+ * post-install from the admin panel (Settings → Auth & Security), not here.
+ * Keeping install-time config minimal avoids guiding new installs into
+ * filling provider credentials they don't have yet.
+ */
 export function AuthStep({ data, onChange, onNext, onPrevious }: StepProps) {
     const { t } = useTranslation();
 
-    const updateMode = (mode: 'local' | 'oauth') => {
+    const toggle = (value: boolean): void => {
         onChange({
-            auth: { ...data.auth, mode },
-        });
-    };
-
-    const updateField = (field: keyof AuthConfig, value: string) => {
-        onChange({
-            auth: { ...data.auth, [field]: value },
+            auth: { ...data.auth, allow_local_registration: value },
         });
     };
 
@@ -28,109 +29,49 @@ export function AuthStep({ data, onChange, onNext, onPrevious }: StepProps) {
                 </p>
             </div>
 
-            <div className="space-y-3">
-                <label
-                    className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                        data.auth.mode === 'local'
-                            ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
-                            : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-hover)]'
-                    }`}
-                >
-                    <input
-                        type="radio"
-                        name="auth_mode"
-                        value="local"
-                        checked={data.auth.mode === 'local'}
-                        onChange={() => updateMode('local')}
-                        className="mt-1 text-[var(--color-primary)] focus:ring-[var(--color-primary)] bg-[var(--color-surface-hover)] border-[var(--color-border)]"
-                    />
-                    <div>
-                        <span className="block text-sm font-medium text-[var(--color-text-primary)]">
-                            {t('setup.auth.mode_local')}
-                        </span>
-                        <span className="block text-xs text-[var(--color-text-secondary)] mt-1">
-                            {t('setup.auth.mode_local_description')}
-                        </span>
-                    </div>
-                </label>
-
-                <label
-                    className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                        data.auth.mode === 'oauth'
-                            ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
-                            : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-hover)]'
-                    }`}
-                >
-                    <input
-                        type="radio"
-                        name="auth_mode"
-                        value="oauth"
-                        checked={data.auth.mode === 'oauth'}
-                        onChange={() => updateMode('oauth')}
-                        className="mt-1 text-[var(--color-primary)] focus:ring-[var(--color-primary)] bg-[var(--color-surface-hover)] border-[var(--color-border)]"
-                    />
-                    <div>
-                        <span className="block text-sm font-medium text-[var(--color-text-primary)]">
-                            {t('setup.auth.mode_oauth')}
-                        </span>
-                        <span className="block text-xs text-[var(--color-text-secondary)] mt-1">
-                            {t('setup.auth.mode_oauth_description')}
-                        </span>
-                    </div>
-                </label>
-            </div>
-
-            {data.auth.mode === 'oauth' && (
-                <div className="space-y-4 pt-2">
-                    <FormField label={t('setup.auth.oauth_client_id')} required>
-                        <input
-                            type="text"
-                            value={data.auth.oauth_client_id}
-                            onChange={(e) => updateField('oauth_client_id', e.target.value)}
-                            className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-                        />
-                    </FormField>
-
-                    <FormField label={t('setup.auth.oauth_client_secret')} required>
-                        <input
-                            type="password"
-                            value={data.auth.oauth_client_secret}
-                            onChange={(e) => updateField('oauth_client_secret', e.target.value)}
-                            className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-                        />
-                    </FormField>
-
-                    <FormField label={t('setup.auth.oauth_authorize_url')} required>
-                        <input
-                            type="url"
-                            value={data.auth.oauth_authorize_url}
-                            onChange={(e) => updateField('oauth_authorize_url', e.target.value)}
-                            placeholder={t('setup.auth.oauth_authorize_url_placeholder')}
-                            className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-                        />
-                    </FormField>
-
-                    <FormField label={t('setup.auth.oauth_token_url')} required>
-                        <input
-                            type="url"
-                            value={data.auth.oauth_token_url}
-                            onChange={(e) => updateField('oauth_token_url', e.target.value)}
-                            placeholder={t('setup.auth.oauth_token_url_placeholder')}
-                            className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-                        />
-                    </FormField>
-
-                    <FormField label={t('setup.auth.oauth_user_url')} required>
-                        <input
-                            type="url"
-                            value={data.auth.oauth_user_url}
-                            onChange={(e) => updateField('oauth_user_url', e.target.value)}
-                            placeholder={t('setup.auth.oauth_user_url_placeholder')}
-                            className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-                        />
-                    </FormField>
+            <label
+                className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    data.auth.allow_local_registration
+                        ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
+                        : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-hover)]'
+                }`}
+            >
+                <input
+                    type="checkbox"
+                    checked={data.auth.allow_local_registration}
+                    onChange={(e) => toggle(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded text-[var(--color-primary)] focus:ring-[var(--color-primary)] bg-[var(--color-surface-hover)] border-[var(--color-border)] cursor-pointer"
+                />
+                <div>
+                    <span className="block text-sm font-medium text-[var(--color-text-primary)]">
+                        {t('setup.auth.allow_local_registration.label')}
+                    </span>
+                    <span className="block text-xs text-[var(--color-text-secondary)] mt-1">
+                        {t('setup.auth.allow_local_registration.help')}
+                    </span>
                 </div>
-            )}
+            </label>
+
+            <div
+                className="flex items-start gap-3 rounded-[var(--radius)] border p-4 text-sm"
+                style={{
+                    background: 'rgba(var(--color-primary-rgb), 0.06)',
+                    borderColor: 'rgba(var(--color-primary-rgb), 0.25)',
+                    color: 'var(--color-text-secondary)',
+                }}
+            >
+                <svg
+                    className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-primary)]"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                >
+                    <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4M12 8h.01" />
+                </svg>
+                <span>{t('setup.auth.post_install_note')}</span>
+            </div>
 
             <div className="flex justify-between pt-4">
                 <button

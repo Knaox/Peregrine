@@ -27,12 +27,7 @@ const initialState: SetupState = {
         client_api_key: '',
     },
     auth: {
-        mode: 'local',
-        oauth_client_id: '',
-        oauth_client_secret: '',
-        oauth_authorize_url: '',
-        oauth_token_url: '',
-        oauth_user_url: '',
+        allow_local_registration: true,
     },
     bridge: {
         enabled: false,

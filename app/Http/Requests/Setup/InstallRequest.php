@@ -33,13 +33,11 @@ class InstallRequest extends FormRequest
             'pelican.api_key' => ['required', 'string'],
             'pelican.client_api_key' => ['required', 'string'],
 
-            // Auth
-            'auth.mode' => ['required', 'string', 'in:local,oauth'],
-            'auth.oauth_client_id' => ['required_if:auth.mode,oauth', 'nullable', 'string'],
-            'auth.oauth_client_secret' => ['required_if:auth.mode,oauth', 'nullable', 'string'],
-            'auth.oauth_authorize_url' => ['required_if:auth.mode,oauth', 'nullable', 'url'],
-            'auth.oauth_token_url' => ['required_if:auth.mode,oauth', 'nullable', 'url'],
-            'auth.oauth_user_url' => ['required_if:auth.mode,oauth', 'nullable', 'url'],
+            // Auth — only the registration toggle is asked at install time.
+            // Providers (Shop / Google / Discord / LinkedIn) and 2FA are
+            // configured post-install at /admin/auth-settings. Optional
+            // here: AuthSettingsSeeder already provides a `true` default.
+            'auth.allow_local_registration' => ['sometimes', 'boolean'],
 
             // Bridge
             'bridge.enabled' => ['required', 'boolean'],

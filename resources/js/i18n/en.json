@@ -85,19 +85,12 @@
         },
         "auth": {
             "title": "Authentication",
-            "description": "Choose how users will sign in to Peregrine.",
-            "mode_local": "Local Authentication",
-            "mode_local_description": "Users sign in with email and password. Accounts are managed directly in Peregrine.",
-            "mode_oauth": "OAuth2 (External Provider)",
-            "mode_oauth_description": "Users sign in through an external identity provider (e.g., your shop).",
-            "oauth_client_id": "Client ID",
-            "oauth_client_secret": "Client Secret",
-            "oauth_authorize_url": "Authorization URL",
-            "oauth_authorize_url_placeholder": "https://shop.example.com/oauth/authorize",
-            "oauth_token_url": "Token URL",
-            "oauth_token_url_placeholder": "https://shop.example.com/oauth/token",
-            "oauth_user_url": "User Info URL",
-            "oauth_user_url_placeholder": "https://shop.example.com/api/user"
+            "description": "Pick the default sign-in behaviour. Everything else is configurable post-install.",
+            "allow_local_registration": {
+                "label": "Allow local registration",
+                "help": "When enabled, new users can create an account with email + password at /register. Turn off if users must come through an OAuth provider only."
+            },
+            "post_install_note": "OAuth providers (Shop, Google, Discord, LinkedIn) and two-factor authentication are configured after installation in Settings → Auth & Security."
         },
         "bridge": {
             "title": "Bridge Module",
@@ -115,6 +108,8 @@
             "section_admin": "Admin Account",
             "section_pelican": "Pelican Panel",
             "section_auth": "Authentication",
+            "auth_registration_on": "Local email/password registration enabled",
+            "auth_registration_off": "Local email/password registration closed",
             "section_bridge": "Bridge Module",
             "install_button": "Install Peregrine",
             "installing_migrations": "Running database migrations...",

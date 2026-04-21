@@ -151,6 +151,16 @@ class SetupService
             '--class' => \Database\Seeders\SettingsSeeder::class,
             '--force' => true,
         ]);
+
+        // Auth settings — seeds the multi-provider auth flags (auth_local_*,
+        // auth_shop_*, auth_providers, auth_2fa_*) into the settings table.
+        // Without this, a fresh install lands with no `auth_*` rows and
+        // `canAccessPanel()` / `AuthProviderRegistry` read missing values,
+        // breaking the first login attempt.
+        Artisan::call('db:seed', [
+            '--class' => \Database\Seeders\AuthSettingsSeeder::class,
+            '--force' => true,
+        ]);
     }
 
     /**

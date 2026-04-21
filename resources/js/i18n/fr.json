@@ -85,19 +85,12 @@
         },
         "auth": {
             "title": "Authentification",
-            "description": "Choisissez comment les utilisateurs se connecteront à Peregrine.",
-            "mode_local": "Authentification locale",
-            "mode_local_description": "Les utilisateurs se connectent avec email et mot de passe. Les comptes sont gérés directement dans Peregrine.",
-            "mode_oauth": "OAuth2 (Fournisseur externe)",
-            "mode_oauth_description": "Les utilisateurs se connectent via un fournisseur d'identité externe (ex : votre boutique).",
-            "oauth_client_id": "Client ID",
-            "oauth_client_secret": "Client Secret",
-            "oauth_authorize_url": "URL d'autorisation",
-            "oauth_authorize_url_placeholder": "https://boutique.exemple.com/oauth/authorize",
-            "oauth_token_url": "URL du token",
-            "oauth_token_url_placeholder": "https://boutique.exemple.com/oauth/token",
-            "oauth_user_url": "URL des infos utilisateur",
-            "oauth_user_url_placeholder": "https://boutique.exemple.com/api/user"
+            "description": "Choisissez le comportement d'inscription par défaut. Le reste se configure après installation.",
+            "allow_local_registration": {
+                "label": "Autoriser l'inscription locale",
+                "help": "Quand activé, les nouveaux utilisateurs peuvent créer un compte avec email + mot de passe sur /register. Désactivez pour forcer l'arrivée via un fournisseur OAuth uniquement."
+            },
+            "post_install_note": "Les fournisseurs OAuth (Shop, Google, Discord, LinkedIn) et la double authentification se configurent après l'installation dans Paramètres → Auth & Sécurité."
         },
         "bridge": {
             "title": "Module Bridge",
@@ -115,6 +108,8 @@
             "section_admin": "Compte administrateur",
             "section_pelican": "Panel Pelican",
             "section_auth": "Authentification",
+            "auth_registration_on": "Inscription locale email/mot de passe activée",
+            "auth_registration_off": "Inscription locale email/mot de passe fermée",
             "section_bridge": "Module Bridge",
             "install_button": "Installer Peregrine",
             "installing_migrations": "Exécution des migrations...",

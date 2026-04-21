@@ -80,23 +80,10 @@ export function SummaryStep({ data, onPrevious }: StepProps) {
                         {t('setup.summary.section_auth')}
                     </h3>
                     <p className="text-sm text-[var(--color-text-primary)]">
-                        {data.auth.mode === 'local'
-                            ? t('setup.auth.mode_local')
-                            : t('setup.auth.mode_oauth')}
+                        {data.auth.allow_local_registration
+                            ? t('setup.summary.auth_registration_on')
+                            : t('setup.summary.auth_registration_off')}
                     </p>
-                    {data.auth.mode === 'oauth' && (
-                        <div className="mt-2 space-y-1">
-                            <p className="text-xs text-[var(--color-text-muted)]">
-                                {t('setup.auth.oauth_authorize_url')}: {data.auth.oauth_authorize_url}
-                            </p>
-                            <p className="text-xs text-[var(--color-text-muted)]">
-                                {t('setup.auth.oauth_token_url')}: {data.auth.oauth_token_url}
-                            </p>
-                            <p className="text-xs text-[var(--color-text-muted)]">
-                                {t('setup.auth.oauth_user_url')}: {data.auth.oauth_user_url}
-                            </p>
-                        </div>
-                    )}
                 </div>
 
                 {/* Bridge */}
