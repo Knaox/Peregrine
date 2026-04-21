@@ -28,10 +28,18 @@ class SocialAuthController extends Controller
      */
     public function listProviders(): JsonResponse
     {
+        $shop = $this->registry->shopConfig();
+        $shopRegisterUrl = (string) ($shop['register_url'] ?? '');
+        $shopEnabled = $this->settings->get('auth_shop_enabled', 'false') === 'true';
+
         return response()->json([
             'providers' => $this->registry->enabledProviders(),
             'local_enabled' => $this->settings->get('auth_local_enabled', 'true') === 'true',
             'local_registration_enabled' => $this->settings->get('auth_local_registration_enabled', 'true') === 'true',
+            // Only surface the shop register URL when the Shop provider is
+            // actually enabled — otherwise the "Create on Shop" CTA would
+            // point to an IdP that can't authenticate the user afterwards.
+            'shop_register_url' => ($shopEnabled && $shopRegisterUrl !== '') ? $shopRegisterUrl : null,
         ]);
     }
 
@@ -55,7 +63,14 @@ class SocialAuthController extends Controller
             $outcome = $this->service->handleCallback($provider, $request);
         } catch (\App\Exceptions\Auth\SocialAuthException $e) {
             return redirect('/login?error='.$e->errorKey());
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('OAuth callback failed', [
+                'provider' => $provider,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile().':'.$e->getLine(),
+            ]);
+
             return redirect('/login?error=auth.social.oauth_failed');
         }
 

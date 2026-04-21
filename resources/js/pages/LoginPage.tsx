@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, m } from 'motion/react';
 import clsx from 'clsx';
@@ -13,6 +13,7 @@ import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons';
 export function LoginPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { login } = useAuthStore();
     const branding = useBranding();
     const providers = useAuthProviders();
@@ -21,14 +22,34 @@ export function LoginPage() {
     const [password, setPassword] = useState('');
     const [remember, setRemember] = useState(false);
     const [error, setError] = useState('');
+    const [providerError, setProviderError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [focusedField, setFocusedField] = useState<string | null>(null);
+
+    // OAuth callbacks redirect back to /login?error=<i18n-key> when something
+    // blocks the sign-in (unverified email, disabled provider, token failure).
+    // Surface the message in a banner, then strip it from the URL so a refresh
+    // doesn't replay a stale error.
+    useEffect(() => {
+        const errorKey = searchParams.get('error');
+        if (errorKey === null) return;
+        const translated = t(errorKey);
+        // When the key isn't defined in i18n, i18next returns the key itself —
+        // fall back to a generic message rather than showing "auth.social.xxx".
+        setProviderError(translated === errorKey ? t('auth.social.oauth_failed') : translated);
+        const next = new URLSearchParams(searchParams);
+        next.delete('error');
+        setSearchParams(next, { replace: true });
+    }, [searchParams, setSearchParams, t]);
 
     // Dynamic providers drive the button rendering. Local form is gated on the
     // auth_local_enabled flag. Falls back to local-only while the query runs.
     const localEnabled = providers.data?.local_enabled ?? true;
     const localRegistrationEnabled = providers.data?.local_registration_enabled ?? true;
+    const shopRegisterUrl = providers.data?.shop_register_url ?? null;
     const enabledProviders = providers.data?.providers ?? [];
+    const canRegisterLocal = localEnabled && localRegistrationEnabled;
+    const canRegisterShop = shopRegisterUrl !== null;
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -87,6 +108,31 @@ export function LoginPage() {
                         border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
 
                     <div className="space-y-4">
+                        <AnimatePresence>
+                            {providerError && (
+                                <m.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10"
+                                >
+                                    <div className="flex items-start gap-2 px-4 py-2.5">
+                                        <span className="text-sm text-[var(--color-danger)] flex-1">{providerError}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setProviderError('')}
+                                            aria-label={t('common.close')}
+                                            className="text-[var(--color-danger)]/70 hover:text-[var(--color-danger)] transition-colors cursor-pointer"
+                                        >
+                                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </m.div>
+                            )}
+                        </AnimatePresence>
+
                         {enabledProviders.length > 0 && (
                             <SocialLoginButtons providers={enabledProviders} />
                         )}
@@ -144,12 +190,37 @@ export function LoginPage() {
                     </div>
                 </m.div>
 
-                {localEnabled && localRegistrationEnabled && (
+                {(canRegisterLocal || canRegisterShop) && (
                     <p className="mt-5 text-center text-sm text-[var(--color-text-muted)]">
                         {t('auth.login.no_account')}{' '}
-                        <Link to="/register" className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors">
-                            {t('auth.login.create_account')}
-                        </Link>
+                        {canRegisterShop ? (
+                            <>
+                                <a
+                                    href={shopRegisterUrl as string}
+                                    className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
+                                >
+                                    {t('auth.login.create_account_shop')}
+                                </a>
+                                {canRegisterLocal && (
+                                    <>
+                                        {' · '}
+                                        <Link
+                                            to="/register"
+                                            className="font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                                        >
+                                            {t('auth.login.create_account_local')}
+                                        </Link>
+                                    </>
+                                )}
+                            </>
+                        ) : (
+                            <Link
+                                to="/register"
+                                className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
+                            >
+                                {t('auth.login.create_account')}
+                            </Link>
+                        )}
                     </p>
                 )}
             </m.div>

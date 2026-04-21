@@ -25,11 +25,12 @@ export function RegisterPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [focusedField, setFocusedField] = useState<string | null>(null);
 
-    // Registration closes when Shop mode is on (users come from the Shop) or
-    // when the admin toggles off local registration explicitly. While the
-    // providers query resolves, default to open so the form doesn't flash.
+    // Registration closes when the admin toggles off local registration. When
+    // that happens BUT a Shop register URL is configured, we show a CTA to
+    // sign up on the Shop instead of the dead-end "disabled" screen.
     const registrationDisabled = providers.data !== undefined
         && ! providers.data.local_registration_enabled;
+    const shopRegisterUrl = providers.data?.shop_register_url ?? null;
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -71,10 +72,39 @@ export function RegisterPage() {
                         background: 'var(--color-glass)', backdropFilter: 'blur(24px) saturate(180%)',
                         border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.05)',
                     }}>
-                        <p className="mb-5 text-sm text-[var(--color-text-muted)]">{t('auth.register.disabled')}</p>
-                        <Link to="/login" className="inline-block rounded-[var(--radius)] bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_20px_var(--color-primary-glow)] transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]">
-                            {t('auth.register.sign_in')}
-                        </Link>
+                        {shopRegisterUrl ? (
+                            <>
+                                <p className="mb-5 text-sm text-[var(--color-text-muted)]">
+                                    {t('auth.register.redirect_shop')}
+                                </p>
+                                <a
+                                    href={shopRegisterUrl}
+                                    className="inline-block rounded-[var(--radius)] bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_20px_var(--color-primary-glow)] transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]"
+                                >
+                                    {t('auth.register.create_on_shop')}
+                                </a>
+                                <p className="mt-4 text-xs">
+                                    <Link
+                                        to="/login"
+                                        className="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                                    >
+                                        {t('auth.register.sign_in')}
+                                    </Link>
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <p className="mb-5 text-sm text-[var(--color-text-muted)]">
+                                    {t('auth.register.disabled')}
+                                </p>
+                                <Link
+                                    to="/login"
+                                    className="inline-block rounded-[var(--radius)] bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_20px_var(--color-primary-glow)] transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]"
+                                >
+                                    {t('auth.register.sign_in')}
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </m.div>
             </div>

@@ -18,7 +18,8 @@
         "install": "Install",
         "installing": "Installing...",
         "coming_soon": "Coming soon",
-        "back": "Back"
+        "back": "Back",
+        "close": "Close"
     },
     "errors": {
         "no_permission": "You don't have permission to view this page."
@@ -130,6 +131,8 @@
             "forgot_password": "Forgot your password?",
             "no_account": "Don't have an account?",
             "create_account": "Create one",
+            "create_account_shop": "Create one on the Shop",
+            "create_account_local": "or locally",
             "error": "Invalid email or password."
         },
         "providers": {
@@ -141,6 +144,7 @@
         "social": {
             "register_on_shop_first": "No account found. Please register on the Shop first, then sign in here.",
             "email_not_verified": "The provider hasn't verified this email. Sign in with your primary method, then link this account from your profile.",
+            "email_not_verified_shop": "Your Shop email is not verified. Open the verification email we sent you on the Shop, confirm your address, then try again.",
             "cannot_unlink_last_method": "This is your only sign-in method — set a password or link another provider before unlinking.",
             "provider_disabled": "This sign-in method isn't available.",
             "oauth_failed": "Sign-in failed. Please try again."
@@ -154,7 +158,9 @@
             "password_confirmation": "Confirm Password",
             "has_account": "Already have an account?",
             "sign_in": "Sign in",
-            "disabled": "Registration is disabled. Please sign in with your existing account."
+            "disabled": "Registration is disabled. Please sign in with your existing account.",
+            "redirect_shop": "Accounts are created on the Shop. Sign up there, then come back here to sign in.",
+            "create_on_shop": "Create my account on the Shop"
         },
         "2fa": {
             "setup": {

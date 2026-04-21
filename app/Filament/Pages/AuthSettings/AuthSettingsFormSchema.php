@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\AuthSettings;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -24,7 +25,7 @@ final class AuthSettingsFormSchema
                     ->helperText('Users created locally (or via OAuth with a password set) can sign in with email + password.'),
                 Toggle::make('auth_local_registration_enabled')
                     ->label('Allow local registration')
-                    ->helperText('When off, /register is closed — users must come in via a Shop callback or a linked provider. Ignored when Shop mode is on (always off in that case).'),
+                    ->helperText('When off, /register is closed — users must come in via a Shop callback or a linked provider. Can stay on alongside Shop if you want both paths available.'),
             ]);
     }
 
@@ -46,7 +47,7 @@ final class AuthSettingsFormSchema
     public static function shop(string $redirectUri): Section
     {
         return Section::make('Shop — BiomeBounty')
-            ->description('Canonical identity provider. When enabled, user accounts are created from the Shop; local registration is disabled and email sync with Pelican is automatic.')
+            ->description('Canonical identity provider. When enabled, user accounts are created from the Shop; email sync with Pelican is automatic.')
             ->icon('heroicon-o-shopping-bag')
             ->schema([
                 Toggle::make('auth_shop_enabled')->label('Enable Shop as identity provider'),
@@ -59,6 +60,27 @@ final class AuthSettingsFormSchema
                 TextInput::make('auth_shop_authorize_url')->label('Authorize URL')->url()->maxLength(255),
                 TextInput::make('auth_shop_token_url')->label('Token URL')->url()->maxLength(255),
                 TextInput::make('auth_shop_user_url')->label('User profile URL')->url()->maxLength(255),
+                TextInput::make('auth_shop_register_url')
+                    ->label('Shop register page URL (optional)')
+                    ->url()
+                    ->maxLength(255)
+                    ->placeholder('https://biomebounty.com/register')
+                    ->helperText('When set, the "Create account" link on the login page sends visitors to the Shop\'s sign-up page instead of (or alongside) the local /register form. Leave empty to keep local-only behaviour.'),
+                FileUpload::make('auth_shop_logo_path')
+                    ->label('Custom button logo (optional)')
+                    ->image()
+                    ->directory('branding/oauth')
+                    ->disk('public')
+                    ->acceptedFileTypes([
+                        'image/svg+xml',
+                        'image/png',
+                        'image/jpeg',
+                        'image/webp',
+                        'image/x-icon',
+                        'image/vnd.microsoft.icon',
+                    ])
+                    ->maxSize(1024)
+                    ->helperText('Replaces the default shop icon on the login button. SVG, PNG, JPEG, WebP or ICO (favicon), square preferred (max 1MB). Leave empty to keep the default icon.'),
                 Placeholder::make('auth_shop_redirect_display')
                     ->label('Redirect URI (copy this into the Shop\'s OAuth app)')
                     ->content($redirectUri),

@@ -6,12 +6,21 @@ export interface AuthProvider {
     redirect_url: string;
     /** True for the Shop — the canonical identity provider. */
     canonical: boolean;
+    /** Absolute URL of an admin-uploaded button logo. Null = use default SVG. */
+    logo_url: string | null;
 }
 
 export interface AuthProvidersResponse {
     providers: AuthProvider[];
     local_enabled: boolean;
     local_registration_enabled: boolean;
+    /**
+     * Admin-configured URL to the Shop's sign-up page. When non-null, the
+     * login page shows a "Create account on Shop" CTA that external-links
+     * here. Null means the Shop either isn't enabled or no register URL was
+     * configured — fall back to the local /register flow.
+     */
+    shop_register_url: string | null;
 }
 
 export interface LinkedIdentity {

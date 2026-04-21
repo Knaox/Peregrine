@@ -18,7 +18,8 @@
         "install": "Installer",
         "installing": "Installation en cours...",
         "coming_soon": "Bientôt disponible",
-        "back": "Retour"
+        "back": "Retour",
+        "close": "Fermer"
     },
     "errors": {
         "no_permission": "Vous n'avez pas la permission d'afficher cette page."
@@ -130,6 +131,8 @@
             "forgot_password": "Mot de passe oublié ?",
             "no_account": "Pas encore de compte ?",
             "create_account": "Créer un compte",
+            "create_account_shop": "Créer un compte sur le Shop",
+            "create_account_local": "ou en local",
             "error": "E-mail ou mot de passe invalide."
         },
         "providers": {
@@ -141,6 +144,7 @@
         "social": {
             "register_on_shop_first": "Aucun compte trouvé. Inscrivez-vous d'abord sur le Shop, puis revenez vous connecter ici.",
             "email_not_verified": "Le fournisseur n'a pas vérifié cet e-mail. Connectez-vous avec votre méthode principale puis liez ce compte depuis votre profil.",
+            "email_not_verified_shop": "Votre e-mail Shop n'est pas vérifié. Ouvrez l'e-mail de vérification envoyé par le Shop, confirmez votre adresse, puis réessayez.",
             "cannot_unlink_last_method": "C'est votre seule méthode de connexion — définissez un mot de passe ou liez un autre fournisseur avant de délier.",
             "provider_disabled": "Ce fournisseur de connexion n'est pas disponible.",
             "oauth_failed": "Échec de la connexion. Veuillez réessayer."
@@ -154,7 +158,9 @@
             "password_confirmation": "Confirmer le mot de passe",
             "has_account": "Déjà un compte ?",
             "sign_in": "Se connecter",
-            "disabled": "L'inscription est désactivée. Veuillez vous connecter avec votre compte existant."
+            "disabled": "L'inscription est désactivée. Veuillez vous connecter avec votre compte existant.",
+            "redirect_shop": "Les comptes se créent sur le Shop. Inscrivez-vous là-bas, puis revenez ici pour vous connecter.",
+            "create_on_shop": "Créer mon compte sur le Shop"
         },
         "2fa": {
             "setup": {

@@ -48,14 +48,23 @@ export function SocialLoginButtons({ providers }: SocialLoginButtonsProps) {
                         'hover:border-[var(--color-primary)]/50 hover:shadow-[0_0_12px_var(--color-primary-glow)]',
                     )}
                 >
-                    <svg
-                        className="h-4 w-4 shrink-0"
-                        viewBox="0 0 24 24"
-                        fill={COLOR[p.id]}
-                        aria-hidden="true"
-                    >
-                        <path d={ICON[p.id]} />
-                    </svg>
+                    {p.logo_url ? (
+                        <img
+                            src={p.logo_url}
+                            alt=""
+                            className="h-4 w-4 shrink-0 object-contain"
+                            aria-hidden="true"
+                        />
+                    ) : (
+                        <svg
+                            className="h-4 w-4 shrink-0"
+                            viewBox="0 0 24 24"
+                            fill={COLOR[p.id]}
+                            aria-hidden="true"
+                        >
+                            <path d={ICON[p.id]} />
+                        </svg>
+                    )}
                     {t('auth.login.oauth_button', { provider: t(`auth.providers.${p.id}`) })}
                 </a>
             ))}

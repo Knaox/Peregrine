@@ -79,7 +79,7 @@ class AuthProviderRegistry
      * the redirect URL (the same one the admin configured on Google/Discord
      * Developer Consoles).
      *
-     * @return list<array{id: string, enabled: bool, redirect_url: string, canonical: bool}>
+     * @return list<array{id: string, enabled: bool, redirect_url: string, canonical: bool, logo_url: ?string}>
      */
     public function enabledProviders(): array
     {
@@ -92,6 +92,7 @@ class AuthProviderRegistry
                 'enabled' => true,
                 'redirect_url' => (string) ($shop['redirect_uri'] ?? $this->defaultRedirect('shop')),
                 'canonical' => true,
+                'logo_url' => $this->logoUrl((string) ($shop['logo_path'] ?? '')),
             ];
         }
 
@@ -105,10 +106,29 @@ class AuthProviderRegistry
                 'enabled' => true,
                 'redirect_url' => (string) ($providers[$id]['redirect_uri'] ?? $this->defaultRedirect($id)),
                 'canonical' => false,
+                'logo_url' => $this->logoUrl((string) ($providers[$id]['logo_path'] ?? '')),
             ];
         }
 
         return $out;
+    }
+
+    /**
+     * Resolve a stored relative path (e.g. "branding/oauth/xyz.png") to the
+     * absolute URL the frontend can drop into an <img src>. Returns null when
+     * no custom logo is configured — the SPA falls back to the default SVG.
+     */
+    private function logoUrl(string $path): ?string
+    {
+        if ($path === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
+            return $path;
+        }
+
+        return '/storage/'.ltrim($path, '/');
     }
 
     /**

@@ -49,6 +49,9 @@ class AuthSettings extends Page implements HasForms
     public ?string $auth_shop_authorize_url = '';
     public ?string $auth_shop_token_url = '';
     public ?string $auth_shop_user_url = '';
+    public ?string $auth_shop_register_url = '';
+    /** @var array<int, string>|null */
+    public ?array $auth_shop_logo_path = [];
     public bool $auth_providers_google_enabled = false;
     public ?string $auth_providers_google_client_id = '';
     public ?string $auth_providers_google_client_secret = '';
@@ -77,6 +80,9 @@ class AuthSettings extends Page implements HasForms
         $this->auth_shop_authorize_url = (string) ($shop['authorize_url'] ?? '');
         $this->auth_shop_token_url = (string) ($shop['token_url'] ?? '');
         $this->auth_shop_user_url = (string) ($shop['user_url'] ?? '');
+        $this->auth_shop_register_url = (string) ($shop['register_url'] ?? '');
+        $logoPath = (string) ($shop['logo_path'] ?? '');
+        $this->auth_shop_logo_path = ($logoPath !== '' && ! str_starts_with($logoPath, '/')) ? [$logoPath] : [];
 
         $providers = $registry->decodeProviders();
         foreach (['google', 'discord', 'linkedin'] as $id) {
@@ -159,12 +165,8 @@ class AuthSettings extends Page implements HasForms
             }
         }
 
-        // Shop mode forces registration off — documented in the General section.
-        $shopEnabled = (bool) ($data['auth_shop_enabled'] ?? false);
-        $localRegistration = $shopEnabled ? false : (bool) ($data['auth_local_registration_enabled'] ?? true);
-
         $settings->set('auth_local_enabled', ($data['auth_local_enabled'] ?? true) ? 'true' : 'false');
-        $settings->set('auth_local_registration_enabled', $localRegistration ? 'true' : 'false');
+        $settings->set('auth_local_registration_enabled', ($data['auth_local_registration_enabled'] ?? true) ? 'true' : 'false');
         $settings->set('auth_2fa_enabled', ($data['auth_2fa_enabled'] ?? true) ? 'true' : 'false');
         $settings->set('auth_2fa_required_admins', ($data['auth_2fa_required_admins'] ?? false) ? 'true' : 'false');
 
@@ -191,7 +193,13 @@ class AuthSettings extends Page implements HasForms
         $existing['authorize_url'] = (string) ($data['auth_shop_authorize_url'] ?? '');
         $existing['token_url'] = (string) ($data['auth_shop_token_url'] ?? '');
         $existing['user_url'] = (string) ($data['auth_shop_user_url'] ?? '');
+        $existing['register_url'] = (string) ($data['auth_shop_register_url'] ?? '');
         $existing['redirect_uri'] = $existing['redirect_uri'] ?? $this->defaultRedirect('shop');
+
+        // FileUpload returns an array (or cleared null) — extract first path.
+        $logoValue = $data['auth_shop_logo_path'] ?? null;
+        $logoPath = is_array($logoValue) ? (array_values($logoValue)[0] ?? null) : $logoValue;
+        $existing['logo_path'] = $logoPath ?: '';
 
         app(SettingsService::class)->set('auth_shop_config', json_encode($existing, JSON_THROW_ON_ERROR));
         app(SettingsService::class)->set('auth_shop_enabled', ($data['auth_shop_enabled'] ?? false) ? 'true' : 'false');
@@ -257,7 +265,9 @@ class AuthSettings extends Page implements HasForms
             'auth_shop_authorize_url' => $this->auth_shop_authorize_url,
             'auth_shop_token_url' => $this->auth_shop_token_url,
             'auth_shop_user_url' => $this->auth_shop_user_url,
+            'auth_shop_register_url' => $this->auth_shop_register_url,
             'auth_shop_client_secret' => '',
+            'auth_shop_logo_path' => $this->auth_shop_logo_path,
             'auth_providers_google_enabled' => $this->auth_providers_google_enabled,
             'auth_providers_google_client_id' => $this->auth_providers_google_client_id,
             'auth_providers_google_client_secret' => '',
