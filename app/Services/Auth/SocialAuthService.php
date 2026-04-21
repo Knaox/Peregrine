@@ -72,7 +72,7 @@ class SocialAuthService
         $matchResult = $this->matcher->match($provider, $socialiteUser);
 
         $user = match ($matchResult->action) {
-            MatchResult::ACTION_REJECT_UNVERIFIED_EMAIL => throw new UnverifiedEmailException(),
+            MatchResult::ACTION_REJECT_UNVERIFIED_EMAIL => throw new UnverifiedEmailException($provider),
             MatchResult::ACTION_REJECT_REGISTER_ON_SHOP_FIRST => throw new RegisterOnShopFirstException(),
             MatchResult::ACTION_MATCH_BY_IDENTITY => $this->touchIdentity($matchResult->user, $provider, $socialiteUser),
             MatchResult::ACTION_MATCH_BY_EMAIL => $this->linkIdentity($matchResult->user, $provider, $socialiteUser, $request),
@@ -89,9 +89,16 @@ class SocialAuthService
             true,
         );
 
+        // OAuth providers are treated as primary authentication — the provider
+        // already authenticated the user (with its own 2FA if configured). We
+        // skip Peregrine's TOTP challenge on OAuth callbacks to avoid a double
+        // prompt. The admin can flip `auth_2fa_skip_oauth` to 'false' if they
+        // want defence-in-depth.
+        $skipOauth2fa = $this->settings->get('auth_2fa_skip_oauth', 'true') === 'true';
+
         return new CallbackOutcome(
             user: $user,
-            requires2fa: $user->hasTwoFactor(),
+            requires2fa: ! $skipOauth2fa && $user->hasTwoFactor(),
             providerWasJustLinked: $providerWasJustLinked,
         );
     }

@@ -9,9 +9,16 @@ namespace App\Exceptions\Auth;
  */
 class UnverifiedEmailException extends SocialAuthException
 {
+    public function __construct(private readonly ?string $provider = null)
+    {
+        parent::__construct();
+    }
+
     public function errorKey(): string
     {
-        return 'auth.social.email_not_verified';
+        return $this->provider === 'shop'
+            ? 'auth.social.email_not_verified_shop'
+            : 'auth.social.email_not_verified';
     }
 
     public function statusCode(): int

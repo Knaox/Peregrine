@@ -36,6 +36,15 @@ class SocialUserMatcher
         if ($identity !== null) {
             $user = $identity->user()->first();
             if ($user !== null) {
+                // Defense-in-depth: for the Shop (canonical IdP) we revalidate
+                // email_verified on every login, not just at link time. A user
+                // whose Shop email becomes unverified (manual admin reset,
+                // account suspended, etc.) must re-verify before re-entering.
+                // Other providers are trusted once linked — the identity row
+                // itself is the proof of prior verification.
+                if ($provider === 'shop' && ! $this->isEmailVerifiedByProvider($provider, $socialiteUser)) {
+                    return new MatchResult(null, MatchResult::ACTION_REJECT_UNVERIFIED_EMAIL);
+                }
                 return new MatchResult($user, MatchResult::ACTION_MATCH_BY_IDENTITY);
             }
         }
@@ -85,19 +94,23 @@ class SocialUserMatcher
 
     /**
      * Read the provider-specific verified-email flag from the raw user payload.
-     * Shop is treated as implicitly trusted (it IS our identity provider of
-     * record). Google OIDC → email_verified. Discord → verified. LinkedIn
-     * OIDC → email_verified. Unknown providers default to UNVERIFIED.
+     * Google OIDC → email_verified. Discord → verified. LinkedIn OIDC →
+     * email_verified. Unknown providers default to UNVERIFIED.
+     *
+     * Shop: the payload SHOULD carry `email_verified` — when present we honour
+     * it (defence in depth — plan §S1). When the field is absent (older Shop
+     * deployments that haven't added it yet) we trust the Shop as canonical
+     * IdP. Once SaaSykit exposes the field this branch auto-enforces it.
      */
     private function isEmailVerifiedByProvider(string $provider, SocialiteUser $u): bool
     {
-        if ($provider === 'shop') {
-            return true;
-        }
+        $raw = is_array($u->user) ? $u->user : [];
 
-        $raw = $u->user;
-        if (! is_array($raw)) {
-            return false;
+        if ($provider === 'shop') {
+            if (array_key_exists('email_verified', $raw)) {
+                return (bool) $raw['email_verified'];
+            }
+            return true;
         }
 
         return match ($provider) {
