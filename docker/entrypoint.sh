@@ -78,7 +78,12 @@ fi
 # Ensure writable perms (volumes from Portainer start as root-owned).
 # The Setup Wizard writes .env from the www-data-owned PHP worker, so
 # both the file and its parent directory need to be www-data-writable.
-chown -R www-data:www-data storage bootstrap/cache plugins 2>/dev/null || true
+#
+# public/plugins is where PluginLifecycle::createPublicSymlink() creates
+# symlinks to each active plugin's frontend/dist — without www-data
+# ownership, activating a plugin fails with "mkdir(): Permission denied".
+mkdir -p public/plugins 2>/dev/null || true
+chown -R www-data:www-data storage bootstrap/cache plugins public/plugins 2>/dev/null || true
 chown www-data:www-data storage/.env .env 2>/dev/null || true
 
 # Honour explicit PANEL_INSTALLED=false override (operator wants to re-run

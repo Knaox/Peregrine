@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\ColorUtils;
 use App\Support\ThemePresets;
 use Illuminate\Support\Facades\Cache;
 
@@ -136,20 +137,20 @@ class ThemeService
         }
 
         // Auto-derive RGB triplets (for rgba() usage in components)
-        $vars['--color-primary-rgb'] = $this->hexToRgbTriplet($theme['colors']['primary']);
-        $vars['--color-danger-rgb'] = $this->hexToRgbTriplet($theme['colors']['danger']);
-        $vars['--color-success-rgb'] = $this->hexToRgbTriplet($theme['colors']['success']);
-        $vars['--color-info-rgb'] = $this->hexToRgbTriplet($theme['colors']['info']);
-        $vars['--color-warning-rgb'] = $this->hexToRgbTriplet($theme['colors']['warning']);
-        $vars['--color-text-secondary-rgb'] = $this->hexToRgbTriplet($theme['colors']['text_secondary']);
+        $vars['--color-primary-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['primary']);
+        $vars['--color-danger-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['danger']);
+        $vars['--color-success-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['success']);
+        $vars['--color-info-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['info']);
+        $vars['--color-warning-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['warning']);
+        $vars['--color-text-secondary-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['text_secondary']);
 
         // Auto-derive glow colors (base color with alpha)
-        $vars['--color-primary-glow'] = $this->hexToRgba($theme['colors']['primary'], 0.15);
-        $vars['--color-danger-glow'] = $this->hexToRgba($theme['colors']['danger'], 0.15);
-        $vars['--color-success-glow'] = $this->hexToRgba($theme['colors']['success'], 0.15);
+        $vars['--color-primary-glow'] = ColorUtils::hexToRgba($theme['colors']['primary'], 0.15);
+        $vars['--color-danger-glow'] = ColorUtils::hexToRgba($theme['colors']['danger'], 0.15);
+        $vars['--color-success-glow'] = ColorUtils::hexToRgba($theme['colors']['success'], 0.15);
 
         // Auto-derive glass colors from surface
-        $vars['--color-glass'] = $this->hexToRgba($theme['colors']['surface'], 0.75);
+        $vars['--color-glass'] = ColorUtils::hexToRgba($theme['colors']['surface'], 0.75);
         $vars['--color-glass-border'] = $theme['colors']['border'];
 
         $vars['--radius'] = $theme['radius'];
@@ -174,8 +175,8 @@ class ThemeService
         };
 
         // Auto-derive secondary + ring RGB triplets for rgba() usage
-        $vars['--color-secondary-rgb'] = $this->hexToRgbTriplet($theme['colors']['secondary']);
-        $vars['--color-ring-rgb'] = $this->hexToRgbTriplet($theme['colors']['ring']);
+        $vars['--color-secondary-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['secondary']);
+        $vars['--color-ring-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['ring']);
 
         // Mode-dependent overlay + scrim tokens so components don't need to
         // hardcode rgba(0,0,0,...) or rgba(255,255,255,...) for glass effects.
@@ -206,55 +207,6 @@ class ThemeService
         $vars['--egg-bg-blend']   = $isLight ? 'multiply' : 'luminosity';
 
         return $vars;
-    }
-
-    /**
-     * Convert hex color to RGB triplet string (e.g. "225, 29, 72").
-     */
-    private function hexToRgbTriplet(string $hex): string
-    {
-        $hex = ltrim($hex, '#');
-        if (str_starts_with($hex, 'rgb')) {
-            return $hex;
-        }
-        if (strlen($hex) === 3) {
-            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-        }
-        if (strlen($hex) !== 6) {
-            return '0, 0, 0';
-        }
-        $r = hexdec(substr($hex, 0, 2));
-        $g = hexdec(substr($hex, 2, 2));
-        $b = hexdec(substr($hex, 4, 2));
-
-        return "{$r}, {$g}, {$b}";
-    }
-
-    /**
-     * Convert hex color to rgba string.
-     */
-    private function hexToRgba(string $hex, float $alpha): string
-    {
-        $hex = ltrim($hex, '#');
-
-        // Skip if already rgba/rgb
-        if (str_starts_with($hex, 'rgb')) {
-            return $hex;
-        }
-
-        if (strlen($hex) === 3) {
-            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-        }
-
-        if (strlen($hex) !== 6) {
-            return "rgba(0, 0, 0, {$alpha})";
-        }
-
-        $r = hexdec(substr($hex, 0, 2));
-        $g = hexdec(substr($hex, 2, 2));
-        $b = hexdec(substr($hex, 4, 2));
-
-        return "rgba({$r}, {$g}, {$b}, {$alpha})";
     }
 
     public function getCardConfig(): array

@@ -83,9 +83,9 @@ COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/entrypoint.sh /usr/local/bin/peregrine-entrypoint
 
 RUN chmod +x /usr/local/bin/peregrine-entrypoint \
-    && mkdir -p /run/nginx \
-    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+    && mkdir -p /run/nginx /var/www/html/public/plugins \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/plugins \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/plugins
 
 # Runtime defaults (overridable via docker run -e / compose).
 # LOG_CHANNEL=stderr + LOG_STDERR_FORMATTER pipe every Laravel log entry

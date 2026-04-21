@@ -57,6 +57,9 @@ class Settings extends Page implements HasForms
     public bool $bridge_enabled = false;
     public ?string $stripe_webhook_secret = '';
 
+    // Developer
+    public bool $app_debug = false;
+
     // SMTP
     public ?string $mail_mailer = 'smtp';
     public ?string $mail_host = '';
@@ -94,6 +97,8 @@ class Settings extends Page implements HasForms
         $this->bridge_enabled = (bool) config('services.bridge.enabled', false);
         $this->stripe_webhook_secret = config('services.stripe.webhook_secret', '');
 
+        $this->app_debug = (bool) config('app.debug', false);
+
         $this->mail_mailer = config('mail.default', 'smtp');
         $this->mail_host = config('mail.mailers.smtp.host', '');
         $this->mail_port = (string) config('mail.mailers.smtp.port', '587');
@@ -128,6 +133,7 @@ class Settings extends Page implements HasForms
             'mail_password' => $this->mail_password,
             'mail_from_address' => $this->mail_from_address,
             'mail_from_name' => $this->mail_from_name,
+            'app_debug' => $this->app_debug,
         ]);
     }
 
@@ -139,6 +145,7 @@ class Settings extends Page implements HasForms
             SettingsFormSchema::authentication(),
             SettingsFormSchema::bridge(),
             SettingsFormSchema::smtp(),
+            SettingsFormSchema::developer(),
         ]);
     }
 
@@ -211,6 +218,9 @@ class Settings extends Page implements HasForms
         }
         $envValues['MAIL_FROM_ADDRESS'] = $data['mail_from_address'] ?? '';
         $envValues['MAIL_FROM_NAME'] = $data['mail_from_name'] ?? config('app.name', 'Peregrine');
+
+        // Developer → .env
+        $envValues['APP_DEBUG'] = ($data['app_debug'] ?? false) ? 'true' : 'false';
 
         if (! empty($envValues)) {
             $setup->writeEnv($envValues);

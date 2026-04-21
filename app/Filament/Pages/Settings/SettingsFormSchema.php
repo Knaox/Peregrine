@@ -181,4 +181,17 @@ final class SettingsFormSchema
                     ->visible(fn (Get $get): bool => (bool) $get('bridge_enabled')),
             ])->columns(1);
     }
+
+    public static function developer(): Section
+    {
+        return Section::make('Developer')
+            ->description('Low-level toggles. Leave debug mode OFF in production — when enabled, full PHP stack traces are exposed to clients on errors.')
+            ->icon('heroicon-o-bug-ant')
+            ->collapsible()->collapsed()
+            ->schema([
+                Toggle::make('app_debug')
+                    ->label('Enable debug mode (APP_DEBUG)')
+                    ->helperText('Writes APP_DEBUG to your .env. Restart php-fpm / docker container after toggling — Laravel caches the .env at boot.'),
+            ])->columns(1);
+    }
 }
