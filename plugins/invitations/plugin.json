@@ -1,7 +1,7 @@
 {
     "id": "invitations",
     "name": "Server Invitations",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "description": "Invite users to your servers by email with granular permissions. Supports editing permissions of active users and pending invitations.",
     "author": "Peregrine Team",
     "license": "MIT",

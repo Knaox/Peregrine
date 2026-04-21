@@ -4,12 +4,12 @@
         {
             "id": "invitations",
             "name": "Server Invitations",
-            "version": "0.8.0",
-            "description": "Invite users to your servers by email with granular Pelican permissions. Edit permissions of active subusers and pending invitations. Ships with Peregrine by default.",
+            "version": "0.8.1",
+            "description": "Invite users to your servers by email with granular Pelican permissions. Edit permissions of active subusers and pending invitations. Ships with Peregrine by default. Admin-aware — panel admins can manage invitations / subusers on any server.",
             "author": "Peregrine Team",
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.1",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.1/invitations-0.8.0.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.1/invitations-0.8.1.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/invitations",
             "tags": ["users", "permissions", "collaboration", "default"]
         }

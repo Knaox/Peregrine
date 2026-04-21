@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth')->group(function () {
 
     Route::get('servers/{serverIdentifier}/invitations', function (string $serverIdentifier, Request $request): JsonResponse {
-        $server = Server::where('identifier', $serverIdentifier)->whereHas('accessUsers', fn ($q) => $q->where('user_id', $request->user()->id))->firstOrFail();
+        $server = Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
 
         $invitations = Invitation::where('server_id', $server->id)
             ->active()
@@ -30,7 +30,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::post('servers/{serverIdentifier}/invitations', function (string $serverIdentifier, Request $request): JsonResponse {
-        $server = Server::where('identifier', $serverIdentifier)->whereHas('accessUsers', fn ($q) => $q->where('user_id', $request->user()->id))->firstOrFail();
+        $server = Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
 
         if (! $request->user()->hasServerPermission($server, 'user.create')) {
             abort(403);
@@ -101,7 +101,7 @@ Route::middleware('auth')->group(function () {
     // silently drops unknown permission keys, so the local pivot is the
     // authoritative source for the full permission set.
     Route::get('servers/{serverIdentifier}/subusers', function (string $serverIdentifier, Request $request): JsonResponse {
-        $server = Server::where('identifier', $serverIdentifier)->whereHas('accessUsers', fn ($q) => $q->where('user_id', $request->user()->id))->firstOrFail();
+        $server = Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
 
         try {
             $subusers = app(\Plugins\Invitations\Services\PelicanSubuserService::class)->listSubusers($serverIdentifier);
@@ -148,7 +148,7 @@ Route::middleware('auth')->group(function () {
 
     // Update subuser permissions on Pelican + local pivot
     Route::post('servers/{serverIdentifier}/subusers/{subuserUuid}', function (string $serverIdentifier, string $subuserUuid, Request $request): JsonResponse {
-        $server = Server::where('identifier', $serverIdentifier)->whereHas('accessUsers', fn ($q) => $q->where('user_id', $request->user()->id))->firstOrFail();
+        $server = Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
 
         if (! $request->user()->hasServerPermission($server, 'user.update')) {
             abort(403);
@@ -196,7 +196,7 @@ Route::middleware('auth')->group(function () {
 
     // Remove a subuser from Pelican
     Route::delete('servers/{serverIdentifier}/subusers/{subuserUuid}', function (string $serverIdentifier, string $subuserUuid, Request $request): JsonResponse {
-        $server = Server::where('identifier', $serverIdentifier)->whereHas('accessUsers', fn ($q) => $q->where('user_id', $request->user()->id))->firstOrFail();
+        $server = Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
 
         if (! $request->user()->hasServerPermission($server, 'user.delete')) {
             abort(403);
@@ -221,7 +221,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('servers/{serverIdentifier}/permissions', function (string $serverIdentifier, Request $request): JsonResponse {
-        Server::where('identifier', $serverIdentifier)->whereHas('accessUsers', fn ($q) => $q->where('user_id', $request->user()->id))->firstOrFail();
+        Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
 
         $locale = $request->header('Accept-Language', 'en');
         $locale = str_starts_with($locale, 'fr') ? 'fr' : 'en';

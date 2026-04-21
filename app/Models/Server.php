@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -73,6 +74,27 @@ class Server extends Model
         return $this->belongsToMany(User::class, 'server_user')
             ->withPivot(['role', 'permissions'])
             ->withTimestamps();
+    }
+
+    /**
+     * Query scope: restrict to servers the given user can access, with an
+     * admin bypass.
+     *
+     * Replaces the `whereHas('accessUsers', fn($q) => $q->where('user_id', $userId))`
+     * pattern used in the invitations plugin (and anywhere else that needs
+     * "this user sees this server"). Admins skip the pivot check — consistent
+     * with the scoped Gate::before whitelist (AuthServiceProvider, plan §S5).
+     *
+     * @param  Builder<Server>  $query
+     * @return Builder<Server>
+     */
+    public function scopeAccessibleBy(Builder $query, User $user): Builder
+    {
+        if ($user->is_admin) {
+            return $query;
+        }
+
+        return $query->whereHas('accessUsers', fn ($q) => $q->where('user_id', $user->id));
     }
 
     /**
