@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Models\Server;
 use App\Services\Pelican\PelicanNetworkService;
@@ -46,6 +47,8 @@ class ServerNetworkController extends Controller
         Cache::forget("server_network:{$server->identifier}");
         Cache::forget("server_allocation:{$server->identifier}");
 
+        $this->audit($server, 'server.network.add_allocation', []);
+
         return response()->json(['data' => $result['attributes'] ?? $result]);
     }
 
@@ -60,6 +63,8 @@ class ServerNetworkController extends Controller
         );
 
         Cache::forget("server_network:{$server->identifier}");
+
+        $this->audit($server, 'server.network.update_notes', ['allocation_id' => $allocation]);
 
         return response()->json(['data' => $result]);
     }
@@ -76,6 +81,8 @@ class ServerNetworkController extends Controller
         Cache::forget("server_network:{$server->identifier}");
         Cache::forget("server_allocation:{$server->identifier}");
 
+        $this->audit($server, 'server.network.set_primary', ['allocation_id' => $allocation]);
+
         return response()->json(['data' => $result]);
     }
 
@@ -88,6 +95,24 @@ class ServerNetworkController extends Controller
         Cache::forget("server_network:{$server->identifier}");
         Cache::forget("server_allocation:{$server->identifier}");
 
+        $this->audit($server, 'server.network.delete_allocation', ['allocation_id' => $allocation]);
+
         return response()->json(['message' => 'success']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function audit(Server $server, string $action, array $payload): void
+    {
+        $req = request();
+        AdminActionPerformed::dispatchIfCrossUser(
+            admin: $req->user(),
+            action: $action,
+            server: $server,
+            payload: $payload,
+            ip: $req->ip(),
+            userAgent: (string) $req->userAgent(),
+        );
     }
 }

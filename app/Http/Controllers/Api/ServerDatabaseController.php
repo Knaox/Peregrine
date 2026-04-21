@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Server\CreateDatabaseRequest;
 use App\Models\Server;
@@ -43,6 +44,11 @@ class ServerDatabaseController extends Controller
 
         Cache::forget("server_databases:{$server->identifier}");
 
+        $this->audit($server, 'server.database.create', [
+            'database' => $validated['database'],
+            'remote' => $validated['remote'],
+        ]);
+
         return response()->json(['data' => $result], 201);
     }
 
@@ -57,6 +63,8 @@ class ServerDatabaseController extends Controller
 
         Cache::forget("server_databases:{$server->identifier}");
 
+        $this->audit($server, 'server.database.rotate_password', ['database' => $database]);
+
         return response()->json(['data' => $result]);
     }
 
@@ -68,6 +76,24 @@ class ServerDatabaseController extends Controller
 
         Cache::forget("server_databases:{$server->identifier}");
 
+        $this->audit($server, 'server.database.delete', ['database' => $database]);
+
         return response()->json(['message' => 'success']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function audit(Server $server, string $action, array $payload): void
+    {
+        $request = request();
+        AdminActionPerformed::dispatchIfCrossUser(
+            admin: $request->user(),
+            action: $action,
+            server: $server,
+            payload: $payload,
+            ip: $request->ip(),
+            userAgent: (string) $request->userAgent(),
+        );
     }
 }

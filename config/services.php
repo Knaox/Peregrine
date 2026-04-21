@@ -35,4 +35,26 @@ return [
         ],
     ],
 
+    // Socialite providers. Values are overridden at runtime by
+    // AuthProviderRegistry::configureSocialite() from the `settings` table
+    // (admin-editable). The defaults here are placeholders that keep package
+    // discovery happy when a provider is disabled.
+    'google' => [
+        'client_id' => '',
+        'client_secret' => '',
+        'redirect' => '',
+    ],
+
+    'discord' => [
+        'client_id' => '',
+        'client_secret' => '',
+        'redirect' => '',
+    ],
+
+    'linkedin-openid' => [
+        'client_id' => '',
+        'client_secret' => '',
+        'redirect' => '',
+    ],
+
 ];

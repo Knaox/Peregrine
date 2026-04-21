@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ServerResource;
 use App\Models\Server;
@@ -20,6 +21,31 @@ class ServerController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $viewAll = $request->query('view') === 'all' && $request->user()->is_admin;
+
+        if ($viewAll) {
+            $servers = Server::query()
+                ->with(['user:id,name,email', 'egg', 'plan'])
+                ->orderBy('name')
+                ->get();
+
+            $enriched = $servers->map(function (Server $server) {
+                $data = (new ServerResource($server))->toArray(request());
+                $data['allocation'] = $server->identifier
+                    ? $this->getCachedAllocation($server->identifier)
+                    : null;
+                $data['role'] = 'admin';
+                $data['permissions'] = null;
+                $data['owner'] = $server->user
+                    ? ['id' => $server->user->id, 'name' => $server->user->name, 'email' => $server->user->email]
+                    : null;
+
+                return $data;
+            });
+
+            return response()->json(['data' => $enriched, 'meta' => ['view' => 'all']]);
+        }
+
         $servers = $request->user()
             ->accessibleServers()
             ->with(['egg', 'plan'])
@@ -115,6 +141,16 @@ class ServerController extends Controller
         $this->authorize('updateStartup', $server);
         $validated = $request->validate(['key' => ['required', 'string'], 'value' => ['required', 'string']]);
         $this->clientService->updateStartupVariable($server->identifier, $validated['key'], $validated['value']);
+
+        AdminActionPerformed::dispatchIfCrossUser(
+            admin: $request->user(),
+            action: 'server.startup.update',
+            server: $server,
+            payload: ['key' => $validated['key'], 'value' => mb_substr($validated['value'], 0, 500)],
+            ip: $request->ip(),
+            userAgent: (string) $request->userAgent(),
+        );
+
         return response()->json(['success' => true]);
     }
 

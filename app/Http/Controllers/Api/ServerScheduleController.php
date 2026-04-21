@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Server\CreateScheduleRequest;
 use App\Http\Requests\Server\CreateTaskRequest;
@@ -63,6 +64,8 @@ class ServerScheduleController extends Controller
 
         $data = $result['attributes'] ?? $result;
 
+        $this->audit($server, 'server.schedule.create', ['name' => $request->validated()['name'] ?? null]);
+
         return response()->json(['data' => $data], 201);
     }
 
@@ -78,6 +81,8 @@ class ServerScheduleController extends Controller
 
         Cache::forget("server_schedules:{$server->identifier}");
 
+        $this->audit($server, 'server.schedule.update', ['schedule_id' => $schedule]);
+
         return response()->json(['data' => $result]);
     }
 
@@ -89,6 +94,8 @@ class ServerScheduleController extends Controller
 
         Cache::forget("server_schedules:{$server->identifier}");
 
+        $this->audit($server, 'server.schedule.execute', ['schedule_id' => $schedule]);
+
         return response()->json(['message' => 'success']);
     }
 
@@ -99,6 +106,8 @@ class ServerScheduleController extends Controller
         $this->scheduleService->deleteSchedule($server->identifier, $schedule);
 
         Cache::forget("server_schedules:{$server->identifier}");
+
+        $this->audit($server, 'server.schedule.delete', ['schedule_id' => $schedule]);
 
         return response()->json(['message' => 'success']);
     }
@@ -119,6 +128,11 @@ class ServerScheduleController extends Controller
 
         Cache::forget("server_schedules:{$server->identifier}");
 
+        $this->audit($server, 'server.schedule.task.create', [
+            'schedule_id' => $schedule,
+            'action' => $data['action'] ?? null,
+        ]);
+
         return response()->json(['data' => $result], 201);
     }
 
@@ -130,6 +144,24 @@ class ServerScheduleController extends Controller
 
         Cache::forget("server_schedules:{$server->identifier}");
 
+        $this->audit($server, 'server.schedule.task.delete', ['schedule_id' => $schedule, 'task_id' => $task]);
+
         return response()->json(['message' => 'success']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function audit(Server $server, string $action, array $payload): void
+    {
+        $request = request();
+        AdminActionPerformed::dispatchIfCrossUser(
+            admin: $request->user(),
+            action: $action,
+            server: $server,
+            payload: $payload,
+            ip: $request->ip(),
+            userAgent: (string) $request->userAgent(),
+        );
     }
 }

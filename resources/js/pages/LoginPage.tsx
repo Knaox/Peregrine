@@ -29,7 +29,11 @@ export function LoginPage() {
         setError('');
         setIsSubmitting(true);
         try {
-            await login(email, password, remember);
+            const result = await login(email, password, remember);
+            if (result.requires2fa === true) {
+                navigate('/2fa/challenge');
+                return;
+            }
             navigate('/dashboard');
         } catch (err) {
             setError(err instanceof ApiError ? t('auth.login.error') : t('common.error'));

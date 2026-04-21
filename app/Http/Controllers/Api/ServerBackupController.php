@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Server\CreateBackupRequest;
 use App\Models\Server;
@@ -45,6 +46,11 @@ class ServerBackupController extends Controller
 
         Cache::forget("server_backups:{$server->identifier}");
 
+        $this->audit($server, 'server.backup.create', [
+            'name' => $validated['name'] ?? null,
+            'is_locked' => $validated['is_locked'] ?? false,
+        ]);
+
         return response()->json(['data' => $result], 201);
     }
 
@@ -56,6 +62,8 @@ class ServerBackupController extends Controller
             $server->identifier,
             $backup,
         );
+
+        $this->audit($server, 'server.backup.download', ['backup' => $backup]);
 
         return response()->json(['data' => ['url' => $url]]);
     }
@@ -70,6 +78,8 @@ class ServerBackupController extends Controller
         );
 
         Cache::forget("server_backups:{$server->identifier}");
+
+        $this->audit($server, 'server.backup.toggle_lock', ['backup' => $backup]);
 
         return response()->json(['data' => $result]);
     }
@@ -86,6 +96,11 @@ class ServerBackupController extends Controller
 
         Cache::forget("server_backups:{$server->identifier}");
 
+        $this->audit($server, 'server.backup.restore', [
+            'backup' => $backup,
+            'truncate' => (bool) $request->input('truncate', false),
+        ]);
+
         return response()->json(['message' => 'success']);
     }
 
@@ -97,6 +112,24 @@ class ServerBackupController extends Controller
 
         Cache::forget("server_backups:{$server->identifier}");
 
+        $this->audit($server, 'server.backup.delete', ['backup' => $backup]);
+
         return response()->json(['message' => 'success']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function audit(Server $server, string $action, array $payload): void
+    {
+        $request = request();
+        AdminActionPerformed::dispatchIfCrossUser(
+            admin: $request->user(),
+            action: $action,
+            server: $server,
+            payload: $payload,
+            ip: $request->ip(),
+            userAgent: (string) $request->userAgent(),
+        );
     }
 }

@@ -146,6 +146,53 @@
             "has_account": "Déjà un compte ?",
             "sign_in": "Se connecter",
             "disabled": "L'inscription est désactivée. Veuillez vous connecter avec votre compte existant."
+        },
+        "2fa": {
+            "setup": {
+                "title": "Double authentification",
+                "intro": "Scannez le QR code avec votre application d'authentification (Google Authenticator, Authy, 1Password…), puis saisissez le code à 6 chiffres pour confirmer.",
+                "manual_entry_label": "Impossible de scanner ? Saisissez cette clé manuellement :",
+                "code_label": "Code à 6 chiffres",
+                "verify_button": "Vérifier et activer",
+                "verifying": "Vérification…",
+                "success": "La 2FA a été activée sur votre compte.",
+                "error_invalid": "Code invalide — réessayez.",
+                "recovery_title": "Sauvegardez vos codes de récupération",
+                "recovery_intro": "Chaque code est utilisable une seule fois si vous perdez l'accès à votre application d'authentification. Conservez-les en lieu sûr — ils ne seront plus jamais affichés.",
+                "recovery_download": "Télécharger en .txt",
+                "recovery_acknowledge": "J'ai sauvegardé mes codes",
+                "recovery_done_cta": "Terminer"
+            },
+            "challenge": {
+                "title": "Entrez votre code 2FA",
+                "description": "Ouvrez votre application d'authentification et saisissez le code à 6 chiffres pour ce compte.",
+                "code_label": "Code à 6 chiffres",
+                "submit": "Vérifier",
+                "submitting": "Vérification…",
+                "use_recovery": "Utiliser un code de récupération",
+                "recovery_label": "Code de récupération",
+                "expired": "Votre session a expiré. Veuillez vous reconnecter.",
+                "invalid": "Code invalide. Réessayez."
+            },
+            "disable": {
+                "title": "Désactiver la 2FA",
+                "description": "Saisissez votre mot de passe pour désactiver la double authentification.",
+                "password_label": "Mot de passe",
+                "code_label": "Ou un code 2FA valide",
+                "confirm_button": "Désactiver la 2FA",
+                "success": "2FA désactivée.",
+                "error": "Désactivation impossible — vérifiez votre mot de passe ou votre code."
+            },
+            "recovery": {
+                "regenerate_button": "Régénérer les codes de récupération",
+                "regenerate_confirm": "Générer de nouveaux codes invalide les anciens. Continuer ?",
+                "regenerate_success": "Nouveaux codes de récupération générés."
+            },
+            "status": {
+                "enabled": "Activée",
+                "disabled": "Désactivée",
+                "enabled_on": "Activée le {{date}}"
+            }
         }
     },
     "servers": {
@@ -526,6 +573,29 @@
             "expired": "Cette invitation a expiré ou a été révoquée.",
             "already_accepted": "Cette invitation a déjà été acceptée.",
             "go_home": "Aller au tableau de bord"
+        }
+    },
+    "settings": {
+        "security": {
+            "title": "Sécurité",
+            "subtitle": "Gérez votre mot de passe et la double authentification.",
+            "two_factor_section_title": "Double authentification",
+            "two_factor_section_description": "Ajoutez une étape supplémentaire à votre connexion via une application TOTP."
+        }
+    },
+    "admin": {
+        "servers": {
+            "title": "Tous les serveurs",
+            "subtitle": "Tous les serveurs du panel. Ouvrez un serveur pour le gérer — vos actions sont enregistrées dans le journal d'audit.",
+            "mode_toggle": "Vue admin",
+            "search_placeholder": "Rechercher par nom, identifiant, utilisateur…",
+            "filter": {
+                "any_status": "Tous les statuts"
+            },
+            "count": "{{count}} serveur",
+            "count_plural": "{{count}} serveurs",
+            "empty": "Aucun serveur ne correspond à ces filtres.",
+            "owner_label": "Propriétaire"
         }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Server\CreateFolderRequest;
 use App\Http\Requests\Server\FileChmodRequest;
@@ -68,6 +69,8 @@ class ServerFileController extends Controller
             $validated['content'],
         );
 
+        $this->audit($request, $server, 'server.file.write', ['file' => $validated['file']]);
+
         return response()->json(['success' => true]);
     }
 
@@ -85,6 +88,8 @@ class ServerFileController extends Controller
             );
         }
 
+        $this->audit($request, $server, 'server.file.rename', ['root' => $validated['root'], 'count' => count($validated['files'])]);
+
         return response()->json(['success' => true]);
     }
 
@@ -99,6 +104,8 @@ class ServerFileController extends Controller
             );
         }
 
+        $this->audit($request, $server, 'server.file.delete', ['root' => $validated['root'], 'count' => count($validated['files'])]);
+
         return response()->json(['success' => true]);
     }
 
@@ -107,6 +114,8 @@ class ServerFileController extends Controller
         $validated = $request->validated();
 
         $this->clientService->compressFiles($server->identifier, $validated['files']);
+
+        $this->audit($request, $server, 'server.file.compress', ['count' => count($validated['files'])]);
 
         return response()->json(['success' => true]);
     }
@@ -119,6 +128,8 @@ class ServerFileController extends Controller
             $server->identifier,
             $validated['root'] . '/' . $validated['file'],
         );
+
+        $this->audit($request, $server, 'server.file.decompress', ['file' => $validated['file']]);
 
         return response()->json(['success' => true]);
     }
@@ -142,6 +153,8 @@ class ServerFileController extends Controller
             $validated['name'],
         );
 
+        $this->audit($request, $server, 'server.file.create_folder', ['root' => $validated['root'], 'name' => $validated['name']]);
+
         return response()->json(['success' => true]);
     }
 
@@ -154,7 +167,9 @@ class ServerFileController extends Controller
             return response()->json(['error' => 'File path required'], 422);
         }
 
-        $url = $this->clientService->getFileDownloadUrl($server->identifier, $file);
+        $url = $this->clientService->getFileDownloadUrl($server->identifier, (string) $file);
+
+        $this->audit($request, $server, 'server.file.download', ['file' => (string) $file]);
 
         return response()->json(['data' => ['url' => $url]]);
     }
@@ -169,6 +184,8 @@ class ServerFileController extends Controller
         }
 
         $this->clientService->copyFile($server->identifier, $location);
+
+        $this->audit($request, $server, 'server.file.copy', ['location' => (string) $location]);
 
         return response()->json(['message' => 'success']);
     }
@@ -188,6 +205,8 @@ class ServerFileController extends Controller
 
         $this->clientService->chmodFiles($server->identifier, $validated['root'], $files);
 
+        $this->audit($request, $server, 'server.file.chmod', ['root' => $validated['root'], 'count' => count($files)]);
+
         return response()->json(['success' => true]);
     }
 
@@ -202,6 +221,27 @@ class ServerFileController extends Controller
             $validated['filename'] ?? null,
         );
 
+        $this->audit($request, $server, 'server.file.pull', [
+            'url' => mb_substr($validated['url'], 0, 500),
+            'directory' => $validated['directory'] ?? null,
+            'filename' => $validated['filename'] ?? null,
+        ]);
+
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function audit(Request $request, Server $server, string $action, array $payload): void
+    {
+        AdminActionPerformed::dispatchIfCrossUser(
+            admin: $request->user(),
+            action: $action,
+            server: $server,
+            payload: $payload,
+            ip: $request->ip(),
+            userAgent: (string) $request->userAgent(),
+        );
     }
 }

@@ -17,6 +17,7 @@ class UserResource extends JsonResource
             'theme_mode' => $this->theme_mode ?? 'auto',
             'is_admin' => $this->is_admin,
             'pelican_user_id' => $this->pelican_user_id,
+            'has_two_factor' => $this->resource->hasTwoFactor(),
             'created_at' => $this->created_at?->toISOString(),
         ];
     }

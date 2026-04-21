@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AdminServersController;
+use App\Http\Controllers\Api\Auth\TwoFactorController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MarketplaceController;
 use App\Http\Controllers\Api\OAuthController;
@@ -26,10 +28,21 @@ Route::prefix('setup')->group(function () {
 
 // Auth routes
 Route::prefix('auth')->group(function () {
-    Route::post('login', [AuthController::class, 'login']);
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('register', [AuthController::class, 'register']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('user', [AuthController::class, 'user']);
+
+    // 2FA — the challenge is unauthenticated (pre-login), the rest are auth'd.
+    Route::post('2fa/challenge', [TwoFactorController::class, 'challenge'])
+        ->middleware('throttle:2fa-challenge');
+
+    Route::middleware('auth')->prefix('2fa')->group(function () {
+        Route::post('setup', [TwoFactorController::class, 'setup'])->middleware('throttle:2fa-setup');
+        Route::post('confirm', [TwoFactorController::class, 'confirm']);
+        Route::post('disable', [TwoFactorController::class, 'disable']);
+        Route::post('recovery-codes/regenerate', [TwoFactorController::class, 'regenerateRecoveryCodes']);
+    });
 });
 
 // OAuth routes
@@ -115,6 +128,11 @@ Route::middleware('auth')->group(function () {
     Route::post('servers/{server}/network/{allocation}/notes', [ServerNetworkController::class, 'updateNotes']);
     Route::post('servers/{server}/network/{allocation}/primary', [ServerNetworkController::class, 'setPrimary']);
     Route::delete('servers/{server}/network/{allocation}', [ServerNetworkController::class, 'destroy']);
+
+    // Admin: cross-user server listing (admin mode dashboard). Wrapped in
+    // the two-factor middleware so the tightening of `auth_2fa_required_admins`
+    // applies consistently with the Filament panel.
+    Route::middleware(['admin', 'two-factor'])->get('admin/servers', [AdminServersController::class, 'index']);
 
     // Admin: plugins management
     Route::middleware('admin')->prefix('admin/plugins')->group(function () {

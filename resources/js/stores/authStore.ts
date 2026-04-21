@@ -3,14 +3,25 @@ import i18n from '@/i18n/config';
 import { useThemeModeStore } from '@/stores/themeModeStore';
 import type { User } from '@/types/User';
 import { fetchCurrentUser, login as apiLogin, logout as apiLogout, register as apiRegister } from '@/services/api';
+import { twoFactorChallenge } from '@/services/authApi';
 
 interface AuthState {
     user: User | null;
     isLoading: boolean;
     isAuthenticated: boolean;
+    pendingChallengeId: string | null;
     loadUser: () => Promise<void>;
-    login: (email: string, password: string, remember?: boolean) => Promise<void>;
+    /**
+     * Resolves to { requires2fa: true, challengeId } when the server defers
+     * to the 2FA challenge page, otherwise sets the user as authenticated.
+     */
+    login: (
+        email: string,
+        password: string,
+        remember?: boolean,
+    ) => Promise<{ requires2fa: true; challengeId: string } | { requires2fa: false }>;
     register: (data: { name: string; email: string; password: string; password_confirmation: string }) => Promise<void>;
+    submitChallenge: (code: string) => Promise<string>;
     logout: () => Promise<void>;
 }
 
@@ -38,10 +49,11 @@ function applyThemeMode(user: User | null): void {
     store.setMode(user.theme_mode);
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
     user: null,
     isLoading: true,
     isAuthenticated: false,
+    pendingChallengeId: null,
 
     loadUser: async () => {
         try {
@@ -55,10 +67,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     login: async (email, password, remember = false) => {
-        const { user } = await apiLogin(email, password, remember);
-        applyLocale(user);
-        applyThemeMode(user);
-        set({ user, isAuthenticated: true });
+        const response = await apiLogin(email, password, remember);
+
+        if (response.requires_2fa === true) {
+            set({ pendingChallengeId: response.challenge_id, user: null, isAuthenticated: false });
+            return { requires2fa: true, challengeId: response.challenge_id };
+        }
+
+        applyLocale(response.user);
+        applyThemeMode(response.user);
+        set({ user: response.user, isAuthenticated: true, pendingChallengeId: null });
+        return { requires2fa: false };
     },
 
     register: async (data) => {
@@ -68,8 +87,20 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ user, isAuthenticated: true });
     },
 
+    submitChallenge: async (code) => {
+        const challengeId = get().pendingChallengeId;
+        if (!challengeId) {
+            throw new Error('No pending 2FA challenge.');
+        }
+        const { user, redirect_url } = await twoFactorChallenge(challengeId, code);
+        applyLocale(user);
+        applyThemeMode(user);
+        set({ user, isAuthenticated: true, pendingChallengeId: null });
+        return redirect_url;
+    },
+
     logout: async () => {
         await apiLogout();
-        set({ user: null, isAuthenticated: false });
+        set({ user: null, isAuthenticated: false, pendingChallengeId: null });
     },
 }));

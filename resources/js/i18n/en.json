@@ -146,6 +146,53 @@
             "has_account": "Already have an account?",
             "sign_in": "Sign in",
             "disabled": "Registration is disabled. Please sign in with your existing account."
+        },
+        "2fa": {
+            "setup": {
+                "title": "Two-factor authentication",
+                "intro": "Scan the QR code with your authenticator app (Google Authenticator, Authy, 1Password...), then enter the 6-digit code to confirm.",
+                "manual_entry_label": "Can't scan? Enter this key manually:",
+                "code_label": "6-digit code",
+                "verify_button": "Verify & enable",
+                "verifying": "Verifying...",
+                "success": "2FA has been enabled on your account.",
+                "error_invalid": "Invalid code — try again.",
+                "recovery_title": "Save your recovery codes",
+                "recovery_intro": "Each code can be used once if you lose access to your authenticator. Store them somewhere safe — they won't be shown again.",
+                "recovery_download": "Download as .txt",
+                "recovery_acknowledge": "I saved my recovery codes",
+                "recovery_done_cta": "Done"
+            },
+            "challenge": {
+                "title": "Enter your 2FA code",
+                "description": "Open your authenticator app and enter the 6-digit code for this account.",
+                "code_label": "6-digit code",
+                "submit": "Verify",
+                "submitting": "Verifying...",
+                "use_recovery": "Use a recovery code instead",
+                "recovery_label": "Recovery code",
+                "expired": "Your session expired. Please sign in again.",
+                "invalid": "That code is invalid. Try again."
+            },
+            "disable": {
+                "title": "Disable 2FA",
+                "description": "Enter your password to turn off two-factor authentication.",
+                "password_label": "Password",
+                "code_label": "Or a current 2FA code",
+                "confirm_button": "Disable 2FA",
+                "success": "2FA disabled.",
+                "error": "Could not disable — check your password or code."
+            },
+            "recovery": {
+                "regenerate_button": "Regenerate recovery codes",
+                "regenerate_confirm": "Generating new codes invalidates the old ones. Continue?",
+                "regenerate_success": "New recovery codes generated."
+            },
+            "status": {
+                "enabled": "Enabled",
+                "disabled": "Disabled",
+                "enabled_on": "Enabled on {{date}}"
+            }
         }
     },
     "servers": {
@@ -526,6 +573,29 @@
             "expired": "This invitation has expired or has been revoked.",
             "already_accepted": "This invitation has already been accepted.",
             "go_home": "Go to dashboard"
+        }
+    },
+    "settings": {
+        "security": {
+            "title": "Security",
+            "subtitle": "Manage your password and two-factor authentication.",
+            "two_factor_section_title": "Two-factor authentication",
+            "two_factor_section_description": "Add an extra step to your sign-in using a TOTP app."
+        }
+    },
+    "admin": {
+        "servers": {
+            "title": "All servers",
+            "subtitle": "Every server on the panel. Open a server to manage it — your actions are logged in the audit trail.",
+            "mode_toggle": "Admin view",
+            "search_placeholder": "Search by name, identifier, user...",
+            "filter": {
+                "any_status": "Any status"
+            },
+            "count": "{{count}} server",
+            "count_plural": "{{count}} servers",
+            "empty": "No server matches these filters.",
+            "owner_label": "Owner"
         }
     }
 }

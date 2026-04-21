@@ -21,6 +21,9 @@ import { ServerFilesPage } from '@/pages/ServerFilesPage';
 import { ServerSftpPage } from '@/pages/ServerSftpPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { InviteAcceptPage } from '@/pages/InviteAcceptPage';
+import { TwoFactorChallengePage } from '@/pages/TwoFactorChallengePage';
+import { SecurityPage } from '@/pages/settings/SecurityPage';
+import { AdminServersPage } from '@/pages/AdminServersPage';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -41,12 +44,15 @@ function App() {
                         <Routes>
                             <Route path="/login" element={<LoginPage />} />
                             <Route path="/register" element={<RegisterPage />} />
+                            <Route path="/2fa/challenge" element={<TwoFactorChallengePage />} />
                             <Route path="/invite/:token" element={<InviteAcceptPage />} />
                             <Route element={<ProtectedRoute />}>
                                 <Route element={<AppLayout />}>
                                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                     <Route path="/dashboard" element={<DashboardPage />} />
                                     <Route path="/profile" element={<ProfilePage />} />
+                                    <Route path="/settings/security" element={<SecurityPage />} />
+                                    <Route path="/admin/servers" element={<AdminServersPage />} />
                                     <Route path="/plugins/:pluginId/*" element={<PluginPageRenderer />} />
                                 </Route>
                                 <Route path="/servers/:id/*" element={<ServerDetailPage />} />
