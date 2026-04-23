@@ -2,22 +2,6 @@
 
 namespace App\Providers;
 
-use App\Events\AdminActionPerformed;
-use App\Events\Bridge\ServerProvisioned;
-use App\Events\Bridge\ServerSuspended;
-use App\Events\OAuthProviderLinked;
-use App\Events\OAuthProviderUnlinked;
-use App\Events\RecoveryCodesRegenerated;
-use App\Events\TwoFactorDisabled;
-use App\Events\TwoFactorEnabled;
-use App\Listeners\Bridge\SendServerReadyNotification;
-use App\Listeners\Bridge\SendServerSuspendedNotification;
-use App\Listeners\LogAdminAction;
-use App\Listeners\SendOAuthProviderLinkedNotification;
-use App\Listeners\SendOAuthProviderUnlinkedNotification;
-use App\Listeners\SendRecoveryCodesRegeneratedNotification;
-use App\Listeners\SendTwoFactorDisabledNotification;
-use App\Listeners\SendTwoFactorEnabledNotification;
 use App\Services\Auth\PaymenterSocialiteProvider;
 use App\Services\Auth\ShopSocialiteProvider;
 use Illuminate\Support\Facades\Event;
@@ -28,16 +12,22 @@ use SocialiteProviders\Manager\SocialiteWasCalled;
 class SocialAuthServiceProvider extends ServiceProvider
 {
     /**
-     * Wires up auth-related event listeners + Socialite driver extensions.
+     * Wires up auth-related Socialite driver extensions.
      *
      * Discord isn't part of Socialite core, so the SocialiteProviders package
      * fires SocialiteWasCalled when any driver is resolved — we hook in and
      * attach the Discord driver. Google + LinkedIn-OpenID are core drivers.
      *
-     * The 'shop' custom driver is registered here via Socialite::extend().
-     * Its config is injected at runtime from the DB settings by
-     * AuthProviderRegistry::configureSocialite('shop') before each driver()
-     * call.
+     * The 'shop' + 'paymenter' custom drivers are registered here via
+     * Socialite::extend(). Their config is injected at runtime from the DB
+     * settings by AuthProviderRegistry::configureSocialite('shop') before
+     * each driver() call.
+     *
+     * **Listener wiring lives in `app/Listeners/` itself** — Laravel 13
+     * auto-discovers any class under that namespace whose `handle()` is
+     * type-hinted with an event class (Send*Notification, LogAdminAction).
+     * Adding `Event::listen(...)` here would register them a second time
+     * and double-fire every email / log row.
      */
     public function boot(): void
     {
@@ -45,19 +35,6 @@ class SocialAuthServiceProvider extends ServiceProvider
             \SocialiteProviders\Discord\DiscordExtendSocialite::class,
             'handle',
         ]);
-
-        Event::listen(TwoFactorEnabled::class, SendTwoFactorEnabledNotification::class);
-        Event::listen(TwoFactorDisabled::class, SendTwoFactorDisabledNotification::class);
-        Event::listen(RecoveryCodesRegenerated::class, SendRecoveryCodesRegeneratedNotification::class);
-
-        Event::listen(AdminActionPerformed::class, LogAdminAction::class);
-
-        Event::listen(OAuthProviderLinked::class, SendOAuthProviderLinkedNotification::class);
-        Event::listen(OAuthProviderUnlinked::class, SendOAuthProviderUnlinkedNotification::class);
-
-        // Bridge — server lifecycle notifications to the customer.
-        Event::listen(ServerProvisioned::class, SendServerReadyNotification::class);
-        Event::listen(ServerSuspended::class, SendServerSuspendedNotification::class);
 
         $this->app->make(SocialiteFactory::class)->extend('shop', function ($app) {
             $cfg = (array) config('services.shop', []);
