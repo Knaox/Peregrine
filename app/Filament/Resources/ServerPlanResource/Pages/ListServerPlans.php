@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ServerPlanResource\Pages;
 
 use App\Filament\Resources\ServerPlanResource;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListServerPlans extends ListRecords
@@ -12,8 +11,8 @@ class ListServerPlans extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\CreateAction::make(),
-        ];
+        // Plans are pushed by the Shop via Bridge API — never created from
+        // the Peregrine admin. No CreateAction here.
+        return [];
     }
 }

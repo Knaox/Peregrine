@@ -2,7 +2,7 @@ export interface Server {
     id: number;
     identifier: string;
     name: string;
-    status: 'active' | 'suspended' | 'terminated' | 'running' | 'stopped' | 'offline';
+    status: 'active' | 'suspended' | 'terminated' | 'running' | 'stopped' | 'offline' | 'provisioning' | 'provisioning_failed';
     pelican_server_id: number | null;
     egg: {
         id: number;

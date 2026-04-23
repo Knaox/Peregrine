@@ -46,7 +46,6 @@ export async function install(state: SetupState): Promise<{ success: boolean; er
             client_api_key: state.pelican.client_api_key,
         },
         auth: state.auth,
-        bridge: state.bridge,
         locale: state.locale,
     });
 }

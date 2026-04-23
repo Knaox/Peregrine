@@ -1,15 +1,30 @@
 import { useEffect, useRef, useState } from 'react';
 
+interface UseCountUpOptions {
+    duration?: number;
+    /** When false, returns the target value immediately without animating.
+     *  Use this to globally disable count-ups in dense lists where 60fps
+     *  tweens × N items × M stats become a measurable drag. */
+    enabled?: boolean;
+}
+
 /**
  * Animates a number from 0 to `target` over `duration` ms.
  * Only triggers on mount or when target changes by more than 10%.
  */
-export function useCountUp(target: number, duration = 600): number {
-    const [value, setValue] = useState(0);
+export function useCountUp(target: number, options: UseCountUpOptions = {}): number {
+    const { duration = 600, enabled = true } = options;
+    const [value, setValue] = useState(enabled ? 0 : target);
     const prevTarget = useRef(0);
     const frameRef = useRef(0);
 
     useEffect(() => {
+        if (!enabled) {
+            prevTarget.current = target;
+            setValue(target);
+            return;
+        }
+
         // Skip trivial changes (less than 10% difference)
         const diff = Math.abs(target - prevTarget.current);
         const threshold = Math.max(prevTarget.current * 0.1, 1);
@@ -39,7 +54,7 @@ export function useCountUp(target: number, duration = 600): number {
         return () => {
             cancelAnimationFrame(frameRef.current);
         };
-    }, [target, duration]);
+    }, [target, duration, enabled]);
 
     return value;
 }

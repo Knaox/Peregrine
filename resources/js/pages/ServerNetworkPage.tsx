@@ -171,7 +171,12 @@ export function ServerNetworkPage() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 40, scale: 0.95 }}
                         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                        className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
+                        className="fixed left-1/2 z-50 -translate-x-1/2"
+                        style={{
+                            // Sit above the dock when active (see DockBar),
+                            // 1.5rem from the bottom otherwise.
+                            bottom: 'calc(var(--bottom-safe-area, 0px) + 1.5rem)',
+                        }}
                     >
                         <div className="glass-card-enhanced flex items-center gap-3 sm:gap-4 rounded-[var(--radius-lg)] px-3 sm:px-5 py-3 shadow-[var(--shadow-lg)]">
                             <span className="text-sm font-medium text-[var(--color-text-secondary)]">

@@ -26,10 +26,11 @@ return [
         'google' => 'Google',
         'discord' => 'Discord',
         'linkedin' => 'LinkedIn',
+        'paymenter' => 'Paymenter',
     ],
     'social' => [
         'email_not_verified' => 'Cet e-mail n\'a pas été vérifié par le fournisseur.',
-        'register_on_shop_first' => 'Veuillez d\'abord vous inscrire sur le Shop.',
+        'register_on_canonical_first' => 'Veuillez d\'abord vous inscrire sur :provider.',
         'cannot_unlink_last_method' => 'Impossible de délier votre seul moyen de connexion.',
         'provider_disabled' => 'Ce fournisseur de connexion n\'est pas activé.',
         'mail' => [

@@ -57,7 +57,7 @@ class SocialAuthService
      *   - resolve via SocialUserMatcher
      *   - persist / link / reject as instructed
      *   - dispatch OAuthProviderLinked when a new identity is attached
-     *   - sync the local email → Pelican when the shop email has changed
+     *   - sync the local email → Pelican when a canonical IdP email has changed
      *   - return CallbackOutcome
      */
     public function handleCallback(string $provider, Request $request): CallbackOutcome
@@ -79,8 +79,8 @@ class SocialAuthService
             MatchResult::ACTION_CREATE => $this->createAndLink($provider, $socialiteUser, $request),
         };
 
-        if ($provider === 'shop') {
-            $this->syncShopEmailToPelican($user, (string) $socialiteUser->getEmail());
+        if ($this->registry->isCanonical($provider)) {
+            $this->syncCanonicalEmailToPelican($user, (string) $socialiteUser->getEmail());
         }
 
         $providerWasJustLinked = in_array(
@@ -138,7 +138,7 @@ class SocialAuthService
     /**
      * Update last_login_at + provider_email (in case the user changed their
      * email at the provider side). Does NOT sync the local email — that's
-     * only the shop's job (Pelican sync branches on provider === 'shop').
+     * only the canonical IdPs' job (handled by syncCanonicalEmailToPelican).
      */
     private function touchIdentity(User $user, string $provider, SocialiteUser $socialiteUser): User
     {
@@ -189,14 +189,39 @@ class SocialAuthService
     }
 
     /**
-     * Shop is the canonical identity provider in the BiomeBounty ecosystem.
-     * When the Shop tells us the email changed, propagate the change to the
-     * local user AND (if they have a Pelican account) push it to Pelican via
-     * the Application API — Pelican is NOT a source of truth for the email.
+     * Canonical IdPs (shop, paymenter) are the source of truth for the user's
+     * email. When the canonical provider tells us the email changed, propagate
+     * the change to the local user AND (if they have a Pelican account) push
+     * it to Pelican via the Application API — Pelican is NOT a source of truth
+     * for the email.
+     *
+     * Conflict policy: if another local user already owns the new email
+     * (typical when the user has a stale duplicate account, or the email was
+     * registered locally first), we SKIP the local update entirely — both DB
+     * (unique constraint would crash the callback) AND Pelican (same constraint
+     * applies there). Login still succeeds with the old local email; the
+     * conflict is logged so an admin can merge the duplicate.
      */
-    private function syncShopEmailToPelican(User $user, string $newEmail): void
+    private function syncCanonicalEmailToPelican(User $user, string $newEmail): void
     {
         if ($newEmail === '' || strtolower($user->email) === strtolower($newEmail)) {
+            return;
+        }
+
+        $conflictingUserId = User::query()
+            ->whereRaw('LOWER(email) = ?', [strtolower($newEmail)])
+            ->where('id', '<>', $user->id)
+            ->value('id');
+
+        if ($conflictingUserId !== null) {
+            \Illuminate\Support\Facades\Log::warning('Canonical email sync skipped — collision with another local user', [
+                'user_id' => $user->id,
+                'user_current_email' => $user->email,
+                'provider_email' => $newEmail,
+                'conflicting_local_user_id' => $conflictingUserId,
+                'hint' => 'Merge or delete the duplicate user via the admin panel to allow the email sync.',
+            ]);
+
             return;
         }
 
@@ -207,10 +232,20 @@ class SocialAuthService
         }
 
         try {
-            $this->pelican->updateUser($user->pelican_user_id, ['email' => $newEmail]);
-        } catch (\Throwable) {
-            // Log but don't fail login — a Pelican outage must not block
-            // users signing into Peregrine itself.
+            $this->pelican->changeUserEmail($user->pelican_user_id, $newEmail);
+        } catch (\Throwable $e) {
+            // Don't fail login — a Pelican outage must not block users signing
+            // into Peregrine itself. But DO log details so the desync is
+            // visible (the previous silent catch hid a real PATCH validation
+            // failure for months — Pelican rejects partial-email PATCHes).
+            \Illuminate\Support\Facades\Log::warning('Pelican email sync failed during canonical login', [
+                'user_id' => $user->id,
+                'pelican_user_id' => $user->pelican_user_id,
+                'new_email' => $newEmail,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+                'response_body' => method_exists($e, 'response') && $e->response ? (string) $e->response->body() : null,
+            ]);
         }
     }
 }

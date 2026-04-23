@@ -131,7 +131,7 @@
             "forgot_password": "Mot de passe oublié ?",
             "no_account": "Pas encore de compte ?",
             "create_account": "Créer un compte",
-            "create_account_shop": "Créer un compte sur le Shop",
+            "create_account_canonical": "Créer un compte sur {{provider}}",
             "create_account_local": "ou en local",
             "error": "E-mail ou mot de passe invalide."
         },
@@ -139,10 +139,11 @@
             "shop": "Shop",
             "google": "Google",
             "discord": "Discord",
-            "linkedin": "LinkedIn"
+            "linkedin": "LinkedIn",
+            "paymenter": "Paymenter"
         },
         "social": {
-            "register_on_shop_first": "Aucun compte trouvé. Inscrivez-vous d'abord sur le Shop, puis revenez vous connecter ici.",
+            "register_on_canonical_first": "Aucun compte trouvé. Inscrivez-vous d'abord sur {{provider}}, puis revenez vous connecter ici.",
             "email_not_verified": "Le fournisseur n'a pas vérifié cet e-mail. Connectez-vous avec votre méthode principale puis liez ce compte depuis votre profil.",
             "email_not_verified_shop": "Votre e-mail Shop n'est pas vérifié. Ouvrez l'e-mail de vérification envoyé par le Shop, confirmez votre adresse, puis réessayez.",
             "cannot_unlink_last_method": "C'est votre seule méthode de connexion — définissez un mot de passe ou liez un autre fournisseur avant de délier.",
@@ -159,8 +160,8 @@
             "has_account": "Déjà un compte ?",
             "sign_in": "Se connecter",
             "disabled": "L'inscription est désactivée. Veuillez vous connecter avec votre compte existant.",
-            "redirect_shop": "Les comptes se créent sur le Shop. Inscrivez-vous là-bas, puis revenez ici pour vous connecter.",
-            "create_on_shop": "Créer mon compte sur le Shop"
+            "redirect_canonical": "Les comptes se créent sur {{provider}}. Inscrivez-vous là-bas, puis revenez ici pour vous connecter.",
+            "create_on_canonical": "Créer mon compte sur {{provider}}"
         },
         "2fa": {
             "setup": {
@@ -245,8 +246,31 @@
             "suspended": "Suspendu",
             "terminated": "Résilié",
             "running": "En cours",
+            "starting": "Démarrage",
+            "stopping": "En cours d'arrêt",
             "stopped": "Arrêté",
-            "offline": "Hors ligne"
+            "offline": "Hors ligne",
+            "provisioning": "Installation",
+            "provisioning_failed": "Installation échouée"
+        },
+        "install": {
+            "in_progress_title": "Installation en cours",
+            "in_progress_description": "Wings prépare votre serveur. Les autres pages sont indisponibles tant que l'installation n'est pas terminée — seule la console est accessible en direct.",
+            "completed_title": "Installation terminée",
+            "completed_description": "Votre serveur est prêt. Le tableau de bord passera à la vue normale dans un instant.",
+            "view_console": "Ouvrir la console en direct",
+            "live_log_label": "Dernières lignes d'installation",
+            "waiting_for_output": "En attente des premières lignes d'installation depuis Wings…",
+            "console_only_notice": "Ce serveur est encore en installation. Seules la console et la page d'accueil sont accessibles tant que Wings n'a pas confirmé la fin de l'installation."
+        },
+        "suspended": {
+            "badge": "Serveur suspendu",
+            "title": "Ce serveur est actuellement suspendu.",
+            "description": "Votre hébergeur a mis ce serveur en pause. Les fichiers, sauvegardes et configurations sont préservés — seules les commandes de démarrage, la console et les actions en direct sont bloquées.",
+            "info_title": "Ce que cela signifie",
+            "info_kept": "Vos données, configurations et sauvegardes sont conservées intactes et seront restaurées telles quelles à la réactivation du serveur.",
+            "info_no_power": "Démarrer / arrêter / redémarrer et la console en direct sont désactivés tant que le serveur est suspendu — Wings rejette toutes les commandes.",
+            "info_reactivate": "Contactez votre hébergeur ou réactivez votre abonnement pour rétablir l'accès."
         },
         "actions": {
             "start": "Démarrer",
@@ -499,6 +523,21 @@
             "not_editable": "Non modifiable",
             "advanced": "Configuration avancée",
             "advanced_count": "{{count}} fichier(s)"
+        },
+        "settings": {
+            "title": "Actions serveur",
+            "rename": "Renommer",
+            "reinstall": "Réinstaller",
+            "rename_title": "Renommer le serveur",
+            "rename_help": "Choisissez un nouveau nom d'affichage. Cela met à jour le nom dans Pelican et dans le panel.",
+            "rename_confirm": "Enregistrer le nouveau nom",
+            "rename_error": "Échec du renommage. Veuillez réessayer dans un instant.",
+            "reinstall_title": "Réinstaller le serveur",
+            "reinstall_warning": "La réinstallation relance le script d'installation de l'egg. Elle peut écraser des fichiers de configuration et, selon l'egg, effacer des données. Cette action est irréversible.",
+            "reinstall_confirm_help": "Tapez le nom du serveur « {{name}} » pour confirmer.",
+            "reinstall_confirm": "Réinstaller maintenant",
+            "reinstall_name_mismatch": "Le nom saisi ne correspond pas.",
+            "reinstall_error": "Échec de la réinstallation. Veuillez réessayer dans un instant."
         }
     },
     "nav": {

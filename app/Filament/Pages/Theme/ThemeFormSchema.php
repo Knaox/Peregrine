@@ -53,6 +53,14 @@ final class ThemeFormSchema
                     ColorPicker::make('theme_warning')->label('Warning'),
                     ColorPicker::make('theme_success')->label('Success'),
                     ColorPicker::make('theme_info')->label('Info'),
+                    ColorPicker::make('theme_suspended')
+                        ->label('Suspended server accent')
+                        ->default('#f59e0b')
+                        ->helperText('Tiny pill + left border on server cards for suspended servers.'),
+                    ColorPicker::make('theme_installing')
+                        ->label('Installing server accent')
+                        ->default('#3b82f6')
+                        ->helperText('Tiny pill + left border on server cards during install.'),
                 ])->columns(4),
 
             Section::make('Background & Surfaces')

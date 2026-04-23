@@ -119,6 +119,35 @@ class PelicanClientService
             ->throw();
     }
 
+    /**
+     * Rename the server. Updates the display name in Pelican; callers should
+     * also update the local Server row so the panel UI stays in sync without
+     * a sync cycle.
+     *
+     * @throws RequestException
+     */
+    public function renameServer(string $serverIdentifier, string $name): void
+    {
+        $this->request()
+            ->post("/api/client/servers/{$serverIdentifier}/settings/rename", [
+                'name' => $name,
+            ])
+            ->throw();
+    }
+
+    /**
+     * Trigger a server reinstall (re-runs the egg's install script). Data in
+     * the server files is preserved by default — use with caution.
+     *
+     * @throws RequestException
+     */
+    public function reinstallServer(string $serverIdentifier): void
+    {
+        $this->request()
+            ->post("/api/client/servers/{$serverIdentifier}/settings/reinstall")
+            ->throw();
+    }
+
     // -------------------------------------------------------------------------
     // Startup variables
     // -------------------------------------------------------------------------

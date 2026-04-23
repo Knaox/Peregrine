@@ -26,30 +26,36 @@ export function LoginPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [focusedField, setFocusedField] = useState<string | null>(null);
 
+    // Dynamic providers drive the button rendering. Local form is gated on the
+    // auth_local_enabled flag. Falls back to local-only while the query runs.
+    const localEnabled = providers.data?.local_enabled ?? true;
+    const localRegistrationEnabled = providers.data?.local_registration_enabled ?? true;
+    const canonicalProvider = providers.data?.canonical_provider ?? null;
+    const canonicalRegisterUrl = providers.data?.canonical_register_url ?? null;
+    const enabledProviders = providers.data?.providers ?? [];
+    const canRegisterLocal = localEnabled && localRegistrationEnabled;
+    const canRegisterCanonical = canonicalRegisterUrl !== null;
+    const canonicalProviderLabel = canonicalProvider !== null
+        ? t(`auth.providers.${canonicalProvider}`)
+        : '';
+
     // OAuth callbacks redirect back to /login?error=<i18n-key> when something
     // blocks the sign-in (unverified email, disabled provider, token failure).
     // Surface the message in a banner, then strip it from the URL so a refresh
-    // doesn't replay a stale error.
+    // doesn't replay a stale error. The register_on_canonical_first key needs
+    // the canonical provider name interpolated — we source it from the
+    // providers response.
     useEffect(() => {
         const errorKey = searchParams.get('error');
         if (errorKey === null) return;
-        const translated = t(errorKey);
+        const translated = t(errorKey, { provider: canonicalProviderLabel });
         // When the key isn't defined in i18n, i18next returns the key itself —
         // fall back to a generic message rather than showing "auth.social.xxx".
         setProviderError(translated === errorKey ? t('auth.social.oauth_failed') : translated);
         const next = new URLSearchParams(searchParams);
         next.delete('error');
         setSearchParams(next, { replace: true });
-    }, [searchParams, setSearchParams, t]);
-
-    // Dynamic providers drive the button rendering. Local form is gated on the
-    // auth_local_enabled flag. Falls back to local-only while the query runs.
-    const localEnabled = providers.data?.local_enabled ?? true;
-    const localRegistrationEnabled = providers.data?.local_registration_enabled ?? true;
-    const shopRegisterUrl = providers.data?.shop_register_url ?? null;
-    const enabledProviders = providers.data?.providers ?? [];
-    const canRegisterLocal = localEnabled && localRegistrationEnabled;
-    const canRegisterShop = shopRegisterUrl !== null;
+    }, [searchParams, setSearchParams, t, canonicalProviderLabel]);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -190,16 +196,16 @@ export function LoginPage() {
                     </div>
                 </m.div>
 
-                {(canRegisterLocal || canRegisterShop) && (
+                {(canRegisterLocal || canRegisterCanonical) && (
                     <p className="mt-5 text-center text-sm text-[var(--color-text-muted)]">
                         {t('auth.login.no_account')}{' '}
-                        {canRegisterShop ? (
+                        {canRegisterCanonical ? (
                             <>
                                 <a
-                                    href={shopRegisterUrl as string}
+                                    href={canonicalRegisterUrl as string}
                                     className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
                                 >
-                                    {t('auth.login.create_account_shop')}
+                                    {t('auth.login.create_account_canonical', { provider: canonicalProviderLabel })}
                                 </a>
                                 {canRegisterLocal && (
                                     <>

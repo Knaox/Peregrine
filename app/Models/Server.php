@@ -24,6 +24,10 @@ class Server extends Model
         'plan_id',
         'stripe_subscription_id',
         'payment_intent_id',
+        'paymenter_service_id',
+        'idempotency_key',
+        'provisioning_error',
+        'scheduled_deletion_at',
     ];
 
     /**
@@ -39,6 +43,7 @@ class Server extends Model
             'status' => 'string',
             'egg_id' => 'integer',
             'plan_id' => 'integer',
+            'scheduled_deletion_at' => 'datetime',
         ];
     }
 

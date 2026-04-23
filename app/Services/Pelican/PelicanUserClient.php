@@ -107,4 +107,24 @@ class PelicanUserClient
             ])
             ->throw();
     }
+
+    /**
+     * Change a Pelican user's email. Pelican's PATCH /users/{id} validates
+     * `username` (and `name`) as required even on a partial update — sending
+     * just `{email}` returns 422. We fetch the current user first to preserve
+     * username + name. Hides this quirk from callers (UserController profile
+     * edit, SocialAuthService canonical login sync).
+     *
+     * @throws RequestException
+     */
+    public function changeUserEmail(int $pelicanUserId, string $newEmail): PelicanUser
+    {
+        $current = $this->getUser($pelicanUserId);
+
+        return $this->updateUser($pelicanUserId, [
+            'email' => $newEmail,
+            'username' => $current->username,
+            'name' => $current->name,
+        ]);
+    }
 }

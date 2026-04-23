@@ -11,7 +11,6 @@ const STEP_KEYS = [
     'setup.steps.admin',
     'setup.steps.pelican',
     'setup.steps.auth',
-    'setup.steps.bridge',
     'setup.steps.summary',
 ] as const;
 

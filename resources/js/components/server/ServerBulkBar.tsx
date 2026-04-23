@@ -19,7 +19,12 @@ export function ServerBulkBar({
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: 100, opacity: 0 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl bg-[var(--color-glass)] border-t border-[var(--color-glass-border)] shadow-[var(--shadow-lg)] px-3 sm:px-6 py-3"
+                    className="fixed left-0 right-0 z-50 backdrop-blur-xl bg-[var(--color-glass)] border-t border-[var(--color-glass-border)] shadow-[var(--shadow-lg)] px-3 sm:px-6 py-3"
+                    style={{
+                        // Sit above the dock when active (see DockBar), flush
+                        // against the bottom otherwise.
+                        bottom: 'var(--bottom-safe-area, 0px)',
+                    }}
                 >
                     <div className="mx-auto flex max-w-5xl flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
                         <span className="text-sm font-medium text-[var(--color-text-primary)]">

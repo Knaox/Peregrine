@@ -32,6 +32,19 @@ export function ProfileForm({ onSaved }: ProfileFormProps) {
         }
     }, [profile]);
 
+    // Keep the locale select in sync with i18n.language so external changes
+    // (e.g. the user menu shortcut) reflect here without a refresh. Only
+    // syncs when the locale actually differs to avoid blowing away in-flight
+    // local edits.
+    useEffect(() => {
+        const handler = (lng: string) => {
+            const normalized = lng.startsWith('fr') ? 'fr' : 'en';
+            setLocale((prev) => (prev === normalized ? prev : normalized));
+        };
+        i18n.on('languageChanged', handler);
+        return () => { i18n.off('languageChanged', handler); };
+    }, [i18n]);
+
     useEffect(() => {
         if (isUpdateSuccess) {
             onSaved?.();

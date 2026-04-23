@@ -27,6 +27,20 @@ export function UserMenu() {
         }
     };
 
+    const handleLocaleChange = async (lang: string): Promise<void> => {
+        // Optimistic UI flip — i18next swaps the bundle in front of the user
+        // immediately. Backend persist follows so the profile page (and the
+        // next session, and emails sent to the user) all stay in sync.
+        await i18n.changeLanguage(lang);
+        try {
+            await updateProfile({ locale: lang });
+        } catch {
+            // Same fallback policy as theme_mode: keep the local change, the
+            // next /me refresh resolves any divergence.
+        }
+        close();
+    };
+
     const close = useCallback(() => setIsOpen(false), []);
 
     useEffect(() => {
@@ -86,7 +100,7 @@ export function UserMenu() {
                                     <button
                                         key={lang}
                                         type="button"
-                                        onClick={() => { void i18n.changeLanguage(lang); close(); }}
+                                        onClick={() => { void handleLocaleChange(lang); }}
                                         className={clsx(
                                             'rounded px-2 py-0.5 text-xs font-medium transition-all duration-[var(--transition-fast)]',
                                             i18n.language.startsWith(lang) ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',

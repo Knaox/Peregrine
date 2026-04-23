@@ -9,6 +9,8 @@ const colorMap: Record<StatusDotProps['status'], string> = {
     offline: 'bg-[var(--color-danger)]',
     suspended: 'bg-[var(--color-warning)]',
     terminated: 'bg-[var(--color-danger)]',
+    provisioning: 'bg-[var(--color-primary)]',
+    provisioning_failed: 'bg-[var(--color-danger)]',
 };
 
 const glowMap: Record<StatusDotProps['status'], string> = {
@@ -19,6 +21,8 @@ const glowMap: Record<StatusDotProps['status'], string> = {
     offline: 'shadow-[0_0_6px_var(--color-danger-glow)]',
     suspended: 'shadow-[0_0_6px_rgba(245,158,11,0.3)]',
     terminated: 'shadow-[0_0_6px_var(--color-danger-glow)]',
+    provisioning: 'shadow-[0_0_6px_var(--color-primary-glow)]',
+    provisioning_failed: 'shadow-[0_0_6px_var(--color-danger-glow)]',
 };
 
 const sizeMap: Record<NonNullable<StatusDotProps['size']>, string> = {
@@ -30,6 +34,7 @@ const defaultPulseStatuses = new Set<StatusDotProps['status']>([
     'running',
     'active',
     'starting',
+    'provisioning',
 ]);
 
 export function StatusDot({ status, size = 'sm', pulse }: StatusDotProps) {

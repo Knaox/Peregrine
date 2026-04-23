@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import type { PowerSignal } from '@/types/PowerSignal';
@@ -39,7 +40,7 @@ const RestartIcon = (
     </svg>
 );
 
-export function ServerCardPowerButtons({
+function ServerCardPowerButtonsImpl({
     serverId, isRunning, isStopped, isPowerPending, onPower,
 }: ServerCardPowerButtonsProps) {
     const { t } = useTranslation();
@@ -59,3 +60,5 @@ export function ServerCardPowerButtons({
         </div>
     );
 }
+
+export const ServerCardPowerButtons = memo(ServerCardPowerButtonsImpl);

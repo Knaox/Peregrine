@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useWingsWebSocket } from '@/hooks/useWingsWebSocket';
+import { useRefetchServerOnInstallComplete } from '@/hooks/useRefetchServerOnInstallComplete';
 import { useCommandHistory } from '@/hooks/useCommandHistory';
 import { useServer } from '@/hooks/useServer';
 import { useServerPermissions } from '@/hooks/useServerPermissions';
@@ -33,9 +34,17 @@ export function ServerConsolePage() {
     const canStop = perms.has('control.stop');
     const canRestart = perms.has('control.restart');
 
-    const { messages, serverState, isConnected, sendCommand, clearMessages } = useWingsWebSocket(serverId, {
+    const { messages, serverState, isConnected, sendCommand, clearMessages, installCompleted } = useWingsWebSocket(serverId, {
         console: true, stats: true,
     });
+
+    const isProvisioning = server?.status === 'provisioning';
+    const isSuspended = server?.status === 'suspended';
+
+    // Same auto-refresh as on the overview — covers the case where the
+    // user is watching the live install logs when Wings flips to
+    // `install completed` (which is exactly the most likely scenario).
+    useRefetchServerOnInstallComplete(serverId, installCompleted, server?.status);
 
     const { addCommand, navigateUp, navigateDown } = useCommandHistory(serverId);
 
@@ -57,6 +66,12 @@ export function ServerConsolePage() {
     }, [serverState, isStarting, isStopping, t]);
 
     const enrichedMessages: ConsoleMessage[] = useMemo(() => {
+        // Install context wins over the regular state messages — Wings is
+        // streaming install output and the user wants to see it raw.
+        if (isProvisioning && messages.length === 0) {
+            return [{ id: -4, text: `[Peregrine] ${t('servers.install.waiting_for_output')}`, timestamp: Date.now() }];
+        }
+        if (isProvisioning) return messages;
         if (isStopped && messages.length === 0) {
             return [{ id: -1, text: `[Peregrine] ${t('servers.console.server_stopped_message')}`, timestamp: Date.now() }];
         }
@@ -67,7 +82,7 @@ export function ServerConsolePage() {
             return [...messages, { id: -3, text: `[Peregrine] ${t('servers.console.server_stopping_message')}`, timestamp: Date.now() }];
         }
         return messages;
-    }, [messages, isStopped, isStarting, isStopping, t]);
+    }, [messages, isStopped, isStarting, isStopping, isProvisioning, t]);
 
     return (
         <m.div
@@ -81,14 +96,27 @@ export function ServerConsolePage() {
                 {/* Row 1: status + connection + clear */}
                 <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
-                        {/* Server state pill */}
-                        <div className="inline-flex items-center gap-1.5 rounded-[var(--radius-full)] px-2.5 py-1 sm:px-3 sm:py-1.5 glass-card-enhanced"
-                            style={{ borderColor: STATE_COLORS[serverState] ?? 'var(--color-border)' }}>
-                            <StatusDot status={serverState === 'running' ? 'running' : serverState === 'starting' || serverState === 'stopping' ? 'starting' : 'offline'} size="sm" />
-                            <span className="text-xs font-semibold" style={{ color: STATE_COLORS[serverState] ?? 'var(--color-text-muted)' }}>
-                                {stateLabel}
-                            </span>
-                        </div>
+                        {/* Server state pill — switches to Installing during provisioning */}
+                        {isProvisioning ? (
+                            <div className="inline-flex items-center gap-1.5 rounded-[var(--radius-full)] px-2.5 py-1 sm:px-3 sm:py-1.5 glass-card-enhanced"
+                                style={{ borderColor: 'var(--color-primary)' }}>
+                                <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: 'var(--color-primary)' }} />
+                                    <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: 'var(--color-primary)' }} />
+                                </span>
+                                <span className="text-xs font-semibold" style={{ color: 'var(--color-primary)' }}>
+                                    {installCompleted ? t('servers.install.completed_title') : t('servers.install.in_progress_title')}
+                                </span>
+                            </div>
+                        ) : (
+                            <div className="inline-flex items-center gap-1.5 rounded-[var(--radius-full)] px-2.5 py-1 sm:px-3 sm:py-1.5 glass-card-enhanced"
+                                style={{ borderColor: STATE_COLORS[serverState] ?? 'var(--color-border)' }}>
+                                <StatusDot status={serverState === 'running' ? 'running' : serverState === 'starting' || serverState === 'stopping' ? 'starting' : 'offline'} size="sm" />
+                                <span className="text-xs font-semibold" style={{ color: STATE_COLORS[serverState] ?? 'var(--color-text-muted)' }}>
+                                    {stateLabel}
+                                </span>
+                            </div>
+                        )}
 
                         {/* Connection badge */}
                         <span className="inline-flex items-center gap-1.5 text-[10px] font-mono"
@@ -107,21 +135,25 @@ export function ServerConsolePage() {
                     </Button>
                 </div>
 
-                {/* Row 2: power controls */}
-                <div className="flex items-center">
-                    <ServerPowerControls
-                        serverId={serverId}
-                        state={serverState as 'running' | 'stopped' | 'offline' | 'starting'}
-                        canStart={canStart} canStop={canStop} canRestart={canRestart}
-                    />
-                </div>
+                {/* Row 2: power controls (hidden during install OR when
+                    suspended — Wings rejects every command in both states). */}
+                {!isProvisioning && !isSuspended && (
+                    <div className="flex items-center">
+                        <ServerPowerControls
+                            serverId={serverId}
+                            state={serverState as 'running' | 'stopped' | 'offline' | 'starting'}
+                            canStart={canStart} canStop={canStop} canRestart={canRestart}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Terminal */}
             <ConsoleOutput messages={enrichedMessages} />
 
-            {/* Command input */}
-            {canConsole && (
+            {/* Command input — hidden during install OR when suspended
+                (Wings rejects commands in both states). */}
+            {canConsole && !isProvisioning && !isSuspended && (
                 <ConsoleInput
                     onSend={handleSend}
                     onHistoryUp={navigateUp}

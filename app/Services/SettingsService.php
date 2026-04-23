@@ -86,6 +86,7 @@ class SettingsService
                 'logo_url_light' => $logoUrlLight,
                 'favicon_url' => $this->resolveAssetUrl($favicon),
                 'header_links' => $headerLinks,
+                'default_locale' => $this->get('default_locale', 'en'),
             ];
         });
     }

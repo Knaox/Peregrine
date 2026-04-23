@@ -59,6 +59,13 @@ docker run -d --name peregrine \
 
 Open `http://localhost:8080` and run the Setup Wizard.
 
+> **What's running inside the container** — supervised by `supervisord`, all auto-restarted on crash:
+> - `nginx` (HTTP server, port 8080)
+> - `php-fpm` (PHP 8.3 worker pool)
+> - **`php artisan queue:work`** — processes Bridge / Stripe / Pelican-mirror webhooks, plugin mails, sync jobs. **No separate worker container needed**, no supervisor / systemd setup on your host.
+>
+> Cache + queue + sessions default to `file` / `database` (no Redis required). For higher throughput, switch to bundled Redis via [Option C](#option-c--app--redis-external-database) or [Option D](#option-d--all-in-one-stack-app--mysql--redis) below — the in-image worker picks up `QUEUE_CONNECTION=redis` automatically.
+
 ### Option B — the official `docker-compose.yml` (SQLite or external DB)
 
 Save this as `docker-compose.yml`, run `docker compose up -d`. Also works as a **Portainer Stack** — paste and Deploy.

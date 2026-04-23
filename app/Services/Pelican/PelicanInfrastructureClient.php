@@ -2,6 +2,8 @@
 
 namespace App\Services\Pelican;
 
+use App\Services\Pelican\DTOs\CreateServerRequest;
+use App\Services\Pelican\DTOs\PelicanAllocation;
 use App\Services\Pelican\DTOs\PelicanEgg;
 use App\Services\Pelican\DTOs\PelicanNode;
 use App\Services\Pelican\DTOs\PelicanServer;
@@ -60,6 +62,42 @@ class PelicanInfrastructureClient
                 ],
                 'node_id' => $nodeId,
             ])
+            ->throw();
+
+        return PelicanServer::fromApiResponse($response->json());
+    }
+
+    /**
+     * Full-control variant of createServer() — accepts the complete Pelican
+     * Application API payload (limits, environment, allocations, feature
+     * limits, OOM, startup, scripts). Used by the Bridge when provisioning
+     * from a Stripe webhook : the legacy createServer() left too many fields
+     * hardcoded.
+     *
+     * @throws RequestException
+     */
+    public function createServerAdvanced(CreateServerRequest $request): PelicanServer
+    {
+        $response = $this->http->request()
+            ->post('/api/application/servers', $request->toApiPayload())
+            ->throw();
+
+        return PelicanServer::fromApiResponse($response->json());
+    }
+
+    /**
+     * Update a server's resource build (limits, feature_limits, allocation
+     * counts, oom). Used by the Bridge when a Stripe subscription.updated
+     * event signals an upgrade or downgrade of plan.
+     *
+     * @param  array<string, mixed>  $build  Pelican PATCH /servers/{id}/build payload
+     *
+     * @throws RequestException
+     */
+    public function updateServerBuild(int $pelicanServerId, array $build): PelicanServer
+    {
+        $response = $this->http->request()
+            ->patch("/api/application/servers/{$pelicanServerId}/build", $build)
             ->throw();
 
         return PelicanServer::fromApiResponse($response->json());
@@ -153,6 +191,22 @@ class PelicanInfrastructureClient
             ->throw();
     }
 
+    /**
+     * List all network allocations on a node (paginated). Used by the Bridge
+     * PortAllocator to find a contiguous block of free ports.
+     *
+     * @return PelicanAllocation[]
+     *
+     * @throws RequestException
+     */
+    public function listNodeAllocations(int $nodeId): array
+    {
+        return $this->http->fetchAllPages(
+            "/api/application/nodes/{$nodeId}/allocations",
+            PelicanAllocation::class,
+        );
+    }
+
     // Eggs ----------------------------------------------------------------
 
     /**
@@ -187,5 +241,39 @@ class PelicanInfrastructureClient
         $this->http->request()
             ->delete("/api/application/eggs/{$pelicanEggId}")
             ->throw();
+    }
+
+    /**
+     * Fetch the variable definitions for an egg from Pelican. Returns a
+     * map of env_variable name → default_value, suitable for seeding the
+     * `environment` payload of createServerAdvanced(). Pelican rejects a
+     * server creation when required egg variables are missing — this lookup
+     * is mandatory before any provisioning call.
+     *
+     * Local DB doesn't store these (Egg model has no env_default column),
+     * so we hit the Application API at provisioning time.
+     *
+     * @return array<string, scalar|null>
+     *
+     * @throws RequestException
+     */
+    public function getEggVariableDefaults(int $eggId): array
+    {
+        $response = $this->http->request()
+            ->get("/api/application/eggs/{$eggId}", ['include' => 'variables'])
+            ->throw();
+
+        $variables = data_get($response->json(), 'attributes.relationships.variables.data', []);
+        $defaults = [];
+
+        foreach ($variables as $entry) {
+            $attrs = $entry['attributes'] ?? [];
+            $key = $attrs['env_variable'] ?? null;
+            if ($key !== null && $key !== '') {
+                $defaults[(string) $key] = $attrs['default_value'] ?? '';
+            }
+        }
+
+        return $defaults;
     }
 }

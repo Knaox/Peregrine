@@ -17,6 +17,11 @@
     $logoUrl = $initialMode === 'light' && ! empty($branding['logo_url_light'])
         ? $branding['logo_url_light']
         : ($branding['logo_url'] ?? '/images/logo.webp');
+
+    // Default UI language picked by the admin in /admin/settings (en or fr).
+    // The SPA's i18n config uses this as the fallback language when no
+    // localStorage / browser preference matches a supported locale.
+    $defaultLocale = app(\App\Services\SettingsService::class)->get('default_locale', 'en');
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $initialMode }}">
 <head>
@@ -27,6 +32,7 @@
     <link rel="icon" href="{{ $branding['favicon_url'] ?? '/images/favicon.ico' }}" type="image/x-icon">
     <script>window.__BRANDING__ = @json($branding);</script>
     <script>window.__THEME_MODE__ = @json($userThemeMode);</script>
+    <script>window.__DEFAULT_LOCALE__ = @json($defaultLocale);</script>
     <style>:root {
         @foreach($initialCssVars as $key => $value){{ $key }}: {{ $value }};
         @endforeach

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import i18n from '@/i18n/config';
 import type { SetupState } from '../types';
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 6;
 
 const detectedLocale = (i18n.language ?? 'en').startsWith('fr') ? 'fr' : 'en';
 
@@ -28,10 +28,6 @@ const initialState: SetupState = {
     },
     auth: {
         allow_local_registration: true,
-    },
-    bridge: {
-        enabled: false,
-        stripe_webhook_secret: '',
     },
 };
 

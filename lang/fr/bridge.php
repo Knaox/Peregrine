@@ -16,4 +16,27 @@ return [
         'cancelled' => 'Abonnement annulé.',
         'expired' => 'Abonnement expiré. Serveur suspendu.',
     ],
+    'errors' => [
+        'disabled' => 'L\'API Bridge est désactivée.',
+        'secret_not_configured' => 'Le secret partagé Bridge n\'a pas été configuré.',
+        'invalid_signature' => 'Signature HMAC invalide.',
+        'invalid_timestamp' => 'En-tête X-Bridge-Timestamp manquant ou mal formé.',
+        'timestamp_expired' => 'Horodatage de la requête en dehors de la fenêtre de 5 minutes.',
+        'plan_not_found' => 'Aucun plan trouvé avec ce shop_plan_id.',
+    ],
+    'plan' => [
+        'status' => [
+            'ready' => 'Prêt',
+            'needs_config' => 'Configuration requise',
+            'inactive' => 'Inactif',
+            'sync_error' => 'Erreur de synchronisation',
+        ],
+    ],
+    'settings' => [
+        'enabled_label' => 'Activer l\'API Bridge',
+        'shop_url_label' => 'URL de base du Shop',
+        'shared_secret_label' => 'Secret HMAC partagé',
+        'generate_secret' => 'Générer un nouveau secret',
+        'saved' => 'Paramètres Bridge enregistrés',
+    ],
 ];

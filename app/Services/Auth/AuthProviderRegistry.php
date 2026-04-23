@@ -3,6 +3,8 @@
 namespace App\Services\Auth;
 
 use App\Models\User;
+use App\Services\Auth\AuthProviderRegistry\EnabledProvidersList;
+use App\Services\Auth\AuthProviderRegistry\SocialiteConfigurator;
 use App\Services\SettingsService;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -24,8 +26,8 @@ use Illuminate\Support\Facades\DB;
  */
 class AuthProviderRegistry
 {
-    /** Providers we know how to drive. Shop is treated specially (custom driver). */
-    private const SUPPORTED = ['shop', 'google', 'discord', 'linkedin'];
+    /** Providers we know how to drive. Shop + Paymenter are canonical (custom drivers). */
+    private const SUPPORTED = ['shop', 'google', 'discord', 'linkedin', 'paymenter'];
 
     /** Socialite core uses `linkedin-openid` for the modern OIDC flow. */
     private const SOCIALITE_DRIVER = [
@@ -33,7 +35,17 @@ class AuthProviderRegistry
         'google' => 'google',
         'discord' => 'discord',
         'linkedin' => 'linkedin-openid',
+        'paymenter' => 'paymenter',
     ];
+
+    /**
+     * Canonical providers act as primary identity sources: they auto-create
+     * local accounts on first login, sync the user's email to Pelican on every
+     * callback, and may surface a register URL on the login page. Only ONE
+     * canonical provider can be active at a time (Filament save() enforces).
+     * Order = priority when both are accidentally enabled (defensive fallback).
+     */
+    private const CANONICAL_PROVIDERS = ['shop', 'paymenter'];
 
     public function __construct(
         private readonly SettingsService $settings,
@@ -54,9 +66,40 @@ class AuthProviderRegistry
             return $this->settings->get('auth_shop_enabled', 'false') === 'true';
         }
 
+        if ($provider === 'paymenter') {
+            return $this->settings->get('auth_paymenter_enabled', 'false') === 'true';
+        }
+
         $providers = $this->decodeProviders();
 
         return (bool) ($providers[$provider]['enabled'] ?? false);
+    }
+
+    /**
+     * Returns the currently active canonical provider id, or null when none is
+     * enabled. If both are enabled (shouldn't happen — Filament save() blocks),
+     * returns the first in declaration order (shop wins) and logs a warning.
+     */
+    public function canonicalProvider(): ?string
+    {
+        $active = array_values(array_filter(
+            self::CANONICAL_PROVIDERS,
+            fn (string $p): bool => $this->isEnabled($p),
+        ));
+
+        if (count($active) > 1) {
+            \Illuminate\Support\Facades\Log::warning('Multiple canonical IdPs enabled simultaneously; falling back to first', [
+                'active' => $active,
+                'fallback' => $active[0],
+            ]);
+        }
+
+        return $active[0] ?? null;
+    }
+
+    public function isCanonical(string $provider): bool
+    {
+        return in_array($provider, self::CANONICAL_PROVIDERS, true) && $this->isEnabled($provider);
     }
 
     /**
@@ -83,58 +126,16 @@ class AuthProviderRegistry
      */
     public function enabledProviders(): array
     {
-        $out = [];
-
-        if ($this->isEnabled('shop')) {
-            $shop = $this->shopConfig();
-            $out[] = [
-                'id' => 'shop',
-                'enabled' => true,
-                'redirect_url' => (string) ($shop['redirect_uri'] ?? $this->defaultRedirect('shop')),
-                'canonical' => true,
-                'logo_url' => $this->logoUrl((string) ($shop['logo_path'] ?? '')),
-            ];
-        }
-
-        $providers = $this->decodeProviders();
-        foreach (['google', 'discord', 'linkedin'] as $id) {
-            if (! ($providers[$id]['enabled'] ?? false)) {
-                continue;
-            }
-            $out[] = [
-                'id' => $id,
-                'enabled' => true,
-                'redirect_url' => (string) ($providers[$id]['redirect_uri'] ?? $this->defaultRedirect($id)),
-                'canonical' => false,
-                'logo_url' => $this->logoUrl((string) ($providers[$id]['logo_path'] ?? '')),
-            ];
-        }
-
-        return $out;
-    }
-
-    /**
-     * Resolve a stored relative path (e.g. "branding/oauth/xyz.png") to the
-     * absolute URL the frontend can drop into an <img src>. Returns null when
-     * no custom logo is configured — the SPA falls back to the default SVG.
-     */
-    private function logoUrl(string $path): ?string
-    {
-        if ($path === '') {
-            return null;
-        }
-
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
-            return $path;
-        }
-
-        return '/storage/'.ltrim($path, '/');
+        return EnabledProvidersList::build($this);
     }
 
     /**
      * Pushes provider config into config('services.*') at runtime so
      * Laravel Socialite picks it up on the next `driver()` call. Also
      * decrypts the client_secret from its stored envelope.
+     *
+     * Body lives in `AuthProviderRegistry/SocialiteConfigurator` to keep
+     * this class under the 300-line file rule.
      */
     public function configureSocialite(string $provider): void
     {
@@ -142,28 +143,7 @@ class AuthProviderRegistry
             throw new \App\Exceptions\Auth\ProviderDisabledException();
         }
 
-        if ($provider === 'shop') {
-            $cfg = $this->shopConfig();
-            config()->set('services.shop', [
-                'client_id' => (string) ($cfg['client_id'] ?? ''),
-                'client_secret' => $this->decryptSecret((string) ($cfg['client_secret_encrypted'] ?? '')),
-                'redirect' => (string) ($cfg['redirect_uri'] ?? $this->defaultRedirect('shop')),
-                'authorize_url' => (string) ($cfg['authorize_url'] ?? ''),
-                'token_url' => (string) ($cfg['token_url'] ?? ''),
-                'user_url' => (string) ($cfg['user_url'] ?? ''),
-            ]);
-
-            return;
-        }
-
-        $providers = $this->decodeProviders();
-        $p = $providers[$provider] ?? [];
-
-        config()->set("services.{$this->socialiteDriver($provider)}", [
-            'client_id' => (string) ($p['client_id'] ?? ''),
-            'client_secret' => $this->decryptSecret((string) ($p['client_secret_encrypted'] ?? '')),
-            'redirect' => (string) ($p['redirect_uri'] ?? $this->defaultRedirect($provider)),
-        ]);
+        SocialiteConfigurator::apply($this, $provider);
     }
 
     /**
@@ -211,6 +191,13 @@ class AuthProviderRegistry
         $this->settings->set('auth_shop_config', json_encode($cfg, JSON_THROW_ON_ERROR));
     }
 
+    public function storePaymenterClientSecret(string $plaintext): void
+    {
+        $cfg = $this->paymenterConfig();
+        $cfg['client_secret_encrypted'] = $plaintext === '' ? '' : Crypt::encryptString($plaintext);
+        $this->settings->set('auth_paymenter_config', json_encode($cfg, JSON_THROW_ON_ERROR));
+    }
+
     public function storeProviderClientSecret(string $provider, string $plaintext): void
     {
         $providers = $this->decodeProviders();
@@ -233,6 +220,37 @@ class AuthProviderRegistry
         }
 
         return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function paymenterConfig(): array
+    {
+        $raw = (string) $this->settings->get('auth_paymenter_config', '{}');
+
+        try {
+            $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return [];
+        }
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * Active canonical config (whichever of shop/paymenter is currently
+     * enabled). Returns an empty array when none is active.
+     *
+     * @return array<string, mixed>
+     */
+    public function canonicalConfig(): array
+    {
+        return match ($this->canonicalProvider()) {
+            'shop' => $this->shopConfig(),
+            'paymenter' => $this->paymenterConfig(),
+            default => [],
+        };
     }
 
     /**

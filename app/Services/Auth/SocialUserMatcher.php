@@ -4,7 +4,6 @@ namespace App\Services\Auth;
 
 use App\Models\OAuthIdentity;
 use App\Models\User;
-use App\Services\SettingsService;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 /**
@@ -19,7 +18,7 @@ use Laravel\Socialite\Contracts\User as SocialiteUser;
 class SocialUserMatcher
 {
     public function __construct(
-        private readonly SettingsService $settings,
+        private readonly AuthProviderRegistry $registry,
     ) {}
 
     public function match(string $provider, SocialiteUser $socialiteUser): MatchResult
@@ -36,13 +35,14 @@ class SocialUserMatcher
         if ($identity !== null) {
             $user = $identity->user()->first();
             if ($user !== null) {
-                // Defense-in-depth: for the Shop (canonical IdP) we revalidate
-                // email_verified on every login, not just at link time. A user
-                // whose Shop email becomes unverified (manual admin reset,
-                // account suspended, etc.) must re-verify before re-entering.
-                // Other providers are trusted once linked — the identity row
-                // itself is the proof of prior verification.
-                if ($provider === 'shop' && ! $this->isEmailVerifiedByProvider($provider, $socialiteUser)) {
+                // Defense-in-depth: for canonical IdPs (shop, paymenter) we
+                // revalidate email_verified on every login, not just at link
+                // time. A user whose canonical email becomes unverified
+                // (manual admin reset, account suspended, etc.) must re-verify
+                // before re-entering. Non-canonical providers are trusted once
+                // linked — the identity row itself is the proof of prior
+                // verification.
+                if ($this->registry->isCanonical($provider) && ! $this->isEmailVerifiedByProvider($provider, $socialiteUser)) {
                     return new MatchResult(null, MatchResult::ACTION_REJECT_UNVERIFIED_EMAIL);
                 }
                 return new MatchResult($user, MatchResult::ACTION_MATCH_BY_IDENTITY);
@@ -73,29 +73,28 @@ class SocialUserMatcher
 
     /**
      * No local user by (provider, provider_user_id) AND none by email. The
-     * caller must decide whether to create or reject based on Shop mode.
+     * caller must decide whether to create or reject based on canonical mode.
      */
     private function rejectionOrCreate(string $provider, ?string $email): MatchResult
     {
-        // Shop mode: accounts come from the Shop only. A social provider
-        // (google/discord/linkedin) is a sign-IN method, not a sign-UP channel.
-        // The shop provider itself bypasses this rule — it IS the sign-up channel.
-        if ($this->isShopMode() && $provider !== 'shop') {
+        // Canonical mode: accounts come from the canonical IdP (shop or
+        // paymenter) only. A social provider (google/discord/linkedin) is a
+        // sign-IN method, not a sign-UP channel. The canonical provider itself
+        // bypasses this rule — it IS the sign-up channel.
+        $canonical = $this->registry->canonicalProvider();
+        if ($canonical !== null && $provider !== $canonical) {
             return new MatchResult(null, MatchResult::ACTION_REJECT_REGISTER_ON_SHOP_FIRST);
         }
 
         return new MatchResult(null, MatchResult::ACTION_CREATE);
     }
 
-    private function isShopMode(): bool
-    {
-        return $this->settings->get('auth_shop_enabled', 'false') === 'true';
-    }
-
     /**
      * Read the provider-specific verified-email flag from the raw user payload.
      * Google OIDC → email_verified. Discord → verified. LinkedIn OIDC →
-     * email_verified. Unknown providers default to UNVERIFIED.
+     * email_verified. Paymenter → email_verified (synthesized from
+     * email_verified_at in PaymenterSocialiteProvider). Unknown providers
+     * default to UNVERIFIED.
      *
      * Shop: the payload SHOULD carry `email_verified` — when present we honour
      * it (defence in depth — plan §S1). When the field is absent (older Shop
@@ -117,6 +116,7 @@ class SocialUserMatcher
             'google' => ($raw['email_verified'] ?? false) === true,
             'discord' => ($raw['verified'] ?? false) === true,
             'linkedin' => ($raw['email_verified'] ?? false) === true,
+            'paymenter' => ($raw['email_verified'] ?? false) === true,
             default => false,
         };
     }

@@ -91,8 +91,15 @@ class EmailTemplates extends Page implements HasForms
                 ]),
         ];
 
-        // Auth templates — one section per entry in MailTemplateRegistry
+        // Templates from the registry — one section per entry. Bridge
+        // templates are hidden when the Bridge feature is disabled (matches
+        // the visibility rule used elsewhere : ServerPlanResource navigation,
+        // BridgeSyncLogResource navigation).
+        $bridgeActive = $this->isBridgeActive();
         foreach (MailTemplateRegistry::all() as $tpl) {
+            if ($tpl['group'] === 'Bridge' && ! $bridgeActive) {
+                continue;
+            }
             $sections[] = $this->authTemplateSection($tpl);
         }
 
@@ -149,6 +156,14 @@ class EmailTemplates extends Page implements HasForms
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    private function isBridgeActive(): bool
+    {
+        // Bridge emails are ONLY relevant in Shop+Stripe mode. In Paymenter
+        // mode, Paymenter sends every customer email itself — we must not
+        // duplicate them.
+        return app(\App\Services\Bridge\BridgeModeService::class)->isShopStripe();
     }
 
     public function save(): void

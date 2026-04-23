@@ -3,17 +3,22 @@
 namespace App\Providers;
 
 use App\Events\AdminActionPerformed;
+use App\Events\Bridge\ServerProvisioned;
+use App\Events\Bridge\ServerSuspended;
 use App\Events\OAuthProviderLinked;
 use App\Events\OAuthProviderUnlinked;
 use App\Events\RecoveryCodesRegenerated;
 use App\Events\TwoFactorDisabled;
 use App\Events\TwoFactorEnabled;
+use App\Listeners\Bridge\SendServerReadyNotification;
+use App\Listeners\Bridge\SendServerSuspendedNotification;
 use App\Listeners\LogAdminAction;
 use App\Listeners\SendOAuthProviderLinkedNotification;
 use App\Listeners\SendOAuthProviderUnlinkedNotification;
 use App\Listeners\SendRecoveryCodesRegeneratedNotification;
 use App\Listeners\SendTwoFactorDisabledNotification;
 use App\Listeners\SendTwoFactorEnabledNotification;
+use App\Services\Auth\PaymenterSocialiteProvider;
 use App\Services\Auth\ShopSocialiteProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -50,6 +55,10 @@ class SocialAuthServiceProvider extends ServiceProvider
         Event::listen(OAuthProviderLinked::class, SendOAuthProviderLinkedNotification::class);
         Event::listen(OAuthProviderUnlinked::class, SendOAuthProviderUnlinkedNotification::class);
 
+        // Bridge — server lifecycle notifications to the customer.
+        Event::listen(ServerProvisioned::class, SendServerReadyNotification::class);
+        Event::listen(ServerSuspended::class, SendServerSuspendedNotification::class);
+
         $this->app->make(SocialiteFactory::class)->extend('shop', function ($app) {
             $cfg = (array) config('services.shop', []);
 
@@ -58,6 +67,22 @@ class SocialAuthServiceProvider extends ServiceProvider
 
             /** @var ShopSocialiteProvider $provider */
             $provider = $socialite->buildProvider(ShopSocialiteProvider::class, $cfg);
+
+            return $provider->withExtraConfig([
+                'authorize_url' => $cfg['authorize_url'] ?? '',
+                'token_url' => $cfg['token_url'] ?? '',
+                'user_url' => $cfg['user_url'] ?? '',
+            ]);
+        });
+
+        $this->app->make(SocialiteFactory::class)->extend('paymenter', function ($app) {
+            $cfg = (array) config('services.paymenter', []);
+
+            /** @var \Laravel\Socialite\Contracts\Factory $socialite */
+            $socialite = $app->make(SocialiteFactory::class);
+
+            /** @var PaymenterSocialiteProvider $provider */
+            $provider = $socialite->buildProvider(PaymenterSocialiteProvider::class, $cfg);
 
             return $provider->withExtraConfig([
                 'authorize_url' => $cfg['authorize_url'] ?? '',

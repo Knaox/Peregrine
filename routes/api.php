@@ -4,6 +4,12 @@ use App\Http\Controllers\Api\Admin\AdminServersController;
 use App\Http\Controllers\Api\Auth\SocialAuthController;
 use App\Http\Controllers\Api\Auth\TwoFactorController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Bridge\PelicanWebhookController;
+use App\Http\Controllers\Api\Bridge\PlanSyncController;
+use App\Http\Controllers\Api\Bridge\StripeWebhookController;
+use App\Http\Middleware\VerifyBridgeSignature;
+use App\Http\Middleware\VerifyPelicanWebhookToken;
+use App\Http\Middleware\VerifyStripeSignature;
 use App\Http\Controllers\Api\MarketplaceController;
 use App\Http\Controllers\Api\PluginController;
 use App\Http\Controllers\Api\ServerBackupController;
@@ -44,15 +50,42 @@ Route::prefix('auth')->group(function () {
         Route::post('recovery-codes/regenerate', [TwoFactorController::class, 'regenerateRecoveryCodes']);
     });
 
-    // Social auth (Shop + Google + Discord + LinkedIn) — configurable via Filament
+    // Social auth (Shop + Paymenter + Google + Discord + LinkedIn) — configurable via Filament
     // NOTE: redirect/callback are declared in routes/web.php (session-backed OAuth state).
     Route::get('providers', [SocialAuthController::class, 'listProviders']);
     Route::middleware('auth')->group(function () {
         Route::get('identities', [SocialAuthController::class, 'listLinked']);
         Route::delete('social/{provider}/unlink', [SocialAuthController::class, 'unlink'])
-            ->where('provider', 'shop|google|discord|linkedin');
+            ->where('provider', 'shop|google|discord|linkedin|paymenter');
     });
 });
+
+// Bridge — Shop pushes plan definitions to Peregrine via signed HTTP API.
+// Public routes (no Laravel auth) — protected by HMAC signature middleware.
+// Throttled per-IP to 60/min (Shop is the only legitimate caller).
+Route::prefix('bridge')
+    ->middleware(['throttle:bridge', VerifyBridgeSignature::class])
+    ->group(function () {
+        Route::post('ping', [PlanSyncController::class, 'ping']);
+        Route::post('plans/upsert', [PlanSyncController::class, 'upsert']);
+        Route::delete('plans/{shopPlanId}', [PlanSyncController::class, 'destroy'])
+            ->whereNumber('shopPlanId');
+    });
+
+// Stripe webhook receiver. Public route (no Laravel auth) — protected
+// by signature middleware. Tolerant rate limit since Stripe has fixed IPs
+// and spikes can happen during dunning runs.
+Route::post('stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->middleware(['throttle:stripe-webhook', VerifyStripeSignature::class])
+    ->name('stripe.webhook');
+
+// Pelican outgoing webhook receiver (Bridge Paymenter mode). Public route
+// authenticated by bearer token (Pelican does not sign payloads). The
+// middleware also gates on bridge_mode === paymenter so events sent to a
+// disabled bridge fail loudly with 503.
+Route::post('pelican/webhook', [PelicanWebhookController::class, 'handle'])
+    ->middleware(['throttle:pelican-webhook', VerifyPelicanWebhookToken::class])
+    ->name('pelican.webhook');
 
 // Plugins (public — active plugins for frontend)
 Route::get('plugins', [PluginController::class, 'index']);
@@ -80,6 +113,13 @@ Route::middleware('auth')->group(function () {
     // Server startup variables
     Route::get('servers/{server}/startup', [ServerController::class, 'startupVariables']);
     Route::put('servers/{server}/startup/variable', [ServerController::class, 'updateStartupVariable']);
+
+    // Server settings (rename / reinstall) — rate-limited like power actions
+    // because reinstall is irreversible and triggers egg install scripts.
+    Route::middleware('throttle:server-actions')->group(function () {
+        Route::post('servers/{server}/rename', [ServerController::class, 'rename']);
+        Route::post('servers/{server}/reinstall', [ServerController::class, 'reinstall']);
+    });
 
     // Server console & resources
     Route::get('servers/{server}/websocket', [ServerConsoleController::class, 'websocket']);

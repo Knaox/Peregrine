@@ -35,6 +35,8 @@ class UserResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
+        $isShopStripe = app(\App\Services\Bridge\BridgeModeService::class)->isShopStripe();
+
         return $schema
             ->schema([
                 Section::make('User Information')
@@ -64,22 +66,25 @@ class UserResource extends Resource
                     ])->columns(2),
 
                 Section::make('External Integrations')
-                    ->schema([
+                    ->schema(array_filter([
                         TextInput::make('pelican_user_id')
                             ->label('Pelican User ID')
                             ->helperText('Manual override — changing this re-maps the user to a different Pelican account without touching Pelican.')
                             ->numeric()
                             ->nullable(),
-                        TextInput::make('stripe_customer_id')
-                            ->label('Stripe Customer ID')
-                            ->maxLength(255),
+                        // Stripe Customer ID only relevant in Shop+Stripe mode.
+                        $isShopStripe
+                            ? TextInput::make('stripe_customer_id')
+                                ->label('Stripe Customer ID')
+                                ->maxLength(255)
+                            : null,
                         TextInput::make('oauth_provider')
                             ->label('OAuth Provider')
                             ->disabled(),
                         TextInput::make('oauth_id')
                             ->label('OAuth ID')
                             ->disabled(),
-                    ])->columns(2),
+                    ]))->columns(2),
             ]);
     }
 

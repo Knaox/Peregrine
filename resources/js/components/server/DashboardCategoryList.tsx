@@ -107,6 +107,11 @@ function ServerGrid({
         return servers.filter((s) => s.name.toLowerCase().includes(term) || (s.egg?.name ?? '').toLowerCase().includes(term));
     }, [servers, search]);
 
+    // Stagger fan-in is delightful for ≤30 cards, painful beyond — the last
+    // card of a 50-server dashboard would otherwise wait 2.5s before
+    // appearing. Skip the stagger entirely past 30 items (instant fade-in).
+    const useStagger = shouldAnimate && filtered.length <= 30;
+
     return (
         <div
             ref={drag.getDropZoneRef(zoneId)}
@@ -122,6 +127,7 @@ function ServerGrid({
             `}</style>
             {filtered.map((server, i) => {
                 const cardIndex = cardIndexRef.current++;
+                const staggerDelay = useStagger ? Math.min(cardIndex * 0.04, 0.6) : 0;
                 return (
                     <div key={server.id}>
                         <DropZoneIndicator isVisible={drag.isDragging && drag.activeDropZoneId === zoneId && drag.insertIndex === i} />
@@ -130,7 +136,7 @@ function ServerGrid({
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, transition: { duration: 0.15 } }}
                             transition={shouldAnimate
-                                ? { delay: cardIndex * 0.05, duration: 0.35, ease: 'easeOut' }
+                                ? { delay: staggerDelay, duration: useStagger ? 0.35 : 0.18, ease: 'easeOut' }
                                 : { duration: 0 }
                             }
                         >

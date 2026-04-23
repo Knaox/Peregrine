@@ -11,6 +11,8 @@ const statusColorMap: Record<Server['status'], NonNullable<BadgeProps['color']>>
     offline: 'red',
     suspended: 'yellow',
     terminated: 'red',
+    provisioning: 'blue',
+    provisioning_failed: 'red',
 };
 
 export function ServerStatusBadge({ status }: ServerStatusBadgeProps) {

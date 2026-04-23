@@ -73,3 +73,15 @@ export async function updateStartupVariable(id: number, key: string, value: stri
         body: JSON.stringify({ key, value }),
     });
 }
+
+export async function renameServer(id: number, name: string): Promise<Server> {
+    const { data } = await request<{ data: Server }>(`/api/servers/${id}/rename`, {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+    });
+    return data;
+}
+
+export async function reinstallServer(id: number): Promise<void> {
+    await request(`/api/servers/${id}/reinstall`, { method: 'POST' });
+}

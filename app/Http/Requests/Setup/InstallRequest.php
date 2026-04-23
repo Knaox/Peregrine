@@ -39,9 +39,9 @@ class InstallRequest extends FormRequest
             // here: AuthSettingsSeeder already provides a `true` default.
             'auth.allow_local_registration' => ['sometimes', 'boolean'],
 
-            // Bridge
-            'bridge.enabled' => ['required', 'boolean'],
-            'bridge.stripe_webhook_secret' => ['required_if:bridge.enabled,true', 'nullable', 'string'],
+            // Bridge configuration is post-install only (admin enables and
+            // sets the HMAC secret + Stripe webhook secret in
+            // /admin/bridge-settings). Not asked here.
 
             // Locale
             'locale' => ['required', 'string', 'in:en,fr'],

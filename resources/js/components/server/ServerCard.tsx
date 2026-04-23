@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -13,10 +13,10 @@ import { fetchServer } from '@/services/serverApi';
 import type { ServerCardProps } from '@/components/server/ServerCard.props';
 import { ServerCardPowerButtons } from '@/components/server/ServerCardPowerButtons';
 
-function AnimStat({ icon, value, formatter }: {
-    icon: React.ReactNode; value: number; formatter: (v: number) => string;
+function AnimStat({ icon, value, formatter, animate }: {
+    icon: React.ReactNode; value: number; formatter: (v: number) => string; animate: boolean;
 }) {
-    const animated = useCountUp(value);
+    const animated = useCountUp(value, { enabled: animate });
     return (
         <span className="flex items-center gap-1 text-white/70 text-xs">
             {icon} {formatter(animated)}
@@ -28,7 +28,7 @@ const CpuIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" str
 const RamIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
 const DiskIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 1.1.9 2 2 2h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2zm16 7H4m13 2h.01" /></svg>;
 
-export function ServerCard({
+function ServerCardImpl({
     server, stats, onPower, isPowerPending,
     isSelectable = false, isSelected = false, onSelect, isDragging = false,
 }: ServerCardProps) {
@@ -49,8 +49,17 @@ export function ServerCard({
         });
     }, [queryClient, server.id]);
 
-    const state = (stats?.state ?? server.status) as
-        'running' | 'active' | 'stopped' | 'offline' | 'suspended' | 'terminated' | 'starting';
+    // `server.status` from the DB always wins for terminal lifecycle states
+    // (suspended / provisioning / terminated) — Wings stats may be stale or
+    // missing entirely while the row is in those states. Only fall back to
+    // the live Wings runtime state for running/stopped/offline.
+    const lifecycleStatus = server.status === 'suspended' || server.status === 'provisioning' || server.status === 'provisioning_failed' || server.status === 'terminated'
+        ? server.status
+        : null;
+    const state = (lifecycleStatus ?? stats?.state ?? server.status) as
+        'running' | 'active' | 'stopped' | 'offline' | 'suspended' | 'terminated' | 'starting' | 'provisioning' | 'provisioning_failed';
+    const isSuspended = state === 'suspended';
+    const isProvisioning = state === 'provisioning' || state === 'provisioning_failed';
     const isRunning = state === 'running' || state === 'active';
     const isStopped = state === 'stopped' || state === 'offline' || !stats;
     const address = server.allocation ? `${server.allocation.ip}:${server.allocation.port}` : null;
@@ -87,6 +96,13 @@ export function ServerCard({
                 isDragging && 'opacity-50',
                 isSelected && 'ring-2 ring-[var(--color-primary)] ring-offset-1 ring-offset-[var(--color-background)]',
             )}
+            style={
+                isSuspended
+                    ? { borderLeft: '3px solid var(--color-suspended)' }
+                    : isProvisioning
+                        ? { borderLeft: '3px solid var(--color-installing)' }
+                        : undefined
+            }
         >
             {/* Full background image */}
             {hasBanner && (
@@ -101,6 +117,46 @@ export function ServerCard({
                         background: 'linear-gradient(to right, var(--banner-overlay-soft) 0%, var(--banner-overlay) 65%, var(--banner-overlay) 100%)',
                     }} />
                 </>
+            )}
+
+            {/* Discreet lifecycle pill — small, top-right corner. Theme-color
+                driven so admins can match their brand. The card otherwise
+                stays untouched (no grayscale, no big ring) — the user wants
+                "subtle but visible". */}
+            {isSuspended && (
+                <div
+                    className="absolute right-2 top-2 z-30 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider"
+                    style={{
+                        background: 'rgba(var(--color-suspended-rgb), 0.18)',
+                        color: 'var(--color-suspended)',
+                        border: '1px solid rgba(var(--color-suspended-rgb), 0.35)',
+                        backdropFilter: 'blur(4px)',
+                    }}
+                    title={t('servers.status.suspended')}
+                >
+                    <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <rect x="5" y="11" width="14" height="10" rx="2" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 118 0v4" />
+                    </svg>
+                    {t('servers.status.suspended')}
+                </div>
+            )}
+            {isProvisioning && (
+                <div
+                    className="absolute right-2 top-2 z-30 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider"
+                    style={{
+                        background: 'rgba(var(--color-installing-rgb), 0.18)',
+                        color: 'var(--color-installing)',
+                        border: '1px solid rgba(var(--color-installing-rgb), 0.35)',
+                        backdropFilter: 'blur(4px)',
+                    }}
+                    title={t('servers.status.provisioning')}
+                >
+                    <svg className="h-2.5 w-2.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+                    </svg>
+                    {t('servers.status.provisioning')}
+                </div>
             )}
 
             {/* Spotlight */}
@@ -152,10 +208,13 @@ export function ServerCard({
                         </button>
                     )}
 
-                    {cardConfig.show_stats_bars && stats && (
+                    {/* Stats + power are hidden when the server is suspended
+                        or provisioning : Wings reports nothing useful in those
+                        states and any control would be rejected by the daemon. */}
+                    {cardConfig.show_stats_bars && stats && !isSuspended && !isProvisioning && (
                         <div className="flex items-center gap-3">
-                            <AnimStat icon={CpuIcon} value={stats.cpu} formatter={formatCpu} />
-                            <AnimStat icon={RamIcon} value={stats.memory_bytes} formatter={formatBytes} />
+                            <AnimStat icon={CpuIcon} value={stats.cpu} formatter={formatCpu} animate={false} />
+                            <AnimStat icon={RamIcon} value={stats.memory_bytes} formatter={formatBytes} animate={false} />
                             <span className="hidden lg:flex items-center gap-1 text-white/70 text-xs">
                                 {DiskIcon} {formatBytes(stats.disk_bytes)}
                             </span>
@@ -168,7 +227,7 @@ export function ServerCard({
                         </div>
                     )}
 
-                    {cardConfig.show_quick_actions && (
+                    {cardConfig.show_quick_actions && !isSuspended && !isProvisioning && (
                         /* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
                         <div className="ml-auto flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                             <ServerCardPowerButtons
@@ -199,3 +258,23 @@ export function ServerCard({
         </m.div>
     );
 }
+
+/**
+ * Memoized export — large dashboards (50+ servers) re-render cards on every
+ * stats poll, search keystroke or selection toggle otherwise. The shallow
+ * compare here trusts that the parent passes :
+ *  - `server` : stable reference per id (TanStack Query cache)
+ *  - `stats`  : stable per-server reference (same statsMap object across polls)
+ *  - `onPower` / `onSelect` : stable callbacks (`useCallback` in DashboardPage)
+ *  - everything else : primitives
+ */
+export const ServerCard = memo(ServerCardImpl, (prev, next) => {
+    return prev.server === next.server
+        && prev.stats === next.stats
+        && prev.isPowerPending === next.isPowerPending
+        && prev.isSelectable === next.isSelectable
+        && prev.isSelected === next.isSelected
+        && prev.isDragging === next.isDragging
+        && prev.onPower === next.onPower
+        && prev.onSelect === next.onSelect;
+});

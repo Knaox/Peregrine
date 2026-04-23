@@ -31,6 +31,13 @@ class ThemeService
                 'warning' => $this->settingsService->get('theme_warning', '#f59e0b'),
                 'success' => $this->settingsService->get('theme_success', '#10b981'),
                 'info' => $this->settingsService->get('theme_info', '#3b82f6'),
+                // Server lifecycle accents — used by ServerCard / SuspendedOverview
+                // / InstallationOverview. Default to warning amber for suspended
+                // (matches the existing suspended badge) and info blue for the
+                // install-in-progress badge. Admins can pick any colour to match
+                // their brand from /admin/theme-settings.
+                'suspended' => $this->settingsService->get('theme_suspended', '#f59e0b'),
+                'installing' => $this->settingsService->get('theme_installing', '#3b82f6'),
                 'background' => $this->settingsService->get('theme_background', '#0c0a14'),
                 'surface' => $this->settingsService->get('theme_surface', '#16131e'),
                 'surface_hover' => $this->settingsService->get('theme_surface_hover', '#1e1a2a'),
@@ -110,6 +117,8 @@ class ThemeService
                 'warning' => $values['theme_warning'],
                 'success' => $values['theme_success'],
                 'info' => $values['theme_info'],
+                'suspended' => $values['theme_suspended'] ?? '#f59e0b',
+                'installing' => $values['theme_installing'] ?? '#3b82f6',
                 'background' => $values['theme_background'],
                 'surface' => $values['theme_surface'],
                 'surface_hover' => $values['theme_surface_hover'],
@@ -143,11 +152,15 @@ class ThemeService
         $vars['--color-info-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['info']);
         $vars['--color-warning-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['warning']);
         $vars['--color-text-secondary-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['text_secondary']);
+        $vars['--color-suspended-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['suspended']);
+        $vars['--color-installing-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['installing']);
 
         // Auto-derive glow colors (base color with alpha)
         $vars['--color-primary-glow'] = ColorUtils::hexToRgba($theme['colors']['primary'], 0.15);
         $vars['--color-danger-glow'] = ColorUtils::hexToRgba($theme['colors']['danger'], 0.15);
         $vars['--color-success-glow'] = ColorUtils::hexToRgba($theme['colors']['success'], 0.15);
+        $vars['--color-suspended-glow'] = ColorUtils::hexToRgba($theme['colors']['suspended'], 0.15);
+        $vars['--color-installing-glow'] = ColorUtils::hexToRgba($theme['colors']['installing'], 0.15);
 
         // Auto-derive glass colors from surface
         $vars['--color-glass'] = ColorUtils::hexToRgba($theme['colors']['surface'], 0.75);

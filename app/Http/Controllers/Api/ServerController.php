@@ -154,6 +154,47 @@ class ServerController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function rename(Request $request, Server $server): JsonResponse
+    {
+        $this->authorize('renameServer', $server);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'min:1', 'max:191'],
+        ]);
+
+        $this->clientService->renameServer($server->identifier, $validated['name']);
+        $server->update(['name' => $validated['name']]);
+
+        AdminActionPerformed::dispatchIfCrossUser(
+            admin: $request->user(),
+            action: 'server.rename',
+            server: $server,
+            payload: ['name' => $validated['name']],
+            ip: $request->ip(),
+            userAgent: (string) $request->userAgent(),
+        );
+
+        return response()->json(['data' => new ServerResource($server->fresh())]);
+    }
+
+    public function reinstall(Request $request, Server $server): JsonResponse
+    {
+        $this->authorize('reinstallServer', $server);
+
+        $this->clientService->reinstallServer($server->identifier);
+
+        AdminActionPerformed::dispatchIfCrossUser(
+            admin: $request->user(),
+            action: 'server.reinstall',
+            server: $server,
+            payload: [],
+            ip: $request->ip(),
+            userAgent: (string) $request->userAgent(),
+        );
+
+        return response()->json(['success' => true]);
+    }
+
     public function batchStats(Request $request): JsonResponse
     {
         $servers = $request->user()->accessibleServers()->whereNotNull('identifier')->get();

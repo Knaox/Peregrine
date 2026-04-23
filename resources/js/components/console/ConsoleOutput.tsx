@@ -35,7 +35,15 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
     }, []);
 
     return (
-        <div className="relative flex-1 min-h-0 flex flex-col rounded-[var(--radius-lg)] overflow-hidden"
+        // Bounded height : the parent <main> in ServerDetailPage uses
+        // overflow-y-auto, so a flex-1 here would grow with the message
+        // list (infinite vertical expansion). We pin the terminal to a
+        // viewport-relative height with min/max guards so the inner body
+        // owns the scroll. min-h-[400px] keeps it usable on small phones,
+        // max-h-[1100px] prevents it from dominating ultra-wide monitors.
+        // 78dvh keeps a comfortable strip for the input + tab dock + the
+        // status header above without making the page feel cramped.
+        <div className="relative flex flex-col rounded-[var(--radius-lg)] overflow-hidden h-[78dvh] min-h-[400px] max-h-[1100px]"
             style={{ border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-inset)' }}>
 
             {/* Terminal header bar */}
@@ -55,7 +63,9 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
                 </span>
             </div>
 
-            {/* Terminal body */}
+            {/* Terminal body — scroll-region. flex-1 + min-h-0 lets it claim
+                the remaining height inside the fixed-height parent and
+                triggers the inner overflow-y-auto. */}
             <div
                 ref={containerRef}
                 onScroll={handleScroll}

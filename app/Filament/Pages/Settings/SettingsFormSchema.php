@@ -26,6 +26,15 @@ final class SettingsFormSchema
                 Toggle::make('show_app_name')
                     ->label('Show application name in header')
                     ->helperText('Disable if your logo already contains the name.'),
+                Select::make('default_locale')
+                    ->label('Default language')
+                    ->options([
+                        'en' => 'English',
+                        'fr' => 'Français',
+                    ])
+                    ->default('en')
+                    ->required()
+                    ->helperText('Used for newly registered users (until they pick their own) and for the SPA when no language is detected from the browser.'),
                 Select::make('logo_height')
                     ->label('Logo Size')
                     ->options([
@@ -151,17 +160,10 @@ final class SettingsFormSchema
             ])->columns(2);
     }
 
-    public static function bridge(): Section
-    {
-        return Section::make('Bridge')
-            ->description('Configure the bridge between Pelican and Stripe.')
-            ->icon('heroicon-o-link')
-            ->schema([
-                Toggle::make('bridge_enabled')->label('Enable Bridge')->live(),
-                TextInput::make('stripe_webhook_secret')->label('Stripe Webhook Secret')->password()->revealable()->maxLength(255)
-                    ->visible(fn (Get $get): bool => (bool) $get('bridge_enabled')),
-            ])->columns(1);
-    }
+    // Bridge configuration moved to its dedicated page (BridgeSettings).
+    // The Bridge module now manages its own toggle, shared HMAC secret with
+    // the Shop, and (eventually) the Stripe webhook secret. Keeping a second
+    // toggle here would create two sources of truth.
 
     public static function developer(): Section
     {

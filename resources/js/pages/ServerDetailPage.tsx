@@ -81,6 +81,18 @@ export function ServerDetailPage() {
     const userPermissions = server?.permissions ?? null;
     const isOwner = !server?.role || server.role === 'owner' || userPermissions === null;
 
+    // While the server is still installing (Wings egg install script running),
+    // only the overview and console make sense. The other panels either query
+    // endpoints that 409 during install, or show placeholder data that would
+    // confuse the customer. We lock the navigation down.
+    const isProvisioning = server?.status === 'provisioning' || server?.status === 'provisioning_failed';
+
+    // While the server is suspended, every Wings command is rejected. We
+    // narrow the navigation to read-only panels (overview + files + backups
+    // for data recovery) and hide the live ones (console, network, sftp,
+    // databases) — they'd just show errors or stale state.
+    const isSuspended = server?.status === 'suspended';
+
     // Merge core sidebar entries with plugin-provided entries, filtered by permissions
     const mergedEntries = useMemo(() => {
         const pluginEntries: SidebarEntry[] = [];
@@ -100,15 +112,28 @@ export function ServerDetailPage() {
 
         const all = [...sidebarConfig.entries, ...pluginEntries].sort((a, b) => a.order - b.order);
 
-        // If owner, show everything. If subuser, filter by permissions.
-        if (isOwner) return all;
+        // Install gate : only overview + console during provisioning.
+        const applyInstallGate = (entries: SidebarEntry[]) =>
+            isProvisioning ? entries.filter((e) => e.id === 'overview' || e.id === 'console') : entries;
 
-        return all.filter((entry) => {
-            const requiredPerm = SIDEBAR_ENTRY_PERMISSIONS[entry.id];
-            if (!requiredPerm) return true; // overview = always visible
-            return userPermissions?.includes(requiredPerm) ?? false;
-        });
-    }, [sidebarConfig.entries, pluginManifests, isOwner, userPermissions]);
+        // Suspended gate : only the overview is visible. Wings rejects every
+        // command and the customer-facing message belongs on the home tab.
+        const applySuspendedGate = (entries: SidebarEntry[]) =>
+            isSuspended
+                ? entries.filter((e) => e.id === 'overview')
+                : entries;
+
+        // If owner, show everything (minus the install gate). If subuser, filter by permissions.
+        if (isOwner) return applySuspendedGate(applyInstallGate(all));
+
+        return applySuspendedGate(applyInstallGate(
+            all.filter((entry) => {
+                const requiredPerm = SIDEBAR_ENTRY_PERMISSIONS[entry.id];
+                if (!requiredPerm) return true; // overview = always visible
+                return userPermissions?.includes(requiredPerm) ?? false;
+            }),
+        ));
+    }, [sidebarConfig.entries, pluginManifests, isOwner, userPermissions, isProvisioning, isSuspended]);
 
     const mergedConfig = useMemo(
         () => ({ ...sidebarConfig, entries: mergedEntries }),
@@ -194,6 +219,10 @@ export function ServerDetailPage() {
                                 ? <Route key="__index" index element={route.element} />
                                 : <Route key={route.path} path={route.path} element={route.element} />,
                         )}
+                        {/* Unmatched suffix → bounce to the overview. Useful
+                            when the install gate strips routes the user has
+                            bookmarked (e.g. /files). */}
+                        <Route path="*" element={<Navigate to="" replace />} />
                     </Routes>
                 </div>
             </m.main>

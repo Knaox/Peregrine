@@ -6,6 +6,41 @@ import type { Server } from '@/types/Server';
 
 const DEBOUNCE_MS = 400;
 const QUERY_KEY = ['dashboard-layout'] as const;
+const CACHE_KEY = 'peregrine.dashboard-layout.v1';
+
+/**
+ * Read the last-saved layout from localStorage so a hard refresh renders
+ * the categorised dashboard *immediately* with the user's last-known
+ * arrangement, before /api/user/dashboard-layout resolves. The query
+ * revalidates in the background; if the server returns a different shape
+ * we silently transition to it.
+ */
+function readLayoutCache(): DashboardLayout | null {
+    try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as { layout?: DashboardLayout; cachedAt?: number };
+        if (parsed.cachedAt && Date.now() - parsed.cachedAt > 7 * 24 * 60 * 60 * 1000) return null;
+        if (!parsed.layout || !Array.isArray(parsed.layout.categories) || !Array.isArray(parsed.layout.uncategorizedOrder)) {
+            return null;
+        }
+        return parsed.layout;
+    } catch {
+        return null;
+    }
+}
+
+function writeLayoutCache(layout: DashboardLayout | null): void {
+    try {
+        if (layout === null) {
+            localStorage.removeItem(CACHE_KEY);
+            return;
+        }
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ layout, cachedAt: Date.now() }));
+    } catch {
+        // localStorage full / disabled — silently skip; cache is optional
+    }
+}
 
 function generateCategoryId(): string {
     return 'cat_' + Math.random().toString(36).slice(2, 10);
@@ -61,11 +96,21 @@ export function useDashboardLayout(servers: Server[]): UseDashboardLayoutReturn 
     const queryClient = useQueryClient();
     const query = useQuery<DashboardLayout | null>({
         queryKey: QUERY_KEY,
-        queryFn: fetchDashboardLayout,
+        queryFn: async () => {
+            const layout = await fetchDashboardLayout();
+            writeLayoutCache(layout);
+            return layout;
+        },
         staleTime: Infinity,
+        // Bootstrap from localStorage so refresh renders categories instantly
+        // — without this the dashboard shows uncategorised cards for ~200ms
+        // until the API responds, then re-shuffles into categories (visible
+        // flicker for users with many categories).
+        initialData: readLayoutCache,
+        initialDataUpdatedAt: 0,
     });
 
-    const [localLayout, setLocalLayout] = useState<DashboardLayout | null>(null);
+    const [localLayout, setLocalLayout] = useState<DashboardLayout | null>(() => readLayoutCache());
     const [isSaving, setIsSaving] = useState(false);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const pendingLayoutRef = useRef<DashboardLayout | null>(null);
@@ -138,6 +183,10 @@ export function useDashboardLayout(servers: Server[]): UseDashboardLayoutReturn 
             setLocalLayout((prev) => {
                 const next = updater(reconcileLayout(prev, servers));
                 scheduleSave(next);
+                // Mirror to localStorage immediately so a refresh picks up
+                // the user's latest gesture even if the debounced backend
+                // save hasn't fired yet.
+                writeLayoutCache(next);
                 return next;
             });
         },
@@ -226,6 +275,7 @@ export function useDashboardLayout(servers: Server[]): UseDashboardLayoutReturn 
         pendingLayoutRef.current = null;
         setLocalLayout(null);
         queryClient.setQueryData(QUERY_KEY, null);
+        writeLayoutCache(null);
         setIsSaving(true);
         saveDashboardLayout({ categories: [], uncategorizedOrder: [] })
             .then(() => queryClient.invalidateQueries({ queryKey: QUERY_KEY }))
@@ -240,15 +290,27 @@ export function useDashboardLayout(servers: Server[]): UseDashboardLayoutReturn 
         [reconciledLayout.uncategorizedOrder, serverMap],
     );
 
+    // Pre-compute every category's server list once per (layout, servers)
+    // change. Without this, calling `getServersForCategory(catId)` inside
+    // the render loop would build a fresh `Server[]` on every render →
+    // ServerGrid's useMemo on `filtered` invalidates → every card re-renders.
+    // With the cached map the array reference is stable across renders.
+    const serversByCategoryId = useMemo(() => {
+        const map = new Map<string, Server[]>();
+        for (const cat of reconciledLayout.categories) {
+            map.set(
+                cat.id,
+                cat.serverIds
+                    .map((id) => serverMap.get(id))
+                    .filter((s): s is Server => s !== undefined),
+            );
+        }
+        return map;
+    }, [reconciledLayout.categories, serverMap]);
+
     const getServersForCategory = useCallback(
-        (categoryId: string): Server[] => {
-            const cat = reconciledLayout.categories.find((c) => c.id === categoryId);
-            if (!cat) return [];
-            return cat.serverIds
-                .map((id) => serverMap.get(id))
-                .filter((s): s is Server => s !== undefined);
-        },
-        [reconciledLayout.categories, serverMap],
+        (categoryId: string): Server[] => serversByCategoryId.get(categoryId) ?? [],
+        [serversByCategoryId],
     );
 
     const hasCustomLayout = useMemo(

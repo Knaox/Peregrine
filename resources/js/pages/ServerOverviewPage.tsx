@@ -5,6 +5,7 @@ import { m } from 'motion/react';
 import { copyToClipboard } from '@/utils/clipboard';
 import { useServer } from '@/hooks/useServer';
 import { useWingsWebSocket } from '@/hooks/useWingsWebSocket';
+import { useRefetchServerOnInstallComplete } from '@/hooks/useRefetchServerOnInstallComplete';
 import { useSidebarConfig } from '@/hooks/useSidebarConfig';
 import { usePluginStore } from '@/plugins/pluginStore';
 import { SIDEBAR_ENTRY_PERMISSIONS } from '@/utils/serverPermissions';
@@ -12,8 +13,11 @@ import { Spinner } from '@/components/ui/Spinner';
 import { ServerPowerControls } from '@/components/server/ServerPowerControls';
 import { ServerResourceCards } from '@/components/server/ServerResourceCards';
 import { ServerInfoCard } from '@/components/server/ServerInfoCard';
+import { ServerSettingsActions } from '@/components/server/ServerSettingsActions';
 import { ServerVariables } from '@/components/server/ServerVariables';
 import { OverviewQuickActions } from '@/components/server/OverviewQuickActions';
+import { InstallationOverview } from '@/components/server/InstallationOverview';
+import { SuspendedOverview } from '@/components/server/SuspendedOverview';
 import { formatUptime } from '@/utils/format';
 import type { SidebarEntry } from '@/hooks/useSidebarConfig';
 
@@ -25,13 +29,36 @@ export function ServerOverviewPage() {
     const navigate = useNavigate();
     const serverId = Number(id);
     const { data: server, isLoading: serverLoading } = useServer(serverId);
-    const { resources, serverState: wsState } = useWingsWebSocket(serverId, { stats: true });
+    // Subscribe to console output too — when the server is installing we
+    // show a live tail of `install output` messages on the hero card.
+    const { resources, serverState: wsState, messages, installCompleted } = useWingsWebSocket(serverId, { stats: true, console: true });
     const sidebarConfig = useSidebarConfig();
     const pluginManifests = usePluginStore((s) => s.manifests);
     const [copied, setCopied] = useState(false);
 
+    // Auto-refresh the server query as soon as Wings reports install
+    // completion — Pelican's `updated: Server` webhook arrives a few
+    // seconds later and flips status to `active`, which unlocks the
+    // regular dashboard without the user having to F5.
+    useRefetchServerOnInstallComplete(serverId, installCompleted, server?.status);
+
     if (serverLoading || !server) {
         return <div className="flex min-h-[40vh] items-center justify-center"><Spinner size="lg" /></div>;
+    }
+
+    // While Wings is installing the egg (`server.status === 'provisioning'`),
+    // show a dedicated installation hero with the live install output. The
+    // regular dashboard panes (stats, variables, settings) are useless until
+    // the install completes — we hide them.
+    if (server.status === 'provisioning') {
+        return <InstallationOverview server={server} messages={messages} installCompleted={installCompleted} />;
+    }
+
+    // Server suspended (Pelican `suspended_at` set, billing paused). Wings
+    // rejects every command so the regular dashboard would show stale data
+    // and broken buttons — replace it with a clear suspension hero instead.
+    if (server.status === 'suspended') {
+        return <SuspendedOverview server={server} />;
     }
 
     const state = (wsState !== 'offline' ? wsState : server.status) as ServerState;
@@ -53,6 +80,8 @@ export function ServerOverviewPage() {
     const canViewStartup = hasPerm('startup.read');
     const canEditStartup = hasPerm('startup.update');
     const canViewConfig = hasPerm('overview.server-info') || hasPerm('settings.rename');
+    const canRename = hasPerm('settings.rename');
+    const canReinstall = hasPerm('settings.reinstall');
 
     const filteredEntries = useMemo(() => {
         // Merge core + plugin sidebar entries
@@ -176,6 +205,17 @@ export function ServerOverviewPage() {
             {/* Server info — only if owner or has settings permission */}
             {canViewConfig && (
                 <section><ServerInfoCard server={server} /></section>
+            )}
+
+            {/* Rename + reinstall actions */}
+            {(canRename || canReinstall) && (
+                <section>
+                    <ServerSettingsActions
+                        server={server}
+                        canRename={canRename}
+                        canReinstall={canReinstall}
+                    />
+                </section>
             )}
         </m.div>
     );

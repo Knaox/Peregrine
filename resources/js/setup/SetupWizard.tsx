@@ -6,19 +6,20 @@ import { DatabaseStep } from './steps/DatabaseStep';
 import { AdminStep } from './steps/AdminStep';
 import { PelicanStep } from './steps/PelicanStep';
 import { AuthStep } from './steps/AuthStep';
-import { BridgeStep } from './steps/BridgeStep';
 import { SummaryStep } from './steps/SummaryStep';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
 import type { StepProps } from './types';
 import type { ComponentType } from 'react';
 
+// Bridge is no longer asked during install — it's configured post-install at
+// /admin/bridge-settings (toggle + HMAC secret + Stripe webhook secret in
+// the same place). Keeps the wizard short for users who don't run the Shop.
 const STEP_COMPONENTS: ComponentType<StepProps>[] = [
     LanguageStep,
     DatabaseStep,
     AdminStep,
     PelicanStep,
     AuthStep,
-    BridgeStep,
     SummaryStep,
 ];
 

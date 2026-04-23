@@ -111,6 +111,53 @@ final class AuthSettingsFormSchema
             ]);
     }
 
+    public static function paymenter(string $redirectUri): Section
+    {
+        return Section::make('Paymenter')
+            ->description('Open-source billing platform (paymenter.org). Acts as a canonical identity provider — auto-creates local users, syncs email to Pelican, surfaces a register URL. Mutually exclusive with Shop.')
+            ->icon('heroicon-o-credit-card')
+            ->collapsed()
+            ->schema([
+                Toggle::make('auth_paymenter_enabled')->label('Enable Paymenter as identity provider'),
+                TextInput::make('auth_paymenter_base_url')
+                    ->label('Paymenter base URL')
+                    ->url()
+                    ->maxLength(255)
+                    ->placeholder('https://billing.example.com')
+                    ->helperText('No trailing slash. The driver derives /oauth/authorize, /api/oauth/token, /api/me from this base.'),
+                TextInput::make('auth_paymenter_client_id')->label('Client ID')->maxLength(255),
+                TextInput::make('auth_paymenter_client_secret')
+                    ->label('Client secret')
+                    ->password()
+                    ->revealable()
+                    ->helperText('Leave blank to keep the stored value. Typing a new value replaces the encrypted envelope on save.'),
+                TextInput::make('auth_paymenter_register_url')
+                    ->label('Paymenter register page URL (optional)')
+                    ->url()
+                    ->maxLength(255)
+                    ->placeholder('https://billing.example.com/register')
+                    ->helperText('When set, the "Create account" link on the login page sends visitors to Paymenter\'s sign-up page. Leave empty to keep local-only behaviour.'),
+                FileUpload::make('auth_paymenter_logo_path')
+                    ->label('Custom button logo (optional)')
+                    ->image()
+                    ->directory('branding/oauth')
+                    ->disk('public')
+                    ->acceptedFileTypes([
+                        'image/svg+xml',
+                        'image/png',
+                        'image/jpeg',
+                        'image/webp',
+                        'image/x-icon',
+                        'image/vnd.microsoft.icon',
+                    ])
+                    ->maxSize(1024)
+                    ->helperText('Replaces the default Paymenter icon on the login button. SVG, PNG, JPEG, WebP or ICO (favicon), square preferred (max 1MB). Leave empty to keep the default icon.'),
+                Placeholder::make('auth_paymenter_redirect_display')
+                    ->label('Redirect URI (copy this into Paymenter\'s OAuth Client config)')
+                    ->content($redirectUri),
+            ]);
+    }
+
     public static function safety(): Section
     {
         return Section::make('Safety')

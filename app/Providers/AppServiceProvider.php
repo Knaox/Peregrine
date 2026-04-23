@@ -61,6 +61,27 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(20)->by($request->ip());
         });
 
+        // Bridge API — accepts plan upserts from the Shop. Per-IP throttling
+        // (the Shop is a single source, so IP-based limit is sufficient).
+        RateLimiter::for('bridge', function (Request $request) {
+            return Limit::perMinute(60)->by($request->ip());
+        });
+
+        // Stripe webhook — Stripe has documented fixed IPs and can spike
+        // during dunning runs (paying invoices for many subscribers in a
+        // short window). Higher cap, still per-IP for safety.
+        RateLimiter::for('stripe-webhook', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
+
+        // Pelican outgoing webhook (Bridge Paymenter mode). Pelican panel is
+        // typically a single source per Peregrine install, but bursts can
+        // happen on initial setup (admin re-emits all events when wiring up
+        // the webhook). Tolerant cap to avoid drops during seeding.
+        RateLimiter::for('pelican-webhook', function (Request $request) {
+            return Limit::perMinute(240)->by($request->ip());
+        });
+
         // Boot active plugins
         if (config('panel.installed')) {
             app(\App\Services\PluginManager::class)->bootPlugins();

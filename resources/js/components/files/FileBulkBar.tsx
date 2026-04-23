@@ -24,8 +24,13 @@ export function FileBulkBar({ selectedCount, onDelete, onCompress, onDeselectAll
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 20, scale: 0.95 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                    className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 sm:gap-3 rounded-[var(--radius-lg)] px-3 sm:px-5 py-3 glass-card-enhanced"
-                    style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}
+                    className="fixed left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 sm:gap-3 rounded-[var(--radius-lg)] px-3 sm:px-5 py-3 glass-card-enhanced"
+                    style={{
+                        boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+                        // Sit above the dock when active (see DockBar), 1.5rem
+                        // from the bottom otherwise.
+                        bottom: 'calc(var(--bottom-safe-area, 0px) + 1.5rem)',
+                    }}
                 >
                     <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                         {t('servers.files.selected_count', { count: selectedCount })}

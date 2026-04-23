@@ -35,19 +35,24 @@ class UserController extends Controller
         $user->update($validated);
 
         // Propagate email changes to Pelican so the two stay in sync. Pelican
-        // uses the email for SFTP notifications / account recovery. Silent on
-        // failure so a temporary Pelican outage doesn't break the profile
-        // save — next successful sync closes the gap.
+        // uses the email for SFTP notifications / account recovery. Don't
+        // fail the profile save on a Pelican outage, but DO log so the
+        // desync is visible — `sync:health` confirms drift on the next run.
         if (isset($validated['email'])
             && $validated['email'] !== $oldEmail
             && $user->pelican_user_id !== null
         ) {
             try {
-                $this->pelicanService->updateUser($user->pelican_user_id, [
-                    'email' => $validated['email'],
+                $this->pelicanService->changeUserEmail($user->pelican_user_id, $validated['email']);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Pelican email sync failed during profile update', [
+                    'user_id' => $user->id,
+                    'pelican_user_id' => $user->pelican_user_id,
+                    'new_email' => $validated['email'],
+                    'exception' => $e::class,
+                    'message' => $e->getMessage(),
+                    'response_body' => method_exists($e, 'response') && $e->response ? (string) $e->response->body() : null,
                 ]);
-            } catch (\Throwable) {
-                // Log and move on — see `sync:health` to surface drift.
             }
         }
 

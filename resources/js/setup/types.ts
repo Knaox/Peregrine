@@ -32,18 +32,12 @@ export interface AuthConfig {
     allow_local_registration: boolean;
 }
 
-export interface BridgeConfig {
-    enabled: boolean;
-    stripe_webhook_secret: string;
-}
-
 export interface SetupState {
     locale: string;
     database: DatabaseConfig;
     admin: AdminConfig;
     pelican: PelicanConfig;
     auth: AuthConfig;
-    bridge: BridgeConfig;
 }
 
 export type ConnectionTestStatus = 'idle' | 'testing' | 'success' | 'error';

@@ -2,6 +2,8 @@
 
 namespace App\Services\Pelican;
 
+use App\Services\Pelican\DTOs\CreateServerRequest;
+use App\Services\Pelican\DTOs\PelicanAllocation;
 use App\Services\Pelican\DTOs\PelicanEgg;
 use App\Services\Pelican\DTOs\PelicanNode;
 use App\Services\Pelican\DTOs\PelicanServer;
@@ -52,6 +54,12 @@ class PelicanApplicationService
     }
 
     /** @throws RequestException */
+    public function changeUserEmail(int $pelicanUserId, string $newEmail): PelicanUser
+    {
+        return $this->users->changeUserEmail($pelicanUserId, $newEmail);
+    }
+
+    /** @throws RequestException */
     public function getUser(int $pelicanUserId): PelicanUser
     {
         return $this->users->getUser($pelicanUserId);
@@ -93,6 +101,22 @@ class PelicanApplicationService
         string $name,
     ): PelicanServer {
         return $this->infra->createServer($userId, $eggId, $nestId, $ram, $cpu, $disk, $nodeId, $name);
+    }
+
+    /** @throws RequestException */
+    public function createServerAdvanced(CreateServerRequest $request): PelicanServer
+    {
+        return $this->infra->createServerAdvanced($request);
+    }
+
+    /**
+     * @param  array<string, mixed>  $build
+     *
+     * @throws RequestException
+     */
+    public function updateServerBuild(int $pelicanServerId, array $build): PelicanServer
+    {
+        return $this->infra->updateServerBuild($pelicanServerId, $build);
     }
 
     /** @throws RequestException */
@@ -147,6 +171,16 @@ class PelicanApplicationService
         return $this->infra->getNode($nodeId);
     }
 
+    /**
+     * @return PelicanAllocation[]
+     *
+     * @throws RequestException
+     */
+    public function listNodeAllocations(int $nodeId): array
+    {
+        return $this->infra->listNodeAllocations($nodeId);
+    }
+
     /** @throws RequestException */
     public function deleteNode(int $pelicanNodeId): void
     {
@@ -175,5 +209,15 @@ class PelicanApplicationService
     public function deleteEgg(int $pelicanEggId): void
     {
         $this->infra->deleteEgg($pelicanEggId);
+    }
+
+    /**
+     * @return array<string, scalar|null>
+     *
+     * @throws RequestException
+     */
+    public function getEggVariableDefaults(int $eggId): array
+    {
+        return $this->infra->getEggVariableDefaults($eggId);
     }
 }

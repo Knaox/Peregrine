@@ -85,26 +85,6 @@ export function SummaryStep({ data, onPrevious }: StepProps) {
                             : t('setup.summary.auth_registration_off')}
                     </p>
                 </div>
-
-                {/* Bridge */}
-                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)]">
-                    <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-                        {t('setup.summary.section_bridge')}
-                    </h3>
-                    <p className="text-sm text-[var(--color-text-primary)]">
-                        {data.bridge.enabled ? (
-                            <span className="inline-flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-[var(--color-success)]" />
-                                {t('setup.bridge.enable')}
-                            </span>
-                        ) : (
-                            <span className="inline-flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-[var(--color-text-muted)]" />
-                                {t('setup.bridge.disabled_note')}
-                            </span>
-                        )}
-                    </p>
-                </div>
             </div>
 
             {/* Install status messages */}

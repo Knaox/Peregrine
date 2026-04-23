@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Pages\AuthSettings\AuthSettingsFormSchema;
+use App\Filament\Pages\AuthSettings\AuthSettingsPersister;
 use App\Services\Auth\AuthProviderRegistry;
 use App\Services\SettingsService;
 use BackedEnum;
@@ -52,6 +53,13 @@ class AuthSettings extends Page implements HasForms
     public ?string $auth_shop_register_url = '';
     /** @var array<int, string>|null */
     public ?array $auth_shop_logo_path = [];
+    public bool $auth_paymenter_enabled = false;
+    public ?string $auth_paymenter_base_url = '';
+    public ?string $auth_paymenter_client_id = '';
+    public ?string $auth_paymenter_client_secret = '';
+    public ?string $auth_paymenter_register_url = '';
+    /** @var array<int, string>|null */
+    public ?array $auth_paymenter_logo_path = [];
     public bool $auth_providers_google_enabled = false;
     public ?string $auth_providers_google_client_id = '';
     public ?string $auth_providers_google_client_secret = '';
@@ -84,6 +92,15 @@ class AuthSettings extends Page implements HasForms
         $logoPath = (string) ($shop['logo_path'] ?? '');
         $this->auth_shop_logo_path = ($logoPath !== '' && ! str_starts_with($logoPath, '/')) ? [$logoPath] : [];
 
+        $paymenter = $registry->paymenterConfig();
+        $this->auth_paymenter_enabled = $settings->get('auth_paymenter_enabled', 'false') === 'true';
+        $this->auth_paymenter_base_url = (string) ($paymenter['base_url'] ?? '');
+        $this->auth_paymenter_client_id = (string) ($paymenter['client_id'] ?? '');
+        $this->auth_paymenter_client_secret = '';
+        $this->auth_paymenter_register_url = (string) ($paymenter['register_url'] ?? '');
+        $paymenterLogoPath = (string) ($paymenter['logo_path'] ?? '');
+        $this->auth_paymenter_logo_path = ($paymenterLogoPath !== '' && ! str_starts_with($paymenterLogoPath, '/')) ? [$paymenterLogoPath] : [];
+
         $providers = $registry->decodeProviders();
         foreach (['google', 'discord', 'linkedin'] as $id) {
             $this->{"auth_providers_{$id}_enabled"} = (bool) ($providers[$id]['enabled'] ?? false);
@@ -100,11 +117,15 @@ class AuthSettings extends Page implements HasForms
         $shop = $registry->shopConfig();
         $shopRedirect = (string) ($shop['redirect_uri'] ?? $this->defaultRedirect('shop'));
 
+        $paymenter = $registry->paymenterConfig();
+        $paymenterRedirect = (string) ($paymenter['redirect_uri'] ?? $this->defaultRedirect('paymenter'));
+
         $providers = $registry->decodeProviders();
 
         return $schema->schema([
             AuthSettingsFormSchema::general(),
             AuthSettingsFormSchema::shop($shopRedirect),
+            AuthSettingsFormSchema::paymenter($paymenterRedirect),
             AuthSettingsFormSchema::socialProvider(
                 'google', 'Google', 'heroicon-o-globe-alt',
                 (string) ($providers['google']['redirect_uri'] ?? $this->defaultRedirect('google')),
@@ -142,14 +163,31 @@ class AuthSettings extends Page implements HasForms
             }
         }
 
+        // Mutual exclusivity guard: only ONE canonical IdP can be active at a
+        // time (Shop OR Paymenter, never both). Block early so we never write
+        // an inconsistent state.
+        $shopWillBeEnabled = (bool) ($data['auth_shop_enabled'] ?? false);
+        $paymenterWillBeEnabled = (bool) ($data['auth_paymenter_enabled'] ?? false);
+        if ($shopWillBeEnabled && $paymenterWillBeEnabled) {
+            Notification::make()
+                ->title('Only one canonical identity provider can be active')
+                ->body('Disable Shop before enabling Paymenter, or vice versa. Both Shop and Paymenter act as canonical IdPs and cannot coexist.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         // S8 disable guardrail — block if a provider is being turned off and
         // exclusive users remain, unless the admin explicitly acknowledges.
         $ack = (bool) ($data['acknowledge_disable_risk'] ?? false);
-        foreach (['shop', 'google', 'discord', 'linkedin'] as $pid) {
-            $wasEnabled = $this->wasPreviouslyEnabled($pid);
-            $willBeEnabled = $pid === 'shop'
-                ? (bool) ($data['auth_shop_enabled'] ?? false)
-                : (bool) ($data["auth_providers_{$pid}_enabled"] ?? false);
+        foreach (['shop', 'paymenter', 'google', 'discord', 'linkedin'] as $pid) {
+            $wasEnabled = AuthSettingsPersister::wasPreviouslyEnabled($pid);
+            $willBeEnabled = match ($pid) {
+                'shop' => $shopWillBeEnabled,
+                'paymenter' => $paymenterWillBeEnabled,
+                default => (bool) ($data["auth_providers_{$pid}_enabled"] ?? false),
+            };
 
             if ($wasEnabled && ! $willBeEnabled) {
                 $exclusive = $registry->providerHasExclusiveUsers($pid);
@@ -170,79 +208,23 @@ class AuthSettings extends Page implements HasForms
         $settings->set('auth_2fa_enabled', ($data['auth_2fa_enabled'] ?? true) ? 'true' : 'false');
         $settings->set('auth_2fa_required_admins', ($data['auth_2fa_required_admins'] ?? false) ? 'true' : 'false');
 
-        $this->persistShop($data, $registry);
-        $this->persistProviders($data, $registry);
+        AuthSettingsPersister::persistShop($data, $registry, $this->defaultRedirect('shop'));
+        AuthSettingsPersister::persistPaymenter($data, $registry, $this->defaultRedirect('paymenter'));
+        AuthSettingsPersister::persistSocialProviders($data, $registry, [
+            'google' => $this->defaultRedirect('google'),
+            'discord' => $this->defaultRedirect('discord'),
+            'linkedin' => $this->defaultRedirect('linkedin'),
+        ]);
 
         Notification::make()->title('Auth settings saved')->success()->send();
 
         // Reset the acknowledgement + secrets inputs so they don't stick.
         $this->acknowledge_disable_risk = false;
         $this->auth_shop_client_secret = '';
+        $this->auth_paymenter_client_secret = '';
         foreach (['google', 'discord', 'linkedin'] as $id) {
             $this->{"auth_providers_{$id}_client_secret"} = '';
         }
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    private function persistShop(array $data, AuthProviderRegistry $registry): void
-    {
-        $existing = $registry->shopConfig();
-        $existing['client_id'] = (string) ($data['auth_shop_client_id'] ?? '');
-        $existing['authorize_url'] = (string) ($data['auth_shop_authorize_url'] ?? '');
-        $existing['token_url'] = (string) ($data['auth_shop_token_url'] ?? '');
-        $existing['user_url'] = (string) ($data['auth_shop_user_url'] ?? '');
-        $existing['register_url'] = (string) ($data['auth_shop_register_url'] ?? '');
-        $existing['redirect_uri'] = $existing['redirect_uri'] ?? $this->defaultRedirect('shop');
-
-        // FileUpload returns an array (or cleared null) — extract first path.
-        $logoValue = $data['auth_shop_logo_path'] ?? null;
-        $logoPath = is_array($logoValue) ? (array_values($logoValue)[0] ?? null) : $logoValue;
-        $existing['logo_path'] = $logoPath ?: '';
-
-        app(SettingsService::class)->set('auth_shop_config', json_encode($existing, JSON_THROW_ON_ERROR));
-        app(SettingsService::class)->set('auth_shop_enabled', ($data['auth_shop_enabled'] ?? false) ? 'true' : 'false');
-
-        $typed = (string) ($data['auth_shop_client_secret'] ?? '');
-        if ($typed !== '') {
-            $registry->storeShopClientSecret($typed);
-        }
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    private function persistProviders(array $data, AuthProviderRegistry $registry): void
-    {
-        $existing = $registry->decodeProviders();
-
-        foreach (['google', 'discord', 'linkedin'] as $id) {
-            $existing[$id] ??= [];
-            $existing[$id]['enabled'] = (bool) ($data["auth_providers_{$id}_enabled"] ?? false);
-            $existing[$id]['client_id'] = (string) ($data["auth_providers_{$id}_client_id"] ?? '');
-            $existing[$id]['redirect_uri'] = $existing[$id]['redirect_uri'] ?? $this->defaultRedirect($id);
-        }
-
-        app(SettingsService::class)->set('auth_providers', json_encode($existing, JSON_THROW_ON_ERROR));
-
-        foreach (['google', 'discord', 'linkedin'] as $id) {
-            $typed = (string) ($data["auth_providers_{$id}_client_secret"] ?? '');
-            if ($typed !== '') {
-                $registry->storeProviderClientSecret($id, $typed);
-            }
-        }
-    }
-
-    private function wasPreviouslyEnabled(string $providerId): bool
-    {
-        if ($providerId === 'shop') {
-            return app(SettingsService::class)->get('auth_shop_enabled', 'false') === 'true';
-        }
-
-        $providers = app(AuthProviderRegistry::class)->decodeProviders();
-
-        return (bool) ($providers[$providerId]['enabled'] ?? false);
     }
 
     private function defaultRedirect(string $provider): string
@@ -268,6 +250,12 @@ class AuthSettings extends Page implements HasForms
             'auth_shop_register_url' => $this->auth_shop_register_url,
             'auth_shop_client_secret' => '',
             'auth_shop_logo_path' => $this->auth_shop_logo_path,
+            'auth_paymenter_enabled' => $this->auth_paymenter_enabled,
+            'auth_paymenter_base_url' => $this->auth_paymenter_base_url,
+            'auth_paymenter_client_id' => $this->auth_paymenter_client_id,
+            'auth_paymenter_client_secret' => '',
+            'auth_paymenter_register_url' => $this->auth_paymenter_register_url,
+            'auth_paymenter_logo_path' => $this->auth_paymenter_logo_path,
             'auth_providers_google_enabled' => $this->auth_providers_google_enabled,
             'auth_providers_google_client_id' => $this->auth_providers_google_client_id,
             'auth_providers_google_client_secret' => '',

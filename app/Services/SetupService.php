@@ -166,7 +166,7 @@ class SetupService
     /**
      * Create an admin user in the local database.
      */
-    public function createAdminUser(string $name, string $email, string $password): void
+    public function createAdminUser(string $name, string $email, string $password, string $locale = 'en'): void
     {
         User::create([
             'name' => $name,
@@ -174,6 +174,7 @@ class SetupService
             'password' => Hash::make($password),
             'is_admin' => true,
             'email_verified_at' => now(),
+            'locale' => in_array($locale, ['en', 'fr'], true) ? $locale : 'en',
         ]);
     }
 

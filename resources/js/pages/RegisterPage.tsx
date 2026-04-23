@@ -26,11 +26,16 @@ export function RegisterPage() {
     const [focusedField, setFocusedField] = useState<string | null>(null);
 
     // Registration closes when the admin toggles off local registration. When
-    // that happens BUT a Shop register URL is configured, we show a CTA to
-    // sign up on the Shop instead of the dead-end "disabled" screen.
+    // that happens BUT a canonical IdP register URL is configured (Shop or
+    // Paymenter), we show a CTA to sign up there instead of the dead-end
+    // "disabled" screen.
     const registrationDisabled = providers.data !== undefined
         && ! providers.data.local_registration_enabled;
-    const shopRegisterUrl = providers.data?.shop_register_url ?? null;
+    const canonicalProvider = providers.data?.canonical_provider ?? null;
+    const canonicalRegisterUrl = providers.data?.canonical_register_url ?? null;
+    const canonicalProviderLabel = canonicalProvider !== null
+        ? t(`auth.providers.${canonicalProvider}`)
+        : '';
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -72,16 +77,16 @@ export function RegisterPage() {
                         background: 'var(--color-glass)', backdropFilter: 'blur(24px) saturate(180%)',
                         border: '1px solid var(--color-glass-border)', boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.05)',
                     }}>
-                        {shopRegisterUrl ? (
+                        {canonicalRegisterUrl ? (
                             <>
                                 <p className="mb-5 text-sm text-[var(--color-text-muted)]">
-                                    {t('auth.register.redirect_shop')}
+                                    {t('auth.register.redirect_canonical', { provider: canonicalProviderLabel })}
                                 </p>
                                 <a
-                                    href={shopRegisterUrl}
+                                    href={canonicalRegisterUrl}
                                     className="inline-block rounded-[var(--radius)] bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_20px_var(--color-primary-glow)] transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]"
                                 >
-                                    {t('auth.register.create_on_shop')}
+                                    {t('auth.register.create_on_canonical', { provider: canonicalProviderLabel })}
                                 </a>
                                 <p className="mt-4 text-xs">
                                     <Link

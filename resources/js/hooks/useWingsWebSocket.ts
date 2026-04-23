@@ -27,6 +27,8 @@ interface UseWingsWebSocketReturn {
     isConnected: boolean;
     /** True once the retry policy has given up (rate-limited or permission-denied). */
     isGaveUp: boolean;
+    /** True once Wings has emitted `install completed` since this hook mounted. */
+    installCompleted: boolean;
     sendCommand: (command: string) => void;
     clearMessages: () => void;
 }
@@ -40,6 +42,7 @@ export function useWingsWebSocket(
     const [serverState, setServerState] = useState<string>('offline');
     const [isConnected, setIsConnected] = useState(false);
     const [isGaveUp, setIsGaveUp] = useState(false);
+    const [installCompleted, setInstallCompleted] = useState(false);
 
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -154,6 +157,43 @@ export function useWingsWebSocket(
                     }
                     break;
 
+                // Wings emits `install output` while the egg install script
+                // runs (status='installing'). We treat it like console output
+                // so the same terminal component can render it. Lines are
+                // tagged with [install] for visual distinction.
+                case 'install output':
+                    if (options.console && data.args[0] !== undefined) {
+                        const cleaned = data.args[0].replace(ANSI_REGEX, '');
+                        const id = ++msgId.current;
+                        setMessages((prev) => {
+                            const next = [...prev, { id, text: `[install] ${cleaned}`, timestamp: Date.now() }];
+                            return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next;
+                        });
+                    }
+                    break;
+
+                case 'install started':
+                    if (options.console) {
+                        const id = ++msgId.current;
+                        setMessages((prev) => [
+                            ...prev.slice(-MAX_MESSAGES + 1),
+                            { id, text: '[Peregrine] Installation starting…', timestamp: Date.now() },
+                        ]);
+                    }
+                    setInstallCompleted(false);
+                    break;
+
+                case 'install completed':
+                    if (options.console) {
+                        const id = ++msgId.current;
+                        setMessages((prev) => [
+                            ...prev.slice(-MAX_MESSAGES + 1),
+                            { id, text: '[Peregrine] Installation completed.', timestamp: Date.now() },
+                        ]);
+                    }
+                    setInstallCompleted(true);
+                    break;
+
                 case 'status':
                     if (data.args[0]) setServerState(data.args[0]);
                     break;
@@ -232,5 +272,5 @@ export function useWingsWebSocket(
         };
     }, [connect, cleanup]);
 
-    return { messages, resources, serverState, isConnected, isGaveUp, sendCommand, clearMessages };
+    return { messages, resources, serverState, isConnected, isGaveUp, installCompleted, sendCommand, clearMessages };
 }

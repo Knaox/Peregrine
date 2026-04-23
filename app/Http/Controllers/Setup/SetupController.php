@@ -78,12 +78,21 @@ class SetupController extends Controller
                 fresh: (bool) ($validated['database']['fresh'] ?? false),
             );
 
-            // 3. Create admin user
+            // 3. Create admin user (with the language picked at step 1).
+            $wizardLocale = in_array($validated['locale'] ?? 'en', ['en', 'fr'], true)
+                ? (string) $validated['locale']
+                : 'en';
             $this->setupService->createAdminUser(
                 name: $validated['admin']['name'],
                 email: $validated['admin']['email'],
                 password: $validated['admin']['password'],
+                locale: $wizardLocale,
             );
+
+            // Persist the language choice as the panel-wide default. New users
+            // (Bridge / Paymenter / OAuth flows) get this locale; the React SPA
+            // also reads it as fallback when no browser preference matches.
+            app(SettingsService::class)->set('default_locale', $wizardLocale);
 
             // 3.5 Activate the default "invitations" plugin (best effort — a
             // failure here must not break setup). It ships with Peregrine
@@ -128,10 +137,8 @@ class SetupController extends Controller
                     'PELICAN_CLIENT_API_KEY' => $validated['pelican']['client_api_key'],
                     // Auth config no longer lives in .env — it's in the
                     // `settings` table, managed via /admin/auth-settings.
-                    // AUTH_MODE + OAUTH_* are dropped here (they'd just
-                    // clutter .env without being read anywhere).
-                    'BRIDGE_ENABLED' => $validated['bridge']['enabled'] ? 'true' : 'false',
-                    'STRIPE_WEBHOOK_SECRET' => $validated['bridge']['stripe_webhook_secret'] ?? '',
+                    // Same for Bridge config (toggle + HMAC + Stripe secret) —
+                    // managed at /admin/bridge-settings post-install.
                 ]);
             });
 

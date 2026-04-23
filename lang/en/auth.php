@@ -26,10 +26,11 @@ return [
         'google' => 'Google',
         'discord' => 'Discord',
         'linkedin' => 'LinkedIn',
+        'paymenter' => 'Paymenter',
     ],
     'social' => [
         'email_not_verified' => 'This email has not been verified by the provider.',
-        'register_on_shop_first' => 'Please register on the Shop first.',
+        'register_on_canonical_first' => 'Please register on :provider first.',
         'cannot_unlink_last_method' => 'Cannot unlink your only sign-in method.',
         'provider_disabled' => 'This sign-in provider is not enabled.',
         'mail' => [

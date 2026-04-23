@@ -3,22 +3,28 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ServerPlanResource\Pages;
+use App\Filament\Resources\ServerPlanResource\ServerPlanFormSchema;
+use App\Filament\Resources\ServerPlanResource\ServerPlanTable;
 use App\Models\ServerPlan;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
-use Filament\Tables;
-use Filament\Tables\Table;
 use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Tables\Table;
 use UnitEnum;
 
+/**
+ * Server plans pushed by the Shop via Bridge API. The page is hidden when
+ * Bridge is not in Shop+Stripe mode (cf. shouldRegisterNavigation).
+ *
+ * UX rule : the form is split in two — Section 1 displays Shop-owned fields
+ * read-only (name, billing, RAM/CPU/disk promised to the customer), Section 2
+ * is the Peregrine-only technical config (egg, node, docker, port mapping,
+ * env mapping, runtime toggles).
+ *
+ * Form schema and table configuration live in sibling classes under
+ * `ServerPlanResource/` (FormSchema + Table) — keeps this Resource focused
+ * on Filament wiring (model, navigation, page routing).
+ */
 class ServerPlanResource extends Resource
 {
     protected static ?string $model = ServerPlan::class;
@@ -33,117 +39,22 @@ class ServerPlanResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return (bool) config('bridge.enabled');
+        // Plans are only meaningful in Shop+Stripe mode (Shop pushes them).
+        // In Paymenter mode, Paymenter manages the catalogue itself.
+        return app(\App\Services\Bridge\BridgeModeService::class)->isShopStripe();
     }
 
     public static function form(Schema $schema): Schema
     {
-        return $schema
-            ->schema([
-                Section::make('Plan Details')
-                    ->schema([
-                        TextInput::make('name')
-                            ->required()
-                            ->maxLength(255),
-                        TextInput::make('stripe_price_id')
-                            ->label('Stripe Price ID')
-                            ->required()
-                            ->maxLength(255),
-                        Toggle::make('is_active')
-                            ->label('Active')
-                            ->default(true),
-                    ])->columns(2),
-
-                Section::make('Resources')
-                    ->schema([
-                        TextInput::make('ram')
-                            ->label('RAM')
-                            ->numeric()
-                            ->required()
-                            ->suffix('MB'),
-                        TextInput::make('cpu')
-                            ->label('CPU')
-                            ->numeric()
-                            ->required()
-                            ->suffix('%'),
-                        TextInput::make('disk')
-                            ->label('Disk')
-                            ->numeric()
-                            ->required()
-                            ->suffix('MB'),
-                    ])->columns(3),
-
-                Section::make('Associations')
-                    ->schema([
-                        Select::make('egg_id')
-                            ->relationship('egg', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->required(),
-                        Select::make('nest_id')
-                            ->relationship('nest', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->required(),
-                        Select::make('node_id')
-                            ->relationship('node', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->required(),
-                    ])->columns(3),
-            ]);
+        return $schema->schema([
+            ServerPlanFormSchema::shopMirrorSection(),
+            ServerPlanFormSchema::peregrineConfigSection(),
+        ]);
     }
 
     public static function table(Table $table): Table
     {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('stripe_price_id')
-                    ->label('Stripe Price')
-                    ->searchable()
-                    ->limit(25),
-                Tables\Columns\TextColumn::make('egg.name')
-                    ->label('Egg')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('node.name')
-                    ->label('Node')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('ram')
-                    ->label('RAM')
-                    ->formatStateUsing(fn (int $state): string => number_format($state) . ' MB')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('cpu')
-                    ->label('CPU')
-                    ->formatStateUsing(fn (int $state): string => $state . '%')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('disk')
-                    ->label('Disk')
-                    ->formatStateUsing(fn (int $state): string => number_format($state) . ' MB')
-                    ->sortable(),
-                Tables\Columns\ToggleColumn::make('is_active')
-                    ->label('Active')
-                    ->sortable(),
-            ])
-            ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')
-                    ->label('Active'),
-            ])
-            ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ])
-            ->defaultSort('id', 'desc');
+        return ServerPlanTable::configure($table);
     }
 
     public static function getRelations(): array
@@ -155,7 +66,6 @@ class ServerPlanResource extends Resource
     {
         return [
             'index' => Pages\ListServerPlans::route('/'),
-            'create' => Pages\CreateServerPlan::route('/create'),
             'edit' => Pages\EditServerPlan::route('/{record}/edit'),
         ];
     }

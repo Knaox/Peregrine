@@ -43,7 +43,7 @@ disabled for users who signed up via OAuth and never set a local password.
 
 ## OAuth providers
 
-Four providers are supported out of the box:
+Five providers are supported out of the box:
 
 | Provider | Driver | Notes |
 |---|---|---|
@@ -51,6 +51,12 @@ Four providers are supported out of the box:
 | **Discord** | `socialiteproviders/discord` | Requires a Discord Developer Portal application |
 | **LinkedIn** | `linkedin-openid` (modern OIDC flow) | Requires a LinkedIn OAuth 2.0 app with "Sign In with LinkedIn using OpenID Connect" |
 | **Custom / Shop** | In-tree custom driver | Any OAuth2 server with a user profile endpoint returning `{id, email, name}` JSON. Useful to delegate to an existing SaaS backend. |
+| **Paymenter** | In-tree custom driver | Open-source billing platform (paymenter.org). Acts as a canonical IdP. Single base URL configuration; `/oauth/authorize`, `/api/oauth/token`, `/api/me` are derived. |
+
+Providers are split into two categories:
+
+- **Canonical IdPs** (Shop, Paymenter): act as primary identity sources — they auto-create local users on first login, sync the user's email into Pelican, and may surface a register URL on the login page. **Only one canonical IdP can be active at a time.** Filament blocks saving when both are toggled on.
+- **Social providers** (Google, Discord, LinkedIn): sign-in only. When a canonical IdP is enabled, social providers cannot create new users — they're for users who already exist (e.g. registered on Shop or Paymenter), giving them an SSO shortcut.
 
 ### Adding a provider
 
@@ -78,29 +84,89 @@ Configure four URLs in its settings section:
 - **Redirect URI** — read-only, copy into your OAuth application on the
   server side
 
-Peregrine treats the Shop as the *canonical* identity provider when it's
-enabled: local registration is automatically disabled so user accounts can
-only originate from the Shop, and users can still sign in via any linked
-social provider (same email).
+Peregrine treats the Shop as a *canonical* identity provider when it's
+enabled: local registration can be closed so user accounts can only originate
+from the Shop, and users can still sign in via any linked social provider
+(same email).
+
+### Paymenter (open-source canonical alternative)
+
+[Paymenter](https://paymenter.org/) is a Laravel + Filament-based open-source
+billing platform with a built-in OAuth2 server (Laravel Passport). It plays
+the same role as the Shop in Peregrine, for self-hosted installations that
+don't use the BiomeBounty Shop. Setup steps:
+
+1. In your Paymenter admin, go to **OAuth Clients → Create OAuth Client**.
+   - Application name: anything (e.g. "Peregrine").
+   - Redirect URL: copy the redirect URI shown in the Peregrine
+     `Auth & Security` page next to Paymenter — exact match required.
+2. Paymenter shows a Client ID + Client Secret — paste them in Peregrine,
+   along with your Paymenter base URL (e.g. `https://billing.example.com`),
+   then enable the toggle and save.
+3. The driver derives `/oauth/authorize`, `/api/oauth/token`, and `/api/me`
+   from the base URL. The OAuth flow uses the `profile` scope (the only one
+   Paymenter exposes today).
+
+Paymenter user attributes (`first_name`, `last_name`, `email`,
+`email_verified_at`) are mapped onto Peregrine users automatically. The
+`email_verified_at` timestamp gates auto-linking by email — a Paymenter user
+who has not confirmed their email cannot sign into Peregrine.
+
+Shop and Paymenter are **mutually exclusive** — Filament blocks saving when
+both are enabled. Pick whichever fits your install.
+
+#### Provisioning game servers from Paymenter purchases
+
+The Peregrine integration documented here covers **identity only** — users
+sign into Peregrine via Paymenter SSO. To actually **create / suspend /
+terminate game servers** from Paymenter purchases, install on the Paymenter
+side:
+
+1. The **[Pelican-Paymenter extension](https://builtbybit.com/resources/pelican-paymenter.63526/)** —
+   the server provisioning bridge that turns Paymenter products into Pelican
+   servers (handles install, suspend, unsuspend, terminate via Pelican
+   Application API).
+2. Enable **bridge mode** on the extension.
+3. Enable **webhooks** so lifecycle events (purchase, renewal, cancellation)
+   reach Pelican in real time.
+
+Without this extension, Paymenter only provides login — it can't push server
+specs to Pelican on its own. The Peregrine-side bridge module that mirrors
+this billing flow into Peregrine's own server table is planned (see "P3 —
+Bridge plugin" in `CLAUDE.md`); for now, configure provisioning entirely on
+the Paymenter side.
 
 ### Account linking by email
 
 When a user logs in via an OAuth provider for the first time and no local
-account matches, behavior depends on the Shop mode:
+account matches, behavior depends on the canonical IdP state:
 
-- **Shop disabled** — Peregrine creates a fresh local account and links the
-  identity.
-- **Shop enabled** — Peregrine refuses the creation and prompts the user to
-  register on the Shop first, then return to Peregrine. Protects the
-  canonical identity flow.
+- **No canonical IdP enabled** — Peregrine creates a fresh local account and
+  links the identity (regardless of which provider).
+- **Canonical IdP enabled (Shop or Paymenter)** — Peregrine refuses the
+  creation and prompts the user to register on the canonical IdP first,
+  then return to Peregrine. Social providers (Google/Discord/LinkedIn) are
+  sign-IN only in this mode. The canonical IdP itself bypasses this rule —
+  it IS the sign-up channel.
 
 When a local account already exists with the same email, Peregrine auto-links
 the identity **only if the provider has marked the email as verified**
 (Google `email_verified`, Discord `verified`, LinkedIn `email_verified`,
-Shop implicitly trusted). Otherwise the login is rejected with a message
-telling the user to sign in with their primary method, then link the
-provider from their profile page. This prevents account takeover via an
-attacker-controlled provider account using someone else's email.
+Paymenter `email_verified_at`, Shop implicitly trusted). Otherwise the login
+is rejected with a message telling the user to sign in with their primary
+method, then link the provider from their profile page. This prevents account
+takeover via an attacker-controlled provider account using someone else's
+email.
+
+### Email collision on canonical login
+
+When a canonical IdP login arrives with a new email (the user changed it on
+the IdP side), Peregrine attempts to propagate the change to the local user
+row + the corresponding Pelican account. If another local user already owns
+that email (typical when a duplicate account exists), the sync is **skipped
+gracefully** — login still succeeds with the user's old local email, and a
+warning is logged so an admin can merge the duplicate. This keeps users from
+being locked out by a stale duplicate row.
 
 ## Two-factor authentication
 

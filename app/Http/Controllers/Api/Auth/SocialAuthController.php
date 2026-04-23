@@ -28,18 +28,19 @@ class SocialAuthController extends Controller
      */
     public function listProviders(): JsonResponse
     {
-        $shop = $this->registry->shopConfig();
-        $shopRegisterUrl = (string) ($shop['register_url'] ?? '');
-        $shopEnabled = $this->settings->get('auth_shop_enabled', 'false') === 'true';
+        $canonicalProvider = $this->registry->canonicalProvider();
+        $canonicalConfig = $this->registry->canonicalConfig();
+        $canonicalRegisterUrl = (string) ($canonicalConfig['register_url'] ?? '');
 
         return response()->json([
             'providers' => $this->registry->enabledProviders(),
             'local_enabled' => $this->settings->get('auth_local_enabled', 'true') === 'true',
             'local_registration_enabled' => $this->settings->get('auth_local_registration_enabled', 'true') === 'true',
-            // Only surface the shop register URL when the Shop provider is
-            // actually enabled — otherwise the "Create on Shop" CTA would
+            // Only surface the canonical register URL when a canonical IdP is
+            // actually enabled — otherwise the "Create account" CTA would
             // point to an IdP that can't authenticate the user afterwards.
-            'shop_register_url' => ($shopEnabled && $shopRegisterUrl !== '') ? $shopRegisterUrl : null,
+            'canonical_provider' => $canonicalProvider,
+            'canonical_register_url' => ($canonicalProvider !== null && $canonicalRegisterUrl !== '') ? $canonicalRegisterUrl : null,
         ]);
     }
 

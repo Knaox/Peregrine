@@ -49,12 +49,16 @@ Multi-flag depuis la table `settings` — plus de `AUTH_MODE` binaire dans `.env
 | Setting | Description |
 |---|---|
 | `auth_local_enabled` | Login email+password autorisé |
-| `auth_local_registration_enabled` | `/register` ouvert (forcé `false` si Shop activé) |
-| `auth_shop_enabled` | Provider "Shop" BiomeBounty actif (sync Pelican email) |
+| `auth_local_registration_enabled` | `/register` ouvert (forcé `false` si canonical IdP activé) |
+| `auth_shop_enabled` | Provider "Shop" BiomeBounty actif (canonical IdP) |
 | `auth_shop_config` | JSON : client_id, client_secret (chiffré), authorize/token/user URLs, redirect_uri |
+| `auth_paymenter_enabled` | Provider Paymenter actif (canonical IdP alternatif au Shop, mutuellement exclusif) |
+| `auth_paymenter_config` | JSON : base_url, client_id, client_secret (chiffré), redirect_uri, register_url, logo_path |
 | `auth_providers` | JSON : Google / Discord / LinkedIn (enabled + client_id + client_secret chiffré) |
 | `auth_2fa_enabled` | 2FA TOTP disponible pour tous les users |
 | `auth_2fa_required_admins` | Force 2FA pour admins (impacte `canAccessPanel` + middleware `two-factor`) |
+
+**Canonical IdPs** (Shop, Paymenter) : auto-création de comptes, sync email vers Pelican, register URL exposé sur la page de login, révalidation `email_verified` à chaque connexion. **Mutuellement exclusifs** — Filament bloque le save si les deux sont activés. Shop = SaaSykit BiomeBounty (propriétaire). Paymenter = paymenter.org (open-source, Laravel Passport, base URL unique → `/oauth/authorize`, `/api/oauth/token`, `/api/me` scope `profile`). Provisioning serveurs depuis Paymenter : extension côté Paymenter (Pelican-Paymenter sur builtbybit.com) + bridge mode + webhooks. Voir `docs/authentication.md` § Paymenter.
 
 **2FA TOTP** : réutilise les traits natifs Filament 5 (`HasAppAuthentication`, `HasAppAuthenticationRecovery`) — colonnes `users.app_authentication_secret` (encrypted) et `users.app_authentication_recovery_codes` (encrypted:array de bcrypt hashes). Challenge pending entre password OK et code 2FA : Redis, UUID, TTL 5 min. Page de setup : `/2fa/setup` standalone, auto-redirect via interceptor HTTP quand enforcement admin déclenche un 403.
 
@@ -104,7 +108,7 @@ La synchronisation Pelican se fait via l'admin Filament (boutons UI) ou via des 
 
 - Si `PANEL_INSTALLED` n'est pas `true`, tout redirige vers `/setup`
 - SPA React autonome (pas Filament, pas Livewire)
-- Étapes : Langue → DB → Compte admin → Pelican → Auth → Bridge (optionnel) → Récap → Install
+- Étapes : Langue → DB → Compte admin → Pelican → Auth → Récap → Install (la config Bridge se fait post-install via `/admin/bridge-settings`)
 - Le wizard écrit le `.env`, lance les migrations, crée le compte admin, set `PANEL_INSTALLED=true`
 - Après install, wizard inaccessible (middleware `EnsureInstalled`)
 - Config modifiable après coup via `/admin/settings` (écrit dans `.env`) ou `/admin/auth-settings` (écrit dans la table `settings`)
@@ -156,14 +160,17 @@ La synchronisation Pelican se fait via l'admin Filament (boutons UI) ou via des 
 
 ### Tables principales
 
-- `users` : id, email, name, password (nullable si OAuth), locale (en/fr), pelican_user_id, stripe_customer_id, is_admin, `app_authentication_secret` (encrypted), `app_authentication_recovery_codes` (encrypted:array bcrypt), `two_factor_confirmed_at`, timestamps
-- `oauth_identities` : id, user_id FK, provider (shop/google/discord/linkedin), provider_user_id, provider_email, last_login_at, timestamps. Unique `(provider, provider_user_id)`.
+- `users` : id, email, name, password (nullable si OAuth), locale (en/fr), pelican_user_id, **stripe_customer_id (UNIQUE)**, is_admin, `app_authentication_secret` (encrypted), `app_authentication_recovery_codes` (encrypted:array bcrypt), `two_factor_confirmed_at`, timestamps
+- `oauth_identities` : id, user_id FK, provider (shop/google/discord/linkedin/paymenter), provider_user_id, provider_email, last_login_at, timestamps. Unique `(provider, provider_user_id)`.
 - `admin_action_logs` : id, admin_id, target_user_id (nullable), target_server_id (nullable), action, payload (json), ip, user_agent, created_at
-- `servers` : id, user_id FK, pelican_server_id, identifier, name, status, egg_id, plan_id, stripe_subscription_id, payment_intent_id, timestamps
-- `eggs`, `nests`, `nodes` : miroirs locaux de Pelican (sync via boutons admin ou CLI)
-- `server_plans` : id, name, stripe_price_id, egg_id, nest_id, ram, cpu, disk, node_id, is_active
-- `settings` : id, key (unique), value (text nullable). Stocke branding, auth config, thème, email templates. Cachée.
+- `servers` : id, user_id FK, pelican_server_id, identifier, name, status (enum incl. `provisioning` / `provisioning_failed`), egg_id, plan_id, **stripe_subscription_id (UNIQUE nullable)**, payment_intent_id (UNIQUE nullable), `paymenter_service_id` (string nullable, indexed — Pelican `external_id` mirroring in Bridge Paymenter mode), `idempotency_key` (UNIQUE), `provisioning_error` (text), `scheduled_deletion_at` (timestamp nullable, indexed), timestamps
+- `eggs`, `nests`, `nodes` : miroirs locaux de Pelican (sync via boutons admin ou CLI). `nest` n'est plus exposée par l'API Pelican (retirée) → dérivée de `egg.nest_id` localement.
+- `server_plans` : id, name, stripe_price_id (nullable, UNIQUE), egg_id (nullable), nest_id (nullable), node_id (nullable), ram, cpu, disk, swap_mb, io_weight, cpu_pinning, default_node_id, allowed_node_ids (json), auto_deploy, docker_image, port_count, env_var_mapping (json), enable_oom_killer, start_on_completion, skip_install_script, dedicated_ip, feature_limits_*, checkout_custom_fields (json), shop_plan_id (UNIQUE), shop_plan_slug, shop_plan_type, description, price_cents, currency, interval, interval_count, has_trial, trial_*, last_shop_synced_at, is_active
+- `settings` : id, key (unique), value (text nullable). Stocke branding, auth config, thème, email templates, **bridge config (bridge_mode enum [disabled/shop_stripe/paymenter], bridge_enabled (legacy fallback), bridge_shop_url, bridge_shop_shared_secret encrypted, bridge_stripe_webhook_secret encrypted, bridge_grace_period_days, bridge_pelican_webhook_token encrypted)**. Cachée.
 - `sync_logs` : id, type, status, summary (json), started_at, completed_at
+- `bridge_sync_logs` : audit des appels Bridge plan-sync depuis le Shop (id, action, shop_plan_id, server_plan_id, request_payload json, response_status, response_body, ip_address, signature_valid, attempted_at)
+- `stripe_processed_events` : idempotency ledger des webhooks Stripe (event_id PK, event_type, payload_summary json, response_status, error_message, processed_at). TTL 30j via `stripe:clean-processed-events` daily.
+- `pelican_processed_events` : idempotency ledger des webhooks Pelican (Bridge Paymenter mode). PK `idempotency_hash` = sha256(event|model_id|updated_at|body). TTL 2j via `pelican:clean-processed-events` daily — Pelican ne retry pas, rétention courte suffit.
 
 ### Principes
 
@@ -447,92 +454,154 @@ Contracts : `Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication` + `Ha
 
 ## Reste à faire
 
-- **P3** — Bridge plugin (détail ci-dessous)
+Aucune dette critique.
 
-## Priorité 3 — Bridge plugin
+- Bridge P3 (Stripe webhook + lifecycle + emails) **livré 2026-04-23**.
+- Bridge Paymenter (Pelican webhook → mirror, no emails / no plans) **livré 2026-04-23** (mode mutuellement exclusif avec Shop+Stripe via enum `bridge_mode`).
 
-Module optionnel qui automatise le provisioning de serveurs quand un client achète via Stripe.
+Backlog optionnel (à faire seulement si besoin produit explicite) :
+- OneTimeProduct sync depuis le Shop (endpoints dédiés `/api/bridge/one-time-products/upsert`) — quand le Shop commencera à pousser des produits one-shot
+- Endpoint `/api/bridge/stripe-price-rotated` pour notifier Peregrine quand le Shop crée un nouveau Price (rotation grandfathering) — actuellement l'admin doit re-mapper manuellement le `stripe_price_id` côté plan
+- Migration vers Horizon quand le volume Stripe le justifie (cf. `docs/operations/queue-worker.md` § Future)
+- Cleanup migration pour drop la setting legacy `bridge_enabled` (gardée 1 release pour fallback de `BridgeModeService::current()`)
+- Surface `paymenter_service_id` dans l'admin servers (column + filter) — utile au support pour relier Server local ↔ service Paymenter
 
-### Structure
+## Bridge — implémentation actuelle (P3 + Paymenter)
+
+Module qui automatise le provisioning de serveurs en se synchronisant avec un shop externe. **Deux backends mutuellement exclusifs** sélectionnés via le radio `bridge_mode` dans `/admin/bridge-settings` :
+
+- `disabled` — aucun bridge actif
+- `shop_stripe` — Shop SaaSykit (ou custom) pousse les plans + Stripe envoie les webhooks (cas du Shop BiomeBounty)
+- `paymenter` — Paymenter orchestre tout, Pelican forward ses events natifs vers Peregrine en mirror only (no plans page, no emails Peregrine)
+
+L'enum `App\Enums\BridgeMode` + le service `App\Services\Bridge\BridgeModeService::current()` sont la source de vérité (avec fallback legacy sur `bridge_enabled` boolean pour les installs pre-migration).
+
+### Mode 1 : Shop+Stripe — Trois canaux indépendants
 
 ```
-app/Plugins/Bridge/
-├── BridgeServiceProvider.php       # Enregistrement conditionnel
-├── Config/bridge.php
-├── Http/
-│   ├── Controllers/
-│   │   └── StripeWebhookController.php
-│   └── Middleware/
-│       └── VerifyStripeSignature.php
-├── Services/
-│   ├── ProvisioningService.php     # Logique de provisioning
-│   └── SubscriptionService.php     # Upgrade/downgrade/cancel
-├── Jobs/
-│   ├── ProvisionServerJob.php
-│   └── SuspendServerJob.php
-├── Listeners/
-│   └── HandleStripeEvent.php
-└── Events/
-    ├── ServerProvisioned.php
-    └── ServerSuspended.php
+SHOP                            PEREGRINE                      STRIPE
+  │                                 │                            │
+  │  POST /api/bridge/plans/upsert  │                            │
+  ├────────────────────────────────▶│  ← stocke plan mirror      │
+  │  HMAC-signé, idempotent         │                            │
+  │                                 │                            │
+  │  DELETE /api/bridge/plans/{id}  │                            │
+  ├────────────────────────────────▶│  ← désactive (soft)        │
+  │                                 │                            │
+  │                                 │  POST /api/stripe/webhook  │
+  │                                 │◀───────────────────────────┤
+  │                                 │  4 events lifecycle        │
 ```
 
-### BridgeServiceProvider
+### Côté plan-sync (Shop → Peregrine)
 
-- Vérifie `config('bridge.enabled')` dans `register()`. Si `false`, ne fait rien.
-- Enregistre la route `POST /webhook/stripe` (exclue du CSRF middleware)
-- Enregistre listeners et jobs
+- `POST /api/bridge/ping` — health check
+- `POST /api/bridge/plans/upsert` — Shop pousse un plan complet (business + Pelican specs)
+- `DELETE /api/bridge/plans/{shop_plan_id}` — soft-désactive
+- HMAC-SHA256 + replay protection 5min via `VerifyBridgeSignature`
+- Settings `bridge_enabled` + `bridge_shop_url` + `bridge_shop_shared_secret` (chiffré) dans `/admin/bridge-settings`
+- Audit complet dans `bridge_sync_logs` (visible dans `/admin/bridge-sync-logs`)
+- Doc publique `/docs/bridge-api`
 
-### StripeWebhookController
+### Côté Stripe webhook (Stripe → Peregrine)
 
-- Reçoit `POST /webhook/stripe`
-- `VerifyStripeSignature` middleware : vérifie la signature avec `STRIPE_WEBHOOK_SECRET` via `Stripe\Webhook::constructEvent()`
-- Dispatche selon `$event->type` :
-  - `checkout.session.completed` → `ProvisionServerJob::dispatch($payload)`
-  - `customer.subscription.updated` → `SubscriptionService->handleUpdate($payload)`
-  - `customer.subscription.deleted` → `SuspendServerJob::dispatch($payload)`
+- `POST /api/stripe/webhook` — 4 events traités : `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`
+- Signature via SDK officiel `Stripe\Webhook::constructEvent()` — middleware `VerifyStripeSignature`
+- Idempotence par `event.id` dans `stripe_processed_events` (TTL 30j via cron daily `stripe:clean-processed-events`)
+- Settings `bridge_stripe_webhook_secret` (chiffré) + `bridge_grace_period_days` (default 14, range 0-90) dans `/admin/bridge-settings`
 
-### ProvisioningService
+### Jobs queued (database driver)
 
-- `provision(array $webhookData): void`
-  1. Extraire `customer_email`, `customer_name`, `line_items[0].price.id` du webhook
-  2. Vérifier idempotence : `Server::where('payment_intent_id', $paymentIntentId)->exists()` → si oui, return
-  3. Chercher `ServerPlan::where('stripe_price_id', $priceId)->firstOrFail()`
-  4. Chercher user : `User::where('email', $customerEmail)->first()`
-  5. Si user n'existe pas → `PelicanApplicationService->createUser()` + `User::create()` en DB locale
-  6. Si mode local (pas OAuth) → générer mot de passe temporaire + envoyer email "Serveur prêt — définissez votre mot de passe" avec lien reset
-  7. `PelicanApplicationService->createServer()` avec les specs du `ServerPlan`
-  8. `Server::create()` en DB locale avec `payment_intent_id`, `stripe_subscription_id`, `plan_id`
-  9. Dispatch event `ServerProvisioned`
+- `ProvisionServerJob` (`tries=3`, backoff `[60s, 300s, 900s]`) : 2-phase commit local + Pelican, idempotence par `idempotency_key` unique sur `servers`. Dispatche `ServerProvisioned` event après succès.
+- `SubscriptionUpdateJob` : upgrade/downgrade via `PelicanApplicationService::updateServerBuild()`. Soft suspend sur `past_due`, recovery sur retour à `active`.
+- `SuspendServerJob` : suspend Pelican + status local `suspended`. Si `scheduleDeletion=true` → set `Server::scheduled_deletion_at = now() + grace_period`. Dispatche `ServerSuspended` event.
+- `PurgeScheduledServerDeletionsJob` : cron daily à 03:00, hard-delete des servers passé leur grace period.
 
-### SubscriptionService
+### Emails
 
-- `handleUpdate(array $webhookData): void` — lookup serveur par `stripe_subscription_id`, si `price_id` a changé → nouveau `ServerPlan`, update specs Pelican (méthode `updateServerBuild()` à ajouter à `PelicanApplicationService`)
-- `handleCancellation(array $webhookData): void` — lookup serveur par `stripe_subscription_id`, `PelicanApplicationService->suspendServer()`, update statut en DB. **Ne suspend QUE les serveurs avec abo** (`stripe_subscription_id IS NOT NULL`).
+3 templates dans `MailTemplateRegistry` (group "Bridge", visible dans `/admin/email-templates` uniquement quand Bridge actif) :
+- `bridge_server_ready_local` — server prêt + lien reset password (user local, sans OAuth)
+- `bridge_server_ready_oauth` — server prêt sans password (user OAuth)
+- `bridge_server_suspended` — suspension + scheduled deletion at X
 
-### Jobs
+Détection mode local vs OAuth via `$user->oauthIdentities()->exists()`. Reset URL signé via `Password::broker()->createToken()`.
 
-- `ProvisionServerJob` : retry 3, backoff exponentiel (10s, 30s, 90s). Appelle `ProvisioningService->provision()`.
-- `SuspendServerJob` : retry 3. Appelle `SubscriptionService->handleCancellation()`.
+### Pelican client étendu
 
-### Installation Stripe
+`PelicanInfrastructureClient` ajoute :
+- `createServerAdvanced(CreateServerRequest)` — payload complet (limits, feature_limits, environment, allocations, oom, start_on_completion, skip_scripts)
+- `updateServerBuild(int, array)` — pour upgrades de plan
+- `listNodeAllocations(int)` — pour `PortAllocator`
+- `getEggVariableDefaults(int)` — fetch les env vars de l'egg pour le provisioning
 
-`composer require stripe/stripe-php`. Le Bridge n'utilise PAS la clé API Stripe complète — uniquement la signing secret pour vérifier les webhooks.
+Services Bridge :
+- `PortAllocator::findConsecutiveFreePorts(nodeId, count, ?preferredRange)`
+- `EnvironmentResolver::resolve(plan, allocatedPorts, eggDefaults)` — gère `env_var_mapping` (offset/random/static)
 
-### Emails liés au Bridge (à implémenter en même temps)
+### Worker queue obligatoire
 
-À ajouter dans `MailTemplateRegistry` + `/admin/email-templates` :
+Sans worker actif (`php artisan queue:work`), les jobs s'accumulent dans la table `jobs` et ne se traitent jamais. Setup supervisor / systemd dans `docs/operations/queue-worker.md`.
 
-- **"Votre serveur est prêt"** (`ServerReadyMail`) : envoyé par le Bridge en mode local (pas OAuth). Variables : `{server_name}` (nom jeu), `{ip_port}`, `{reset_password_url}`, `{panel_url}`, `{name}`.
-- **"Invitation à créer un compte Shop"** (`ShopInvitationMail`) : envoyé depuis l'admin Filament. Variable : `{shop_register_url}`.
+### Action admin "Cancel scheduled deletion"
 
-Templates EN + FR. Réutiliser le wrapper `resources/views/emails/templated.blade.php`.
+Dans `/admin/servers`, action per-row visible si `scheduled_deletion_at !== null`. Permet de récupérer un serveur pendant la grace period (client qui se ravise).
 
-### Tests Bridge
+### Tests
 
-- `StripeWebhookTest` : idempotence, user creation, provisioning
-- `ProvisioningServiceTest`
-- Mocks HTTP (`Http::fake()`) pour Pelican et Stripe
+Bridge Shop+Stripe :
+- `tests/Feature/BridgePlanSyncTest.php` (11 tests)
+- `tests/Feature/StripeWebhookTest.php` (8 tests)
+- `tests/Feature/SubscriptionLifecycleTest.php` (7 tests)
+- `tests/Feature/Bridge/ServerNotificationTest.php` (5 tests)
+- `tests/Unit/Bridge/PortAllocatorTest.php` (6 tests)
+- `tests/Unit/Bridge/EnvironmentResolverTest.php` (7 tests)
+- `tests/Feature/PelicanEmailSyncTest.php` (1 test)
+
+Bridge Paymenter + mode commun :
+- `tests/Feature/BridgeSettingsTest.php` (6 tests — radio mode, legacy fallback, token encryption)
+- `tests/Feature/PelicanWebhookTest.php` (8 tests — token, mode gate, idempotence, dispatch)
+- `tests/Feature/Bridge/PelicanMirrorSyncTest.php` (8 tests — mirror sync, reconciliation)
+- `tests/Feature/Bridge/PelicanWebhookLogVisibilityTest.php` (3 tests — admin nav visibility)
+
+Tous mockent Pelican via `Http::fake()` et la queue via `Bus::fake()`.
+
+### Mode 2 : Paymenter — Pelican webhook driven (mirror only)
+
+Pour les setups où **Paymenter** est le front-shop. L'extension Pelican-Paymenter crée/suspend/supprime les serveurs Pelican, et Pelican forward ses events natifs vers Peregrine via `/admin/webhooks` (Pelican ≥ 0.46).
+
+- `POST /api/pelican/webhook` — receiver, middleware `VerifyPelicanWebhookToken` (Bearer token, pas de HMAC car Pelican ne signe pas)
+- 5 events à activer côté Pelican (UI labels) : `created: Server`, `updated: Server`, `deleted: Server`, `created: User`, `event: Server\Installed`. ⚠️ Bug connu sur certaines versions Pelican : `event: Server\Installed` peut faire crasher la queue Pelican avec `Cannot use object as array` (`ProcessWebhook.php:40`). Si l'admin voit ces failed jobs côté Pelican, décocher uniquement cet event — `updated: Server` couvre déjà le cas install-finished (status `installing` → `null`).
+- Idempotence par `sha256(event|model_id|updated_at|body)` dans `pelican_processed_events` (TTL 2j via `pelican:clean-processed-events` daily à 03:45)
+- Settings `bridge_pelican_webhook_token` (chiffré) dans `/admin/bridge-settings` (section Paymenter, collapsée par défaut)
+- Audit visible dans `/admin/pelican-webhook-logs` (uniquement en mode paymenter)
+- Doc opérateur publique `/docs/bridge-paymenter`
+
+Jobs queued :
+- `App\Jobs\Bridge\SyncServerFromPelicanWebhookJob` : `updateOrCreate` Server local + sync pivot `server_user`. **Aucun event Peregrine fired** (pas de `ServerProvisioned`/`ServerSuspended`) — Paymenter envoie ses propres emails, on ne dédoublonne PAS.
+- `App\Jobs\Bridge\SyncUserFromPelicanWebhookJob` : `updateOrCreate` User local sans password (le user se connecte via OAuth Paymenter ou reset password local).
+
+Filet de sécurité : `SyncServerStatusJob` (cron every 5 min) appelle `reconcilePaymenterMirror()` quand `BridgeMode::isPaymenter()` — diff `PelicanApplicationService::listServers()` avec la DB locale → dispatch jobs pour les manquants, soft-delete des orphelins. Couvre les events que Pelican aurait raté (Pelican ne retry pas).
+
+Visibility en mode Paymenter :
+- `ServerPlanResource` (Plans admin) — **caché**, Paymenter gère le catalogue
+- `BridgeSyncLogResource` (Bridge sync logs) — **caché**, n'a aucun sens
+- `EmailTemplates` — Bridge templates (`bridge_server_ready_*`, `bridge_server_suspended`) **filtrés out**
+- `PelicanWebhookLogResource` — **visible** (audit des events reçus)
+- `BridgeSettings` — visible dans les 2 modes
+
+### Étapes optionnelles d'installation
+
+Selon le mode choisi, certaines étapes ne sont pas nécessaires :
+
+| Étape | Shop+Stripe | Paymenter | Commentaire |
+|---|---|---|---|
+| Installer `stripe/stripe-php` | ✅ requis | ⏸ optionnel | Pas utilisé en mode Paymenter |
+| Configurer Stripe webhook secret | ✅ requis | ⏸ ignoré | Le champ reste visible mais non utilisé |
+| Configurer Shop HMAC secret | ✅ requis | ⏸ ignoré | Idem |
+| Configurer Pelican `/admin/webhooks` | ⏸ ignoré | ✅ requis | Voir `/docs/bridge-paymenter` |
+| Configurer email templates Bridge | ✅ requis | ❌ caché | Paymenter envoie tous les emails |
+| Setup queue worker | ✅ requis | ✅ requis | Les 2 modes dispatch des jobs |
+| Setup grace period | ✅ utile | ⏸ ignoré | Paymenter gère ses cycles de service |
 
 ## Commandes utiles
 

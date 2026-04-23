@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
@@ -10,6 +11,13 @@ import type { useSidebarConfig } from '@/hooks/useSidebarConfig';
 import type { ServerSidebarProps } from '@/components/server/ServerSidebar.props';
 
 type DockBarProps = ServerSidebarProps & { config: ReturnType<typeof useSidebarConfig> };
+
+/**
+ * Vertical clearance the dock occupies (button height + bottom-4 + breathing
+ * room). Floating UI like bulk action bars reads `--bottom-safe-area` so it
+ * never sits underneath the dock — see ServerBulkBar / FileBulkBar.
+ */
+const DOCK_CLEARANCE = '5.5rem';
 
 /**
  * Floating macOS-style dock at bottom-center. The hero banner is fully
@@ -27,6 +35,16 @@ export function DockBar({ server, config }: DockBarProps) {
     const { t } = useTranslation();
     const style = config.style ?? 'pills';
     const withLabels = style === 'default';
+
+    // Publish the dock clearance on the document so floating UI (bulk bars,
+    // floating selection toolbars) can lift themselves above the dock. Other
+    // sidebar variants don't set the var → it falls back to 0.
+    useEffect(() => {
+        document.documentElement.style.setProperty('--bottom-safe-area', DOCK_CLEARANCE);
+        return () => {
+            document.documentElement.style.removeProperty('--bottom-safe-area');
+        };
+    }, []);
 
     return (
         <>

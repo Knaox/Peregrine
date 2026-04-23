@@ -39,6 +39,7 @@ class Settings extends Page implements HasForms
     public ?array $favicon_url = [];
     public bool $show_app_name = true;
     public ?string $logo_height = '40';
+    public string $default_locale = 'en';
     /** @var array<int, array<string, mixed>> */
     public array $header_links = [];
 
@@ -52,9 +53,9 @@ class Settings extends Page implements HasForms
     // LinkedIn) via the settings table rather than .env. Nothing auth-related
     // remains here.
 
-    // Bridge
-    public bool $bridge_enabled = false;
-    public ?string $stripe_webhook_secret = '';
+    // Bridge moved to the dedicated BridgeSettings page (HMAC secret +
+    // toggle managed there). The Stripe webhook secret will move there too
+    // when the P3 webhook handler is implemented.
 
     // Developer
     public bool $app_debug = false;
@@ -76,6 +77,7 @@ class Settings extends Page implements HasForms
         $this->app_name = $settings->get('app_name', config('app.name'));
         $this->show_app_name = $settings->get('show_app_name', 'true') === 'true';
         $this->logo_height = $settings->get('logo_height', '40');
+        $this->default_locale = (string) $settings->get('default_locale', 'en');
 
         $logoPath = $settings->get('app_logo_path', '');
         $logoLightPath = $settings->get('app_logo_path_light', '');
@@ -89,8 +91,6 @@ class Settings extends Page implements HasForms
         $this->pelican_url = config('services.pelican.url', '');
         $this->pelican_admin_api_key = config('services.pelican.admin_api_key', '');
         $this->pelican_client_api_key = config('panel.client_api_key', '');
-        $this->bridge_enabled = (bool) config('services.bridge.enabled', false);
-        $this->stripe_webhook_secret = config('services.stripe.webhook_secret', '');
 
         $this->app_debug = (bool) config('app.debug', false);
 
@@ -107,6 +107,7 @@ class Settings extends Page implements HasForms
             'app_name' => $this->app_name,
             'show_app_name' => $this->show_app_name,
             'logo_height' => $this->logo_height,
+            'default_locale' => $this->default_locale,
             'logo_url' => $logoForForm,
             'logo_url_light' => $logoLightForForm,
             'favicon_url' => $faviconForForm,
@@ -114,8 +115,6 @@ class Settings extends Page implements HasForms
             'pelican_url' => $this->pelican_url,
             'pelican_admin_api_key' => $this->pelican_admin_api_key,
             'pelican_client_api_key' => $this->pelican_client_api_key,
-            'bridge_enabled' => $this->bridge_enabled,
-            'stripe_webhook_secret' => $this->stripe_webhook_secret,
             'mail_mailer' => $this->mail_mailer,
             'mail_host' => $this->mail_host,
             'mail_port' => $this->mail_port,
@@ -134,7 +133,6 @@ class Settings extends Page implements HasForms
         return $schema->schema([
             SettingsFormSchema::appearance(),
             SettingsFormSchema::pelican(),
-            SettingsFormSchema::bridge(),
             SettingsFormSchema::smtp(),
             SettingsFormSchema::developer(),
         ]);
@@ -150,6 +148,10 @@ class Settings extends Page implements HasForms
         $settings->set('app_name', $data['app_name'] ?? null);
         $settings->set('show_app_name', ($data['show_app_name'] ?? true) ? 'true' : 'false');
         $settings->set('logo_height', $data['logo_height'] ?? '40');
+        $defaultLocale = in_array($data['default_locale'] ?? 'en', ['en', 'fr'], true)
+            ? $data['default_locale']
+            : 'en';
+        $settings->set('default_locale', $defaultLocale);
         $settings->set('header_links', json_encode($data['header_links'] ?? []));
 
         $logoValue = $data['logo_url'] ?? null;
@@ -174,7 +176,7 @@ class Settings extends Page implements HasForms
             }
         }
 
-        // Pelican, Auth, Bridge → .env
+        // Pelican → .env
         $envValues = [];
         if (isset($data['pelican_url'])) {
             $envValues['PELICAN_URL'] = $data['pelican_url'];
@@ -185,12 +187,9 @@ class Settings extends Page implements HasForms
         if (isset($data['pelican_client_api_key']) && $data['pelican_client_api_key'] !== '') {
             $envValues['PELICAN_CLIENT_API_KEY'] = $data['pelican_client_api_key'];
         }
-        // Auth config is owned by the dedicated AuthSettings page — kept
-        // out of .env so admins can swap provider keys without a redeploy.
-        $envValues['BRIDGE_ENABLED'] = ($data['bridge_enabled'] ?? false) ? 'true' : 'false';
-        if (! empty($data['bridge_enabled']) && ! empty($data['stripe_webhook_secret'])) {
-            $envValues['STRIPE_WEBHOOK_SECRET'] = $data['stripe_webhook_secret'];
-        }
+        // Auth config is owned by the dedicated AuthSettings page.
+        // Bridge config is owned by the dedicated BridgeSettings page.
+        // Both stay out of .env so admins can change them without a redeploy.
 
         // SMTP → .env
         $envValues['MAIL_MAILER'] = $data['mail_mailer'] ?? 'smtp';
