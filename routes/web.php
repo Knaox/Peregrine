@@ -7,6 +7,16 @@ use League\CommonMark\GithubFlavoredMarkdownConverter;
 // Setup Wizard SPA
 Route::view('/setup', 'setup');
 
+// Frontend login page (React SPA route). The named `frontend.login` is what
+// Filament's auth middleware redirects to when an admin hits /admin/* with
+// no session — single sign-in entry point for the whole product.
+Route::view('/login', 'app')->name('frontend.login');
+
+// Safety net for old bookmarks pointing at /admin/login — Filament's panel
+// no longer exposes a login page (admins use /login like everyone else),
+// but a 404 on a deep bookmark is a worse experience than a clean redirect.
+Route::redirect('/admin/login', '/login', 302);
+
 // Bridge developer documentation — public HTML render of docs/bridge-api.md.
 // Targeted at shop developers writing the client side of the Bridge contract.
 Route::get('/docs/bridge-api', function () {

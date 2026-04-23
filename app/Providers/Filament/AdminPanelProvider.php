@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Http\Middleware\Authenticate;
+use App\Http\Middleware\RedirectAdminToFrontendLogin;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -29,7 +29,11 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            // No ->login() — admins must sign in via the React /login page
+            // (single source of truth for multi-provider auth + 2FA + OAuth
+            // canonical IdP redirect). The auth middleware below redirects
+            // unauthenticated /admin/* hits to /login with the original URL
+            // preserved via ?redirect_to=.
             ->brandName('Peregrine')
             ->brandLogo(asset('images/logo.webp'))
             ->brandLogoHeight('2rem')
@@ -76,7 +80,7 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                RedirectAdminToFrontendLogin::class,
             ]);
     }
 }
