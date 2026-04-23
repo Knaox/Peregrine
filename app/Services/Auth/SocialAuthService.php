@@ -37,6 +37,16 @@ class SocialAuthService
      * Build the provider's authorize URL. Configures Socialite at runtime
      * from the DB-stored provider config and returns the URL — the controller
      * returns that as an HTTP redirect.
+     *
+     * `prompt=consent` is forced on every redirect so that providers (notably
+     * Laravel Passport on the Shop side, plus Google / Discord) ALWAYS show
+     * their consent screen. Without it, a user who unlinks then re-links the
+     * provider sees a silent same-window redirect — the provider still has a
+     * session cookie + a previously-approved client grant, so it bounces
+     * straight back without asking. The papercut is real enough that users
+     * report "the connect button does nothing visible" when it actually did
+     * the round-trip in 200ms. Safe with all providers we support: standard
+     * OAuth2 ignores unknown query params.
      */
     public function redirectUrl(string $provider): string
     {
@@ -47,6 +57,7 @@ class SocialAuthService
         $this->registry->configureSocialite($provider);
 
         return Socialite::driver($this->registry->socialiteDriver($provider))
+            ->with(['prompt' => 'consent'])
             ->redirect()
             ->getTargetUrl();
     }
