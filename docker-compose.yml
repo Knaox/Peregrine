@@ -38,6 +38,14 @@ services:
       APP_DEBUG: "false"
       APP_URL: ${APP_URL:-http://localhost:8080}
       DOCKER: "true"
+      # Reverse-proxy support — set this when a proxy fronts Peregrine
+      # (Nginx Proxy Manager, Traefik, Cloudflare, …). Without it Laravel
+      # writes http:// links and OAuth redirect_uri breaks behind HTTPS.
+      # Examples:
+      #   TRUSTED_PROXIES=*                            (default, trust all — single-host Docker)
+      #   TRUSTED_PROXIES=192.168.80.1                 (single proxy on the Docker host)
+      #   TRUSTED_PROXIES=172.16.0.0/12,192.168.0.0/16 (private LAN ranges)
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
       # Database — SQLite is the default, override any of these to point at
       # an external MySQL / MariaDB / PostgreSQL host.
       DB_CONNECTION: ${DB_CONNECTION:-sqlite}

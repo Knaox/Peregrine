@@ -60,6 +60,10 @@ class Settings extends Page implements HasForms
     // Developer
     public bool $app_debug = false;
 
+    // Network
+    /** @var array<int, string> */
+    public array $trusted_proxies = [];
+
     // SMTP
     public ?string $mail_mailer = 'smtp';
     public ?string $mail_host = '';
@@ -94,6 +98,14 @@ class Settings extends Page implements HasForms
 
         $this->app_debug = (bool) config('app.debug', false);
 
+        // TRUSTED_PROXIES is comma-separated in .env; '*' is the trust-all
+        // default coming from the bootstrap/app.php fallback. Decompose it
+        // into an array so the TagsInput chip UI can render each entry.
+        $proxiesRaw = (string) env('TRUSTED_PROXIES', '*');
+        $this->trusted_proxies = $proxiesRaw === '*' || $proxiesRaw === ''
+            ? []
+            : array_values(array_filter(array_map('trim', explode(',', $proxiesRaw))));
+
         $this->mail_mailer = config('mail.default', 'smtp');
         $this->mail_host = config('mail.mailers.smtp.host', '');
         $this->mail_port = (string) config('mail.mailers.smtp.port', '587');
@@ -124,18 +136,15 @@ class Settings extends Page implements HasForms
             'mail_from_address' => $this->mail_from_address,
             'mail_from_name' => $this->mail_from_name,
             'app_debug' => $this->app_debug,
+            'trusted_proxies' => $this->trusted_proxies,
         ]);
     }
 
     public function form(Schema $schema): Schema
     {
         // Authentication section moved to the dedicated AuthSettings page.
-        return $schema->schema([
-            SettingsFormSchema::appearance(),
-            SettingsFormSchema::pelican(),
-            SettingsFormSchema::smtp(),
-            SettingsFormSchema::developer(),
-        ]);
+        // All configurable fields are grouped into top-level tabs for clarity.
+        return $schema->schema(SettingsFormSchema::tabs());
     }
 
     public function save(): void
@@ -207,6 +216,17 @@ class Settings extends Page implements HasForms
 
         // Developer → .env
         $envValues['APP_DEBUG'] = ($data['app_debug'] ?? false) ? 'true' : 'false';
+
+        // Network → .env. The TagsInput hands us an array of IP/CIDR strings.
+        // We persist as a comma-separated list (read by bootstrap/app.php), or
+        // '*' (trust all proxies) when the operator explicitly clears the list
+        // and chooses to keep the bundled-Docker default. Empty means "trust
+        // none" (locked-down).
+        $proxies = $data['trusted_proxies'] ?? [];
+        $proxies = is_array($proxies)
+            ? array_values(array_filter(array_map('trim', $proxies), fn ($v): bool => $v !== ''))
+            : [];
+        $envValues['TRUSTED_PROXIES'] = empty($proxies) ? '*' : implode(',', $proxies);
 
         if (! empty($envValues)) {
             $setup->writeEnv($envValues);

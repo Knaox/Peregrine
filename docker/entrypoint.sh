@@ -13,7 +13,7 @@ cd "$APP_ROOT"
 # sees the empty Docker-provided value.
 # Unsetting empty vars lets the .env values take over as intended.
 # -------------------------------------------------------------------
-for var in APP_URL APP_NAME \
+for var in APP_URL APP_NAME TRUSTED_PROXIES \
            DB_CONNECTION DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD \
            REDIS_HOST REDIS_PORT REDIS_PASSWORD \
            CACHE_STORE QUEUE_CONNECTION SESSION_DRIVER \
