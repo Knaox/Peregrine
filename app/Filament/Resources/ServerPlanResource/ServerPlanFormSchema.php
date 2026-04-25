@@ -121,6 +121,7 @@ final class ServerPlanFormSchema
                     ->maxValue(10)
                     ->default(1)
                     ->required()
+                    ->live()
                     ->helperText('1 = standard, multiple ports = used for game-specific protocols (e.g. RCON + Telnet alongside the game port).'),
 
                 Repeater::make('env_var_mapping')
@@ -139,11 +140,28 @@ final class ServerPlanFormSchema
                             ])
                             ->required()
                             ->live(),
-                        TextInput::make('offset_value')
-                            ->numeric()
-                            ->minValue(0)
+                        Select::make('offset_value')
+                            ->label('Which allocated port')
+                            ->options(function (Get $get): array {
+                                // The Repeater nests fields under their item;
+                                // `../../port_count` walks back up to the form
+                                // root. Fall back to a 1..10 range if Filament
+                                // can't resolve the parent (older versions or
+                                // on a fresh blank form).
+                                $count = (int) ($get('../../port_count') ?? 1);
+                                $count = max(1, min(10, $count));
+                                $options = [];
+                                for ($i = 0; $i < $count; $i++) {
+                                    $options[$i] = $i === 0
+                                        ? 'Main port (port + 0)'
+                                        : 'Main port + '.$i;
+                                }
+                                return $options;
+                            })
+                            ->default(0)
                             ->visible(fn (Get $get) => $get('type') === 'offset')
-                            ->required(fn (Get $get) => $get('type') === 'offset'),
+                            ->required(fn (Get $get) => $get('type') === 'offset')
+                            ->helperText('Picks one of the consecutive ports allocated above. "Main port" is the one players connect to; "+1", "+2"… are the extra ports for protocols like RCON/Telnet. The list shrinks if you reduce "Number of consecutive ports".'),
                         TextInput::make('static_value')
                             ->visible(fn (Get $get) => $get('type') === 'static')
                             ->required(fn (Get $get) => $get('type') === 'static'),
