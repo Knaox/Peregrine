@@ -5,6 +5,8 @@ namespace App\Jobs;
 use App\Actions\Pelican\EnsurePelicanAccountAction;
 use App\Events\Bridge\ServerProvisioned;
 use App\Models\Egg;
+use App\Models\Nest;
+use App\Models\Node;
 use App\Models\Server;
 use App\Models\ServerPlan;
 use App\Models\User;
@@ -128,21 +130,33 @@ class ProvisionServerJob implements ShouldQueue
         ]);
 
         try {
-            $nodeId = $this->pickNode($plan);
-            if ($nodeId === null) {
+            // Resolve the local FK rows to their Pelican-side IDs. The
+            // `eggs/nests/nodes` tables hold an auto-incremented LOCAL PK
+            // (`id`) AND a mirror of the Pelican PK (`pelican_*_id`). Pelican
+            // only accepts its own IDs — passing the local PKs returns 404
+            // NotFoundHttpException on every endpoint that takes one.
+            $node = $this->pickNode($plan);
+            if ($node === null || $node->pelican_node_id === null) {
                 throw new \RuntimeException('No node available for provisioning');
+            }
+            $egg = Egg::find($plan->egg_id);
+            if ($egg === null || $egg->pelican_egg_id === null) {
+                throw new \RuntimeException("Egg #{$plan->egg_id} not found locally or missing pelican_egg_id (run sync:eggs)");
+            }
+            $nest = Nest::find($plan->nest_id ?? $egg->nest_id);
+            if ($nest === null || $nest->pelican_nest_id === null) {
+                throw new \RuntimeException('Nest not found locally or missing pelican_nest_id (run sync:eggs)');
             }
 
             $allocations = $portAllocator->findConsecutiveFreePorts(
-                nodeId: $nodeId,
+                nodeId: (int) $node->pelican_node_id,
                 count: max(1, (int) $plan->port_count),
             );
 
-            $eggDefaults = $pelican->getEggVariableDefaults((int) $plan->egg_id);
+            $eggDefaults = $pelican->getEggVariableDefaults((int) $egg->pelican_egg_id);
             $environment = $environmentResolver->resolve($plan, $allocations, $eggDefaults);
 
-            $egg = Egg::find($plan->egg_id);
-            $startup = $egg?->startup;
+            $startup = $egg->startup;
 
             $defaultAllocation = $allocations[0];
             $additionalAllocations = array_map(fn ($a) => $a->id, array_slice($allocations, 1));
@@ -150,8 +164,8 @@ class ProvisionServerJob implements ShouldQueue
             $pelicanServer = $pelican->createServerAdvanced(new CreateServerRequest(
                 name: $server->name,
                 userId: (int) $user->pelican_user_id,
-                eggId: (int) $plan->egg_id,
-                nestId: (int) $plan->nest_id,
+                eggId: (int) $egg->pelican_egg_id,
+                nestId: (int) $nest->pelican_nest_id,
                 memoryMb: (int) ($plan->ram ?? 0),
                 swapMb: (int) ($plan->swap_mb ?? 0),
                 diskMb: (int) ($plan->disk ?? 0),
@@ -163,7 +177,7 @@ class ProvisionServerJob implements ShouldQueue
                 environment: $environment,
                 defaultAllocationId: $defaultAllocation->id,
                 additionalAllocations: $additionalAllocations,
-                dockerImage: $plan->docker_image ?: ($egg?->docker_image ?: null),
+                dockerImage: $plan->docker_image ?: ($egg->docker_image ?: null),
                 startup: $startup,
                 startOnCompletion: (bool) $plan->start_on_completion,
                 skipScripts: (bool) $plan->skip_install_script,
@@ -230,17 +244,20 @@ class ProvisionServerJob implements ShouldQueue
         ]);
     }
 
-    private function pickNode(ServerPlan $plan): ?int
+    /**
+     * Resolves the local Node row chosen for this plan. Returns the model
+     * (not just the id) so the caller can pull `pelican_node_id` for API
+     * calls — `node_id` / `default_node_id` / `allowed_node_ids` on the plan
+     * are LOCAL FKs into `nodes.id`, not Pelican-side ids.
+     */
+    private function pickNode(ServerPlan $plan): ?Node
     {
-        if ($plan->node_id !== null) {
-            return (int) $plan->node_id;
-        }
-        if ($plan->default_node_id !== null) {
-            return (int) $plan->default_node_id;
-        }
-        if ($plan->auto_deploy && is_array($plan->allowed_node_ids) && count($plan->allowed_node_ids) > 0) {
-            return (int) $plan->allowed_node_ids[0];
-        }
-        return null;
+        $localId = $plan->node_id
+            ?? $plan->default_node_id
+            ?? ($plan->auto_deploy && is_array($plan->allowed_node_ids) && count($plan->allowed_node_ids) > 0
+                ? (int) $plan->allowed_node_ids[0]
+                : null);
+
+        return $localId !== null ? Node::find($localId) : null;
     }
 }

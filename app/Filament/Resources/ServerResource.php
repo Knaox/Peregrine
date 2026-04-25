@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Actions\ResourceDeleteAction;
 use App\Filament\Resources\ServerResource\Pages;
+use App\Jobs\ProvisionServerJob;
 use App\Models\Server;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -182,6 +183,41 @@ class ServerResource extends Resource
         }
 
         $recordActions = [EditAction::make()];
+
+        // Retry provisioning is available whenever a server ended up in
+        // `provisioning_failed` AND was driven by a plan (i.e. originated
+        // from ProvisionServerJob). Manually-imported servers without a plan
+        // can't be retried — there's nothing to re-run.
+        $recordActions[] = Action::make('retryProvisioning')
+            ->label('Retry provisioning')
+            ->icon('heroicon-o-arrow-path')
+            ->color('primary')
+            ->visible(fn (Server $record): bool => $record->status === 'provisioning_failed'
+                && $record->plan_id !== null
+                && $record->idempotency_key !== null)
+            ->requiresConfirmation()
+            ->modalHeading(fn (Server $record): string => "Retry provisioning for \"{$record->name}\"?")
+            ->modalDescription('Re-dispatches a ProvisionServerJob with the same idempotency key — the local row is reused, no duplicate is created. Status flips back to "provisioning". Make sure the queue worker is running, otherwise the job will sit in `jobs` indefinitely.')
+            ->modalSubmitActionLabel('Retry now')
+            ->action(function (Server $record): void {
+                $record->update([
+                    'status' => 'provisioning',
+                    'provisioning_error' => null,
+                ]);
+                ProvisionServerJob::dispatch(
+                    planId: (int) $record->plan_id,
+                    userId: (int) $record->user_id,
+                    idempotencyKey: (string) $record->idempotency_key,
+                    serverNameOverride: $record->name,
+                    stripeSubscriptionId: $record->stripe_subscription_id,
+                    paymentIntentId: $record->payment_intent_id,
+                );
+                Notification::make()
+                    ->title('Retry dispatched')
+                    ->body("ProvisionServerJob queued for \"{$record->name}\". Watch the queue logs for progress.")
+                    ->success()
+                    ->send();
+            });
 
         if ($isShopStripe) {
             // Cancel-scheduled-deletion is a Stripe lifecycle recovery action —
