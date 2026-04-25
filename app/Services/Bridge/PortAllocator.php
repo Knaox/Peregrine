@@ -45,6 +45,18 @@ class PortAllocator
         $allocations = $this->pelican->listNodeAllocations($nodeId);
         $free = array_values(array_filter($allocations, fn (PelicanAllocation $a): bool => ! $a->assigned));
 
+        Log::debug('Bridge PortAllocator: node allocations fetched', [
+            'node_id' => $nodeId,
+            'count_requested' => $count,
+            'total_returned_by_pelican' => count($allocations),
+            'free' => count($free),
+            'assigned' => count($allocations) - count($free),
+            'sample' => array_map(
+                fn (PelicanAllocation $a): array => ['id' => $a->id, 'ip' => $a->ip, 'port' => $a->port, 'assigned' => $a->assigned],
+                array_slice($allocations, 0, 5),
+            ),
+        ]);
+
         if ($preferredRange !== null) {
             $candidates = array_values(array_filter(
                 $free,

@@ -117,12 +117,24 @@ final class StripeEventHandlers
             $user->forceFill(['stripe_customer_id' => $customerId])->save();
         }
 
-        // Idempotency for the provisioning : payment_intent_id is unique per
-        // checkout. If Stripe re-delivers this event, the job's idempotency
-        // check on `Server::where('idempotency_key', $key)` short-circuits.
-        $idempotencyKey = $paymentIntentId !== ''
-            ? 'stripe-pi-'.$paymentIntentId
-            : 'stripe-event-'.$event->id;
+        // Idempotency for the provisioning. We pick the most stable id we can
+        // see, in this order :
+        //   1. payment_intent — present on one-shot checkouts
+        //   2. subscription   — stable for the entire lifetime of a sub, even
+        //      across re-deliveries that mint a new event.id
+        //   3. session.id     — stable for the Checkout session itself
+        //   4. event.id       — last resort; CHANGES on every Stripe redeliver
+        //      so it must never be the only choice for subscription mode
+        //      (otherwise each Dashboard "Resend" creates a duplicate Server).
+        if ($paymentIntentId !== '') {
+            $idempotencyKey = 'stripe-pi-'.$paymentIntentId;
+        } elseif (is_string($subscriptionId) && $subscriptionId !== '') {
+            $idempotencyKey = 'stripe-sub-'.$subscriptionId;
+        } elseif (! empty($sessionData['id'])) {
+            $idempotencyKey = 'stripe-cs-'.$sessionData['id'];
+        } else {
+            $idempotencyKey = 'stripe-event-'.$event->id;
+        }
 
         // Chain: ensure the user has a Pelican account FIRST (which the
         // provision job needs as `pelican_user_id`), THEN provision the

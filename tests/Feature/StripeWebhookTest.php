@@ -217,6 +217,57 @@ class StripeWebhookTest extends TestCase
         $this->assertSame('no_price_id', $log->payload_summary['skipped'] ?? null);
     }
 
+    public function test_idempotency_key_falls_back_to_subscription_when_no_payment_intent(): void
+    {
+        Bus::fake();
+
+        $plan = $this->seedPlan(stripePriceId: 'price_sub_idem');
+        // Subscription Checkout : no payment_intent (Stripe uses setup_intent
+        // for card auth in subscription mode). The webhook is then re-delivered
+        // by the Dashboard with a NEW event.id. Without subscription_id as a
+        // stable fallback, every redeliver would create a duplicate Server.
+        $event = $this->makeCheckoutCompletedEvent(
+            priceId: 'price_sub_idem',
+            email: 'sub@example.com',
+            paymentIntent: '',
+            subscription: 'sub_stable_001',
+        );
+
+        $this->signedStripePost($event)->assertStatus(200);
+
+        Bus::assertChained([
+            LinkPelicanAccountJob::class,
+            function (ProvisionServerJob $job) use ($plan): bool {
+                return $job->planId === $plan->id
+                    && $job->idempotencyKey === 'stripe-sub-sub_stable_001';
+            },
+        ]);
+    }
+
+    public function test_idempotency_key_falls_back_to_session_id_when_no_payment_intent_or_subscription(): void
+    {
+        Bus::fake();
+
+        $plan = $this->seedPlan(stripePriceId: 'price_session_idem');
+        $event = $this->makeCheckoutCompletedEvent(
+            priceId: 'price_session_idem',
+            email: 'session@example.com',
+            paymentIntent: '',
+            subscription: null,
+        );
+        $sessionId = $event['data']['object']['id'];
+
+        $this->signedStripePost($event)->assertStatus(200);
+
+        Bus::assertChained([
+            LinkPelicanAccountJob::class,
+            function (ProvisionServerJob $job) use ($plan, $sessionId): bool {
+                return $job->planId === $plan->id
+                    && $job->idempotencyKey === 'stripe-cs-'.$sessionId;
+            },
+        ]);
+    }
+
     public function test_returns_200_when_stripe_price_id_unknown(): void
     {
         Bus::fake();
