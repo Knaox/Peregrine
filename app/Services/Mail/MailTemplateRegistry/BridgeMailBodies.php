@@ -112,6 +112,28 @@ final class BridgeMailBodies
             .self::timestamp();
     }
 
+    public static function serverReactivatedEn(): string
+    {
+        return self::heading('🎉 Welcome back — your {plan_name} server is online again')
+            .'<p>Hi <strong>{name}</strong>, your subscription has been renewed and your <strong>{server_name}</strong> server is back online with all your data intact.</p>'
+            .self::addressCard('Server address', '{ip_port}')
+            .'<p>Connect right where you left off — no install needed, the world / config / files are exactly as you left them.</p>'
+            .self::buttonRow('{panel_url}', 'Open my server', color: '#16a34a')
+            .self::secondaryLink('Or sign in to the panel', '{login_url}')
+            .self::timestamp();
+    }
+
+    public static function serverReactivatedFr(): string
+    {
+        return self::heading('🎉 Bon retour — votre serveur {plan_name} est de nouveau en ligne')
+            .'<p>Bonjour <strong>{name}</strong>, votre abonnement a été renouvelé et votre serveur <strong>{server_name}</strong> est de nouveau en ligne avec toutes vos données intactes.</p>'
+            .self::addressCard('Adresse du serveur', '{ip_port}')
+            .'<p>Reconnectez-vous exactement là où vous vous étiez arrêté — aucune installation nécessaire, le monde / les configs / les fichiers sont tels que vous les aviez laissés.</p>'
+            .self::buttonRow('{panel_url}', 'Accéder à mon serveur', color: '#16a34a')
+            .self::secondaryLink('Ou se connecter au panel', '{login_url}')
+            .self::timestamp();
+    }
+
     public static function serverSuspendedEn(): string
     {
         return self::heading('Your {plan_name} server has been suspended')

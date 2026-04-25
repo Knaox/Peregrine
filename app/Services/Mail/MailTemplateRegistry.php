@@ -39,6 +39,8 @@ final class MailTemplateRegistry
 
     public const BRIDGE_SERVER_INSTALLED = 'bridge_server_installed';
 
+    public const BRIDGE_SERVER_REACTIVATED = 'bridge_server_reactivated';
+
     public const BRIDGE_SERVER_READY_LOCAL = 'bridge_server_ready_local';
 
     public const BRIDGE_SERVER_READY_OAUTH = 'bridge_server_ready_oauth';
@@ -149,6 +151,17 @@ final class MailTemplateRegistry
                 'default_subject_fr' => 'Votre serveur {plan_name} est maintenant jouable',
                 'default_body_en' => BridgeMailBodies::serverInstalledEn(),
                 'default_body_fr' => BridgeMailBodies::serverInstalledFr(),
+            ],
+            [
+                'id' => self::BRIDGE_SERVER_REACTIVATED,
+                'group' => 'Bridge',
+                'label' => 'Server reactivated (resubscribe)',
+                'description' => 'Sent when a previously-suspended server has been resurrected through a fresh Stripe checkout (resubscribe flow). Same server / same data — only the subscription is new.',
+                'variables' => ['name', 'plan_name', 'server_name', 'ip_port', 'panel_url', 'login_url', 'timestamp'],
+                'default_subject_en' => 'Welcome back — your {plan_name} server is online again',
+                'default_subject_fr' => 'Bon retour — votre serveur {plan_name} est de nouveau en ligne',
+                'default_body_en' => BridgeMailBodies::serverReactivatedEn(),
+                'default_body_fr' => BridgeMailBodies::serverReactivatedFr(),
             ],
             [
                 'id' => self::BRIDGE_SERVER_SUSPENDED,

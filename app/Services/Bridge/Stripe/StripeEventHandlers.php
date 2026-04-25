@@ -3,13 +3,16 @@
 namespace App\Services\Bridge\Stripe;
 
 use App\Events\Bridge\PaymentConfirmed;
+use App\Events\Bridge\ServerReactivated;
 use App\Jobs\Pelican\LinkPelicanAccountJob;
 use App\Jobs\ProvisionServerJob;
 use App\Jobs\SubscriptionUpdateJob;
 use App\Jobs\SuspendServerJob;
+use App\Models\Server;
 use App\Models\ServerPlan;
 use App\Models\User;
 use App\Notifications\Bridge\PaymentFailedNotification;
+use App\Services\Pelican\PelicanApplicationService;
 use App\Services\SettingsService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -50,6 +53,17 @@ final class StripeEventHandlers
         $customerEmail = $sessionData['customer_details']['email']
             ?? $sessionData['customer_email']
             ?? null;
+
+        // Resubscribe flow : the shop posts metadata.is_resubscribe=true +
+        // metadata.peregrine_server_id when the customer is reviving an
+        // existing suspended server (instead of provisioning a new one).
+        // We branch out before the regular flow so we can REUSE the local
+        // row + Pelican server, just with a fresh Stripe subscription.
+        $isResubscribe = ($sessionData['metadata']['is_resubscribe'] ?? '') === 'true';
+        $resubscribeServerId = (int) ($sessionData['metadata']['peregrine_server_id'] ?? 0);
+        if ($isResubscribe && $resubscribeServerId > 0) {
+            return self::handleResubscribe($event, $sessionData, $resubscribeServerId, is_string($subscriptionId) ? $subscriptionId : null);
+        }
 
         // Stripe Checkout custom_fields -> first text field whose key is
         // "server_name" (case-insensitive) is the user-supplied server name.
@@ -174,6 +188,73 @@ final class StripeEventHandlers
             'user_id' => $user->id,
             'subscription_id' => is_string($subscriptionId) ? $subscriptionId : null,
             'server_name' => $serverName,
+        ];
+    }
+
+    /**
+     * Resubscribe flow : the customer paid for a fresh subscription whose
+     * Checkout Session metadata flagged a Peregrine server to revive
+     * (rather than a brand-new one to provision). We re-attach the new
+     * subscription, clear the scheduled deletion, unsuspend in Pelican,
+     * and fire ServerReactivated.
+     *
+     * Security : the link in the suspended-server email is HMAC-signed
+     * with bridge_shop_shared_secret — the shop is REQUIRED to verify
+     * the signature before posting these metadata. We trust the shop to
+     * have done it (same pattern as the rest of the Bridge HTTP API).
+     *
+     * @param  array<string, mixed>  $sessionData
+     * @return array<string, mixed>
+     */
+    private static function handleResubscribe(
+        Event $event,
+        array $sessionData,
+        int $serverId,
+        ?string $newSubscriptionId,
+    ): array {
+        $server = Server::find($serverId);
+        if ($server === null) {
+            Log::warning('Stripe resubscribe : Peregrine server not found', [
+                'event_id' => $event->id,
+                'peregrine_server_id' => $serverId,
+            ]);
+            return ['skipped' => 'resubscribe_server_not_found', 'peregrine_server_id' => $serverId];
+        }
+
+        $oldSubscriptionId = $server->stripe_subscription_id;
+        $server->forceFill([
+            'stripe_subscription_id' => $newSubscriptionId,
+            'status' => 'active',
+            'scheduled_deletion_at' => null,
+            'provisioning_error' => null,
+        ])->save();
+
+        // Best-effort unsuspend on the Pelican side. If the Pelican server
+        // was already unsuspended (e.g. admin did it manually) the call is
+        // a no-op. If Pelican is unreachable we still keep the local state
+        // change — the admin can manually unsuspend, and the user gets the
+        // celebratory mail anyway since the subscription is real.
+        if ($server->pelican_server_id !== null) {
+            try {
+                app(PelicanApplicationService::class)->unsuspendServer((int) $server->pelican_server_id);
+            } catch (\Throwable $e) {
+                Log::warning('Stripe resubscribe : Pelican unsuspend failed (non-blocking)', [
+                    'server_id' => $server->id,
+                    'pelican_server_id' => $server->pelican_server_id,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if ($server->user !== null) {
+            event(new ServerReactivated($server->fresh(), $server->user));
+        }
+
+        return [
+            'reactivated' => true,
+            'server_id' => $server->id,
+            'old_subscription_id' => $oldSubscriptionId,
+            'new_subscription_id' => $newSubscriptionId,
         ];
     }
 
