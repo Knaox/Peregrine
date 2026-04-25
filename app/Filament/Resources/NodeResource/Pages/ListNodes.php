@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\NodeResource\Pages;
 
 use App\Filament\Resources\NodeResource;
+use App\Services\Sync\SyncOrderGuard;
 use App\Services\SyncService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -11,6 +12,11 @@ use Filament\Resources\Pages\ListRecords;
 class ListNodes extends ListRecords
 {
     protected static string $resource = NodeResource::class;
+
+    public function getSubheading(): ?string
+    {
+        return SyncOrderGuard::ORDER_HINT_FR.' — '.app(SyncOrderGuard::class)->statusLine();
+    }
 
     protected function getHeaderActions(): array
     {
