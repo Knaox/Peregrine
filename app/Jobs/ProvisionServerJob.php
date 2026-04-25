@@ -143,10 +143,7 @@ class ProvisionServerJob implements ShouldQueue
             if ($egg === null || $egg->pelican_egg_id === null) {
                 throw new \RuntimeException("Egg #{$plan->egg_id} not found locally or missing pelican_egg_id (run sync:eggs)");
             }
-            $nest = Nest::find($plan->nest_id ?? $egg->nest_id);
-            if ($nest === null || $nest->pelican_nest_id === null) {
-                throw new \RuntimeException('Nest not found locally or missing pelican_nest_id (run sync:eggs)');
-            }
+            $nestPelicanId = $this->resolvePelicanNestId($plan, $egg, $pelican);
 
             $allocations = $portAllocator->findConsecutiveFreePorts(
                 nodeId: (int) $node->pelican_node_id,
@@ -165,7 +162,7 @@ class ProvisionServerJob implements ShouldQueue
                 name: $server->name,
                 userId: (int) $user->pelican_user_id,
                 eggId: (int) $egg->pelican_egg_id,
-                nestId: (int) $nest->pelican_nest_id,
+                nestId: $nestPelicanId,
                 memoryMb: (int) ($plan->ram ?? 0),
                 swapMb: (int) ($plan->swap_mb ?? 0),
                 diskMb: (int) ($plan->disk ?? 0),
@@ -242,6 +239,38 @@ class ProvisionServerJob implements ShouldQueue
             'plan_id' => $this->planId,
             'message' => $e->getMessage(),
         ]);
+    }
+
+    /**
+     * Three-step resolution for the Pelican-side nest id, since the local
+     * `nests` table can lag behind Pelican (the sync only creates a Nest
+     * row when an egg's `pelican_egg.nestId` is > 0, and old eggs may have
+     * been imported before `nests` even existed in this codebase).
+     *
+     *   1. plan->nest_id  — explicit override on the plan
+     *   2. egg->nest_id   — derived during sync:eggs
+     *   3. Pelican getEgg — authoritative fallback, prevents the "missing
+     *      pelican_nest_id" wall when the local cache is stale.
+     */
+    private function resolvePelicanNestId(ServerPlan $plan, Egg $egg, PelicanApplicationService $pelican): int
+    {
+        if ($plan->nest_id !== null) {
+            $nest = Nest::find($plan->nest_id);
+            if ($nest?->pelican_nest_id !== null) {
+                return (int) $nest->pelican_nest_id;
+            }
+        }
+        if ($egg->nest_id !== null) {
+            $nest = Nest::find($egg->nest_id);
+            if ($nest?->pelican_nest_id !== null) {
+                return (int) $nest->pelican_nest_id;
+            }
+        }
+        $pelicanEgg = $pelican->getEgg((int) $egg->pelican_egg_id);
+        if ($pelicanEgg !== null && $pelicanEgg->nestId > 0) {
+            return (int) $pelicanEgg->nestId;
+        }
+        throw new \RuntimeException("Could not resolve pelican_nest_id for egg #{$egg->id} (pelican_egg_id={$egg->pelican_egg_id}). Run `php artisan sync:eggs` to refresh local mirror.");
     }
 
     /**
