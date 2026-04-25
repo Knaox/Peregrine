@@ -50,6 +50,7 @@ class AuthSettings extends Page implements HasForms
     public ?string $auth_shop_authorize_url = '';
     public ?string $auth_shop_token_url = '';
     public ?string $auth_shop_user_url = '';
+    public ?string $auth_shop_redirect_uri = '';
     public ?string $auth_shop_register_url = '';
     /** @var array<int, string>|null */
     public ?array $auth_shop_logo_path = [];
@@ -57,18 +58,22 @@ class AuthSettings extends Page implements HasForms
     public ?string $auth_paymenter_base_url = '';
     public ?string $auth_paymenter_client_id = '';
     public ?string $auth_paymenter_client_secret = '';
+    public ?string $auth_paymenter_redirect_uri = '';
     public ?string $auth_paymenter_register_url = '';
     /** @var array<int, string>|null */
     public ?array $auth_paymenter_logo_path = [];
     public bool $auth_providers_google_enabled = false;
     public ?string $auth_providers_google_client_id = '';
     public ?string $auth_providers_google_client_secret = '';
+    public ?string $auth_providers_google_redirect_uri = '';
     public bool $auth_providers_discord_enabled = false;
     public ?string $auth_providers_discord_client_id = '';
     public ?string $auth_providers_discord_client_secret = '';
+    public ?string $auth_providers_discord_redirect_uri = '';
     public bool $auth_providers_linkedin_enabled = false;
     public ?string $auth_providers_linkedin_client_id = '';
     public ?string $auth_providers_linkedin_client_secret = '';
+    public ?string $auth_providers_linkedin_redirect_uri = '';
     public bool $acknowledge_disable_risk = false;
 
     public function mount(): void
@@ -88,6 +93,7 @@ class AuthSettings extends Page implements HasForms
         $this->auth_shop_authorize_url = (string) ($shop['authorize_url'] ?? '');
         $this->auth_shop_token_url = (string) ($shop['token_url'] ?? '');
         $this->auth_shop_user_url = (string) ($shop['user_url'] ?? '');
+        $this->auth_shop_redirect_uri = (string) ($shop['redirect_uri'] ?? '');
         $this->auth_shop_register_url = (string) ($shop['register_url'] ?? '');
         $logoPath = (string) ($shop['logo_path'] ?? '');
         $this->auth_shop_logo_path = ($logoPath !== '' && ! str_starts_with($logoPath, '/')) ? [$logoPath] : [];
@@ -97,6 +103,7 @@ class AuthSettings extends Page implements HasForms
         $this->auth_paymenter_base_url = (string) ($paymenter['base_url'] ?? '');
         $this->auth_paymenter_client_id = (string) ($paymenter['client_id'] ?? '');
         $this->auth_paymenter_client_secret = '';
+        $this->auth_paymenter_redirect_uri = (string) ($paymenter['redirect_uri'] ?? '');
         $this->auth_paymenter_register_url = (string) ($paymenter['register_url'] ?? '');
         $paymenterLogoPath = (string) ($paymenter['logo_path'] ?? '');
         $this->auth_paymenter_logo_path = ($paymenterLogoPath !== '' && ! str_starts_with($paymenterLogoPath, '/')) ? [$paymenterLogoPath] : [];
@@ -106,6 +113,7 @@ class AuthSettings extends Page implements HasForms
             $this->{"auth_providers_{$id}_enabled"} = (bool) ($providers[$id]['enabled'] ?? false);
             $this->{"auth_providers_{$id}_client_id"} = (string) ($providers[$id]['client_id'] ?? '');
             $this->{"auth_providers_{$id}_client_secret"} = '';
+            $this->{"auth_providers_{$id}_redirect_uri"} = (string) ($providers[$id]['redirect_uri'] ?? '');
         }
 
         $this->form->fill($this->currentFormState());
@@ -113,34 +121,16 @@ class AuthSettings extends Page implements HasForms
 
     public function form(Schema $schema): Schema
     {
-        $registry = app(AuthProviderRegistry::class);
-        $shop = $registry->shopConfig();
-        $shopRedirect = (string) ($shop['redirect_uri'] ?? $this->defaultRedirect('shop'));
-
-        $paymenter = $registry->paymenterConfig();
-        $paymenterRedirect = (string) ($paymenter['redirect_uri'] ?? $this->defaultRedirect('paymenter'));
-
-        $providers = $registry->decodeProviders();
-
-        return $schema->schema([
-            AuthSettingsFormSchema::general(),
-            AuthSettingsFormSchema::shop($shopRedirect),
-            AuthSettingsFormSchema::paymenter($paymenterRedirect),
-            AuthSettingsFormSchema::socialProvider(
-                'google', 'Google', 'heroicon-o-globe-alt',
-                (string) ($providers['google']['redirect_uri'] ?? $this->defaultRedirect('google')),
-            ),
-            AuthSettingsFormSchema::socialProvider(
-                'discord', 'Discord', 'heroicon-o-chat-bubble-left-right',
-                (string) ($providers['discord']['redirect_uri'] ?? $this->defaultRedirect('discord')),
-            ),
-            AuthSettingsFormSchema::socialProvider(
-                'linkedin', 'LinkedIn', 'heroicon-o-briefcase',
-                (string) ($providers['linkedin']['redirect_uri'] ?? $this->defaultRedirect('linkedin')),
-            ),
-            AuthSettingsFormSchema::twoFactor(),
-            AuthSettingsFormSchema::safety(),
-        ]);
+        // Each tab gets the APP_URL-derived default redirect URI as the
+        // placeholder + reset target. The stored value (if any) overrides
+        // it via $this->auth_*_redirect_uri loaded in mount().
+        return $schema->schema(AuthSettingsFormSchema::tabs(
+            shopRedirect: $this->defaultRedirect('shop'),
+            paymenterRedirect: $this->defaultRedirect('paymenter'),
+            googleRedirect: $this->defaultRedirect('google'),
+            discordRedirect: $this->defaultRedirect('discord'),
+            linkedinRedirect: $this->defaultRedirect('linkedin'),
+        ));
     }
 
     public function save(): void
@@ -247,6 +237,7 @@ class AuthSettings extends Page implements HasForms
             'auth_shop_authorize_url' => $this->auth_shop_authorize_url,
             'auth_shop_token_url' => $this->auth_shop_token_url,
             'auth_shop_user_url' => $this->auth_shop_user_url,
+            'auth_shop_redirect_uri' => $this->auth_shop_redirect_uri,
             'auth_shop_register_url' => $this->auth_shop_register_url,
             'auth_shop_client_secret' => '',
             'auth_shop_logo_path' => $this->auth_shop_logo_path,
@@ -254,17 +245,21 @@ class AuthSettings extends Page implements HasForms
             'auth_paymenter_base_url' => $this->auth_paymenter_base_url,
             'auth_paymenter_client_id' => $this->auth_paymenter_client_id,
             'auth_paymenter_client_secret' => '',
+            'auth_paymenter_redirect_uri' => $this->auth_paymenter_redirect_uri,
             'auth_paymenter_register_url' => $this->auth_paymenter_register_url,
             'auth_paymenter_logo_path' => $this->auth_paymenter_logo_path,
             'auth_providers_google_enabled' => $this->auth_providers_google_enabled,
             'auth_providers_google_client_id' => $this->auth_providers_google_client_id,
             'auth_providers_google_client_secret' => '',
+            'auth_providers_google_redirect_uri' => $this->auth_providers_google_redirect_uri,
             'auth_providers_discord_enabled' => $this->auth_providers_discord_enabled,
             'auth_providers_discord_client_id' => $this->auth_providers_discord_client_id,
             'auth_providers_discord_client_secret' => '',
+            'auth_providers_discord_redirect_uri' => $this->auth_providers_discord_redirect_uri,
             'auth_providers_linkedin_enabled' => $this->auth_providers_linkedin_enabled,
             'auth_providers_linkedin_client_id' => $this->auth_providers_linkedin_client_id,
             'auth_providers_linkedin_client_secret' => '',
+            'auth_providers_linkedin_redirect_uri' => $this->auth_providers_linkedin_redirect_uri,
             'acknowledge_disable_risk' => false,
         ];
     }

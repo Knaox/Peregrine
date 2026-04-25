@@ -30,7 +30,13 @@ final class AuthSettingsPersister
         $existing['token_url'] = (string) ($data['auth_shop_token_url'] ?? '');
         $existing['user_url'] = (string) ($data['auth_shop_user_url'] ?? '');
         $existing['register_url'] = (string) ($data['auth_shop_register_url'] ?? '');
-        $existing['redirect_uri'] = $existing['redirect_uri'] ?? $defaultRedirect;
+
+        // Redirect URI: prefer the value the admin typed; fall back to APP_URL
+        // default when the field is empty (so a fresh install or "clear-then-
+        // save" lands on a sensible value rather than persisting an empty
+        // string that would later force-fall-back at runtime anyway).
+        $typedRedirect = trim((string) ($data['auth_shop_redirect_uri'] ?? ''));
+        $existing['redirect_uri'] = $typedRedirect !== '' ? $typedRedirect : $defaultRedirect;
 
         // FileUpload returns an array (or cleared null) — extract first path.
         $logoValue = $data['auth_shop_logo_path'] ?? null;
@@ -56,7 +62,9 @@ final class AuthSettingsPersister
         $existing['base_url'] = rtrim((string) ($data['auth_paymenter_base_url'] ?? ''), '/');
         $existing['client_id'] = (string) ($data['auth_paymenter_client_id'] ?? '');
         $existing['register_url'] = (string) ($data['auth_paymenter_register_url'] ?? '');
-        $existing['redirect_uri'] = $existing['redirect_uri'] ?? $defaultRedirect;
+
+        $typedRedirect = trim((string) ($data['auth_paymenter_redirect_uri'] ?? ''));
+        $existing['redirect_uri'] = $typedRedirect !== '' ? $typedRedirect : $defaultRedirect;
 
         $logoValue = $data['auth_paymenter_logo_path'] ?? null;
         $logoPath = is_array($logoValue) ? (array_values($logoValue)[0] ?? null) : $logoValue;
@@ -84,7 +92,11 @@ final class AuthSettingsPersister
             $existing[$id] ??= [];
             $existing[$id]['enabled'] = (bool) ($data["auth_providers_{$id}_enabled"] ?? false);
             $existing[$id]['client_id'] = (string) ($data["auth_providers_{$id}_client_id"] ?? '');
-            $existing[$id]['redirect_uri'] = $existing[$id]['redirect_uri'] ?? ($defaultRedirects[$id] ?? '');
+
+            $typedRedirect = trim((string) ($data["auth_providers_{$id}_redirect_uri"] ?? ''));
+            $existing[$id]['redirect_uri'] = $typedRedirect !== ''
+                ? $typedRedirect
+                : ($defaultRedirects[$id] ?? '');
         }
 
         app(SettingsService::class)->set('auth_providers', json_encode($existing, JSON_THROW_ON_ERROR));
