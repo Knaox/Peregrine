@@ -24,6 +24,11 @@ final readonly class CreateServerRequest
         public string $name,
         public int $userId,
         public int $eggId,
+        /**
+         * Kept for backward compatibility with existing call sites and tests.
+         * NOT sent to Pelican — the API removed the `nest` concept entirely
+         * (no longer in EggTransformer, no longer in StoreServerRequest rules).
+         */
         public int $nestId,
         public int $memoryMb,
         public int $swapMb,
@@ -54,7 +59,6 @@ final readonly class CreateServerRequest
             'name' => $this->name,
             'user' => $this->userId,
             'egg' => $this->eggId,
-            'nest' => $this->nestId,
             'docker_image' => $this->dockerImage ?? '~',
             'startup' => $this->startup ?? '~',
             'environment' => (object) $this->environment,
