@@ -99,19 +99,20 @@ class PortAllocator
 
             $window = [];
             foreach ($ipAllocations as $allocation) {
-                if ($window === []) {
+                $previous = end($window);
+                if ($previous === false || $allocation->port !== $previous->port + 1) {
+                    // First entry on this IP, or a gap broke the chain :
+                    // restart the window on the current allocation.
+                    $window = [$allocation];
+                } else {
                     $window[] = $allocation;
-                    continue;
                 }
 
-                $previous = end($window);
-                if ($allocation->port === $previous->port + 1) {
-                    $window[] = $allocation;
-                    if (count($window) === $count) {
-                        return $window;
-                    }
-                } else {
-                    $window = [$allocation];
+                // Check after EVERY push so count=1 also gets a chance to
+                // return — the previous shape only ran the size check inside
+                // the consecutive branch, so a block of 1 was never matched.
+                if (count($window) === $count) {
+                    return $window;
                 }
             }
         }

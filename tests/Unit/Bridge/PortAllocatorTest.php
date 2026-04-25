@@ -94,6 +94,28 @@ class PortAllocatorTest extends TestCase
         (new PortAllocator($pelican))->findConsecutiveFreePorts(nodeId: 1, count: 2);
     }
 
+    public function test_finds_a_single_free_port_in_a_fragmented_pool(): void
+    {
+        // Mirror of the production scenario : ~500 allocations on the same
+        // IP, mostly free, with a handful assigned in the middle. The old
+        // algorithm gave up on count=1 because it only ran the size check
+        // inside the consecutive-extension branch — never on the first push.
+        $pelican = $this->mockPelicanWith([
+            $this->alloc(1, '0.0.0.0', 50000, true),
+            $this->alloc(2, '0.0.0.0', 50001, true),
+            $this->alloc(3, '0.0.0.0', 50002, true),
+            $this->alloc(4, '0.0.0.0', 50003, false), // free, isolated by gaps
+            $this->alloc(5, '0.0.0.0', 50004, true),
+            $this->alloc(6, '0.0.0.0', 50005, false), // also free
+            $this->alloc(7, '0.0.0.0', 50006, true),
+        ]);
+
+        $result = (new PortAllocator($pelican))->findConsecutiveFreePorts(nodeId: 1, count: 1);
+
+        $this->assertCount(1, $result);
+        $this->assertSame(50003, $result[0]->port);
+    }
+
     private function alloc(int $id, string $ip, int $port, bool $assigned): PelicanAllocation
     {
         return new PelicanAllocation(
