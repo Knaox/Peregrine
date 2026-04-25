@@ -119,6 +119,11 @@ final class BridgeSettingsFormSchema
                             ->revealable()
                             ->placeholder('sk_live_… or sk_test_…')
                             ->helperText('Stripe Dashboard → Developers → API keys → "Secret key". Required to expand line_items on checkout.session.completed (Stripe never inlines them in the webhook payload). Leave blank to keep the stored value.'),
+                        TextInput::make('bridge_stripe_billing_portal_url')
+                            ->label('Stripe Customer Portal — fallback login link')
+                            ->url()
+                            ->placeholder('https://billing.stripe.com/p/login/…')
+                            ->helperText('Stripe Dashboard → Billing → Customer portal → "Login link". Used in the suspended-server email as a fallback when the per-customer session can\'t be generated (e.g. user has no stripe_customer_id, or the API call fails). Leave blank to omit the fallback button entirely.'),
                         TextInput::make('bridge_grace_period_days')
                             ->label('Grace period before hard delete')
                             ->suffix('days')

@@ -15,6 +15,7 @@ use App\Notifications\Bridge\ServerSuspendedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
+use App\Services\SettingsService;
 use Tests\TestCase;
 
 /**
@@ -27,6 +28,14 @@ use Tests\TestCase;
 class ServerNotificationTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Bridge listeners are gated to shop_stripe mode — set it for the
+        // whole suite, otherwise no notification ever fires.
+        app(SettingsService::class)->set('bridge_mode', 'shop_stripe');
+    }
 
     public function test_server_provisioned_event_dispatches_ready_notification(): void
     {
@@ -84,7 +93,7 @@ class ServerNotificationTest extends TestCase
         $rendered = (string) $mail->render();
         // OAuth template uses a different CTA — no password reset link.
         $this->assertStringNotContainsString('Set my password', $rendered);
-        $this->assertStringContainsString('Open the panel', $rendered);
+        $this->assertStringContainsString('Open my server', $rendered);
     }
 
     public function test_listeners_are_wired_to_events(): void

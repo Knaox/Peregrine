@@ -53,6 +53,7 @@ class ServerReadyNotification extends Notification implements ShouldQueue
             'server_name' => $this->server->name,
             'ip_port' => $this->resolveAddress(),
             'panel_url' => $appUrl.'/servers/'.$this->server->id,
+            'login_url' => $appUrl.'/login',
             'timestamp' => now()->format('Y-m-d H:i e'),
         ];
 

@@ -7,8 +7,14 @@ namespace App\Services\Mail\MailTemplateRegistry;
  * (server ready local / OAuth, server suspended).
  *
  * Distinct from `AuthMailBodies` because these are commercial mails — no
- * IP/UA forensic block, no "review security" CTA. The `wrap()` helper here
- * adds a green primary-action button + a discreet timestamp footer.
+ * IP/UA forensic block, no "review security" CTA.
+ *
+ * Layout convention :
+ *   - heading + lead paragraph
+ *   - "card" block (server address, deletion date, …) on a tinted background
+ *   - primary CTA button (green for ready, amber for suspended)
+ *   - secondary text link below the CTA (login URL)
+ *   - timestamp footer
  *
  * Extracted from `MailTemplateRegistry` to honour the 300-line file rule.
  */
@@ -16,104 +22,106 @@ final class BridgeMailBodies
 {
     public static function serverReadyLocalEn(): string
     {
-        return self::wrap(
-            '<h1>Your {plan_name} server is ready 🎮</h1>'
-            .'<p>Hi {name}, your <strong>{server_name}</strong> server has been provisioned and is ready to use.</p>'
-            .'<p style="background:#f3f4f6;padding:14px 18px;border-radius:8px;font-family:ui-monospace,monospace;">'
-            .'<strong>Server address:</strong> {ip_port}'
-            .'</p>'
-            .'<p>Since you don\'t have a password yet, set one to access the panel:</p>'
-            .'<p style="text-align:center;margin:20px 0;">'
-            .'<a href="{reset_password_url}" style="display:inline-block;padding:10px 22px;background:#3b82f6;color:#fff;text-decoration:none;font-weight:600;border-radius:6px;">Set my password</a>'
-            .'</p>'
-            .'<p style="font-size:12px;color:#6b7280;">This link is valid for 7 days.</p>',
-            'Open the panel',
-            '{panel_url}'
-        );
+        return self::heading('🎮 Your {plan_name} server is ready')
+            .'<p>Hi <strong>{name}</strong>, your <strong>{server_name}</strong> server has been provisioned and is good to go.</p>'
+            .self::addressCard('Server address', '{ip_port}')
+            .'<p>You don\'t have a password yet — set one before signing in:</p>'
+            .self::buttonRow('{reset_password_url}', 'Set my password', color: '#3b82f6')
+            .'<p style="font-size:12px;color:#6b7280;text-align:center;margin:-12px 0 24px;">This link is valid for 7 days.</p>'
+            .self::buttonRow('{panel_url}', 'Open my server', color: '#16a34a')
+            .self::secondaryLink('Or sign in to the panel', '{login_url}')
+            .self::timestamp();
     }
 
     public static function serverReadyLocalFr(): string
     {
-        return self::wrap(
-            '<h1>Votre serveur {plan_name} est prêt 🎮</h1>'
-            .'<p>Bonjour {name}, votre serveur <strong>{server_name}</strong> a été provisionné et est prêt à l\'emploi.</p>'
-            .'<p style="background:#f3f4f6;padding:14px 18px;border-radius:8px;font-family:ui-monospace,monospace;">'
-            .'<strong>Adresse du serveur :</strong> {ip_port}'
-            .'</p>'
-            .'<p>Vous n\'avez pas encore de mot de passe — définissez-en un pour accéder au panel :</p>'
-            .'<p style="text-align:center;margin:20px 0;">'
-            .'<a href="{reset_password_url}" style="display:inline-block;padding:10px 22px;background:#3b82f6;color:#fff;text-decoration:none;font-weight:600;border-radius:6px;">Définir mon mot de passe</a>'
-            .'</p>'
-            .'<p style="font-size:12px;color:#6b7280;">Ce lien est valide pendant 7 jours.</p>',
-            'Ouvrir le panel',
-            '{panel_url}'
-        );
+        return self::heading('🎮 Votre serveur {plan_name} est prêt')
+            .'<p>Bonjour <strong>{name}</strong>, votre serveur <strong>{server_name}</strong> a été provisionné et est prêt à l\'emploi.</p>'
+            .self::addressCard('Adresse du serveur', '{ip_port}')
+            .'<p>Vous n\'avez pas encore de mot de passe — définissez-en un avant de vous connecter :</p>'
+            .self::buttonRow('{reset_password_url}', 'Définir mon mot de passe', color: '#3b82f6')
+            .'<p style="font-size:12px;color:#6b7280;text-align:center;margin:-12px 0 24px;">Ce lien est valide pendant 7 jours.</p>'
+            .self::buttonRow('{panel_url}', 'Accéder à mon serveur', color: '#16a34a')
+            .self::secondaryLink('Ou se connecter au panel', '{login_url}')
+            .self::timestamp();
     }
 
     public static function serverReadyOAuthEn(): string
     {
-        return self::wrap(
-            '<h1>Your {plan_name} server is ready 🎮</h1>'
-            .'<p>Hi {name}, your <strong>{server_name}</strong> server has been provisioned and is ready to use.</p>'
-            .'<p style="background:#f3f4f6;padding:14px 18px;border-radius:8px;font-family:ui-monospace,monospace;">'
-            .'<strong>Server address:</strong> {ip_port}'
-            .'</p>'
-            .'<p>Sign in with your usual provider — no password needed.</p>',
-            'Open the panel',
-            '{panel_url}'
-        );
+        return self::heading('🎮 Your {plan_name} server is ready')
+            .'<p>Hi <strong>{name}</strong>, your <strong>{server_name}</strong> server has been provisioned and is good to go.</p>'
+            .self::addressCard('Server address', '{ip_port}')
+            .'<p>Sign in with your usual provider — no password needed.</p>'
+            .self::buttonRow('{panel_url}', 'Open my server', color: '#16a34a')
+            .self::secondaryLink('Or sign in to the panel', '{login_url}')
+            .self::timestamp();
     }
 
     public static function serverReadyOAuthFr(): string
     {
-        return self::wrap(
-            '<h1>Votre serveur {plan_name} est prêt 🎮</h1>'
-            .'<p>Bonjour {name}, votre serveur <strong>{server_name}</strong> a été provisionné et est prêt à l\'emploi.</p>'
-            .'<p style="background:#f3f4f6;padding:14px 18px;border-radius:8px;font-family:ui-monospace,monospace;">'
-            .'<strong>Adresse du serveur :</strong> {ip_port}'
-            .'</p>'
-            .'<p>Connectez-vous avec votre fournisseur habituel — aucun mot de passe nécessaire.</p>',
-            'Ouvrir le panel',
-            '{panel_url}'
-        );
+        return self::heading('🎮 Votre serveur {plan_name} est prêt')
+            .'<p>Bonjour <strong>{name}</strong>, votre serveur <strong>{server_name}</strong> a été provisionné et est prêt à l\'emploi.</p>'
+            .self::addressCard('Adresse du serveur', '{ip_port}')
+            .'<p>Connectez-vous avec votre fournisseur habituel — aucun mot de passe nécessaire.</p>'
+            .self::buttonRow('{panel_url}', 'Accéder à mon serveur', color: '#16a34a')
+            .self::secondaryLink('Ou se connecter au panel', '{login_url}')
+            .self::timestamp();
     }
 
     public static function serverSuspendedEn(): string
     {
-        return self::wrap(
-            '<h1>Your {plan_name} server has been suspended</h1>'
-            .'<p>Hi {name}, the subscription for your <strong>{server_name}</strong> server was cancelled and the server has been suspended.</p>'
-            .'<p>Your server data will be kept until <strong>{scheduled_deletion_at}</strong>. After that, the server is permanently deleted and the data cannot be recovered.</p>'
-            .'<p>To keep your server, reactivate your subscription before that date — your data and configuration will be restored as-is.</p>',
-            'Manage my account',
-            '{panel_url}'
-        );
+        return self::heading('Your {plan_name} server has been suspended')
+            .'<p>Hi <strong>{name}</strong>, the subscription for your <strong>{server_name}</strong> server was cancelled and the server has been suspended.</p>'
+            .self::addressCard('Data kept until', '{scheduled_deletion_at}', tint: '#fef3c7')
+            .'<p>After that date, the server is permanently deleted and the data cannot be recovered. Reactivate your subscription before that to restore everything as-is.</p>'
+            .self::buttonRow('{billing_portal_url}', 'Reactivate my subscription', color: '#f59e0b')
+            .self::secondaryLink('Or open the panel', '{panel_url}')
+            .self::timestamp();
     }
 
     public static function serverSuspendedFr(): string
     {
-        return self::wrap(
-            '<h1>Votre serveur {plan_name} a été suspendu</h1>'
-            .'<p>Bonjour {name}, l\'abonnement de votre serveur <strong>{server_name}</strong> a été annulé et le serveur a été suspendu.</p>'
-            .'<p>Les données de votre serveur sont conservées jusqu\'au <strong>{scheduled_deletion_at}</strong>. Au-delà, le serveur sera supprimé définitivement et les données ne pourront plus être récupérées.</p>'
-            .'<p>Pour conserver votre serveur, réactivez votre abonnement avant cette date — vos données et configuration seront restaurées telles quelles.</p>',
-            'Gérer mon compte',
-            '{panel_url}'
-        );
+        return self::heading('Votre serveur {plan_name} a été suspendu')
+            .'<p>Bonjour <strong>{name}</strong>, l\'abonnement de votre serveur <strong>{server_name}</strong> a été annulé et le serveur a été suspendu.</p>'
+            .self::addressCard('Données conservées jusqu\'au', '{scheduled_deletion_at}', tint: '#fef3c7')
+            .'<p>Au-delà de cette date, le serveur est supprimé définitivement et les données ne peuvent plus être récupérées. Réactivez votre abonnement avant cette date pour tout restaurer en l\'état.</p>'
+            .self::buttonRow('{billing_portal_url}', 'Réactiver mon abonnement', color: '#f59e0b')
+            .self::secondaryLink('Ou ouvrir le panel', '{panel_url}')
+            .self::timestamp();
     }
 
-    /**
-     * Bridge-flavored body wrapper — green primary action button + a tiny
-     * timestamp footer. No IP/UA block (these are not security alerts).
-     */
-    private static function wrap(string $bodyLead, string $ctaLabel, string $ctaUrlVariable): string
+    private static function heading(string $text): string
     {
-        return $bodyLead."\n\n"
-            .'<p style="text-align:center;margin:28px 0;">'
-            .'<a href="'.$ctaUrlVariable.'" style="display:inline-block;padding:12px 28px;background:#16a34a;color:#fff;text-decoration:none;font-weight:600;border-radius:8px;">'
-            .$ctaLabel.'</a>'
-            .'</p>'
-            .'<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">'
-            .'<p style="font-size:12px;color:#9ca3af;text-align:center;">{timestamp}</p>';
+        return '<h1 style="margin:0 0 16px;font-size:22px;color:#111827;">'.$text.'</h1>';
+    }
+
+    private static function addressCard(string $label, string $value, string $tint = '#f3f4f6'): string
+    {
+        return '<div style="background:'.$tint.';padding:16px 20px;border-radius:10px;margin:20px 0;">'
+            .'<div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;font-weight:600;margin-bottom:6px;">'.$label.'</div>'
+            .'<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:16px;font-weight:600;color:#111827;">'.$value.'</div>'
+            .'</div>';
+    }
+
+    private static function buttonRow(string $url, string $label, string $color): string
+    {
+        return '<p style="text-align:center;margin:24px 0;">'
+            .'<a href="'.$url.'" style="display:inline-block;padding:12px 28px;background:'.$color.';color:#fff;text-decoration:none;font-weight:600;border-radius:8px;">'
+            .$label.'</a>'
+            .'</p>';
+    }
+
+    private static function secondaryLink(string $label, string $url): string
+    {
+        return '<p style="text-align:center;margin:8px 0 24px;font-size:13px;color:#6b7280;">'
+            .$label.' : '
+            .'<a href="'.$url.'" style="color:#3b82f6;text-decoration:none;font-weight:500;">'.$url.'</a>'
+            .'</p>';
+    }
+
+    private static function timestamp(): string
+    {
+        return '<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">'
+            .'<p style="font-size:12px;color:#9ca3af;text-align:center;margin:0;">{timestamp}</p>';
     }
 }

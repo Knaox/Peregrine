@@ -59,6 +59,8 @@ class BridgeSettings extends Page implements HasForms
 
     public ?string $bridge_stripe_api_secret = '';
 
+    public ?string $bridge_stripe_billing_portal_url = '';
+
     public int $bridge_grace_period_days = 14;
 
     public ?string $bridge_pelican_webhook_token = '';
@@ -76,6 +78,7 @@ class BridgeSettings extends Page implements HasForms
         $this->bridge_stripe_api_secret = '';
         $this->bridge_pelican_webhook_token = '';
         $this->bridge_grace_period_days = (int) $settings->get('bridge_grace_period_days', 14);
+        $this->bridge_stripe_billing_portal_url = (string) $settings->get('bridge_stripe_billing_portal_url', '');
 
         $this->form->fill($this->currentFormState());
     }
@@ -131,6 +134,7 @@ class BridgeSettings extends Page implements HasForms
         }
 
         $settings->set('bridge_grace_period_days', (string) (int) ($data['bridge_grace_period_days'] ?? 14));
+        $settings->set('bridge_stripe_billing_portal_url', (string) ($data['bridge_stripe_billing_portal_url'] ?? ''));
 
         Notification::make()->title('Bridge settings saved')->success()->send();
 
@@ -152,6 +156,7 @@ class BridgeSettings extends Page implements HasForms
             'bridge_shop_shared_secret' => $this->bridge_shop_shared_secret,
             'bridge_stripe_webhook_secret' => $this->bridge_stripe_webhook_secret,
             'bridge_stripe_api_secret' => $this->bridge_stripe_api_secret,
+            'bridge_stripe_billing_portal_url' => $this->bridge_stripe_billing_portal_url,
             'bridge_grace_period_days' => $this->bridge_grace_period_days,
             'bridge_pelican_webhook_token' => $this->bridge_pelican_webhook_token,
         ];
