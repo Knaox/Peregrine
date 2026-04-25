@@ -2,6 +2,7 @@
 
 namespace App\Services\Bridge\Stripe;
 
+use App\Events\Bridge\PaymentConfirmed;
 use App\Jobs\Pelican\LinkPelicanAccountJob;
 use App\Jobs\ProvisionServerJob;
 use App\Jobs\SubscriptionUpdateJob;
@@ -135,6 +136,21 @@ final class StripeEventHandlers
         } else {
             $idempotencyKey = 'stripe-event-'.$event->id;
         }
+
+        // Fire the receipt mail right away — independent of the provisioning
+        // chain so the customer gets a payment confirmation even if the
+        // server provisioning is slow or temporarily failing. Listener is
+        // gated to shop_stripe mode.
+        $amountTotal = (int) ($sessionData['amount_total'] ?? 0);
+        $currency = (string) ($sessionData['currency'] ?? 'eur');
+        $invoiceId = is_string($sessionData['invoice'] ?? null) ? $sessionData['invoice'] : null;
+        event(new PaymentConfirmed(
+            user: $user,
+            plan: $plan,
+            amountCents: $amountTotal,
+            currency: $currency,
+            invoiceId: $invoiceId,
+        ));
 
         // Chain: ensure the user has a Pelican account FIRST (which the
         // provision job needs as `pelican_user_id`), THEN provision the

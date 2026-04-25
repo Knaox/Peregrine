@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Actions\Pelican\EnsurePelicanAccountAction;
 use App\Events\Bridge\ServerProvisioned;
+use App\Jobs\Bridge\MonitorServerInstallationJob;
 use App\Models\Egg;
 use App\Models\Node;
 use App\Models\Server;
@@ -204,6 +205,12 @@ class ProvisionServerJob implements ShouldQueue
             // email, plugin hooks, analytics) react. Done AFTER the local
             // update so listeners observe the row in its final state.
             event(new ServerProvisioned($server->fresh(), $user));
+
+            // Pelican is still installing in the background — schedule the
+            // monitor that will fire `ServerInstalled` (→ "playable" mail)
+            // once the install script finishes. First poll in 30s.
+            MonitorServerInstallationJob::dispatch($server->id)
+                ->delay(now()->addSeconds(30));
         } catch (\Throwable $e) {
             $server->update([
                 'status' => 'provisioning_failed',

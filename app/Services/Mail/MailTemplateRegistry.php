@@ -35,6 +35,10 @@ final class MailTemplateRegistry
 
     public const AUTH_SOCIAL_UNLINKED = 'auth_social_unlinked';
 
+    public const BRIDGE_PAYMENT_CONFIRMED = 'bridge_payment_confirmed';
+
+    public const BRIDGE_SERVER_INSTALLED = 'bridge_server_installed';
+
     public const BRIDGE_SERVER_READY_LOCAL = 'bridge_server_ready_local';
 
     public const BRIDGE_SERVER_READY_OAUTH = 'bridge_server_ready_oauth';
@@ -103,6 +107,17 @@ final class MailTemplateRegistry
                 'default_body_fr' => AuthMailBodies::socialUnlinkedFr(),
             ],
             [
+                'id' => self::BRIDGE_PAYMENT_CONFIRMED,
+                'group' => 'Bridge',
+                'label' => 'Payment confirmed',
+                'description' => 'Sent immediately after a Stripe checkout succeeds — receipt-style mail telling the customer what they paid and that the server is being provisioned. Sent BEFORE the "server ready" mail.',
+                'variables' => ['name', 'plan_name', 'amount', 'currency', 'payment_date', 'invoice_url', 'panel_url', 'billing_portal_url', 'timestamp'],
+                'default_subject_en' => 'Payment confirmed — {plan_name}',
+                'default_subject_fr' => 'Paiement confirmé — {plan_name}',
+                'default_body_en' => BridgeMailBodies::paymentConfirmedEn(),
+                'default_body_fr' => BridgeMailBodies::paymentConfirmedFr(),
+            ],
+            [
                 'id' => self::BRIDGE_SERVER_READY_LOCAL,
                 'group' => 'Bridge',
                 'label' => 'Server ready (local account)',
@@ -123,6 +138,17 @@ final class MailTemplateRegistry
                 'default_subject_fr' => 'Votre serveur {plan_name} est prêt',
                 'default_body_en' => BridgeMailBodies::serverReadyOAuthEn(),
                 'default_body_fr' => BridgeMailBodies::serverReadyOAuthFr(),
+            ],
+            [
+                'id' => self::BRIDGE_SERVER_INSTALLED,
+                'group' => 'Bridge',
+                'label' => 'Server installed (playable)',
+                'description' => 'Sent when Pelican finishes the install script and the server is actually playable. Counterpart to "Server ready" (which fires right after the local row is created — at that point the install hasn\'t started yet).',
+                'variables' => ['name', 'plan_name', 'server_name', 'ip_port', 'panel_url', 'login_url', 'timestamp'],
+                'default_subject_en' => 'Your {plan_name} server is now playable',
+                'default_subject_fr' => 'Votre serveur {plan_name} est maintenant jouable',
+                'default_body_en' => BridgeMailBodies::serverInstalledEn(),
+                'default_body_fr' => BridgeMailBodies::serverInstalledFr(),
             ],
             [
                 'id' => self::BRIDGE_SERVER_SUSPENDED,
