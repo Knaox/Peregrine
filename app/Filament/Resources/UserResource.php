@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Actions\ResourceDeleteAction;
 use App\Filament\Resources\UserResource\Pages;
+use App\Jobs\Pelican\LinkPelicanAccountJob;
 use App\Models\User;
 use App\Services\Pelican\PelicanApplicationService;
 use BackedEnum;
@@ -108,10 +109,17 @@ class UserResource extends Resource
                     ->label('Admin')
                     ->boolean()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('pelican_user_id')
-                    ->label('Pelican ID')
-                    ->sortable()
-                    ->placeholder('—'),
+                Tables\Columns\IconColumn::make('pelican_user_id')
+                    ->label('Pelican')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-badge')
+                    ->trueColor('success')
+                    ->falseIcon('heroicon-o-exclamation-triangle')
+                    ->falseColor('warning')
+                    ->tooltip(fn (User $record): string => $record->pelican_user_id !== null
+                        ? "Linked to Pelican user #{$record->pelican_user_id}"
+                        : 'No Pelican account yet — use the Link action to provision one.')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('servers_count')
                     ->counts('servers')
                     ->label('Servers')
@@ -135,6 +143,22 @@ class UserResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('link_to_pelican')
+                    ->label('Link to Pelican')
+                    ->icon('heroicon-o-link')
+                    ->color('success')
+                    ->visible(fn (User $record): bool => $record->pelican_user_id === null)
+                    ->requiresConfirmation()
+                    ->modalHeading('Provision a Pelican account')
+                    ->modalDescription('Dispatches a background job that finds the user in Pelican by email, or creates one if missing. Safe to retry — the job is idempotent.')
+                    ->action(function (User $record): void {
+                        LinkPelicanAccountJob::dispatch($record->id, 'admin-manual');
+                        Notification::make()
+                            ->title('Link job dispatched')
+                            ->body("Background job queued for {$record->email}. Refresh in a few seconds to see the linked status.")
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('change_password')
                     ->label('Change password')
                     ->icon('heroicon-o-key')

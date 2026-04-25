@@ -28,3 +28,10 @@ Schedule::command('stripe:clean-processed-events')->dailyAt('03:30');
 // Pelican does NOT retry, so a short retention is enough — keep 2d for
 // debug/forensic value only.
 Schedule::command('pelican:clean-processed-events')->dailyAt('03:45');
+
+// Final safety net for the per-user Pelican linking flow: dispatch a
+// link job for any user that still has pelican_user_id=NULL. Covers
+// edge cases where every retry of LinkPelicanAccountJob exhausted while
+// Pelican was down — once Pelican comes back, the next 04:00 sweep
+// catches up. The action is idempotent so re-dispatch is harmless.
+Schedule::command('pelican:link-orphans')->dailyAt('04:00');

@@ -8,6 +8,7 @@ use App\Exceptions\Auth\LastLoginMethodException;
 use App\Exceptions\Auth\ProviderDisabledException;
 use App\Exceptions\Auth\RegisterOnShopFirstException;
 use App\Exceptions\Auth\UnverifiedEmailException;
+use App\Jobs\Pelican\LinkPelicanAccountJob;
 use App\Models\OAuthIdentity;
 use App\Models\User;
 use App\Services\Pelican\PelicanApplicationService;
@@ -195,6 +196,12 @@ class SocialAuthService
             'password' => null,
             'locale' => $request->header('Accept-Language', 'en') && str_starts_with((string) $request->header('Accept-Language'), 'fr') ? 'fr' : 'en',
         ]);
+
+        // Provision the matching Pelican account in the background so the
+        // OAuth callback returns immediately. The job is idempotent and
+        // unique-by-user, so duplicate dispatches (e.g. login backfill firing
+        // alongside this) collapse to a single execution.
+        LinkPelicanAccountJob::dispatch($user->id, "oauth:{$provider}");
 
         return $this->linkIdentity($user, $provider, $socialiteUser, $request);
     }

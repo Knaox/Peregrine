@@ -2,6 +2,7 @@
 
 namespace Plugins\Invitations\Services;
 
+use App\Actions\Pelican\EnsurePelicanAccountAction;
 use App\Jobs\SendPluginMail;
 use App\Models\Server;
 use App\Models\User;
@@ -92,24 +93,11 @@ class InvitationService
         }
 
         return DB::transaction(function () use ($invitation, $user) {
-            // Step 1: Ensure user has a Pelican account
-            if (! $user->pelican_user_id) {
-                // Check if user already exists in Pelican (created via another panel)
-                $existingPelicanUser = $this->applicationService->findUserByEmail($user->email);
-
-                if ($existingPelicanUser) {
-                    // User exists in Pelican — link without creating
-                    $user->update(['pelican_user_id' => $existingPelicanUser->id]);
-                } else {
-                    // Create new user on Pelican
-                    $pelicanUser = $this->applicationService->createUser(
-                        $user->email,
-                        Str::slug($user->name, '_'),
-                        $user->name,
-                    );
-                    $user->update(['pelican_user_id' => $pelicanUser->id]);
-                }
-            }
+            // Step 1: Ensure user has a Pelican account. Synchronous on
+            // purpose — Step 2 (subuser creation) needs `pelican_user_id`
+            // immediately. The action handles existing-Pelican-user lookup,
+            // username collisions, and parallel-call locking.
+            app(EnsurePelicanAccountAction::class)->execute($user, 'invitation');
 
             // Step 2: Create subuser on Pelican
             $invitation->loadMissing('server');

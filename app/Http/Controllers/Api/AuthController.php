@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
+use App\Jobs\Pelican\LinkPelicanAccountJob;
 use App\Models\User;
 use App\Services\Auth\TwoFactorChallengeStore;
 use App\Services\SettingsService;
@@ -55,6 +56,14 @@ class AuthController extends Controller
             $request->session()->regenerate();
         }
 
+        // Backfill: existing users created before the per-login Pelican link
+        // feature have pelican_user_id=null. Dispatch async so the response
+        // doesn't block on Pelican availability. The job is unique-by-user
+        // so we never duplicate work.
+        if ($user->pelican_user_id === null) {
+            LinkPelicanAccountJob::dispatch($user->id, 'login-backfill');
+        }
+
         return response()->json([
             'user' => new UserResource($user),
         ]);
@@ -76,6 +85,11 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'locale' => $validated['locale'] ?? 'en',
         ]);
+
+        // Provision a Pelican account in the background so registration
+        // doesn't block on Pelican uptime. If Pelican is down, the job
+        // retries up to ~1h; the daily orphan-link command is the final net.
+        LinkPelicanAccountJob::dispatch($user->id, 'register');
 
         Auth::login($user);
         $request->session()->regenerate();

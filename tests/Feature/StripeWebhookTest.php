@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\Pelican\LinkPelicanAccountJob;
 use App\Jobs\ProvisionServerJob;
 use App\Models\ServerPlan;
 use App\Models\StripeProcessedEvent;
@@ -51,13 +52,19 @@ class StripeWebhookTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson(['received' => true]);
 
-        Bus::assertDispatched(ProvisionServerJob::class, function ($job) use ($plan) {
-            return $job->planId === $plan->id
-                && $job->idempotencyKey === 'stripe-pi-pi_test_001'
-                && $job->serverNameOverride === 'MyMinecraftServer'
-                && $job->stripeSubscriptionId === 'sub_test_001'
-                && $job->paymentIntentId === 'pi_test_001';
-        });
+        // The webhook dispatches a chain so ProvisionServerJob never runs
+        // until LinkPelicanAccountJob has linked the user to Pelican. Assert
+        // the chain head + check the chained ProvisionServerJob payload.
+        Bus::assertChained([
+            LinkPelicanAccountJob::class,
+            function (ProvisionServerJob $job) use ($plan): bool {
+                return $job->planId === $plan->id
+                    && $job->idempotencyKey === 'stripe-pi-pi_test_001'
+                    && $job->serverNameOverride === 'MyMinecraftServer'
+                    && $job->stripeSubscriptionId === 'sub_test_001'
+                    && $job->paymentIntentId === 'pi_test_001';
+            },
+        ]);
 
         // Buyer user was created and has the customer ID stored.
         $user = User::where('email', 'buyer@example.com')->first();
@@ -178,10 +185,13 @@ class StripeWebhookTest extends TestCase
         $response = $this->signedStripePost($event);
 
         $response->assertStatus(200);
-        Bus::assertDispatched(ProvisionServerJob::class, function ($job) {
-            // No name override → ProvisionServerJob will generate a default
-            return $job->serverNameOverride === null;
-        });
+        Bus::assertChained([
+            LinkPelicanAccountJob::class,
+            function (ProvisionServerJob $job): bool {
+                // No name override → ProvisionServerJob will generate a default
+                return $job->serverNameOverride === null;
+            },
+        ]);
     }
 
     public function test_returns_503_when_secret_not_configured(): void

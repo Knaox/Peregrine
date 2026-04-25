@@ -2,6 +2,7 @@
 
 namespace App\Services\Bridge\Stripe;
 
+use App\Jobs\Pelican\LinkPelicanAccountJob;
 use App\Jobs\ProvisionServerJob;
 use App\Jobs\SubscriptionUpdateJob;
 use App\Jobs\SuspendServerJob;
@@ -116,17 +117,24 @@ final class StripeEventHandlers
             ? 'stripe-pi-'.$paymentIntentId
             : 'stripe-event-'.$event->id;
 
-        ProvisionServerJob::dispatch(
-            planId: $plan->id,
-            userId: $user->id,
-            idempotencyKey: $idempotencyKey,
-            serverNameOverride: $serverName,
-            stripeSubscriptionId: is_string($subscriptionId) ? $subscriptionId : null,
-            paymentIntentId: $paymentIntentId !== '' ? $paymentIntentId : null,
-        );
+        // Chain: ensure the user has a Pelican account FIRST (which the
+        // provision job needs as `pelican_user_id`), THEN provision the
+        // server. If the link fails after retries, the chain stops and the
+        // server is never marked `provisioning_failed` for the wrong reason.
+        LinkPelicanAccountJob::dispatch($user->id, 'stripe-checkout')
+            ->chain([
+                new ProvisionServerJob(
+                    planId: $plan->id,
+                    userId: $user->id,
+                    idempotencyKey: $idempotencyKey,
+                    serverNameOverride: $serverName,
+                    stripeSubscriptionId: is_string($subscriptionId) ? $subscriptionId : null,
+                    paymentIntentId: $paymentIntentId !== '' ? $paymentIntentId : null,
+                ),
+            ]);
 
         return [
-            'dispatched' => 'ProvisionServerJob',
+            'dispatched' => 'LinkPelicanAccountJob+ProvisionServerJob',
             'plan_id' => $plan->id,
             'user_id' => $user->id,
             'subscription_id' => is_string($subscriptionId) ? $subscriptionId : null,

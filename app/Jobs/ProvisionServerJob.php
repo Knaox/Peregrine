@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Actions\Pelican\EnsurePelicanAccountAction;
 use App\Events\Bridge\ServerProvisioned;
 use App\Models\Egg;
 use App\Models\Server;
@@ -68,6 +69,7 @@ class ProvisionServerJob implements ShouldQueue
         PortAllocator $portAllocator,
         EnvironmentResolver $environmentResolver,
         PelicanApplicationService $pelican,
+        EnsurePelicanAccountAction $ensurePelicanAccount,
     ): void {
         $existing = Server::where('idempotency_key', $this->idempotencyKey)->first();
         if ($existing !== null && $existing->pelican_server_id !== null) {
@@ -91,9 +93,14 @@ class ProvisionServerJob implements ShouldQueue
             return;
         }
 
+        // Safety net: if the chain (LinkPelicanAccountJob → ProvisionServerJob)
+        // was bypassed and the user has no Pelican account yet, ensure one
+        // here. The action is idempotent and re-uses the same lock as the
+        // dedicated link job. Pelican errors propagate so the standard retry
+        // policy (3 tries, [60s, 300s, 900s]) covers transient outages.
         if ($user->pelican_user_id === null) {
-            $this->fail(new \RuntimeException("User #{$user->id} has no linked Pelican account"));
-            return;
+            $ensurePelicanAccount->execute($user, 'provision-safety-net');
+            $user->refresh();
         }
 
         $serverName = $this->serverNameOverride
