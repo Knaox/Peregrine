@@ -130,6 +130,41 @@ class ServerPlan extends Model
     }
 
     /**
+     * Number of consecutive free ports the allocator must reserve at
+     * provisioning time, derived from BOTH the admin-set `port_count` AND
+     * the highest `offset_value` referenced in `env_var_mapping`.
+     *
+     * Without this, an admin who sets `port_count=1` and adds a mapping
+     * with `offset=2` ends up with the offset variable receiving null at
+     * provisioning time (the 3rd port is never allocated). Computing the
+     * effective count from both sources removes that footgun.
+     *
+     * Always >= 1.
+     */
+    public function effectivePortCount(): int
+    {
+        $declared = max(1, (int) ($this->port_count ?? 1));
+
+        $mapping = $this->env_var_mapping ?? [];
+        if (! is_array($mapping)) {
+            return $declared;
+        }
+
+        $maxOffset = 0;
+        foreach ($mapping as $entry) {
+            if (! is_array($entry)) {
+                continue;
+            }
+            if (($entry['type'] ?? null) !== 'offset') {
+                continue;
+            }
+            $maxOffset = max($maxOffset, (int) ($entry['offset_value'] ?? 0));
+        }
+
+        return max($declared, $maxOffset + 1);
+    }
+
+    /**
      * Un plan est "ready to provision" quand :
      *  - egg_id est défini ET
      *  - soit node_id défini (déploiement sur un node spécifique),

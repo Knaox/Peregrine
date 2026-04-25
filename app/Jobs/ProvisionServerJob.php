@@ -144,9 +144,15 @@ class ProvisionServerJob implements ShouldQueue
                 throw new \RuntimeException("Egg #{$plan->egg_id} not found locally or missing pelican_egg_id (run sync:eggs)");
             }
 
+            // Effective count must include the highest offset referenced in
+            // env_var_mapping — otherwise an admin who sets port_count=1
+            // and a mapping at offset=2 would never get the +2 port reserved
+            // and the variable would resolve to null. ServerPlan computes
+            // this once, here we just hand it to the allocator which then
+            // guarantees the WHOLE consecutive block is free in one pass.
             $allocations = $portAllocator->findConsecutiveFreePorts(
                 nodeId: (int) $node->pelican_node_id,
-                count: max(1, (int) $plan->port_count),
+                count: $plan->effectivePortCount(),
             );
 
             $eggDefaults = $pelican->getEggVariableDefaults((int) $egg->pelican_egg_id);
