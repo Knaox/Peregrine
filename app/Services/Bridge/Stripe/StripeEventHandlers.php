@@ -61,8 +61,11 @@ final class StripeEventHandlers
             }
         }
 
-        // Price ID lookup: try line_items first (most reliable), then
-        // subscription items, then metadata as a last resort.
+        // Price ID lookup: try line_items first, then metadata, then call
+        // back Stripe with expand[]=line_items. The webhook payload never
+        // inlines line_items by default (documented Stripe behavior), so
+        // the API expand is the realistic path for any standard Checkout
+        // Session that doesn't carry a metadata.stripe_price_id.
         $priceId = null;
         $lineItems = $sessionData['line_items']['data'] ?? [];
         if (! empty($lineItems)) {
@@ -70,6 +73,10 @@ final class StripeEventHandlers
         }
         if ($priceId === null && isset($sessionData['metadata']['stripe_price_id'])) {
             $priceId = $sessionData['metadata']['stripe_price_id'];
+        }
+        if ($priceId === null && ! empty($sessionData['id'])) {
+            $priceId = app(StripeSessionFetcher::class)
+                ->fetchFirstLineItemPriceId((string) $sessionData['id']);
         }
 
         if ($priceId === null) {

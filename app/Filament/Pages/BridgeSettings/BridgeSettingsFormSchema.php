@@ -113,6 +113,12 @@ final class BridgeSettingsFormSchema
                             ->revealable()
                             ->placeholder('whsec_…')
                             ->helperText('Stripe Dashboard → Developers → Webhooks → click your endpoint → "Signing secret". Leave blank to keep the stored value.'),
+                        TextInput::make('bridge_stripe_api_secret')
+                            ->label('Stripe API secret key')
+                            ->password()
+                            ->revealable()
+                            ->placeholder('sk_live_… or sk_test_…')
+                            ->helperText('Stripe Dashboard → Developers → API keys → "Secret key". Required to expand line_items on checkout.session.completed (Stripe never inlines them in the webhook payload). Leave blank to keep the stored value.'),
                         TextInput::make('bridge_grace_period_days')
                             ->label('Grace period before hard delete')
                             ->suffix('days')

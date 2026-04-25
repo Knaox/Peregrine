@@ -7,6 +7,7 @@ use App\Jobs\ProvisionServerJob;
 use App\Models\ServerPlan;
 use App\Models\StripeProcessedEvent;
 use App\Models\User;
+use App\Services\Bridge\Stripe\StripeSessionFetcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Str;
@@ -149,6 +150,73 @@ class StripeWebhookTest extends TestCase
         $this->assertDatabaseCount('stripe_processed_events', 1);
     }
 
+    public function test_falls_back_to_api_expand_when_line_items_absent_from_payload(): void
+    {
+        Bus::fake();
+
+        // Real Stripe webhook payloads NEVER inline line_items — the handler
+        // must call back the API with expand[]=line_items. Stub the fetcher
+        // so we can assert it gets called with the session id and have it
+        // return the price the rest of the handler will resolve.
+        $plan = $this->seedPlan(stripePriceId: 'price_expanded_001');
+        $event = $this->makeCheckoutCompletedEvent(
+            priceId: 'price_expanded_001',
+            email: 'expand@example.com',
+            paymentIntent: 'pi_expand_001',
+            includeLineItems: false,
+        );
+        $sessionId = $event['data']['object']['id'];
+
+        $fetcher = new class extends StripeSessionFetcher {
+            public ?string $calledWith = null;
+            public function fetchFirstLineItemPriceId(string $sessionId): ?string
+            {
+                $this->calledWith = $sessionId;
+                return 'price_expanded_001';
+            }
+        };
+        $this->app->instance(StripeSessionFetcher::class, $fetcher);
+
+        $response = $this->signedStripePost($event);
+
+        $response->assertStatus(200);
+        $this->assertSame($sessionId, $fetcher->calledWith);
+        Bus::assertChained([
+            LinkPelicanAccountJob::class,
+            function (ProvisionServerJob $job) use ($plan): bool {
+                return $job->planId === $plan->id
+                    && $job->idempotencyKey === 'stripe-pi-pi_expand_001';
+            },
+        ]);
+    }
+
+    public function test_returns_200_when_line_items_absent_and_api_expand_fails(): void
+    {
+        Bus::fake();
+
+        $event = $this->makeCheckoutCompletedEvent(
+            priceId: 'price_irrelevant',
+            email: 'expand-fail@example.com',
+            includeLineItems: false,
+        );
+
+        // Fetcher returns null (network error / auth failure / missing secret).
+        $fetcher = new class extends StripeSessionFetcher {
+            public function fetchFirstLineItemPriceId(string $sessionId): ?string
+            {
+                return null;
+            }
+        };
+        $this->app->instance(StripeSessionFetcher::class, $fetcher);
+
+        $response = $this->signedStripePost($event);
+
+        $response->assertStatus(200);
+        Bus::assertNothingDispatched();
+        $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
+        $this->assertSame('no_price_id', $log->payload_summary['skipped'] ?? null);
+    }
+
     public function test_returns_200_when_stripe_price_id_unknown(): void
     {
         Bus::fake();
@@ -276,6 +344,7 @@ class StripeWebhookTest extends TestCase
         ?string $customer = 'cus_default',
         ?string $serverName = null,
         ?array $customFields = null,
+        bool $includeLineItems = true,
     ): array {
         if ($customFields === null && $serverName !== null) {
             $customFields = [[
@@ -283,27 +352,28 @@ class StripeWebhookTest extends TestCase
                 'text' => ['value' => $serverName],
             ]];
         }
+        $sessionObject = [
+            'id' => 'cs_test_'.Str::random(20),
+            'object' => 'checkout.session',
+            'payment_intent' => $paymentIntent,
+            'subscription' => $subscription,
+            'customer' => $customer,
+            'customer_email' => $email,
+            'customer_details' => ['email' => $email, 'name' => 'Test Buyer'],
+            'custom_fields' => $customFields ?? [],
+        ];
+        if ($includeLineItems) {
+            $sessionObject['line_items'] = [
+                'data' => [[
+                    'id' => 'li_test',
+                    'price' => ['id' => $priceId],
+                ]],
+            ];
+        }
         return [
             'id' => 'evt_'.Str::random(24),
             'type' => 'checkout.session.completed',
-            'data' => [
-                'object' => [
-                    'id' => 'cs_test_'.Str::random(20),
-                    'object' => 'checkout.session',
-                    'payment_intent' => $paymentIntent,
-                    'subscription' => $subscription,
-                    'customer' => $customer,
-                    'customer_email' => $email,
-                    'customer_details' => ['email' => $email, 'name' => 'Test Buyer'],
-                    'custom_fields' => $customFields ?? [],
-                    'line_items' => [
-                        'data' => [[
-                            'id' => 'li_test',
-                            'price' => ['id' => $priceId],
-                        ]],
-                    ],
-                ],
-            ],
+            'data' => ['object' => $sessionObject],
         ];
     }
 }

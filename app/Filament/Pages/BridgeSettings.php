@@ -57,6 +57,8 @@ class BridgeSettings extends Page implements HasForms
 
     public ?string $bridge_stripe_webhook_secret = '';
 
+    public ?string $bridge_stripe_api_secret = '';
+
     public int $bridge_grace_period_days = 14;
 
     public ?string $bridge_pelican_webhook_token = '';
@@ -71,6 +73,7 @@ class BridgeSettings extends Page implements HasForms
         // Never display the stored secrets — admin types new ones to replace.
         $this->bridge_shop_shared_secret = '';
         $this->bridge_stripe_webhook_secret = '';
+        $this->bridge_stripe_api_secret = '';
         $this->bridge_pelican_webhook_token = '';
         $this->bridge_grace_period_days = (int) $settings->get('bridge_grace_period_days', 14);
 
@@ -117,6 +120,11 @@ class BridgeSettings extends Page implements HasForms
             $settings->set('bridge_stripe_webhook_secret', Crypt::encryptString($typedStripeSecret));
         }
 
+        $typedStripeApiSecret = (string) ($data['bridge_stripe_api_secret'] ?? '');
+        if ($typedStripeApiSecret !== '') {
+            $settings->set('bridge_stripe_api_secret', Crypt::encryptString($typedStripeApiSecret));
+        }
+
         $typedPelicanToken = (string) ($data['bridge_pelican_webhook_token'] ?? '');
         if ($typedPelicanToken !== '') {
             $settings->set('bridge_pelican_webhook_token', Crypt::encryptString($typedPelicanToken));
@@ -129,6 +137,7 @@ class BridgeSettings extends Page implements HasForms
         // Don't keep the typed secrets in the form state.
         $this->bridge_shop_shared_secret = '';
         $this->bridge_stripe_webhook_secret = '';
+        $this->bridge_stripe_api_secret = '';
         $this->bridge_pelican_webhook_token = '';
     }
 
@@ -142,6 +151,7 @@ class BridgeSettings extends Page implements HasForms
             'bridge_shop_url' => $this->bridge_shop_url,
             'bridge_shop_shared_secret' => $this->bridge_shop_shared_secret,
             'bridge_stripe_webhook_secret' => $this->bridge_stripe_webhook_secret,
+            'bridge_stripe_api_secret' => $this->bridge_stripe_api_secret,
             'bridge_grace_period_days' => $this->bridge_grace_period_days,
             'bridge_pelican_webhook_token' => $this->bridge_pelican_webhook_token,
         ];

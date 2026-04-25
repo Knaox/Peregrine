@@ -18,6 +18,15 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
+    // Stripe API server-side secret. Used by the Bridge webhook handler to
+    // expand `line_items` on a `checkout.session.completed` event (Stripe
+    // never includes them in the webhook payload). NOT the webhook signing
+    // secret — that one lives in the `settings` table as
+    // `bridge_stripe_webhook_secret` and is admin-editable.
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
