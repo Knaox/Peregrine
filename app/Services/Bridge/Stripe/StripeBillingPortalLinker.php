@@ -2,6 +2,7 @@
 
 namespace App\Services\Bridge\Stripe;
 
+use App\Models\ServerPlan;
 use App\Models\User;
 use App\Services\SettingsService;
 use Illuminate\Support\Facades\Crypt;
@@ -39,6 +40,30 @@ class StripeBillingPortalLinker
         }
         $fallback = (string) $this->settings->get('bridge_stripe_billing_portal_url', '');
         return $fallback !== '' ? $fallback : null;
+    }
+
+    /**
+     * URL the customer clicks to RESUBSCRIBE after a hard cancellation.
+     *
+     * Stripe does not let a `canceled` subscription be re-activated from
+     * the Customer Portal (only `cancel_at_period_end` ones are recoverable
+     * there), so the suspended-server email must send the user back to a
+     * fresh checkout flow on the shop instead.
+     *
+     * Reads `bridge_resubscribe_url` setting and interpolates `{plan_slug}`
+     * / `{plan_id}` with the plan attached to the suspended server. Returns
+     * null if no template configured (caller falls back to the panel URL).
+     */
+    public function resubscribeUrlFor(?ServerPlan $plan): ?string
+    {
+        $template = (string) $this->settings->get('bridge_resubscribe_url', '');
+        if ($template === '') {
+            return null;
+        }
+        return strtr($template, [
+            '{plan_slug}' => $plan?->shop_plan_slug ?? '',
+            '{plan_id}' => $plan?->shop_plan_id ?? '',
+        ]);
     }
 
     private function createSessionUrl(User $user, ?string $returnUrl): ?string

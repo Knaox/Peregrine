@@ -39,12 +39,17 @@ class ServerSuspendedNotification extends Notification implements ShouldQueue
         $locale = $notifiable->locale ?? 'en';
         $appUrl = rtrim((string) config('app.url', ''), '/');
         $panelUrl = $appUrl.'/servers/'.$this->server->id;
+        $linker = app(StripeBillingPortalLinker::class);
 
-        // Best-effort billing portal URL : per-customer Stripe session →
-        // admin-configured fallback → panel URL (so the button always
-        // resolves to *something* clickable, even when Stripe is unreachable).
-        $billingPortalUrl = app(StripeBillingPortalLinker::class)->urlFor($notifiable, $panelUrl)
-            ?? $panelUrl;
+        // PRIMARY action = re-checkout on the shop, since Stripe forbids
+        // re-activating a `canceled` subscription from the Customer Portal.
+        // Falls back to the panel URL so the button is never broken.
+        $resubscribeUrl = $linker->resubscribeUrlFor($this->server->plan) ?? $panelUrl;
+
+        // SECONDARY action = Customer Portal for managing payment methods,
+        // viewing invoice history, or cancelling other (still active) subs.
+        // Same fallback chain as the ready-mail.
+        $billingPortalUrl = $linker->urlFor($notifiable, $panelUrl) ?? $panelUrl;
 
         $rendered = app(MailTemplateService::class)->render(
             MailTemplateRegistry::BRIDGE_SERVER_SUSPENDED,
@@ -55,6 +60,7 @@ class ServerSuspendedNotification extends Notification implements ShouldQueue
                 'server_name' => $this->server->name,
                 'scheduled_deletion_at' => $this->server->scheduled_deletion_at?->format('Y-m-d H:i e') ?? '—',
                 'panel_url' => $panelUrl,
+                'resubscribe_url' => $resubscribeUrl,
                 'billing_portal_url' => $billingPortalUrl,
                 'timestamp' => now()->format('Y-m-d H:i e'),
             ],

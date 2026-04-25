@@ -123,7 +123,11 @@ final class BridgeSettingsFormSchema
                             ->label('Stripe Customer Portal — fallback login link')
                             ->url()
                             ->placeholder('https://billing.stripe.com/p/login/…')
-                            ->helperText('Stripe Dashboard → Billing → Customer portal → "Login link". Used in the suspended-server email as a fallback when the per-customer session can\'t be generated (e.g. user has no stripe_customer_id, or the API call fails). Leave blank to omit the fallback button entirely.'),
+                            ->helperText('Stripe Dashboard → Billing → Customer portal → "Login link". Shown as a SECONDARY link in suspended-server emails (manage payment methods, view invoices). Leave blank to omit. Note: cancelled subscriptions cannot be re-activated from the Customer Portal — that is what `bridge_resubscribe_url` is for.'),
+                        TextInput::make('bridge_resubscribe_url')
+                            ->label('Re-subscribe URL (resurrection link)')
+                            ->placeholder('https://shop.biomebounty.com/checkout/{plan_slug}')
+                            ->helperText('Where the customer is sent from the suspended-server email PRIMARY button. Stripe forbids re-activating a `canceled` subscription from the Customer Portal, so this must point to a fresh checkout flow on your shop. Use {plan_slug} or {plan_id} as placeholders — they are interpolated with the suspended server\'s plan. Example: https://shop.example.com/checkout/{plan_slug}'),
                         TextInput::make('bridge_grace_period_days')
                             ->label('Grace period before hard delete')
                             ->suffix('days')

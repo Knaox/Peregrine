@@ -117,8 +117,9 @@ final class BridgeMailBodies
         return self::heading('Your {plan_name} server has been suspended')
             .'<p>Hi <strong>{name}</strong>, the subscription for your <strong>{server_name}</strong> server was cancelled and the server has been suspended.</p>'
             .self::addressCard('Data kept until', '{scheduled_deletion_at}', tint: '#fef3c7')
-            .'<p>After that date, the server is permanently deleted and the data cannot be recovered. Reactivate your subscription before that to restore everything as-is.</p>'
-            .self::buttonRow('{billing_portal_url}', 'Reactivate my subscription', color: '#f59e0b')
+            .'<p>After that date, the server is permanently deleted and the data cannot be recovered. Subscribe again before then to restore everything as-is.</p>'
+            .self::buttonRow('{resubscribe_url}', 'Resubscribe to {plan_name}', color: '#f59e0b')
+            .self::secondaryLink('Manage payment methods & invoices', '{billing_portal_url}')
             .self::secondaryLink('Or open the panel', '{panel_url}')
             .self::timestamp();
     }
@@ -128,8 +129,9 @@ final class BridgeMailBodies
         return self::heading('Votre serveur {plan_name} a été suspendu')
             .'<p>Bonjour <strong>{name}</strong>, l\'abonnement de votre serveur <strong>{server_name}</strong> a été annulé et le serveur a été suspendu.</p>'
             .self::addressCard('Données conservées jusqu\'au', '{scheduled_deletion_at}', tint: '#fef3c7')
-            .'<p>Au-delà de cette date, le serveur est supprimé définitivement et les données ne peuvent plus être récupérées. Réactivez votre abonnement avant cette date pour tout restaurer en l\'état.</p>'
-            .self::buttonRow('{billing_portal_url}', 'Réactiver mon abonnement', color: '#f59e0b')
+            .'<p>Au-delà de cette date, le serveur est supprimé définitivement et les données ne peuvent plus être récupérées. Réabonnez-vous avant cette date pour tout restaurer en l\'état.</p>'
+            .self::buttonRow('{resubscribe_url}', 'Me réabonner à {plan_name}', color: '#f59e0b')
+            .self::secondaryLink('Gérer mes moyens de paiement & factures', '{billing_portal_url}')
             .self::secondaryLink('Ou ouvrir le panel', '{panel_url}')
             .self::timestamp();
     }
