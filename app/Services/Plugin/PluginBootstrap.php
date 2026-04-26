@@ -135,6 +135,78 @@ class PluginBootstrap
     }
 
     /**
+     * Wire active plugins' Filament resources/pages into the admin panel.
+     *
+     * Called from `AdminPanelProvider::panel()` so resources are added at
+     * panel-construction time — BEFORE Filament builds its routes. The
+     * previous approach (registering resources from each plugin's
+     * ServiceProvider via `app->booted`) ran AFTER the panel had already
+     * built its route list, so plugin admin pages 404'd in production.
+     *
+     * Each active plugin can ship :
+     *   - `src/Filament/Resources/`   → auto-discovered as Resources
+     *   - `src/Filament/Pages/`       → auto-discovered as Pages
+     *
+     * PSR-4 autoload is registered here too because the panel runs during
+     * the `register()` phase, BEFORE `bootPlugins()` would normally fire.
+     * Registration is idempotent — safe to call from both.
+     */
+    public function contributeToFilamentPanel(\Filament\Panel $panel): \Filament\Panel
+    {
+        if (! config('panel.installed')) {
+            return $panel;
+        }
+
+        try {
+            $activePlugins = $this->getActivePlugins();
+        } catch (\Throwable) {
+            return $panel;
+        }
+
+        if ($activePlugins->isEmpty()) {
+            return $panel;
+        }
+
+        $loader = require base_path('vendor/autoload.php');
+
+        foreach ($activePlugins as $plugin) {
+            $pluginPath = $this->discovery->getPluginPath($plugin->plugin_id);
+            if (! $pluginPath) {
+                continue;
+            }
+
+            $studlyId = \Illuminate\Support\Str::studly($plugin->plugin_id);
+            $baseNs = "Plugins\\{$studlyId}";
+            $srcPath = $pluginPath . '/src/';
+
+            if (! $this->files->isDirectory($srcPath)) {
+                continue;
+            }
+
+            // Idempotent PSR-4 registration — same call as bootPlugins().
+            $loader->addPsr4("{$baseNs}\\", $srcPath);
+
+            $resourcesDir = $srcPath . 'Filament/Resources';
+            if ($this->files->isDirectory($resourcesDir)) {
+                $panel->discoverResources(
+                    in: $resourcesDir,
+                    for: "{$baseNs}\\Filament\\Resources",
+                );
+            }
+
+            $pagesDir = $srcPath . 'Filament/Pages';
+            if ($this->files->isDirectory($pagesDir)) {
+                $panel->discoverPages(
+                    in: $pagesDir,
+                    for: "{$baseNs}\\Filament\\Pages",
+                );
+            }
+        }
+
+        return $panel;
+    }
+
+    /**
      * Return all plugins: discovered on disk merged with DB state.
      *
      * @return array<int, array<string, mixed>>

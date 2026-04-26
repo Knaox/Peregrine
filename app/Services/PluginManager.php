@@ -91,6 +91,16 @@ class PluginManager
         return $this->bootstrap->getActiveManifests();
     }
 
+    /**
+     * Wire active plugins' Filament resources/pages into the admin panel.
+     * Called from AdminPanelProvider::panel() so plugin admin pages exist
+     * before Filament builds its route list.
+     */
+    public function contributeToFilamentPanel(\Filament\Panel $panel): \Filament\Panel
+    {
+        return $this->bootstrap->contributeToFilamentPanel($panel);
+    }
+
     /** @return array<int, array<string, mixed>> */
     public function allWithStatus(): array
     {
