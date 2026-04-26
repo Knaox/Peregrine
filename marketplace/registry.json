@@ -12,6 +12,18 @@
             "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.1/invitations-0.8.1.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/invitations",
             "tags": ["users", "permissions", "collaboration", "default"]
+        },
+        {
+            "id": "egg-config-editor",
+            "name": "Egg Config Editor",
+            "version": "0.8.1",
+            "description": "Auto-detects parameters in your server's game config files (server.properties, GameUserSettings.ini, PalWorldSettings.ini, …) and translates known keys via the plugin's own i18n dictionary. Admin only declares which file to expose for which egg; everything else is data-driven. Ships preinstalled with Peregrine. Bundles 145+ ARK / Minecraft / Palworld parameter labels in EN + FR; unknown keys are auto-humanised so the UI never shows raw camelCase.",
+            "author": "Peregrine Team",
+            "license": "MIT",
+            "min_peregrine_version": "1.0.0-alpha.1",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.1/egg-config-editor-0.8.1.zip",
+            "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/egg-config-editor",
+            "tags": ["files", "configuration", "ark", "minecraft", "palworld", "default"]
         }
     ]
 }
