@@ -47,6 +47,8 @@ final class MailTemplateRegistry
 
     public const BRIDGE_SERVER_SUSPENDED = 'bridge_server_suspended';
 
+    public const BRIDGE_TRIAL_WILL_END = 'bridge_trial_will_end';
+
     /**
      * @return array<int, array{id: string, group: string, label: string, description: string, variables: array<int, string>, default_subject_en: string, default_subject_fr: string, default_body_en: string, default_body_fr: string}>
      */
@@ -173,6 +175,17 @@ final class MailTemplateRegistry
                 'default_subject_fr' => 'Votre serveur {plan_name} a été suspendu',
                 'default_body_en' => BridgeMailBodies::serverSuspendedEn(),
                 'default_body_fr' => BridgeMailBodies::serverSuspendedFr(),
+            ],
+            [
+                'id' => self::BRIDGE_TRIAL_WILL_END,
+                'group' => 'Bridge',
+                'label' => 'Trial will end (J-3 reminder)',
+                'description' => 'Sent 3 days before a free trial converts to a paid charge. Tells the customer the upcoming charge date so they can update their card or cancel in time. Triggered by Stripe customer.subscription.trial_will_end.',
+                'variables' => ['name', 'plan_name', 'server_name', 'trial_ends_at', 'panel_url', 'billing_portal_url', 'timestamp'],
+                'default_subject_en' => 'Your {plan_name} trial ends in 3 days',
+                'default_subject_fr' => 'Votre essai {plan_name} se termine dans 3 jours',
+                'default_body_en' => BridgeMailBodies::trialWillEndEn(),
+                'default_body_fr' => BridgeMailBodies::trialWillEndFr(),
             ],
         ];
     }

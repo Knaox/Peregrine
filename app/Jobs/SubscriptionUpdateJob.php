@@ -52,9 +52,20 @@ class SubscriptionUpdateJob implements ShouldQueue
         $server = Server::where('stripe_subscription_id', $this->stripeSubscriptionId)->first();
 
         if ($server === null) {
-            Log::warning('SubscriptionUpdateJob: no Server matches stripe_subscription_id', [
+            // Race: Stripe can deliver subscription.updated before
+            // checkout.session.completed has finished writing
+            // stripe_subscription_id on the local Server row. Release the job
+            // back to the queue so the configured backoff (60s, 300s, 900s)
+            // gives the checkout handler time to land. After tries are
+            // exhausted, fall through and accept the loss with a warning.
+            if ($this->attempts() < $this->tries) {
+                $this->release($this->backoff[$this->attempts() - 1] ?? 60);
+                return;
+            }
+            Log::warning('SubscriptionUpdateJob: no Server matches stripe_subscription_id after retries', [
                 'event_id' => $this->eventId,
                 'stripe_subscription_id' => $this->stripeSubscriptionId,
+                'attempts' => $this->attempts(),
             ]);
             return;
         }

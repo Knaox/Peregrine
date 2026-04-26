@@ -364,6 +364,95 @@ final class StripeEventHandlers
     }
 
     /**
+     * `invoice.paid` : a recurring renewal succeeded (or a trial converted
+     * to a paid first charge). Stripe handles the receipt itself, so we
+     * don't email the customer — the value here is auditing the renewal in
+     * `stripe_processed_events` and clearing any stale `provisioning_error`
+     * left over from a previous transient failure (the renewal succeeded,
+     * any past failure is no longer relevant to display).
+     *
+     * @return array<string, mixed>
+     */
+    public static function handleInvoicePaid(Event $event): array
+    {
+        $invoice = $event->data->object;
+        $invoiceData = is_object($invoice) ? $invoice->toArray() : (array) $invoice;
+
+        $subscriptionId = isset($invoiceData['subscription']) && is_string($invoiceData['subscription'])
+            ? $invoiceData['subscription']
+            : null;
+
+        if ($subscriptionId === null) {
+            // One-shot invoice (no subscription) — nothing to reconcile here.
+            return ['skipped' => 'no_subscription_on_invoice', 'invoice_id' => $invoiceData['id'] ?? null];
+        }
+
+        $server = Server::where('stripe_subscription_id', $subscriptionId)->first();
+        if ($server === null) {
+            return ['skipped' => 'server_not_found', 'subscription_id' => $subscriptionId];
+        }
+
+        $cleared = false;
+        if ($server->provisioning_error !== null) {
+            $server->forceFill(['provisioning_error' => null])->save();
+            $cleared = true;
+        }
+
+        return [
+            'audited' => true,
+            'subscription_id' => $subscriptionId,
+            'invoice_id' => $invoiceData['id'] ?? null,
+            'amount_paid' => $invoiceData['amount_paid'] ?? null,
+            'provisioning_error_cleared' => $cleared,
+        ];
+    }
+
+    /**
+     * `customer.subscription.trial_will_end` : Stripe sends this 3 days
+     * before the trial converts to paid. We use it to email the customer
+     * a reminder ("your trial ends on X, your card will be charged"). No
+     * server side-effect — this is a pure notification.
+     *
+     * @return array<string, mixed>
+     */
+    public static function handleTrialWillEnd(Event $event): array
+    {
+        $sub = $event->data->object;
+        $subData = is_object($sub) ? $sub->toArray() : (array) $sub;
+
+        $subscriptionId = (string) ($subData['id'] ?? '');
+        $trialEnd = isset($subData['trial_end']) ? (int) $subData['trial_end'] : null;
+
+        if ($subscriptionId === '') {
+            return ['skipped' => 'missing_subscription_id'];
+        }
+
+        $server = Server::where('stripe_subscription_id', $subscriptionId)->first();
+        if ($server === null) {
+            return ['skipped' => 'server_not_found', 'subscription_id' => $subscriptionId];
+        }
+
+        $user = $server->user;
+        if ($user === null) {
+            return ['skipped' => 'user_not_found', 'server_id' => $server->id];
+        }
+
+        event(new \App\Events\Bridge\TrialWillEnd(
+            user: $user,
+            server: $server,
+            trialEndsAt: $trialEnd !== null ? \Carbon\CarbonImmutable::createFromTimestamp($trialEnd) : \Carbon\CarbonImmutable::now()->addDays(3),
+        ));
+
+        return [
+            'dispatched' => 'TrialWillEnd',
+            'subscription_id' => $subscriptionId,
+            'server_id' => $server->id,
+            'user_id' => $user->id,
+            'trial_end' => $trialEnd,
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public static function handleUnsupported(Event $event): array

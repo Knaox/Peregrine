@@ -165,6 +165,58 @@ class SubscriptionLifecycleTest extends TestCase
         $this->assertNull($server->scheduled_deletion_at);
     }
 
+    public function test_subscription_update_job_releases_when_server_missing_on_first_attempt(): void
+    {
+        // Race: Stripe delivers subscription.updated BEFORE
+        // checkout.session.completed has stored stripe_subscription_id.
+        // The job should release itself back to the queue (not silently
+        // return), so the next attempt — after the configured backoff — has
+        // a chance to find the row once the checkout handler has landed.
+        $job = new class('evt_race', 'sub_missing_race', null, 'active') extends SubscriptionUpdateJob {
+            public ?int $releasedDelay = null;
+            public int $forcedAttempts = 1;
+            public function attempts(): int { return $this->forcedAttempts; }
+            public function release($delay = 0): void { $this->releasedDelay = (int) $delay; }
+        };
+
+        $pelicanMock = Mockery::mock(PelicanApplicationService::class);
+        $job->handle($pelicanMock);
+
+        $this->assertSame(60, $job->releasedDelay, 'first retry should use backoff[0] = 60s');
+    }
+
+    public function test_subscription_update_job_gives_up_after_max_attempts(): void
+    {
+        // After the third attempt fails to find the Server, the job logs and
+        // accepts the loss instead of looping forever.
+        $job = new class('evt_giveup', 'sub_missing_giveup', null, 'active') extends SubscriptionUpdateJob {
+            public ?int $releasedDelay = null;
+            public int $forcedAttempts = 3;
+            public function attempts(): int { return $this->forcedAttempts; }
+            public function release($delay = 0): void { $this->releasedDelay = (int) $delay; }
+        };
+
+        $pelicanMock = Mockery::mock(PelicanApplicationService::class);
+        $job->handle($pelicanMock);
+
+        $this->assertNull($job->releasedDelay, 'third attempt should not release');
+    }
+
+    public function test_suspend_server_job_releases_when_server_missing_on_first_attempt(): void
+    {
+        $job = new class('evt_race', 'sub_missing_suspend_race', scheduleDeletion: true) extends SuspendServerJob {
+            public ?int $releasedDelay = null;
+            public int $forcedAttempts = 1;
+            public function attempts(): int { return $this->forcedAttempts; }
+            public function release($delay = 0): void { $this->releasedDelay = (int) $delay; }
+        };
+
+        $pelicanMock = Mockery::mock(PelicanApplicationService::class);
+        $job->handle($pelicanMock, app(SettingsService::class));
+
+        $this->assertSame(60, $job->releasedDelay);
+    }
+
     public function test_purge_job_deletes_servers_past_grace_period_and_suspended(): void
     {
         [$pastDueAndSuspended, ] = $this->makeServerWithSubscription('sub_past');

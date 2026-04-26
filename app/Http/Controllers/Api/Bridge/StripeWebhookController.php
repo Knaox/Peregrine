@@ -55,6 +55,8 @@ class StripeWebhookController extends Controller
                 'checkout.session.completed' => StripeEventHandlers::handleCheckoutCompleted($event),
                 'customer.subscription.updated' => StripeEventHandlers::handleSubscriptionUpdated($event),
                 'customer.subscription.deleted' => StripeEventHandlers::handleSubscriptionDeleted($event),
+                'customer.subscription.trial_will_end' => StripeEventHandlers::handleTrialWillEnd($event),
+                'invoice.paid' => StripeEventHandlers::handleInvoicePaid($event),
                 'invoice.payment_failed' => StripeEventHandlers::handlePaymentFailed($event),
                 default => StripeEventHandlers::handleUnsupported($event),
             };

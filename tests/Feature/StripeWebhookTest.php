@@ -2,14 +2,21 @@
 
 namespace Tests\Feature;
 
+use App\Events\Bridge\PaymentConfirmed;
 use App\Jobs\Pelican\LinkPelicanAccountJob;
 use App\Jobs\ProvisionServerJob;
+use App\Listeners\Bridge\SendPaymentConfirmedNotification;
+use App\Models\Server;
 use App\Models\ServerPlan;
 use App\Models\StripeProcessedEvent;
 use App\Models\User;
+use App\Notifications\Bridge\PaymentConfirmedNotification;
+use App\Notifications\Bridge\TrialWillEndNotification;
 use App\Services\Bridge\Stripe\StripeSessionFetcher;
+use App\Services\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -325,6 +332,156 @@ class StripeWebhookTest extends TestCase
         Bus::assertNothingDispatched();
     }
 
+    public function test_payment_confirmed_listener_skips_when_amount_is_zero(): void
+    {
+        // Trial checkouts fire PaymentConfirmed with amountCents=0. The listener
+        // must short-circuit so the customer doesn't get a "thanks for your €0
+        // payment" receipt. Stripe will fire a real invoice.payment_succeeded
+        // when the trial converts to a paid charge.
+        Notification::fake();
+        app(SettingsService::class)->set('bridge_mode', 'shop_stripe');
+
+        $user = User::factory()->create();
+        $plan = $this->seedPlan(stripePriceId: 'price_trial_zero');
+
+        (new SendPaymentConfirmedNotification())->handle(new PaymentConfirmed(
+            user: $user,
+            plan: $plan,
+            amountCents: 0,
+            currency: 'eur',
+            invoiceId: null,
+        ));
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_payment_confirmed_listener_sends_when_amount_is_positive(): void
+    {
+        // Counter-test: a real paid checkout (amount > 0) still gets the receipt.
+        Notification::fake();
+        app(SettingsService::class)->set('bridge_mode', 'shop_stripe');
+
+        $user = User::factory()->create();
+        $plan = $this->seedPlan(stripePriceId: 'price_paid_positive');
+
+        (new SendPaymentConfirmedNotification())->handle(new PaymentConfirmed(
+            user: $user,
+            plan: $plan,
+            amountCents: 999,
+            currency: 'eur',
+            invoiceId: 'in_test_001',
+        ));
+
+        Notification::assertSentTo($user, PaymentConfirmedNotification::class);
+    }
+
+    public function test_trial_will_end_dispatches_user_email(): void
+    {
+        Notification::fake();
+        app(SettingsService::class)->set('bridge_mode', 'shop_stripe');
+
+        $user = User::factory()->create();
+        $this->seedServerWithSubscription($user, 'sub_trial_001');
+
+        $trialEndTs = time() + (3 * 86400);
+        $event = $this->makeTrialWillEndEvent('sub_trial_001', $trialEndTs);
+
+        $response = $this->signedStripePost($event);
+
+        $response->assertStatus(200);
+        Notification::assertSentTo($user, TrialWillEndNotification::class);
+
+        $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
+        $this->assertSame('TrialWillEnd', $log->payload_summary['dispatched'] ?? null);
+        $this->assertSame('sub_trial_001', $log->payload_summary['subscription_id'] ?? null);
+    }
+
+    public function test_trial_will_end_skipped_in_paymenter_mode(): void
+    {
+        Notification::fake();
+        app(SettingsService::class)->set('bridge_mode', 'paymenter');
+
+        $user = User::factory()->create();
+        $this->seedServerWithSubscription($user, 'sub_trial_paymenter');
+
+        $event = $this->makeTrialWillEndEvent('sub_trial_paymenter', time() + (3 * 86400));
+        $this->signedStripePost($event)->assertStatus(200);
+
+        // Listener gates on isShopStripe() — Paymenter mode = silent.
+        Notification::assertNothingSent();
+    }
+
+    public function test_trial_will_end_skipped_when_server_not_found(): void
+    {
+        Notification::fake();
+        app(SettingsService::class)->set('bridge_mode', 'shop_stripe');
+
+        // No server seeded for this subscription id.
+        $event = $this->makeTrialWillEndEvent('sub_unknown_trial', time() + (3 * 86400));
+        $this->signedStripePost($event)->assertStatus(200);
+
+        Notification::assertNothingSent();
+        $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
+        $this->assertSame('server_not_found', $log->payload_summary['skipped'] ?? null);
+    }
+
+    public function test_invoice_paid_resets_provisioning_error_when_present(): void
+    {
+        $user = User::factory()->create();
+        $server = $this->seedServerWithSubscription($user, 'sub_renewal_001');
+        $server->forceFill(['provisioning_error' => 'transient Pelican 503'])->save();
+
+        $event = $this->makeInvoicePaidEvent('sub_renewal_001', 'in_renew_001', amountPaid: 999);
+        $this->signedStripePost($event)->assertStatus(200);
+
+        $server->refresh();
+        $this->assertNull($server->provisioning_error);
+
+        $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
+        $this->assertTrue($log->payload_summary['audited'] ?? false);
+        $this->assertTrue($log->payload_summary['provisioning_error_cleared'] ?? false);
+    }
+
+    public function test_invoice_paid_audits_without_changes_when_no_provisioning_error(): void
+    {
+        $user = User::factory()->create();
+        $this->seedServerWithSubscription($user, 'sub_clean_renewal');
+
+        $event = $this->makeInvoicePaidEvent('sub_clean_renewal', 'in_clean_001', amountPaid: 1500);
+        $this->signedStripePost($event)->assertStatus(200);
+
+        $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
+        $this->assertTrue($log->payload_summary['audited'] ?? false);
+        $this->assertFalse($log->payload_summary['provisioning_error_cleared'] ?? true);
+    }
+
+    public function test_invoice_paid_skipped_when_server_not_found(): void
+    {
+        $event = $this->makeInvoicePaidEvent('sub_orphan_invoice', 'in_orphan_001', amountPaid: 500);
+        $this->signedStripePost($event)->assertStatus(200);
+
+        $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
+        $this->assertSame('server_not_found', $log->payload_summary['skipped'] ?? null);
+    }
+
+    public function test_invoice_paid_skipped_when_no_subscription_on_invoice(): void
+    {
+        // One-shot invoice (no subscription field) — nothing to reconcile.
+        $event = [
+            'id' => 'evt_'.Str::random(24),
+            'type' => 'invoice.paid',
+            'data' => ['object' => [
+                'id' => 'in_oneshot',
+                'amount_paid' => 1000,
+                // no 'subscription' key
+            ]],
+        ];
+        $this->signedStripePost($event)->assertStatus(200);
+
+        $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
+        $this->assertSame('no_subscription_on_invoice', $log->payload_summary['skipped'] ?? null);
+    }
+
     public function test_unsupported_event_type_is_acknowledged_without_dispatch(): void
     {
         Bus::fake();
@@ -360,6 +517,51 @@ class StripeWebhookTest extends TestCase
                 'HTTP_ACCEPT' => 'application/json',
             ],
         );
+    }
+
+    private function makeTrialWillEndEvent(string $subscriptionId, int $trialEndTs): array
+    {
+        return [
+            'id' => 'evt_'.Str::random(24),
+            'type' => 'customer.subscription.trial_will_end',
+            'data' => ['object' => [
+                'id' => $subscriptionId,
+                'object' => 'subscription',
+                'status' => 'trialing',
+                'trial_end' => $trialEndTs,
+            ]],
+        ];
+    }
+
+    private function makeInvoicePaidEvent(string $subscriptionId, string $invoiceId, int $amountPaid): array
+    {
+        return [
+            'id' => 'evt_'.Str::random(24),
+            'type' => 'invoice.paid',
+            'data' => ['object' => [
+                'id' => $invoiceId,
+                'object' => 'invoice',
+                'subscription' => $subscriptionId,
+                'amount_paid' => $amountPaid,
+                'currency' => 'eur',
+            ]],
+        ];
+    }
+
+    private function seedServerWithSubscription(User $user, string $subscriptionId): Server
+    {
+        $plan = $this->seedPlan(stripePriceId: 'price_'.Str::random(8));
+
+        return Server::create([
+            'user_id' => $user->id,
+            'pelican_server_id' => mt_rand(1000, 9999),
+            'identifier' => substr(Str::random(8), 0, 8),
+            'name' => 'srv-'.Str::random(4),
+            'status' => 'active',
+            'egg_id' => $plan->egg_id,
+            'plan_id' => $plan->id,
+            'stripe_subscription_id' => $subscriptionId,
+        ]);
     }
 
     private function seedPlan(string $stripePriceId): ServerPlan

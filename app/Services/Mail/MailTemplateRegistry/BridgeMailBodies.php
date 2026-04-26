@@ -158,6 +158,30 @@ final class BridgeMailBodies
             .self::timestamp();
     }
 
+    public static function trialWillEndEn(): string
+    {
+        return self::heading('Your {plan_name} trial ends in 3 days')
+            .'<p>Hi <strong>{name}</strong>, this is a reminder that your free trial of <strong>{plan_name}</strong> for the <strong>{server_name}</strong> server is coming to an end.</p>'
+            .self::addressCard('Card will be charged on', '{trial_ends_at}', tint: '#fef3c7')
+            .'<p>Nothing to do if you want to keep your server — your card on file will be charged automatically and your server stays online without interruption.</p>'
+            .'<p>If you want to update your card, change plan, or cancel before the charge, use the button below.</p>'
+            .self::buttonRow('{billing_portal_url}', 'Manage my subscription', color: '#3b82f6')
+            .self::secondaryLink('Or open the panel', '{panel_url}')
+            .self::timestamp();
+    }
+
+    public static function trialWillEndFr(): string
+    {
+        return self::heading('Votre essai {plan_name} se termine dans 3 jours')
+            .'<p>Bonjour <strong>{name}</strong>, ceci est un rappel : votre essai gratuit de <strong>{plan_name}</strong> pour le serveur <strong>{server_name}</strong> arrive à son terme.</p>'
+            .self::addressCard('Carte débitée le', '{trial_ends_at}', tint: '#fef3c7')
+            .'<p>Rien à faire si vous souhaitez conserver votre serveur — votre carte enregistrée sera débitée automatiquement et le serveur reste en ligne sans interruption.</p>'
+            .'<p>Si vous voulez mettre à jour votre carte, changer de plan ou annuler avant le débit, utilisez le bouton ci-dessous.</p>'
+            .self::buttonRow('{billing_portal_url}', 'Gérer mon abonnement', color: '#3b82f6')
+            .self::secondaryLink('Ou ouvrir le panel', '{panel_url}')
+            .self::timestamp();
+    }
+
     private static function heading(string $text): string
     {
         return '<h1 style="margin:0 0 16px;font-size:22px;color:#111827;">'.$text.'</h1>';

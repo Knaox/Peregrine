@@ -57,9 +57,18 @@ class SuspendServerJob implements ShouldQueue
         $server = Server::where('stripe_subscription_id', $this->stripeSubscriptionId)->first();
 
         if ($server === null) {
-            Log::warning('SuspendServerJob: no Server matches stripe_subscription_id', [
+            // Race: Stripe can deliver subscription.deleted before
+            // checkout.session.completed has finished writing
+            // stripe_subscription_id. Release back to the queue with the
+            // configured backoff so the checkout handler has time to land.
+            if ($this->attempts() < $this->tries) {
+                $this->release($this->backoff[$this->attempts() - 1] ?? 60);
+                return;
+            }
+            Log::warning('SuspendServerJob: no Server matches stripe_subscription_id after retries', [
                 'event_id' => $this->eventId,
                 'stripe_subscription_id' => $this->stripeSubscriptionId,
+                'attempts' => $this->attempts(),
             ]);
             return;
         }
