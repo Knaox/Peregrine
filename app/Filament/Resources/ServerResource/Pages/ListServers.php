@@ -16,7 +16,7 @@ class ListServers extends ListRecords
 
     public function getSubheading(): ?string
     {
-        return SyncOrderGuard::ORDER_HINT_FR.' — '.app(SyncOrderGuard::class)->statusLine();
+        return SyncOrderGuard::ORDER_HINT.' — '.app(SyncOrderGuard::class)->statusLine();
     }
 
     protected function getHeaderActions(): array

@@ -26,7 +26,7 @@ use App\Models\User;
  */
 class SyncOrderGuard
 {
-    public const ORDER_HINT_FR = 'Ordre obligatoire : 1. Nodes → 2. Users → 3. Eggs → 4. Servers. Chaque étape dépend de la précédente.';
+    public const ORDER_HINT = 'Required order: 1. Nodes → 2. Users → 3. Eggs → 4. Servers. Each step depends on the previous one.';
 
     public function nodesSynced(): bool
     {
@@ -50,7 +50,7 @@ class SyncOrderGuard
     public function blockSyncUsers(): ?string
     {
         if (! $this->nodesSynced()) {
-            return 'Synchronisez d\'abord les Nodes (étape 1/4).';
+            return 'Sync Nodes first (step 1/4).';
         }
         return null;
     }
@@ -58,10 +58,10 @@ class SyncOrderGuard
     public function blockSyncEggs(): ?string
     {
         if (! $this->nodesSynced()) {
-            return 'Synchronisez d\'abord les Nodes (étape 1/4).';
+            return 'Sync Nodes first (step 1/4).';
         }
         if (! $this->usersSynced()) {
-            return 'Synchronisez d\'abord les Users (étape 2/4).';
+            return 'Sync Users first (step 2/4).';
         }
         return null;
     }
@@ -69,13 +69,13 @@ class SyncOrderGuard
     public function blockSyncServers(): ?string
     {
         if (! $this->nodesSynced()) {
-            return 'Synchronisez d\'abord les Nodes (étape 1/4).';
+            return 'Sync Nodes first (step 1/4).';
         }
         if (! $this->usersSynced()) {
-            return 'Synchronisez d\'abord les Users (étape 2/4).';
+            return 'Sync Users first (step 2/4).';
         }
         if (! $this->eggsSynced()) {
-            return 'Synchronisez d\'abord les Eggs (étape 3/4).';
+            return 'Sync Eggs first (step 3/4).';
         }
         return null;
     }
