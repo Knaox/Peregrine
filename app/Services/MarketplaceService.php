@@ -200,19 +200,21 @@ class MarketplaceService
         $extractedDirs = $this->files->directories($tempDir);
         $sourceDir = count($extractedDirs) === 1 ? $extractedDirs[0] : $tempDir;
 
-        // Move to plugins/. moveDirectory returns false on failure (does NOT
-        // throw) so we MUST check the return value AND verify the target
-        // exists post-move — this is the silent failure that caused the
-        // user-visible "installed but not installed" bug.
-        $moved = $this->files->moveDirectory($sourceDir, $pluginPath);
+        // Place the extracted plugin under plugins/. We use copy + delete
+        // rather than `moveDirectory` because the latter relies on PHP's
+        // rename() which fails with EXDEV across filesystem boundaries —
+        // very common in Docker, where admins typically mount plugins/ as
+        // a separate volume to persist installs across container rebuilds.
+        // copyDirectory traverses + writes file by file so it works across
+        // any mount.
+        $copied = $this->files->copyDirectory($sourceDir, $pluginPath);
         $this->files->deleteDirectory($tempDir);
 
-        if (! $moved || ! $this->files->isDirectory($pluginPath)) {
+        if (! $copied || ! $this->files->isDirectory($pluginPath)) {
             throw new \RuntimeException(
-                "Failed to move extracted plugin to {$pluginPath}. "
-                ."Likely cause : plugins/ permissions or a cross-device rename. "
-                ."Check the storage/ and plugins/ directories are owned by the same user "
-                ."(www-data in the official Docker image)."
+                "Failed to copy extracted plugin to {$pluginPath}. "
+                ."Check plugins/ is writable by the web server user "
+                ."(in Docker : `chown -R www-data:www-data plugins/` inside the container)."
             );
         }
 
