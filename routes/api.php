@@ -79,13 +79,32 @@ Route::post('stripe/webhook', [StripeWebhookController::class, 'handle'])
     ->middleware(['throttle:stripe-webhook', VerifyStripeSignature::class])
     ->name('stripe.webhook');
 
-// Pelican outgoing webhook receiver (Bridge Paymenter mode). Public route
-// authenticated by bearer token (Pelican does not sign payloads). The
-// middleware also gates on bridge_mode === paymenter so events sent to a
-// disabled bridge fail loudly with 503.
+// Pelican outgoing webhook receiver. Public route authenticated by bearer
+// token (Pelican does not sign payloads). The middleware also gates on
+// the standalone `pelican_webhook_enabled` toggle so events sent to a
+// disabled receiver fail with 503.
 Route::post('pelican/webhook', [PelicanWebhookController::class, 'handle'])
     ->middleware(['throttle:pelican-webhook', VerifyPelicanWebhookToken::class])
     ->name('pelican.webhook');
+
+// Heartbeat for browser tests / Pelican URL validation. Returns 200 with
+// the receiver's status so admins poking the URL in a browser don't see a
+// 405 unhandled exception in error monitoring. No auth — the response only
+// reflects the public toggle state, no secrets.
+Route::get('pelican/webhook', function () {
+    $enabled = (string) app(\App\Services\SettingsService::class)
+        ->get('pelican_webhook_enabled', 'false');
+    $isEnabled = $enabled === 'true' || $enabled === '1';
+
+    return response()->json([
+        'service' => 'pelican-webhook-receiver',
+        'method' => 'POST',
+        'enabled' => $isEnabled,
+        'message' => $isEnabled
+            ? 'Receiver is ready. Send Pelican webhook events as POST with Authorization: Bearer <token>.'
+            : 'Receiver is currently disabled. Enable it from /admin/pelican-webhook-settings.',
+    ]);
+})->name('pelican.webhook.status');
 
 // Plugins (public — active plugins for frontend)
 Route::get('plugins', [PluginController::class, 'index']);
