@@ -105,6 +105,11 @@ class MarketplaceService
 
     /**
      * Install a plugin from the marketplace.
+     *
+     * Each step throws on failure with an actionable message — the previous
+     * version of this method silently swallowed errors (e.g. moveDirectory
+     * returning false on a permission denial), so the controller showed
+     * "Plugin installed" while the files never actually landed on disk.
      */
     public function install(string $pluginId): void
     {
@@ -129,17 +134,38 @@ class MarketplaceService
             throw new \RuntimeException("No download URL for plugin '{$pluginId}'.");
         }
 
+        $pluginsRoot = base_path('plugins');
         $pluginPath = base_path("plugins/{$pluginId}");
 
         if ($this->files->isDirectory($pluginPath)) {
             throw new \RuntimeException("Plugin '{$pluginId}' is already installed on disk.");
         }
 
+        // Sanity check : the plugins/ directory must exist and be writable
+        // by the PHP-FPM user. Docker images that mount plugins/ as a
+        // read-only volume (or with the wrong owner) silently failed every
+        // step below — the symptom being "install reported success but the
+        // plugin never appeared". Catch it up-front with a clear error.
+        if (! $this->files->isDirectory($pluginsRoot)) {
+            throw new \RuntimeException(
+                "plugins/ directory does not exist at {$pluginsRoot}. Check your Peregrine install."
+            );
+        }
+        if (! is_writable($pluginsRoot)) {
+            throw new \RuntimeException(
+                "plugins/ directory is not writable by the web server user. "
+                ."In Docker : ensure the volume is mounted rw and owned by www-data "
+                ."(typically `chown -R www-data:www-data plugins/` inside the container)."
+            );
+        }
+
         // Download ZIP
         $response = Http::timeout(30)->get($downloadUrl);
 
         if (! $response->successful()) {
-            throw new \RuntimeException("Failed to download plugin '{$pluginId}'.");
+            throw new \RuntimeException(
+                "Failed to download plugin '{$pluginId}' (HTTP {$response->status()}). URL : {$downloadUrl}"
+            );
         }
 
         // Save to temp file
@@ -156,17 +182,50 @@ class MarketplaceService
         }
 
         $tempDir = storage_path("app/plugin-{$pluginId}-extract");
-        $zip->extractTo($tempDir);
+        // Pre-clean a stale extraction from an aborted previous attempt.
+        if ($this->files->isDirectory($tempDir)) {
+            $this->files->deleteDirectory($tempDir);
+        }
+        $extractOk = $zip->extractTo($tempDir);
         $zip->close();
         $this->files->delete($tempZip);
+        if (! $extractOk) {
+            throw new \RuntimeException(
+                "Failed to extract plugin archive '{$pluginId}' to {$tempDir}. "
+                ."Likely cause : storage/app not writable by the web server user."
+            );
+        }
 
         // GitHub ZIPs contain a single root directory — find it
         $extractedDirs = $this->files->directories($tempDir);
         $sourceDir = count($extractedDirs) === 1 ? $extractedDirs[0] : $tempDir;
 
-        // Move to plugins/
-        $this->files->moveDirectory($sourceDir, $pluginPath);
+        // Move to plugins/. moveDirectory returns false on failure (does NOT
+        // throw) so we MUST check the return value AND verify the target
+        // exists post-move — this is the silent failure that caused the
+        // user-visible "installed but not installed" bug.
+        $moved = $this->files->moveDirectory($sourceDir, $pluginPath);
         $this->files->deleteDirectory($tempDir);
+
+        if (! $moved || ! $this->files->isDirectory($pluginPath)) {
+            throw new \RuntimeException(
+                "Failed to move extracted plugin to {$pluginPath}. "
+                ."Likely cause : plugins/ permissions or a cross-device rename. "
+                ."Check the storage/ and plugins/ directories are owned by the same user "
+                ."(www-data in the official Docker image)."
+            );
+        }
+
+        // Verify the plugin's manifest is readable post-move — catches the
+        // case where the files moved but with the wrong permissions, so
+        // PluginManager::discover() can't read them.
+        $manifestPath = $pluginPath . '/plugin.json';
+        if (! $this->files->exists($manifestPath) || ! is_readable($manifestPath)) {
+            throw new \RuntimeException(
+                "Plugin '{$pluginId}' moved to {$pluginPath} but plugin.json is missing or unreadable. "
+                ."Check the file permissions inside the moved directory."
+            );
+        }
 
         // Sync with DB
         \App\Models\Plugin::updateOrCreate(
