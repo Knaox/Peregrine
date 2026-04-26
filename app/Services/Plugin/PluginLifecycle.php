@@ -141,11 +141,27 @@ class PluginLifecycle
 
     /**
      * Signal queue workers to reload and flush compiled caches after a plugin lifecycle change.
-     * Daemon workers keep autoload maps in memory; queue:restart makes them exit gracefully.
+     *
+     * Daemon workers keep autoload maps in memory; queue:restart makes them
+     * exit gracefully. Route + view + filament-component caches must be
+     * cleared so the panel re-discovers the plugin's routes / Filament
+     * resources on the next request — Docker prod typically runs
+     * `php artisan optimize` at image build, which caches all of these
+     * before the plugin was even installed → 404 on the plugin's admin
+     * page until clear.
      */
     private function refreshRuntime(): void
     {
-        foreach (['queue:restart', 'cache:clear', 'config:clear'] as $cmd) {
+        $commands = [
+            'queue:restart',
+            'cache:clear',
+            'config:clear',
+            'route:clear',
+            'view:clear',
+            'filament:clear-cached-components',
+        ];
+
+        foreach ($commands as $cmd) {
             try {
                 Artisan::call($cmd);
             } catch (\Throwable) {
