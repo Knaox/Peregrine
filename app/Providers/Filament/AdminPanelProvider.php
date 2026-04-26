@@ -25,7 +25,7 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        $panel = $panel
             ->default()
             ->id('admin')
             ->path('admin')
@@ -82,5 +82,12 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 RedirectAdminToFrontendLogin::class,
             ]);
+
+        // Let active plugins contribute Filament resources/pages BEFORE
+        // the panel finalises its route list. Without this, plugin admin
+        // pages 404 in production : the plugin's ServiceProvider boots
+        // AFTER the panel and adding resources later doesn't rebuild
+        // routes.
+        return app(\App\Services\PluginManager::class)->contributeToFilamentPanel($panel);
     }
 }
