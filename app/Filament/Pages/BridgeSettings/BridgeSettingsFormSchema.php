@@ -152,86 +152,30 @@ final class BridgeSettingsFormSchema
             ]);
     }
 
-    public static function paymenterSection(string $baseUrl, string $paymenterDocsUrl, string $auditLogUrl): Section
+    public static function paymenterSection(string $baseUrl, string $paymenterDocsUrl, string $pelicanWebhookSettingsUrl): Section
     {
-        return Section::make('Bridge Paymenter (via Pelican webhooks)')
-            ->description('Paymenter handles billing, plans, emails, and orchestrates Pelican directly. Peregrine just mirrors server state by listening to Pelican\'s native outgoing webhooks. No plans page and no Bridge emails are sent in this mode.')
+        return Section::make('Bridge Paymenter')
+            ->description('Paymenter handles billing, plans, emails, and orchestrates Pelican directly. Peregrine just mirrors server state from Pelican. No plans page and no Bridge emails are sent in this mode.')
             ->icon('heroicon-o-bolt')
             ->visible(fn (Get $get): bool => $get('bridge_mode') === BridgeMode::Paymenter->value)
             ->schema([
 
-                Section::make('1. Generate the bearer token')
-                    ->description('Pelican does not sign its webhooks — auth relies entirely on this token.')
-                    ->icon('heroicon-o-key')
+                Section::make('Pelican webhook receiver — moved')
+                    ->description('The Pelican webhook configuration (token + endpoint setup) lives on its own page now. It works in every Bridge mode, not just Paymenter.')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
                     ->compact()
                     ->schema([
-                        TextInput::make('bridge_pelican_webhook_token')
-                            ->label('Pelican webhook authentication token')
-                            ->password()
-                            ->revealable()
-                            ->minLength(32)
-                            ->helperText('Click 🔑 to generate a fresh random 64-char token. Leave blank on save to keep the stored value (rotation requires updating the Pelican headers in lockstep).')
-                            ->suffixAction(
-                                Action::make('generatePelicanToken')
-                                    ->icon('heroicon-o-key')
-                                    ->tooltip('Generate a new random 64-char token')
-                                    ->action(function (Set $set): void {
-                                        $token = base64_encode(random_bytes(48));
-                                        $set('bridge_pelican_webhook_token', $token);
-                                        Notification::make()
-                                            ->title('Token generated')
-                                            ->body('Copy it from the field, paste it in Pelican\'s webhook headers, then click Save.')
-                                            ->success()
-                                            ->send();
-                                    }),
-                            ),
-                    ]),
-
-                Section::make('2. Configure Pelican (/admin/webhooks → Create Webhook)')
-                    ->description('Three pieces of config to enter on the Pelican side. Take them in order.')
-                    ->icon('heroicon-o-clipboard-document-list')
-                    ->compact()
-                    ->schema([
-                        Placeholder::make('paymenter_top_fields_display')
-                            ->label('Top fields')
-                            ->content(BridgeSettingsHtmlHelpers::renderKeyValueList([
-                                ['Type',        'Regular'],
-                                ['Description', 'Peregrine mirror — Bridge Paymenter'],
-                                ['Endpoint',    $baseUrl.'/api/pelican/webhook'],
-                            ])),
-                        Placeholder::make('paymenter_headers_display')
-                            ->label('Headers (keep the default row, add the second)')
-                            ->content(BridgeSettingsHtmlHelpers::renderHeadersList([
-                                ['X-Webhook-Event', '{{event}}', 'Pelican\'s default — keep it'],
-                                ['Authorization',   'Bearer &lt;token above&gt;', 'Add this row'],
-                            ])),
-                        Placeholder::make('paymenter_events_display')
-                            ->label('Events to tick (use the search bar)')
-                            ->content(BridgeSettingsHtmlHelpers::renderTagList([
-                                'created: Server',
-                                'updated: Server',
-                                'deleted: Server',
-                                'created: User',
-                                'event: Server\\Installed',
-                            ], note: 'These cover create / suspend / unsuspend / rename / build update / delete / install-finished. The reconciliation job (every 5 min) catches anything Pelican fails to deliver — Pelican does not retry. ℹ️ Note: in older Pelican releases `event: Server\\Installed` could crash Pelican\'s own ProcessWebhook job (`Cannot use object as array`). If you see those errors in Pelican\'s queue, untick that single event — `updated: Server` covers the install-finished case anyway (Pelican flips status from "installing" to null).')),
-                    ]),
-
-                Section::make('3. Verify')
-                    ->description('Once Pelican saves, every event lands here for audit.')
-                    ->icon('heroicon-o-check-circle')
-                    ->compact()
-                    ->schema([
-                        Placeholder::make('paymenter_docs_link')
-                            ->label('Step-by-step walkthrough')
-                            ->content(BridgeSettingsHtmlHelpers::renderDocLink($paymenterDocsUrl, 'Full setup guide, troubleshooting, known limits, and the matching Paymenter / Pelican-Paymenter extension setup.')),
-                        Placeholder::make('paymenter_audit_link')
-                            ->label('Live audit of received webhooks')
+                        Placeholder::make('paymenter_pelican_webhook_link')
+                            ->label('Open Pelican webhook settings')
                             ->content(new HtmlString(
-                                '<a href="'.e($auditLogUrl).'" '
+                                '<a href="'.e($pelicanWebhookSettingsUrl).'" '
                                 .'class="text-primary-600 underline hover:text-primary-500">'
-                                .'/admin/pelican-webhook-logs ↗</a>'
-                                .'<p class="mt-1 text-xs text-gray-500">Every accepted webhook event with HTTP status, error message, and idempotency hash.</p>'
+                                .'/admin/pelican-webhook-settings ↗</a>'
+                                .'<p class="mt-1 text-xs text-gray-500">Generate the token, see the Pelican-side setup steps, browse the audit log.</p>'
                             )),
+                        Placeholder::make('paymenter_docs_link')
+                            ->label('Step-by-step Paymenter walkthrough')
+                            ->content(BridgeSettingsHtmlHelpers::renderDocLink($paymenterDocsUrl, 'How Peregrine + Paymenter + Pelican fit together, troubleshooting, known limits, and the matching Pelican-Paymenter extension setup.')),
                     ]),
             ]);
     }

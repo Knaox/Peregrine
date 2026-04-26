@@ -101,7 +101,7 @@ class PelicanMirrorSyncTest extends TestCase
                 'updated_at' => '2026-04-22 10:00:00',
             ],
         );
-        $job->handle(app(PelicanApplicationService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
 
         $this->assertDatabaseHas('servers', [
             'pelican_server_id' => 42,
@@ -141,7 +141,7 @@ class PelicanMirrorSyncTest extends TestCase
                 'updated_at' => '2026-04-22 10:00:00',
             ],
         );
-        $job->handle(app(PelicanApplicationService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
 
         $server->refresh();
         $this->assertSame('suspended', $server->status);
@@ -168,7 +168,7 @@ class PelicanMirrorSyncTest extends TestCase
             pelicanServerId: 100,
             payloadSnapshot: ['id' => 100],
         );
-        $job->handle($mock);
+        $job->handle($mock, app(\App\Services\Bridge\BridgeModeService::class));
 
         $this->assertDatabaseMissing('servers', ['pelican_server_id' => 100]);
     }
@@ -192,7 +192,7 @@ class PelicanMirrorSyncTest extends TestCase
                 'updated_at' => '2026-04-22 10:00:00',
             ],
         );
-        $job->handle(app(PelicanApplicationService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
 
         Bus::assertDispatched(SyncUserFromPelicanWebhookJob::class, fn ($j) => $j->pelicanUserId === 999);
         $this->assertDatabaseMissing('servers', ['pelican_server_id' => 200]);
@@ -216,7 +216,7 @@ class PelicanMirrorSyncTest extends TestCase
                 'updated_at' => '2026-04-22 10:00:00',
             ],
         );
-        $job->handle(app(PelicanApplicationService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
 
         Event::assertNotDispatched(ServerProvisioned::class);
     }
@@ -297,7 +297,7 @@ class PelicanMirrorSyncTest extends TestCase
                 'updated_at' => '2026-04-22 10:00:00',
             ],
         );
-        $job->handle(app(PelicanApplicationService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
 
         $this->assertDatabaseHas('servers', [
             'pelican_server_id' => 200,
@@ -331,7 +331,7 @@ class PelicanMirrorSyncTest extends TestCase
                 'updated_at' => '2026-04-22 10:00:00',
             ],
         );
-        $job->handle(app(PelicanApplicationService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
 
         $this->assertDatabaseHas('servers', [
             'pelican_server_id' => 201,

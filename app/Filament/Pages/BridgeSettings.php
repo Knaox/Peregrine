@@ -65,8 +65,6 @@ class BridgeSettings extends Page implements HasForms
 
     public int $bridge_grace_period_days = 14;
 
-    public ?string $bridge_pelican_webhook_token = '';
-
     public function mount(): void
     {
         $settings = app(SettingsService::class);
@@ -78,7 +76,6 @@ class BridgeSettings extends Page implements HasForms
         $this->bridge_shop_shared_secret = '';
         $this->bridge_stripe_webhook_secret = '';
         $this->bridge_stripe_api_secret = '';
-        $this->bridge_pelican_webhook_token = '';
         $this->bridge_grace_period_days = (int) $settings->get('bridge_grace_period_days', 14);
         $this->bridge_stripe_billing_portal_url = (string) $settings->get('bridge_stripe_billing_portal_url', '');
         $this->bridge_resubscribe_url = (string) $settings->get('bridge_resubscribe_url', '');
@@ -91,12 +88,12 @@ class BridgeSettings extends Page implements HasForms
         $baseUrl = rtrim((string) config('app.url', ''), '/');
         $bridgeApiDocsUrl = url('/docs/bridge-api');
         $paymenterDocsUrl = url('/docs/bridge-paymenter');
-        $auditLogUrl = url('/admin/pelican-webhook-logs');
+        $pelicanWebhookSettingsUrl = url('/admin/pelican-webhook-settings');
 
         return $schema->schema([
             BridgeSettingsFormSchema::modeSelector(),
             BridgeSettingsFormSchema::shopStripeSection($baseUrl, $bridgeApiDocsUrl),
-            BridgeSettingsFormSchema::paymenterSection($baseUrl, $paymenterDocsUrl, $auditLogUrl),
+            BridgeSettingsFormSchema::paymenterSection($baseUrl, $paymenterDocsUrl, $pelicanWebhookSettingsUrl),
         ]);
     }
 
@@ -131,11 +128,6 @@ class BridgeSettings extends Page implements HasForms
             $settings->set('bridge_stripe_api_secret', Crypt::encryptString($typedStripeApiSecret));
         }
 
-        $typedPelicanToken = (string) ($data['bridge_pelican_webhook_token'] ?? '');
-        if ($typedPelicanToken !== '') {
-            $settings->set('bridge_pelican_webhook_token', Crypt::encryptString($typedPelicanToken));
-        }
-
         $settings->set('bridge_grace_period_days', (string) (int) ($data['bridge_grace_period_days'] ?? 14));
         $settings->set('bridge_stripe_billing_portal_url', (string) ($data['bridge_stripe_billing_portal_url'] ?? ''));
         $settings->set('bridge_resubscribe_url', (string) ($data['bridge_resubscribe_url'] ?? ''));
@@ -146,7 +138,6 @@ class BridgeSettings extends Page implements HasForms
         $this->bridge_shop_shared_secret = '';
         $this->bridge_stripe_webhook_secret = '';
         $this->bridge_stripe_api_secret = '';
-        $this->bridge_pelican_webhook_token = '';
     }
 
     /**
@@ -163,7 +154,6 @@ class BridgeSettings extends Page implements HasForms
             'bridge_stripe_billing_portal_url' => $this->bridge_stripe_billing_portal_url,
             'bridge_resubscribe_url' => $this->bridge_resubscribe_url,
             'bridge_grace_period_days' => $this->bridge_grace_period_days,
-            'bridge_pelican_webhook_token' => $this->bridge_pelican_webhook_token,
         ];
     }
 

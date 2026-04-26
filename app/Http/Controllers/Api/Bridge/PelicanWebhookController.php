@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\Bridge\SyncServerFromPelicanWebhookJob;
 use App\Jobs\Bridge\SyncUserFromPelicanWebhookJob;
 use App\Models\PelicanProcessedEvent;
+use App\Services\Bridge\BridgeModeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -35,6 +36,10 @@ use Illuminate\Support\Str;
  */
 class PelicanWebhookController extends Controller
 {
+    public function __construct(
+        private readonly BridgeModeService $bridgeMode,
+    ) {}
+
     public function handle(Request $request): JsonResponse
     {
         /** @var array<string, mixed>|null $payload */
@@ -120,7 +125,7 @@ class PelicanWebhookController extends Controller
     {
         return match (true) {
             $this->isServerEvent($eventType) => $this->dispatchServerSync($eventType, $modelId, $data),
-            $this->isUserCreatedEvent($eventType) => $this->dispatchUserSync($modelId),
+            $this->isUserCreatedEvent($eventType) => $this->dispatchUserSyncIfAllowed($modelId),
             default => $this->ignored($eventType),
         };
     }
@@ -170,10 +175,23 @@ class PelicanWebhookController extends Controller
     }
 
     /**
+     * Skip user-created events in shop_stripe mode — users are created by
+     * the Stripe / OAuth flow, not Pelican. Letting Pelican create users
+     * out of band would produce ghost accounts with no Shop link. Updates
+     * are still allowed via the dedicated `eloquent.updated:User` path
+     * (handled by SyncServerFromPelicanWebhookJob's owner backfill).
+     *
      * @return array<string, mixed>
      */
-    private function dispatchUserSync(int $modelId): array
+    private function dispatchUserSyncIfAllowed(int $modelId): array
     {
+        if ($this->bridgeMode->isShopStripe()) {
+            return [
+                'ignored' => 'user_creation_disabled_in_shop_stripe_mode',
+                'pelican_user_id' => $modelId,
+            ];
+        }
+
         SyncUserFromPelicanWebhookJob::dispatch(pelicanUserId: $modelId);
 
         return [
