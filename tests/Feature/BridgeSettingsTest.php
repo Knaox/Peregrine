@@ -70,38 +70,7 @@ class BridgeSettingsTest extends TestCase
         $this->assertSame(BridgeMode::Disabled, app(BridgeModeService::class)->current());
     }
 
-    public function test_pelican_token_is_encrypted_at_rest(): void
-    {
-        $admin = User::factory()->create(['is_admin' => true]);
-
-        Livewire::actingAs($admin)
-            ->test(BridgeSettings::class)
-            ->set('bridge_mode', BridgeMode::Paymenter->value)
-            ->set('bridge_pelican_webhook_token', 'this-is-a-very-long-secret-token-1234567890')
-            ->call('save');
-
-        $stored = Setting::where('key', 'bridge_pelican_webhook_token')->value('value');
-        $this->assertNotEmpty($stored);
-        $this->assertNotSame('this-is-a-very-long-secret-token-1234567890', $stored);
-        $this->assertSame('this-is-a-very-long-secret-token-1234567890', Crypt::decryptString($stored));
-    }
-
-    public function test_blank_pelican_token_keeps_existing_value(): void
-    {
-        Setting::updateOrCreate(
-            ['key' => 'bridge_pelican_webhook_token'],
-            ['value' => Crypt::encryptString('existing-token-please-keep-me-1234567890')],
-        );
-
-        $admin = User::factory()->create(['is_admin' => true]);
-
-        Livewire::actingAs($admin)
-            ->test(BridgeSettings::class)
-            ->set('bridge_mode', BridgeMode::Paymenter->value)
-            ->set('bridge_pelican_webhook_token', '')
-            ->call('save');
-
-        $stored = Setting::where('key', 'bridge_pelican_webhook_token')->value('value');
-        $this->assertSame('existing-token-please-keep-me-1234567890', Crypt::decryptString($stored));
-    }
+    // Pelican webhook token assertions live in PelicanWebhookSettingsTest now —
+    // the token + receiver toggle moved to /admin/pelican-webhook-settings
+    // and is no longer coupled to Bridge mode.
 }

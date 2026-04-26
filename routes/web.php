@@ -44,6 +44,19 @@ Route::get('/docs/bridge-paymenter', function () {
     ]);
 })->name('docs.bridge-paymenter');
 
+// Pelican webhook receiver setup guide — public HTML render of docs/pelican-webhook.md.
+// Decoupled from Bridge mode : works in any mode (shop_stripe, paymenter, disabled).
+Route::get('/docs/pelican-webhook', function () {
+    $markdown = file_get_contents(base_path('docs/pelican-webhook.md')) ?: '';
+    $converter = new GithubFlavoredMarkdownConverter([
+        'html_input' => 'allow',
+        'allow_unsafe_links' => false,
+    ]);
+    return view('docs.pelican-webhook', [
+        'content' => (string) $converter->convert($markdown),
+    ]);
+})->name('docs.pelican-webhook');
+
 /*
  * OAuth social auth — MUST live in the web group so Socialite's session-based
  * state CSRF check works across the browser round-trip from the provider.

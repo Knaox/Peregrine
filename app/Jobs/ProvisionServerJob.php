@@ -14,6 +14,7 @@ use App\Services\Bridge\EnvironmentResolver;
 use App\Services\Bridge\PortAllocator;
 use App\Services\Pelican\DTOs\CreateServerRequest;
 use App\Services\Pelican\PelicanApplicationService;
+use App\Services\SettingsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -212,10 +213,21 @@ class ProvisionServerJob implements ShouldQueue
             // update so listeners observe the row in its final state.
             event(new ServerProvisioned($server->fresh(), $user));
 
-            // Pelican is still installing in the background — schedule the
-            // monitor that will fire `ServerInstalled` (→ "playable" mail)
-            // once the install script finishes. First poll in 30s.
-            MonitorServerInstallationJob::dispatch($server->id)
+            // Pelican is still installing in the background. Pick the polling
+            // mode based on whether the Pelican webhook receiver is enabled :
+            //   webhook ON  → SHORT mode (3 attempts, ~5 min cap). The
+            //                 webhook normally fires ServerInstalled itself;
+            //                 this is just a safety net in case the admin
+            //                 misconfigured Pelican-side or the event is lost.
+            //   webhook OFF → LONG mode (20 attempts, ~10 min cap). We're
+            //                 the only signal Peregrine has.
+            $webhookEnabled = (string) app(SettingsService::class)
+                ->get('pelican_webhook_enabled', 'false');
+            $monitorMode = ($webhookEnabled === 'true' || $webhookEnabled === '1')
+                ? MonitorServerInstallationJob::MODE_SHORT
+                : MonitorServerInstallationJob::MODE_LONG;
+
+            MonitorServerInstallationJob::dispatch($server->id, $monitorMode)
                 ->delay(now()->addSeconds(30));
         } catch (\Throwable $e) {
             $server->update([

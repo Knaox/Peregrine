@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\Bridge\BridgeModeService;
 use App\Services\SettingsService;
 use Closure;
 use Illuminate\Http\Request;
@@ -11,23 +10,29 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Authenticates incoming Pelican outgoing webhooks (Bridge Paymenter mode).
+ * Authenticates incoming Pelican outgoing webhooks.
+ *
+ * Decoupled from Bridge mode — the receiver is its own feature, gated solely
+ * by the `pelican_webhook_enabled` setting (admin enables it from
+ * /admin/pelican-webhook-settings). This lets the same webhook be used in
+ * shop_stripe mode (install-status updates) and Paymenter mode (full mirror).
  *
  * Pelican does NOT sign its webhook payloads — there is no native HMAC
  * signature header. The only auth available is the freeform "headers" map
  * in /admin/webhooks Pelican-side, where we put a long random bearer token
- * generated in /admin/bridge-settings.
+ * generated in /admin/pelican-webhook-settings.
  *
  * Resolution :
  *   1. `Authorization: Bearer <token>` (preferred — standard scheme)
  *   2. `X-Pelican-Token: <token>`     (fallback — easier to copy-paste)
  *
  * The expected token is read at request time from SettingsService
- * (`bridge_pelican_webhook_token`, encrypted via Crypt::encryptString).
+ * (`pelican_webhook_token`, encrypted via Crypt::encryptString). For installs
+ * that haven't run the extract migration yet, `bridge_pelican_webhook_token`
+ * is read as a fallback.
  *
  * Status codes :
- *   503 — Bridge mode is not `paymenter` (Pelican won't retry, but the
- *         polling reconciliation in SyncServerStatusJob fills the gap)
+ *   503 — webhook receiver disabled (admin needs to flip the toggle)
  *   503 — token not configured (admin needs to generate one)
  *   401 — token missing OR mismatch (timing-safe via hash_equals)
  */
@@ -35,14 +40,13 @@ class VerifyPelicanWebhookToken
 {
     public function __construct(
         private readonly SettingsService $settings,
-        private readonly BridgeModeService $bridgeMode,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $this->bridgeMode->isPaymenter()) {
-            $this->logRejection($request, 'bridge_paymenter_not_active');
-            return response()->json(['error' => 'pelican.bridge_paymenter_not_active'], 503);
+        if (! $this->isEnabled()) {
+            $this->logRejection($request, 'webhook_disabled');
+            return response()->json(['error' => 'pelican.webhook_disabled'], 503);
         }
 
         $expected = $this->resolveToken();
@@ -76,9 +80,9 @@ class VerifyPelicanWebhookToken
 
     /**
      * Log middleware-level rejections so admins can debug Pelican-side
-     * misconfiguration (wrong token, mode mismatch, etc.) without having
-     * to flip on packet captures. Rejected requests never reach the
-     * controller, so they would otherwise leave no trace.
+     * misconfiguration (wrong token, toggle off, etc.) without having to
+     * flip on packet captures. Rejected requests never reach the controller,
+     * so they would otherwise leave no trace.
      *
      * Gated on APP_DEBUG to avoid spamming production logs when bots probe
      * the public endpoint. Admins flip APP_DEBUG=true temporarily when
@@ -99,9 +103,21 @@ class VerifyPelicanWebhookToken
         ]);
     }
 
+    private function isEnabled(): bool
+    {
+        $value = (string) $this->settings->get('pelican_webhook_enabled', 'false');
+
+        return $value === 'true' || $value === '1';
+    }
+
     private function resolveToken(): string
     {
-        $envelope = (string) $this->settings->get('bridge_pelican_webhook_token', '');
+        // Read the new key first, fall back to the legacy Bridge-coupled key
+        // for installs that haven't run the extract migration yet.
+        $envelope = (string) $this->settings->get('pelican_webhook_token', '');
+        if ($envelope === '') {
+            $envelope = (string) $this->settings->get('bridge_pelican_webhook_token', '');
+        }
         if ($envelope === '') {
             return '';
         }

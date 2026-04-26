@@ -15,10 +15,11 @@ use Tests\TestCase;
 /**
  * Locks the Pelican webhook contract end-to-end :
  *  - Bearer token validation (no native HMAC available)
- *  - Bridge mode gate (paymenter mode required)
+ *  - Receiver toggle (`pelican_webhook_enabled`) — independent of Bridge mode
  *  - Idempotency by sha256(event|model_id|updated_at|body)
  *  - Dispatches SyncServerFromPelicanWebhookJob for Server eloquent events
  *  - Dispatches SyncUserFromPelicanWebhookJob for User created events
+ *    (but only outside shop_stripe mode — see PelicanWebhookUserGateTest)
  *  - Unknown event types return 200 without side effect
  */
 class PelicanWebhookTest extends TestCase
@@ -31,11 +32,15 @@ class PelicanWebhookTest extends TestCase
     {
         parent::setUp();
 
-        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::Paymenter->value]);
+        Setting::updateOrCreate(['key' => 'pelican_webhook_enabled'], ['value' => 'true']);
         Setting::updateOrCreate(
-            ['key' => 'bridge_pelican_webhook_token'],
+            ['key' => 'pelican_webhook_token'],
             ['value' => Crypt::encryptString(self::TOKEN)],
         );
+        // Default these tests to Paymenter mode so user-creation events are
+        // still dispatched (shop_stripe explicitly skips them — covered in
+        // its own test). The webhook itself is mode-agnostic now.
+        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::Paymenter->value]);
         app(SettingsService::class)->clearCache();
     }
 
@@ -52,9 +57,9 @@ class PelicanWebhookTest extends TestCase
         Bus::assertNothingDispatched();
     }
 
-    public function test_rejects_when_bridge_mode_is_not_paymenter(): void
+    public function test_rejects_when_webhook_disabled(): void
     {
-        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::ShopStripe->value]);
+        Setting::updateOrCreate(['key' => 'pelican_webhook_enabled'], ['value' => 'false']);
         app(SettingsService::class)->clearCache();
 
         Bus::fake();
@@ -63,6 +68,21 @@ class PelicanWebhookTest extends TestCase
 
         $response->assertStatus(503);
         Bus::assertNothingDispatched();
+    }
+
+    public function test_accepts_in_shop_stripe_mode_when_webhook_enabled(): void
+    {
+        // Whole point of the refactor: webhook now works in any Bridge mode
+        // as long as it's enabled.
+        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::ShopStripe->value]);
+        app(SettingsService::class)->clearCache();
+
+        Bus::fake();
+
+        $response = $this->pelicanPost($this->serverCreatedPayload(pelicanServerId: 11));
+
+        $response->assertStatus(200);
+        Bus::assertDispatched(SyncServerFromPelicanWebhookJob::class, fn ($job) => $job->pelicanServerId === 11);
     }
 
     public function test_dispatches_server_sync_job_on_eloquent_created_server(): void
@@ -85,7 +105,7 @@ class PelicanWebhookTest extends TestCase
         ]);
     }
 
-    public function test_dispatches_user_sync_job_on_eloquent_created_user(): void
+    public function test_dispatches_user_sync_job_on_eloquent_created_user_in_paymenter_mode(): void
     {
         Bus::fake();
 
@@ -98,6 +118,28 @@ class PelicanWebhookTest extends TestCase
 
         $response->assertStatus(200);
         Bus::assertDispatched(SyncUserFromPelicanWebhookJob::class, fn ($job) => $job->pelicanUserId === 7);
+    }
+
+    public function test_skips_user_sync_in_shop_stripe_mode(): void
+    {
+        // In shop_stripe mode users come from Stripe / OAuth — Pelican must
+        // not be allowed to create ghost users out of band.
+        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::ShopStripe->value]);
+        app(SettingsService::class)->clearCache();
+
+        Bus::fake();
+
+        $response = $this->pelicanPost([
+            'event' => 'eloquent.created: App\\Models\\User',
+            'data' => ['id' => 7, 'email' => 'pelican-user@example.com', 'updated_at' => '2026-04-22 10:00:00'],
+        ]);
+
+        $response->assertStatus(200);
+        Bus::assertNotDispatched(SyncUserFromPelicanWebhookJob::class);
+        $this->assertDatabaseHas('pelican_processed_events', [
+            'event_type' => 'eloquent.created: App\\Models\\User',
+            'pelican_model_id' => 7,
+        ]);
     }
 
     public function test_dedupes_repeated_event_via_idempotency_hash(): void
@@ -249,6 +291,26 @@ class PelicanWebhookTest extends TestCase
 
         $response->assertStatus(200);
         Bus::assertDispatched(SyncServerFromPelicanWebhookJob::class, fn ($job) => $job->pelicanServerId === 33);
+    }
+
+    public function test_legacy_bridge_token_setting_still_works_as_fallback(): void
+    {
+        // Installs that haven't run the extract migration yet have only the
+        // legacy `bridge_pelican_webhook_token`. The middleware falls back to
+        // it when the new key is missing.
+        Setting::where('key', 'pelican_webhook_token')->delete();
+        Setting::updateOrCreate(
+            ['key' => 'bridge_pelican_webhook_token'],
+            ['value' => Crypt::encryptString(self::TOKEN)],
+        );
+        app(SettingsService::class)->clearCache();
+
+        Bus::fake();
+
+        $response = $this->pelicanPost($this->serverCreatedPayload(pelicanServerId: 100));
+
+        $response->assertStatus(200);
+        Bus::assertDispatched(SyncServerFromPelicanWebhookJob::class);
     }
 
     /**
