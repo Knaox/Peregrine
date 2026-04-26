@@ -10,7 +10,7 @@ import { useServer } from '@/hooks/useServer';
 import { useServerPermissions } from '@/hooks/useServerPermissions';
 import {
     renameFiles, deleteFiles, compressFiles, decompressFile, writeFile, createFolder,
-    chmodFiles, pullFile,
+    chmodFiles, pullFile, getFileDownloadUrl,
 } from '@/services/fileApi';
 import { FileToolbar } from '@/components/files/FileToolbar';
 import { FileBreadcrumb } from '@/components/files/FileBreadcrumb';
@@ -118,6 +118,20 @@ export function ServerFilesPage() {
     };
     const handleSaveFile = () => { if (canUpdate) editor.saveFile(serverId).then(refresh); };
 
+    /**
+     * Resolve a one-shot signed download URL via Pelican and open it in a
+     * new tab. Pelican's URL points straight at Wings, so the bytes never
+     * route through Peregrine — fast even on big files.
+     */
+    const handleDownload = useCallback((name: string) => {
+        const filePath = currentDirectory === '/' ? `/${name}` : `${currentDirectory}/${name}`;
+        getFileDownloadUrl(serverId, filePath)
+            .then((url) => {
+                if (url) window.open(url, '_blank', 'noopener,noreferrer');
+            })
+            .catch(() => { /* surfaced via the global toast / fetch error layer */ });
+    }, [serverId, currentDirectory]);
+
     return (
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-4 pb-16">
             {/* Header */}
@@ -172,8 +186,9 @@ export function ServerFilesPage() {
                     selectedFiles={selectedFiles} onToggleSelect={toggleSelect} onToggleSelectAll={toggleSelectAll}
                     onNavigate={handleNavigate} onOpenFile={handleOpenFile}
                     onRename={handleRename} onDelete={handleDelete} onCompress={handleCompress} onDecompress={handleDecompress}
-                    onChmod={handleChmod}
+                    onChmod={handleChmod} onDownload={handleDownload}
                     canUpdate={canUpdate} canDelete={canDeleteFiles} canArchive={canArchive}
+                    canDownload={perms.has('file.read')}
                 />
             </div>
 

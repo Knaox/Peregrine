@@ -88,6 +88,13 @@ class PluginBootstrap
     /**
      * Return manifests of all active plugins (for the frontend API).
      *
+     * Includes the persisted plugin settings alongside the manifest's
+     * declared `settings_schema` so plugin bundles can read their own
+     * admin-configured options (e.g. egg-config-editor reads
+     * `show_raw_key` / `show_description` toggles to add or remove table
+     * columns). Plugins should never store secrets in `settings` because
+     * this endpoint is reachable by every authenticated user.
+     *
      * @return array<int, array<string, mixed>>
      */
     public function getActiveManifests(): array
@@ -117,6 +124,9 @@ class PluginBootstrap
                 'nav' => $manifest['frontend']['nav'] ?? [],
                 'widgets' => $manifest['frontend']['widgets'] ?? [],
                 'server_sidebar_entries' => $manifest['frontend']['server_sidebar_entries'] ?? [],
+                'server_home_sections' => $manifest['frontend']['server_home_sections'] ?? [],
+                'settings_schema' => $manifest['settings_schema'] ?? [],
+                'settings' => $plugin->settings ?? [],
                 'bundle_url' => $bundleUrl,
             ];
         }
@@ -150,6 +160,11 @@ class PluginBootstrap
                 'installed_at' => $dbRecord?->installed_at,
                 'settings_schema' => $manifest['settings_schema'] ?? [],
                 'settings' => $dbRecord?->settings ?? [],
+                // Optional admin URL the plugin exposes for richer config that
+                // doesn't fit `settings_schema` (structured data, custom UI).
+                // Plugins.blade renders a "Configure" button when set + plugin
+                // is active. URL must already be panel-relative (e.g. /admin/foo).
+                'manage_url' => $manifest['manage_url'] ?? null,
             ];
         }
 

@@ -1,0 +1,50 @@
+{
+    "id": "egg-config-editor",
+    "name": "Egg Config Editor",
+    "version": "0.8.1",
+    "description": "Auto-detects parameters in your server's game config files and translates known keys via the plugin's own i18n dictionary. Admin only declares which file to expose for which egg; everything else is data-driven.",
+    "author": "Peregrine Team",
+    "license": "MIT",
+    "min_peregrine_version": "1.0.0",
+    "service_provider": "EggConfigEditorServiceProvider",
+    "manage_url": "/admin/egg-config-files",
+    "frontend": {
+        "bundle": "frontend/dist/bundle.js",
+        "nav": [],
+        "server_sidebar_entries": [],
+        "server_home_sections": [
+            {
+                "id": "egg-config-editor",
+                "order": 50,
+                "required_permission": "file.read"
+            }
+        ]
+    },
+    "settings_schema": [
+        {
+            "key": "max_columns_per_row",
+            "type": "select",
+            "label": "Max columns per row",
+            "default": "auto",
+            "options": {
+                "auto": "Auto (responsive)",
+                "1": "1 column",
+                "2": "2 columns",
+                "3": "3 columns",
+                "4": "4 columns"
+            }
+        },
+        {
+            "key": "show_raw_key",
+            "type": "toggle",
+            "label": "Show raw config key under each label",
+            "default": false
+        },
+        {
+            "key": "show_description",
+            "type": "toggle",
+            "label": "Show description on each card",
+            "default": false
+        }
+    ]
+}

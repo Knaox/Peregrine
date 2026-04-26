@@ -55,9 +55,28 @@ class PelicanFileService
             ->throw();
     }
 
+    /**
+     * Write file content via Pelican's `POST /files/write?file=...` endpoint.
+     *
+     * Pelican forwards the raw HTTP body to Wings as the new file content.
+     * Content-Length must always be set — including `0` for the empty-file
+     * case (the file manager's "New file" action). Some Guzzle builds drop
+     * `Content-Length: 0` on POSTs with an empty body, which makes Wings
+     * return 411 Length Required and the file is never created. Forcing
+     * the header here covers that edge case.
+     *
+     * Pelican explicitly accepts an empty body — the `WriteFileContentRequest`
+     * validator on their side has no rule on the body content, only on the
+     * `file` query string parameter.
+     */
     public function writeFile(string $serverIdentifier, string $filePath, string $content): void
     {
-        Http::withHeaders(['Authorization' => 'Bearer ' . $this->clientApiKey(), 'Accept' => 'application/json'])
+        Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->clientApiKey(),
+            'Accept' => 'application/json',
+            'Content-Type' => 'text/plain',
+            'Content-Length' => (string) strlen($content),
+        ])
             ->withBody($content, 'text/plain')
             ->retry(3, 100)
             ->baseUrl($this->baseUrl())

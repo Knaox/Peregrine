@@ -106,4 +106,58 @@ class PluginController extends Controller
 
         return response()->json(['message' => 'Settings saved.']);
     }
+
+    /**
+     * Serve a plugin's i18n bundle for the requested locale (public).
+     *
+     * Plugins ship their own translations under
+     * `plugins/{id}/frontend/i18n/{locale}.json`. The frontend boot loader
+     * fetches this and merges it into i18next as the plugin's namespace,
+     * so plugins keep their UI strings (and the egg-config-editor's
+     * `params.*` translation dictionary) fully self-contained — Peregrine
+     * core never carries plugin-specific keys.
+     *
+     * Falls back to English when the requested locale isn't bundled.
+     * Returns `{}` when the plugin has no i18n at all (so the frontend can
+     * unconditionally fetch without 404 noise).
+     */
+    public function i18n(string $pluginId, string $locale): JsonResponse
+    {
+        // Defensive : sanitize locale to a known shape so it can never
+        // escape the i18n directory (no `..`, no slashes).
+        if (! preg_match('/^[a-z]{2}(?:-[A-Z]{2})?$/', $locale)) {
+            return response()->json(['error' => 'invalid_locale'], 400);
+        }
+
+        $pluginPath = $this->pluginManager->getPluginPath($pluginId);
+        if (! $pluginPath) {
+            return response()->json(['error' => 'plugin_not_found'], 404);
+        }
+
+        $i18nDir = $pluginPath . '/frontend/i18n';
+        $candidate = $i18nDir . '/' . $locale . '.json';
+
+        // English fallback : if the plugin doesn't ship the requested
+        // locale, return EN so the player still sees translated labels
+        // instead of raw keys. Returning {} is the last-resort fallback for
+        // plugins that ship no i18n at all.
+        if (! is_file($candidate)) {
+            $candidate = $i18nDir . '/en.json';
+        }
+        if (! is_file($candidate)) {
+            return response()->json(new \stdClass)->setMaxAge(3600);
+        }
+
+        $raw = file_get_contents($candidate);
+        if ($raw === false) {
+            return response()->json(new \stdClass);
+        }
+
+        $decoded = json_decode($raw, true);
+        if (! is_array($decoded)) {
+            return response()->json(new \stdClass);
+        }
+
+        return response()->json($decoded)->setMaxAge(3600);
+    }
 }

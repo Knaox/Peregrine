@@ -108,6 +108,9 @@ Route::get('pelican/webhook', function () {
 
 // Plugins (public — active plugins for frontend)
 Route::get('plugins', [PluginController::class, 'index']);
+// Plugin i18n bundle (public). Locale matches /^[a-z]{2}(-[A-Z]{2})?$/.
+Route::get('plugins/{pluginId}/i18n/{locale}', [PluginController::class, 'i18n'])
+    ->where('locale', '[a-z]{2}(-[A-Z]{2})?');
 
 // Settings (public)
 Route::prefix('settings')->group(function () {

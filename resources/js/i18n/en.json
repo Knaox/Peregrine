@@ -312,6 +312,7 @@
             "refresh": "Refresh",
             "rename": "Rename",
             "delete": "Delete",
+            "download": "Download",
             "compress": "Compress",
             "decompress": "Extract",
             "confirm_delete": "Are you sure you want to delete \"{{name}}\"?",

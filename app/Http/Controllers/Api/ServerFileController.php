@@ -63,11 +63,33 @@ class ServerFileController extends Controller
     {
         $validated = $request->validated();
 
-        $this->clientService->writeFile(
-            $server->identifier,
-            $validated['file'],
-            $validated['content'],
-        );
+        try {
+            $this->clientService->writeFile(
+                $server->identifier,
+                $validated['file'],
+                // `content` arrives as null when the player submitted "" —
+                // `ConvertEmptyStringsToNull` middleware did its work.
+                // Coerce back to a string so the Pelican client gets a
+                // valid empty body (creates an empty file).
+                (string) ($validated['content'] ?? ''),
+            );
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            // Surface the real Pelican / Wings error instead of letting it
+            // bubble up as a generic 500. The frontend's API error layer
+            // shows the body, so the operator sees what went wrong.
+            \Log::warning('writeFile: Pelican returned an error', [
+                'server' => $server->identifier,
+                'file' => $validated['file'],
+                'content_length' => strlen($validated['content']),
+                'pelican_status' => $e->response?->status(),
+                'pelican_body' => $e->response?->body(),
+            ]);
+            return response()->json([
+                'error' => 'pelican_rejected',
+                'pelican_status' => $e->response?->status(),
+                'pelican_body' => $e->response?->json() ?? $e->response?->body(),
+            ], $e->response?->status() ?? 500);
+        }
 
         $this->audit($request, $server, 'server.file.write', ['file' => $validated['file']]);
 

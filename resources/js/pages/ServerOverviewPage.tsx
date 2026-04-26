@@ -34,6 +34,7 @@ export function ServerOverviewPage() {
     const { resources, serverState: wsState, messages, installCompleted } = useWingsWebSocket(serverId, { stats: true, console: true });
     const sidebarConfig = useSidebarConfig();
     const pluginManifests = usePluginStore((s) => s.manifests);
+    const pluginHomeSectionComponents = usePluginStore((s) => s.serverHomeSectionComponents);
     const [copied, setCopied] = useState(false);
 
     // Auto-refresh the server query as soon as Wings reports install
@@ -82,6 +83,22 @@ export function ServerOverviewPage() {
     const canViewConfig = hasPerm('overview.server-info') || hasPerm('settings.rename');
     const canRename = hasPerm('settings.rename');
     const canReinstall = hasPerm('settings.reinstall');
+
+    // Plugin-contributed home sections, sorted by their declared `order` then
+    // filtered by permissions. Owners always see them; subusers need the
+    // `required_permission` claim if the manifest declares one.
+    const pluginHomeSections = useMemo(() => {
+        const out: { key: string; Component: React.ComponentType<{ serverId: number }>; order: number }[] = [];
+        for (const manifest of pluginManifests) {
+            for (const section of manifest.server_home_sections ?? []) {
+                if (section.required_permission && !hasPerm(section.required_permission)) continue;
+                const Component = pluginHomeSectionComponents[section.id];
+                if (!Component) continue;
+                out.push({ key: `${manifest.id}:${section.id}`, Component, order: section.order ?? 100 });
+            }
+        }
+        return out.sort((a, b) => a.order - b.order);
+    }, [pluginManifests, pluginHomeSectionComponents, isOwner, perms]);
 
     const filteredEntries = useMemo(() => {
         // Merge core + plugin sidebar entries
@@ -201,6 +218,13 @@ export function ServerOverviewPage() {
             {canViewStartup && (
                 <section><ServerVariables serverId={serverId} canEdit={canEditStartup} /></section>
             )}
+
+            {/* Plugin-contributed home sections (e.g. egg-config-editor). Each
+                plugin renders its own card right after the env-variable panel
+                so they read as a continuous "configuration" group. */}
+            {pluginHomeSections.map(({ key, Component }) => (
+                <section key={key}><Component serverId={serverId} /></section>
+            ))}
 
             {/* Server info — only if owner or has settings permission */}
             {canViewConfig && (
