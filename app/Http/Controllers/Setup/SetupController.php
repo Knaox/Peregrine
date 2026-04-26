@@ -97,6 +97,10 @@ class SetupController extends Controller
             // 3.5 Activate the default "invitations" plugin (best effort — a
             // failure here must not break setup). It ships with Peregrine
             // and runs its own migrations on activate().
+            //
+            // Other bundled plugins (e.g. egg-config-editor) are preinstalled
+            // on disk but NOT auto-activated — the admin opts in from the
+            // Plugins page when they want them.
             try {
                 if (app(\App\Services\PluginManager::class)->getManifest('invitations')) {
                     app(\App\Services\PluginManager::class)->activate('invitations');

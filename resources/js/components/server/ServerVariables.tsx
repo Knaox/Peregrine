@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { m } from 'motion/react';
+import { m, AnimatePresence } from 'motion/react';
 import clsx from 'clsx';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Spinner } from '@/components/ui/Spinner';
@@ -156,6 +156,7 @@ function VariableCard({
 export function ServerVariables({ serverId, canEdit = true }: ServerVariablesProps) {
     const { t } = useTranslation();
     const { variables, isLoading, updateVariable, isUpdating } = useStartupVariables(serverId);
+    const [open, setOpen] = useState(true);
 
     if (isLoading) {
         return (
@@ -172,8 +173,17 @@ export function ServerVariables({ serverId, canEdit = true }: ServerVariablesPro
     }
 
     return (
-        <GlassCard className="p-4 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
+        <GlassCard className="p-4 sm:p-6">
+            <button
+                type="button"
+                onClick={() => setOpen((o) => !o)}
+                aria-expanded={open}
+                className={clsx(
+                    'flex w-full items-center justify-between gap-2 flex-wrap',
+                    'cursor-pointer text-left rounded-[var(--radius)]',
+                    'transition-colors duration-[var(--transition-fast)]',
+                )}
+            >
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
                     {t('servers.variables.title')}
                 </h2>
@@ -190,20 +200,41 @@ export function ServerVariables({ serverId, canEdit = true }: ServerVariablesPro
                     <span className="text-xs text-[var(--color-text-muted)]">
                         {t('servers.variables.count', { count: variables.length })}
                     </span>
+                    <m.svg
+                        animate={{ rotate: open ? 180 : 0 }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                        className="h-4 w-4 text-[var(--color-text-muted)]"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </m.svg>
                 </div>
-            </div>
+            </button>
 
-            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
-                {variables.map((v) => (
-                    <VariableCard
-                        key={v.env_variable}
-                        variable={v}
-                        onSave={(key, value) => updateVariable({ key, value })}
-                        isSaving={isUpdating}
-                        canEdit={canEdit}
-                    />
-                ))}
-            </div>
+            <AnimatePresence initial={false}>
+                {open && (
+                    <m.div
+                        key="content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        style={{ overflow: 'hidden' }}
+                    >
+                        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 mt-4">
+                            {variables.map((v) => (
+                                <VariableCard
+                                    key={v.env_variable}
+                                    variable={v}
+                                    onSave={(key, value) => updateVariable({ key, value })}
+                                    isSaving={isUpdating}
+                                    canEdit={canEdit}
+                                />
+                            ))}
+                        </div>
+                    </m.div>
+                )}
+            </AnimatePresence>
         </GlassCard>
     );
 }

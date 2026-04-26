@@ -47,4 +47,40 @@ i18n
         },
     });
 
+/**
+ * Fetch a plugin's i18n bundle and register it as a dedicated namespace in
+ * i18next. Plugin frontends consume their strings via
+ * `useTranslation(pluginId)` so keys live entirely inside the plugin and
+ * never pollute the core resource files.
+ *
+ * The plugin version is included as a query param so the browser HTTP cache
+ * is automatically invalidated when the admin updates the plugin. Without
+ * this, the 1-hour cache on the i18n endpoint would mask brand new dict
+ * entries until the cache expires.
+ *
+ * Loads the bundle for the currently active language plus English (for
+ * fallback). Network failures are swallowed — the plugin still renders, just
+ * with raw keys instead of translated labels, which is preferable to
+ * blocking the entire SPA on a plugin asset.
+ */
+export async function loadPluginI18n(pluginId: string, version?: string): Promise<void> {
+    const lang = i18n.language || adminDefault;
+    const targets = lang === 'en' ? ['en'] : [lang, 'en'];
+    const cacheBust = version ? `?v=${encodeURIComponent(version)}` : '';
+
+    await Promise.all(targets.map(async (loc) => {
+        try {
+            const res = await fetch(`/api/plugins/${pluginId}/i18n/${loc}${cacheBust}`, {
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json' },
+            });
+            if (!res.ok) return;
+            const body = (await res.json()) as Record<string, unknown>;
+            i18n.addResourceBundle(loc, pluginId, body, true, true);
+        } catch {
+            // Plugin renders with raw keys — degraded but functional.
+        }
+    }));
+}
+
 export default i18n;

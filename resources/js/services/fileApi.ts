@@ -105,6 +105,20 @@ export async function createFolder(
     });
 }
 
+/**
+ * Resolve a one-shot signed download URL for a file via Pelican's client API.
+ * The returned URL is short-lived and points directly at Wings — open it in
+ * a new tab (or assign to a hidden anchor) to trigger the download without
+ * routing the bytes through Peregrine.
+ */
+export async function getFileDownloadUrl(serverId: number, file: string): Promise<string> {
+    const params = new URLSearchParams({ file });
+    const { data } = await request<{ data: { url: string } }>(
+        `/api/servers/${serverId}/files/download?${params.toString()}`,
+    );
+    return data.url;
+}
+
 export async function chmodFiles(
     serverId: number,
     root: string,

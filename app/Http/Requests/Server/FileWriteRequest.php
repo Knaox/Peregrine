@@ -15,7 +15,13 @@ class FileWriteRequest extends FormRequest
     {
         return [
             'file' => ['required', 'string', 'max:500'],
-            'content' => ['required', 'string'],
+            // `present` lets the body include `content: ""` for empty file
+            // creation. `nullable` is REQUIRED on top because Laravel's
+            // global `ConvertEmptyStringsToNull` middleware converts the
+            // submitted `""` to `null` before validation runs — without
+            // `nullable`, the `string` rule would then reject the field.
+            // The controller coerces null → "" so the parser sees a string.
+            'content' => ['present', 'nullable', 'string'],
         ];
     }
 }

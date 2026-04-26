@@ -5,6 +5,7 @@ interface PluginStore {
     manifests: PluginManifest[];
     components: Record<string, React.ComponentType>;
     serverPageComponents: Record<string, React.ComponentType>;
+    serverHomeSectionComponents: Record<string, React.ComponentType<{ serverId: number }>>;
     isLoading: boolean;
     isInitialized: boolean;
 
@@ -12,6 +13,7 @@ interface PluginStore {
     setLoading: (loading: boolean) => void;
     registerComponent: (pluginId: string, component: React.ComponentType) => void;
     registerServerPage: (pageId: string, component: React.ComponentType) => void;
+    registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number }>) => void;
     getComponent: (pluginId: string) => React.ComponentType | undefined;
     init: () => void;
 }
@@ -20,6 +22,7 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
     manifests: [],
     components: {},
     serverPageComponents: {},
+    serverHomeSectionComponents: {},
     isLoading: true,
     isInitialized: false,
 
@@ -38,6 +41,12 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
         }));
     },
 
+    registerServerHomeSection: (sectionId, component) => {
+        set((state) => ({
+            serverHomeSectionComponents: { ...state.serverHomeSectionComponents, [sectionId]: component },
+        }));
+    },
+
     getComponent: (pluginId) => get().components[pluginId],
 
     init: () => {
@@ -49,6 +58,9 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
             },
             registerServerPage: (pageId: string, component: React.ComponentType) => {
                 get().registerServerPage(pageId, component);
+            },
+            registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number }>) => {
+                get().registerServerHomeSection(sectionId, component);
             },
         };
 

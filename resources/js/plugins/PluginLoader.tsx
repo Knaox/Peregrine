@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { usePluginStore } from '@/plugins/pluginStore';
 import type { PluginApiResponse } from '@/plugins/types';
 import { request } from '@/services/http';
+import { loadPluginI18n } from '@/i18n/config';
 
 function loadScript(src: string): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -43,12 +44,19 @@ export function PluginLoader() {
         const manifests = data.data;
         setManifests(manifests);
 
-        // Load all plugin bundles
-        const bundles = manifests
+        // Plugin i18n bundles must be in i18next BEFORE the plugin script
+        // executes — plugins call useTranslation() at first render and would
+        // briefly show raw keys otherwise. We await both groups in parallel
+        // (they're independent) but only flip isLoading after both finish.
+        // Pass the manifest version as a cache-bust so brand-new dict
+        // entries land immediately after a plugin update instead of waiting
+        // out the 1-hour HTTP cache.
+        const i18nLoads = manifests.map((m) => loadPluginI18n(m.id, m.version));
+        const bundleLoads = manifests
             .filter((m) => m.bundle_url)
             .map((m) => loadScript(m.bundle_url as string));
 
-        Promise.allSettled(bundles).then(() => {
+        Promise.allSettled([...i18nLoads, ...bundleLoads]).then(() => {
             setLoading(false);
         });
     }, [data, setManifests, setLoading]);

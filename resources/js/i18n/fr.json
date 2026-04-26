@@ -312,6 +312,7 @@
             "refresh": "Actualiser",
             "rename": "Renommer",
             "delete": "Supprimer",
+            "download": "Télécharger",
             "compress": "Compresser",
             "decompress": "Extraire",
             "confirm_delete": "Voulez-vous vraiment supprimer \"{{name}}\" ?",

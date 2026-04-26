@@ -14,7 +14,9 @@ export interface FileListProps {
     onCompress: (name: string) => void;
     onDecompress: (name: string) => void;
     onChmod: (name: string) => void;
+    onDownload?: (name: string) => void;
     canUpdate?: boolean;
     canDelete?: boolean;
     canArchive?: boolean;
+    canDownload?: boolean;
 }
