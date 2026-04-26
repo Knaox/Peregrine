@@ -1,7 +1,20 @@
 <?php
 
 return [
-    'installed' => env('PANEL_INSTALLED', false),
+    // True iff the panel has been bootstrapped via the Setup Wizard.
+    //
+    // Three sources, evaluated in order :
+    //   1. PANEL_INSTALLED=true env (set by the wizard in storage/.env)
+    //   2. storage/.installed sentinel file (mirror of #1, written by the
+    //      Docker entrypoint and the wizard — survives env-var loss)
+    //
+    // The sentinel fallback fixes a Docker pitfall : docker-compose passes
+    // every declared env var, even if empty, which prevents Laravel's
+    // DotEnv loader from reading PANEL_INSTALLED from storage/.env.
+    // Without the fallback, plugins (and any other code that gates on
+    // `config('panel.installed')`) silently no-op.
+    'installed' => env('PANEL_INSTALLED', false) === true
+        || file_exists(storage_path('.installed')),
 
     // Shipped version of the Peregrine panel. The admin "Updates" page compares
     // this against the latest GitHub release to tell the admin if they need to
