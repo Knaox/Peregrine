@@ -76,6 +76,13 @@ final class SettingsFormSchema
                     ->default('en')
                     ->required()
                     ->helperText('Used for newly registered users (until they pick their own) and for the SPA when no language is detected from the browser.'),
+                Select::make('app_timezone')
+                    ->label('Application timezone')
+                    ->options(self::timezoneOptions())
+                    ->default('UTC')
+                    ->required()
+                    ->searchable()
+                    ->helperText('Used by Carbon::now(), scheduled jobs, sync logs, and email timestamps. Changes apply on the next request — no restart required. Stored in DB so a Docker stack rebuild does not reset it.'),
                 Repeater::make('header_links')
                     ->label('Header Navigation Links')
                     ->helperText('Add custom links to the top navigation bar.')
@@ -215,8 +222,9 @@ final class SettingsFormSchema
             ->description(
                 'IPs or CIDR ranges allowed to set X-Forwarded-* headers. Set this when '
                 . 'Peregrine sits behind a reverse proxy (Nginx Proxy Manager, Traefik, '
-                . 'Cloudflare, …). Leave empty to trust no proxy. Saved to .env as '
-                . 'TRUSTED_PROXIES — restart php-fpm / docker container to apply.'
+                . 'Cloudflare, …). Leave empty to trust no proxy. Stored in DB (table '
+                . '`settings`) so a Docker stack rebuild does not reset it ; applies on '
+                . 'the next request, no container restart needed.'
             )
             ->icon('heroicon-o-shield-check')
             ->headerActions([
@@ -265,7 +273,31 @@ final class SettingsFormSchema
             ->schema([
                 Toggle::make('app_debug')
                     ->label('Enable debug mode (APP_DEBUG)')
-                    ->helperText('Writes APP_DEBUG to your .env. Restart php-fpm / docker container after toggling — Laravel caches the .env at boot.'),
+                    ->helperText('Stored in DB (table `settings`) — survives a Docker stack rebuild. Applies on the next request, no container restart needed.'),
             ])->columns(1);
+    }
+
+    /**
+     * IANA timezone list, with a few shortcuts pinned at the top so the
+     * common picks are 1 click away.
+     *
+     * @return array<string, string>
+     */
+    private static function timezoneOptions(): array
+    {
+        $pinned = [
+            'UTC' => 'UTC (Coordinated Universal Time)',
+            'Europe/Paris' => 'Europe/Paris (CET/CEST)',
+            'Europe/London' => 'Europe/London (GMT/BST)',
+            'America/New_York' => 'America/New_York (EST/EDT)',
+            'America/Los_Angeles' => 'America/Los_Angeles (PST/PDT)',
+        ];
+        $rest = [];
+        foreach (\DateTimeZone::listIdentifiers() as $tz) {
+            if (! isset($pinned[$tz])) {
+                $rest[$tz] = $tz;
+            }
+        }
+        return $pinned + $rest;
     }
 }

@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,6 +24,29 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Apply DB-backed runtime overrides (debug + timezone) BEFORE any
+        // service starts caching values. Saved in the `settings` table by
+        // /admin/settings — they survive a Docker stack rebuild because
+        // .env is wiped on container reset but the MySQL volume isn't.
+        // Wrapped in try/catch because the boot can run before the table
+        // exists (fresh install, migrations not yet ran).
+        try {
+            if (Schema::hasTable('settings')) {
+                $settings = app(\App\Services\SettingsService::class);
+                $debugSetting = $settings->get('app_debug', null);
+                if ($debugSetting !== null) {
+                    config(['app.debug' => $debugSetting === 'true']);
+                }
+                $tzSetting = (string) $settings->get('app_timezone', '');
+                if ($tzSetting !== '' && in_array($tzSetting, \DateTimeZone::listIdentifiers(), true)) {
+                    config(['app.timezone' => $tzSetting]);
+                    date_default_timezone_set($tzSetting);
+                }
+            }
+        } catch (\Throwable) {
+            // Pre-install / DB unreachable — fall back silently to env values.
+        }
+
         // Force HTTPS when behind a reverse proxy or when APP_URL is https
         if (str_starts_with(config('app.url', ''), 'https')) {
             URL::forceScheme('https');

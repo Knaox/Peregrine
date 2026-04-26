@@ -20,17 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(\App\Http\Middleware\EnsureInstalled::class);
         $middleware->statefulApi();
-        // Trusted proxies: comma-separated list of IPs/CIDRs the app should
-        // honor X-Forwarded-* from. Defaults to '*' (trust everything) so the
-        // bundled docker-compose stacks work out of the box behind any reverse
-        // proxy. Operators running on a known proxy network (NPM, Traefik,
-        // Cloudflare tunnel, etc.) should narrow this down — see .env.example.
-        $trustedProxies = env('TRUSTED_PROXIES', '*');
-        $middleware->trustProxies(
-            at: $trustedProxies === '*'
-                ? '*'
-                : array_values(array_filter(array_map('trim', explode(',', (string) $trustedProxies)))),
-        );
+        // Trusted proxies are now read per-request from the `settings`
+        // table by DynamicTrustProxies, so admins can change the list at
+        // /admin/settings without a container restart. The middleware
+        // falls back to env('TRUSTED_PROXIES', '*') when the table isn't
+        // ready yet (fresh install).
+        $middleware->prepend(\App\Http\Middleware\DynamicTrustProxies::class);
         // The 2FA challenge endpoint is unauthenticated and protected by a
         // single-use opaque challenge_id stored in Redis (5 min TTL) — CSRF
         // would be redundant and causes 419s because the password-login path

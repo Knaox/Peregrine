@@ -60,6 +60,9 @@ class Settings extends Page implements HasForms
     // Developer
     public bool $app_debug = false;
 
+    // General — runtime app timezone (IANA identifier, e.g. Europe/Paris)
+    public string $app_timezone = 'UTC';
+
     // Network
     /** @var array<int, string> */
     public array $trusted_proxies = [];
@@ -96,12 +99,14 @@ class Settings extends Page implements HasForms
         $this->pelican_admin_api_key = config('services.pelican.admin_api_key', '');
         $this->pelican_client_api_key = config('panel.client_api_key', '');
 
-        $this->app_debug = (bool) config('app.debug', false);
+        // app_debug / app_timezone / trusted_proxies are now DB-backed
+        // (table `settings`) so they survive a Docker stack redeploy. The
+        // .env values are kept as bootstrap fallback for the very first
+        // boot before an admin has saved the page once.
+        $this->app_debug = ($settings->get('app_debug', config('app.debug') ? 'true' : 'false')) === 'true';
+        $this->app_timezone = (string) $settings->get('app_timezone', config('app.timezone', 'UTC'));
 
-        // TRUSTED_PROXIES is comma-separated in .env; '*' is the trust-all
-        // default coming from the bootstrap/app.php fallback. Decompose it
-        // into an array so the TagsInput chip UI can render each entry.
-        $proxiesRaw = (string) env('TRUSTED_PROXIES', '*');
+        $proxiesRaw = (string) $settings->get('trusted_proxies', env('TRUSTED_PROXIES', '*'));
         $this->trusted_proxies = $proxiesRaw === '*' || $proxiesRaw === ''
             ? []
             : array_values(array_filter(array_map('trim', explode(',', $proxiesRaw))));
@@ -136,6 +141,7 @@ class Settings extends Page implements HasForms
             'mail_from_address' => $this->mail_from_address,
             'mail_from_name' => $this->mail_from_name,
             'app_debug' => $this->app_debug,
+            'app_timezone' => $this->app_timezone,
             'trusted_proxies' => $this->trusted_proxies,
         ]);
     }
@@ -214,19 +220,19 @@ class Settings extends Page implements HasForms
         $envValues['MAIL_FROM_ADDRESS'] = $data['mail_from_address'] ?? '';
         $envValues['MAIL_FROM_NAME'] = $data['mail_from_name'] ?? config('app.name', 'Peregrine');
 
-        // Developer → .env
-        $envValues['APP_DEBUG'] = ($data['app_debug'] ?? false) ? 'true' : 'false';
+        // Developer / General / Network → DB (table `settings`) instead of
+        // .env, so a Docker stack rebuild doesn't wipe them. AppServiceProvider
+        // overrides config('app.debug') and config('app.timezone') from these
+        // settings at boot ; DynamicTrustProxies middleware reads
+        // 'trusted_proxies' on every request.
+        $settings->set('app_debug', ($data['app_debug'] ?? false) ? 'true' : 'false');
+        $settings->set('app_timezone', (string) ($data['app_timezone'] ?? 'UTC'));
 
-        // Network → .env. The TagsInput hands us an array of IP/CIDR strings.
-        // We persist as a comma-separated list (read by bootstrap/app.php), or
-        // '*' (trust all proxies) when the operator explicitly clears the list
-        // and chooses to keep the bundled-Docker default. Empty means "trust
-        // none" (locked-down).
         $proxies = $data['trusted_proxies'] ?? [];
         $proxies = is_array($proxies)
             ? array_values(array_filter(array_map('trim', $proxies), fn ($v): bool => $v !== ''))
             : [];
-        $envValues['TRUSTED_PROXIES'] = empty($proxies) ? '*' : implode(',', $proxies);
+        $settings->set('trusted_proxies', empty($proxies) ? '*' : implode(',', $proxies));
 
         if (! empty($envValues)) {
             $setup->writeEnv($envValues);
