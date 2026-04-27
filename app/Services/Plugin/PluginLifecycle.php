@@ -96,6 +96,17 @@ class PluginLifecycle
     }
 
     /**
+     * Public entry point used by the boot-time relink command
+     * (`plugin:relink-public`). Idempotent — recreates the symlink if it
+     * disappeared (typical in Docker after a redeploy where the symlink
+     * lived in the ephemeral container filesystem rather than a volume).
+     */
+    public function relinkPublicAssets(string $pluginId): void
+    {
+        $this->createPublicSymlink($pluginId);
+    }
+
+    /**
      * Create a public symlink for plugin frontend assets. Non-fatal — if the
      * web server user can't write to public/ (Docker permission mismatch,
      * read-only filesystem, etc.), the plugin still activates and only the

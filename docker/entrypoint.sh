@@ -108,5 +108,13 @@ fi
 # storage:link is idempotent; ignore if target exists.
 php artisan storage:link 2>/dev/null || true
 
+# Recreate public/plugins/{id} symlinks for every active plugin. Necessary
+# because public/plugins/ lives in the container's ephemeral FS — at every
+# image redeploy the symlinks are gone, plugins stay marked active in the
+# DB, and the SPA breaks with `Unexpected token '<'` (HTML returned for the
+# missing JS bundle). The command is idempotent and safe pre-install (it
+# checks if the plugins table exists).
+php artisan plugin:relink-public 2>/dev/null || true
+
 # Hand off to supervisord (nginx + php-fpm + queue worker).
 exec "$@"
