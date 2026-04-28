@@ -31,7 +31,7 @@ export function ServerOverviewPage() {
     const { data: server, isLoading: serverLoading } = useServer(serverId);
     // Subscribe to console output too — when the server is installing we
     // show a live tail of `install output` messages on the hero card.
-    const { resources, serverState: wsState, messages, installCompleted } = useWingsWebSocket(serverId, { stats: true, console: true });
+    const { resources, serverState: wsState, messages, installCompleted, isConnected } = useWingsWebSocket(serverId, { stats: true, console: true });
     const sidebarConfig = useSidebarConfig();
     const pluginManifests = usePluginStore((s) => s.manifests);
     const pluginHomeSectionComponents = usePluginStore((s) => s.serverHomeSectionComponents);
@@ -62,7 +62,12 @@ export function ServerOverviewPage() {
         return <SuspendedOverview server={server} />;
     }
 
-    const state = (wsState !== 'offline' ? wsState : server.status) as ServerState;
+    // Fallback to DB status only before Wings WS reports anything. Once
+    // connected, trust wsState even when it's 'offline' — otherwise we'd
+    // mask a freshly stopped server with the admin status (`active`),
+    // which `ServerPowerControls` doesn't treat as stopped, leaving the
+    // "Force stop" button visible on a server that's already off.
+    const state = (isConnected || wsState !== 'offline' ? wsState : server.status) as ServerState;
     const statusLabel = t(`servers.status.${state}`);
     const address = server.allocation ? `${server.allocation.ip}:${server.allocation.port}` : null;
     const isRunningState = state === 'running' || state === 'active';
