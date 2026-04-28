@@ -90,7 +90,7 @@ export function UserMenu() {
                         </Link>
                         {user.is_admin && (
                             <a href="/admin" className="block px-4 py-2 text-sm text-[var(--color-text-secondary)] transition-all duration-[var(--transition-fast)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
-                                {t('nav.settings')}
+                                {t('nav.settings_admin')}
                             </a>
                         )}
                         <div className="flex items-center justify-between px-4 py-2">

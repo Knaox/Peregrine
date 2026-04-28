@@ -24,6 +24,18 @@
             "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.1/egg-config-editor-0.8.1.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/egg-config-editor",
             "tags": ["files", "configuration", "ark", "minecraft", "palworld", "default"]
+        },
+        {
+            "id": "ark-mods-installer",
+            "name": "ARK:SE Mods Installer",
+            "version": "1.0.0",
+            "description": "Browse, install and uninstall Steam Workshop mods for ARK: Survival Evolved (appid 346110) directly from the server panel. Two-tab UI (Marketplace + Installed) with search, tag chips, sort, optimistic install/uninstall, bulk actions and a 5-layer cache (Redis SWR + cron warm + HTTP + single-flight lock) so Steam is rarely hit. Adds and removes mod IDs in a configurable Pelican egg variable (default MOD_ID, format `id1, id2, id3`). Admin picks allowed eggs, target variable, page route, page label, mods/page (25 or 50), Steam Web API key. Variable must be flagged user_editable on the Pelican egg.",
+            "author": "Peregrine Team",
+            "license": "MIT",
+            "min_peregrine_version": "1.0.0-alpha.1",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.1/ark-mods-installer-1.0.0.zip",
+            "homepage": "https://github.com/Knaox/Peregrine",
+            "tags": ["ark", "mods", "steam", "workshop", "configuration"]
         }
     ]
 }

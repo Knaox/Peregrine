@@ -545,6 +545,7 @@
         "dashboard": "Dashboard",
         "servers": "Servers",
         "settings": "Settings",
+        "settings_admin": "Admin settings",
         "profile": "Profile",
         "logout": "Logout",
         "user_menu": "User menu",

@@ -108,8 +108,14 @@ export function ServerOverviewPage() {
     const filteredEntries = useMemo(() => {
         // Merge core + plugin sidebar entries
         const pluginEntries: SidebarEntry[] = [];
+        const currentEggId = Number(server?.egg?.id ?? 0);
         for (const manifest of pluginManifests) {
             for (const se of manifest.server_sidebar_entries ?? []) {
+                // Optional egg whitelist — generic plugin-system feature.
+                if (Array.isArray(se.requires_egg_ids) && se.requires_egg_ids.length > 0
+                    && !se.requires_egg_ids.includes(currentEggId)) {
+                    continue;
+                }
                 pluginEntries.push({ id: se.id, label_key: se.label_key, icon: se.icon, enabled: true, route_suffix: se.route_suffix, order: se.order ?? 100 });
             }
         }
@@ -121,7 +127,7 @@ export function ServerOverviewPage() {
             if (!req) return true;
             return perms?.includes(req) ?? false;
         });
-    }, [sidebarConfig.entries, pluginManifests, isOwner, perms]);
+    }, [sidebarConfig.entries, pluginManifests, isOwner, perms, server?.egg?.id]);
 
     const handleCopy = () => {
         if (!address) return;
