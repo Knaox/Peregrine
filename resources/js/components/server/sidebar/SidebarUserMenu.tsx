@@ -124,7 +124,7 @@ export function SidebarUserMenu({ align = 'bottom' }: SidebarUserMenuProps) {
                                 role="menuitem"
                                 className="block px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--surface-overlay-hover)] hover:text-[var(--color-text-primary)]"
                             >
-                                {t('nav.settings')}
+                                {t('nav.settings_admin')}
                             </a>
                         )}
 
