@@ -36,16 +36,22 @@
 
                         {{-- Header --}}
                         <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem;">
-                            <div style="min-width: 0;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <h3 style="font-size: 0.875rem; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $plugin['name'] }}</h3>
-                                    <span style="font-size: 0.625rem; font-family: monospace; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45);">
-                                        v{{ $plugin['version'] }}
-                                    </span>
+                            <div style="display: flex; align-items: flex-start; gap: 0.75rem; min-width: 0;">
+                                @include('filament.pages.partials.plugin-logo', ['official' => $plugin['official'] ?? false])
+                                <div style="min-width: 0;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                        <h3 style="font-size: 0.875rem; font-weight: 600; color: white; margin: 0;">{{ $plugin['name'] }}</h3>
+                                        <span style="font-size: 0.625rem; font-family: monospace; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45);">
+                                            v{{ $plugin['version'] }}
+                                        </span>
+                                        @if($plugin['official'] ?? false)
+                                            @include('filament.pages.partials.plugin-certified-badge')
+                                        @endif
+                                    </div>
+                                    @if($plugin['author'])
+                                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.35); margin: 0.125rem 0 0;">{{ $plugin['author'] }}</p>
+                                    @endif
                                 </div>
-                                @if($plugin['author'])
-                                    <p style="font-size: 0.75rem; color: rgba(255,255,255,0.35); margin-top: 0.125rem;">{{ $plugin['author'] }}</p>
-                                @endif
                             </div>
 
                             {{-- Status badge --}}
@@ -164,32 +170,33 @@
                          onmouseenter="this.style.borderColor='rgba(255,255,255,0.15)'"
                          onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'">
 
-                        <div style="min-width: 0;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                <h3 style="font-size: 0.875rem; font-weight: 600; color: white;">{{ $mp['name'] }}</h3>
-                                <span style="font-size: 0.625rem; font-family: monospace; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45);">
-                                    v{{ $mp['version'] }}
-                                </span>
-                                @if($mp['is_installed'] ?? false)
-                                    @if($mp['update_available'] ?? false)
-                                        <span style="font-size: 0.625rem; font-weight: 500; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(245,158,11,0.15); color: rgb(252,211,77);">
-                                            Update available (v{{ $mp['installed_version'] }} → v{{ $mp['version'] }})
-                                        </span>
-                                    @else
-                                        <span style="font-size: 0.625rem; font-weight: 500; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(34,197,94,0.15); color: rgb(134,239,172);">
-                                            Installed
-                                        </span>
-                                    @endif
-                                @endif
-                                @if($mp['official'] ?? false)
-                                    <span style="font-size: 0.625rem; font-weight: 500; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(59,130,246,0.12); color: rgb(96,165,250);">
-                                        Official
+                        <div style="display: flex; align-items: flex-start; gap: 0.75rem; min-width: 0;">
+                            @include('filament.pages.partials.plugin-logo', ['official' => $mp['official'] ?? false])
+                            <div style="min-width: 0; flex: 1 1 auto;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                    <h3 style="font-size: 0.875rem; font-weight: 600; color: white; margin: 0;">{{ $mp['name'] }}</h3>
+                                    <span style="font-size: 0.625rem; font-family: monospace; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45);">
+                                        v{{ $mp['version'] }}
                                     </span>
+                                    @if($mp['official'] ?? false)
+                                        @include('filament.pages.partials.plugin-certified-badge')
+                                    @endif
+                                    @if($mp['is_installed'] ?? false)
+                                        @if($mp['update_available'] ?? false)
+                                            <span style="font-size: 0.625rem; font-weight: 500; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(245,158,11,0.15); color: rgb(252,211,77);">
+                                                Update available (v{{ $mp['installed_version'] }} → v{{ $mp['version'] }})
+                                            </span>
+                                        @else
+                                            <span style="font-size: 0.625rem; font-weight: 500; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: rgba(34,197,94,0.15); color: rgb(134,239,172);">
+                                                Installed
+                                            </span>
+                                        @endif
+                                    @endif
+                                </div>
+                                @if($mp['author'] ?? null)
+                                    <p style="font-size: 0.75rem; color: rgba(255,255,255,0.35); margin: 0.125rem 0 0;">{{ $mp['author'] }}</p>
                                 @endif
                             </div>
-                            @if($mp['author'] ?? null)
-                                <p style="font-size: 0.75rem; color: rgba(255,255,255,0.35); margin-top: 0.125rem;">{{ $mp['author'] }}</p>
-                            @endif
                         </div>
 
                         @if($mp['description'] ?? null)

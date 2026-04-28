@@ -56,7 +56,10 @@ class Plugins extends Page implements HasForms
     {
         $installed = app(PluginManager::class)->allWithStatus();
 
-        // Annotate each installed plugin with marketplace upgrade info.
+        // Annotate each installed plugin with marketplace upgrade info +
+        // an `official` flag derived either from the registry entry or from
+        // the plugin's own author field (covers the "marketplace
+        // unreachable" case).
         try {
             $registry = app(MarketplaceService::class)->listWithStatus();
             $registryById = collect($registry)->keyBy('id');
@@ -66,10 +69,15 @@ class Plugins extends Page implements HasForms
                 $p['latest_version'] = $entry['version'] ?? null;
                 $p['update_available'] = $entry !== null
                     && !empty($entry['update_available']);
+                $p['official'] = !empty($entry['official'])
+                    || ($p['author'] ?? null) === 'Peregrine Team';
             }
             unset($p);
         } catch (\Throwable) {
-            // Offline / registry unavailable — list without upgrade hints.
+            foreach ($installed as &$p) {
+                $p['official'] = ($p['author'] ?? null) === 'Peregrine Team';
+            }
+            unset($p);
         }
 
         $this->plugins = $installed;
