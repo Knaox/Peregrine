@@ -17,6 +17,13 @@ export interface PluginServerSidebarEntry {
     icon: string;
     route_suffix: string;
     order?: number;
+    /**
+     * Optional egg whitelist. When set and non-empty, the entry is only
+     * rendered for servers whose `egg_id` is included. When omitted or empty
+     * the entry is shown on every server (legacy behaviour). Generic plugin-
+     * system feature — no plugin is hardcoded to use it.
+     */
+    requires_egg_ids?: number[];
 }
 
 export interface PluginServerHomeSection {

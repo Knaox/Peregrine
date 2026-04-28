@@ -545,6 +545,7 @@
         "dashboard": "Tableau de bord",
         "servers": "Serveurs",
         "settings": "Paramètres",
+        "settings_admin": "Paramètres admin",
         "profile": "Profil",
         "logout": "Déconnexion",
         "user_menu": "Menu utilisateur",

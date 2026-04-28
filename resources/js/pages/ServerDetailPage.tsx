@@ -96,9 +96,15 @@ export function ServerDetailPage() {
     // Merge core sidebar entries with plugin-provided entries, filtered by permissions
     const mergedEntries = useMemo(() => {
         const pluginEntries: SidebarEntry[] = [];
+        const currentEggId = Number(server?.egg?.id ?? 0);
 
         for (const manifest of pluginManifests) {
             for (const se of manifest.server_sidebar_entries ?? []) {
+                // Optional egg whitelist — generic plugin-system feature.
+                if (Array.isArray(se.requires_egg_ids) && se.requires_egg_ids.length > 0
+                    && !se.requires_egg_ids.includes(currentEggId)) {
+                    continue;
+                }
                 pluginEntries.push({
                     id: se.id,
                     label_key: se.label_key,
@@ -133,7 +139,7 @@ export function ServerDetailPage() {
                 return userPermissions?.includes(requiredPerm) ?? false;
             }),
         ));
-    }, [sidebarConfig.entries, pluginManifests, isOwner, userPermissions, isProvisioning, isSuspended]);
+    }, [sidebarConfig.entries, pluginManifests, isOwner, userPermissions, isProvisioning, isSuspended, server?.egg?.id]);
 
     const mergedConfig = useMemo(
         () => ({ ...sidebarConfig, entries: mergedEntries }),
