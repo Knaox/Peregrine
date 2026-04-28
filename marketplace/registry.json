@@ -39,6 +39,19 @@
             "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.1/ark-mods-installer-1.0.0.zip",
             "homepage": "https://github.com/Knaox/Peregrine",
             "tags": ["ark", "mods", "steam", "workshop", "configuration"]
+        },
+        {
+            "id": "ark-asa-mods-installer",
+            "name": "ARK:ASA Mods Installer",
+            "version": "1.0.0",
+            "description": "Browse, install and uninstall CurseForge mods for ARK: Survival Ascended (gameId 83374) directly from the server panel. Two-tab UI (Marketplace + Installed) with search, dynamic category chips (pulled from CurseForge), 5-axis sort (Popularity / Top downloads / Recently updated / Most recent / Featured), optimistic install/uninstall, bulk actions and a 5-layer cache (Redis SWR + cron warm + HTTP + single-flight lock) so CurseForge is rarely hit. Adds and removes mod IDs in a configurable Pelican egg variable (default MOD_IDS, comma without spaces — matches the official ARK:ASA Pelican egg). Admin picks allowed eggs, target variable, format (comma / comma-space), page route, page label, mods/page (25 or 50), CurseForge API key. Variable must be flagged user_editable on the Pelican egg. CurseForge API key is free at https://console.curseforge.com/ — approval typically takes 24-48 h.",
+            "author": "Peregrine Team",
+            "official": true,
+            "license": "MIT",
+            "min_peregrine_version": "1.0.0-alpha.1",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.1/ark-asa-mods-installer-1.0.0.zip",
+            "homepage": "https://github.com/Knaox/Peregrine",
+            "tags": ["ark-asa", "mods", "curseforge", "configuration"]
         }
     ]
 }
