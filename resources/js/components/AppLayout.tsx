@@ -98,7 +98,7 @@ export function AppLayout() {
                                 </Link>
                                 {user?.is_admin && (
                                     <a href="/admin" className="block rounded-[var(--radius)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-200 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
-                                        {t('nav.settings')}
+                                        {t('nav.settings_admin')}
                                     </a>
                                 )}
                                 <button type="button" onClick={handleLogout} className="block w-full cursor-pointer rounded-[var(--radius)] px-3 py-2 text-left text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-200 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
