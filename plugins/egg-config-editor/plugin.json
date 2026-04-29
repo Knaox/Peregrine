@@ -1,7 +1,7 @@
 {
     "id": "egg-config-editor",
     "name": "Egg Config Editor",
-    "version": "0.8.1",
+    "version": "1.0.0",
     "description": "Auto-detects parameters in your server's game config files and translates known keys via the plugin's own i18n dictionary. Admin only declares which file to expose for which egg; everything else is data-driven.",
     "author": "Peregrine Team",
     "license": "MIT",

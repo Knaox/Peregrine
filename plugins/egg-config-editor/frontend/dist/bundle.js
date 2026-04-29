@@ -589,6 +589,8 @@
         var isSaving = props.isSaving;
         var settings = props.settings;
         var gridTemplate = props.gridTemplate;
+        var onToggleNonBoolean = props.onToggleNonBoolean;
+        var isTogglingBoolean = props.isTogglingBoolean;
 
         var openState = React.useState(!!props.defaultOpen);
         var open = openState[0];
@@ -666,7 +668,9 @@
                     onSave: onSave,
                     isSaving: isSaving,
                     canEdit: true,
-                    settings: settings
+                    settings: settings,
+                    onToggleNonBoolean: onToggleNonBoolean,
+                    isTogglingBoolean: isTogglingBoolean
                 });
             }));
         }
@@ -706,6 +710,21 @@
                 return api(BASE + "/servers/" + serverId + "/configs/" + config.id, {
                     method: "POST",
                     body: JSON.stringify({ values: payload })
+                });
+            },
+            onSuccess: function () {
+                qc.invalidateQueries({ queryKey: ["ece-detail", serverId, config.id] });
+            }
+        });
+
+        // Toggle boolean override on a single parameter key — flips its
+        // membership in EggConfigFile.non_boolean_keys, then refetches the
+        // detail so the card re-renders in the new mode (text vs toggle).
+        var toggleBooleanMutation = ReactQuery.useMutation({
+            mutationFn: function (configKey) {
+                return api(BASE + "/servers/" + serverId + "/configs/" + config.id + "/non-boolean-keys/toggle", {
+                    method: "POST",
+                    body: JSON.stringify({ key: configKey })
                 });
             },
             onSuccess: function () {
@@ -864,7 +883,9 @@
                             },
                             isSaving: saveMutation.isPending,
                             canEdit: true,
-                            settings: settings
+                            settings: settings,
+                            onToggleNonBoolean: function (key) { toggleBooleanMutation.mutate(key); },
+                            isTogglingBoolean: toggleBooleanMutation.isPending
                         });
                     })));
                 } else {
@@ -887,7 +908,9 @@
                             isSaving: saveMutation.isPending,
                             defaultOpen: idx === 0,
                             settings: settings,
-                            gridTemplate: gridTemplate
+                            gridTemplate: gridTemplate,
+                            onToggleNonBoolean: function (key) { toggleBooleanMutation.mutate(key); },
+                            isTogglingBoolean: toggleBooleanMutation.isPending
                         });
                     })));
                 }
