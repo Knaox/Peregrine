@@ -295,8 +295,10 @@ class PelicanWebhookTest extends TestCase
 
     public function test_server_installed_event_with_nested_server_payload_dispatches_sync_job(): void
     {
-        // Real Pelican payload for App\Events\Server\Installed nests the model
-        // under `server` (not `payload`/`data`/`model`).
+        // Defensive fallback : if Pelican ever switches to named-key payloads
+        // for custom multi-arg events, this `server` shape should still work.
+        // The actual current Pelican shape is exercised by the
+        // *_with_numeric_keys test below.
         Bus::fake();
 
         $response = $this->postJson(
@@ -310,6 +312,32 @@ class PelicanWebhookTest extends TestCase
             [
                 'Authorization' => 'Bearer '.self::TOKEN,
                 'X-Webhook-Event' => 'App\\Events\\Server\\Installed',
+            ],
+        );
+
+        $response->assertStatus(200);
+        Bus::assertDispatched(SyncServerFromPelicanWebhookJob::class, fn ($job) => $job->pelicanServerId === 266);
+    }
+
+    public function test_server_installed_event_with_real_pelican_numeric_keys_dispatches_sync_job(): void
+    {
+        // The real Pelican shape for App\Events\Server\Installed.
+        // ProcessWebhook in Pelican does not introspect constructor parameter
+        // names — it ships `$this->data` as-is. For an event with
+        // (Server $server, bool $successful, bool $initialInstall) the body
+        // has the model under numeric key "0" and the booleans under "1"/"2".
+        Bus::fake();
+
+        $response = $this->postJson(
+            '/api/pelican/webhook',
+            [
+                '0' => ['id' => 266, 'name' => 'srv', 'identifier' => 'iden', 'updated_at' => '2026-04-29 02:51:24'],
+                '1' => true,
+                '2' => false,
+                'event' => 'event: Server\\Installed',
+            ],
+            [
+                'Authorization' => 'Bearer '.self::TOKEN,
             ],
         );
 

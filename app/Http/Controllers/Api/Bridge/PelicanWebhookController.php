@@ -130,10 +130,22 @@ class PelicanWebhookController extends Controller
 
         // Custom Pelican events (e.g. App\Events\Server\Installed) ship the
         // model nested under its kind key instead of `data`/`model`.
+        // Defensive fallback in case Pelican introduces named-key payloads
+        // (today it doesn't — see numeric-key branch below).
         foreach (['server', 'user', 'node'] as $key) {
             if (isset($payload[$key]) && is_array($payload[$key])) {
                 return $payload[$key];
             }
+        }
+
+        // Real Pelican shape for multi-arg custom events (Server\Installed,
+        // SubUser*) : ProcessWebhook does NOT introspect constructor parameter
+        // names, so `$this->data` is shipped as-is — numeric-keyed. The first
+        // element is the model, followed by the other ctor args (booleans,
+        // related models, …). Example for Server\Installed :
+        //   { "0": { id, name, … }, "1": true, "2": false, "event": "event: Server\\Installed" }
+        if (isset($payload[0]) && is_array($payload[0]) && isset($payload[0]['id'])) {
+            return $payload[0];
         }
 
         if (isset($payload['id'])) {
