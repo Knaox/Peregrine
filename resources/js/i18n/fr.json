@@ -32,6 +32,8 @@
             "database": "Base de données",
             "admin": "Compte admin",
             "pelican": "Pelican",
+            "backfill": "Synchronisation initiale",
+            "webhook": "Synchro temps réel",
             "auth": "Authentification",
             "bridge": "Bridge",
             "summary": "Résumé"
