@@ -96,7 +96,7 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
 
             {!isRail && (
                 <div className="px-5 mt-6 mb-2">
-                    <span style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' as const, opacity: 0.35, color: 'var(--color-text-secondary)', fontWeight: 600 }}>
+                    <span style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' as const, opacity: 0.6, color: 'var(--color-text-secondary)', fontWeight: 600 }}>
                         {t('servers.sidebar.principal')}
                     </span>
                 </div>
@@ -118,9 +118,9 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
 
             {user && (
                 <div className={clsx('mt-auto pb-3 pt-4', isRail ? 'px-2' : 'px-3')} style={{ borderTop: '1px solid var(--color-border)' }}>
-                    <div className={clsx('flex items-center py-2', isRail ? 'justify-center' : 'gap-3 px-2')}>
+                    <div className={clsx('flex items-center py-2', isRail ? 'justify-center' : 'gap-2.5 px-2')}>
                         <div
-                            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                            className={clsx('flex flex-shrink-0 items-center justify-center rounded-full font-bold text-white', isRail ? 'h-11 w-11 text-sm' : 'h-9 w-9 text-xs')}
                             title={isRail ? user.name : undefined}
                             style={{ background: 'var(--color-primary)', boxShadow: '0 0 16px var(--color-primary-glow)' }}
                         >
@@ -129,8 +129,20 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
                         {!isRail && (
                             <>
                                 <div className="min-w-0 flex-1">
-                                    <p className="truncate text-xs font-medium" style={{ color: 'var(--color-text-primary)' }}>{user.name}</p>
-                                    <p className="truncate" style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>{user.email}</p>
+                                    <p
+                                        className="line-clamp-2 break-words text-xs font-medium leading-snug"
+                                        title={user.name}
+                                        style={{ color: 'var(--color-text-primary)' }}
+                                    >
+                                        {user.name}
+                                    </p>
+                                    <p
+                                        className="truncate"
+                                        title={user.email}
+                                        style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}
+                                    >
+                                        {user.email}
+                                    </p>
                                 </div>
                                 <button
                                     type="button"
@@ -199,7 +211,7 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
 
             {/* Desktop permanent sidebar */}
             <aside
-                className={clsx('relative flex-shrink-0 h-full overflow-y-auto hidden md:flex md:flex-col transition-[width] duration-200', isRail ? 'w-16' : 'w-56')}
+                className={clsx('relative flex-shrink-0 h-full hidden md:flex md:flex-col transition-[width] duration-200', isRail ? 'w-16' : 'w-56')}
                 style={{ background: 'var(--color-glass)', backdropFilter: 'blur(12px)', borderRight: '1px solid var(--color-glass-border)' }}
             >
                 {navContent}

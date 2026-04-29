@@ -104,8 +104,8 @@ export function SidebarUserMenu({ align = 'bottom' }: SidebarUserMenuProps) {
                         }}
                     >
                         <div className="px-3 py-2">
-                            <p className="truncate text-xs font-medium" style={{ color: 'var(--color-text-primary)' }}>{user.name}</p>
-                            <p className="truncate" style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>{user.email}</p>
+                            <p className="truncate text-xs font-medium" title={user.name} style={{ color: 'var(--color-text-primary)' }}>{user.name}</p>
+                            <p className="truncate" title={user.email} style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>{user.email}</p>
                         </div>
                         <hr className="border-[var(--color-border)]" />
 
