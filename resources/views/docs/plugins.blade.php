@@ -1,7 +1,7 @@
 @php
     $title = match ($current_locale ?? 'en') {
-        'fr' => 'Peregrine — Récepteur webhook Pelican — Guide opérateur',
-        default => 'Peregrine — Pelican webhook receiver — Setup Guide',
+        'fr' => 'Peregrine — Plugins — Guide développeur & opérateur',
+        default => 'Peregrine — Plugins — Developer & operator guide',
     };
 @endphp
 @include('docs._layout', compact('title', 'content', 'available_locales', 'current_locale'))

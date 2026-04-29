@@ -27,66 +27,75 @@ Route::get('/admin/locale/{locale}', [LocaleController::class, 'switch'])
     ->where('locale', 'en|fr')
     ->name('admin.locale.switch');
 
-// Bridge developer documentation — public HTML render of docs/bridge-api.md.
-// Targeted at shop developers writing the client side of the Bridge contract.
-Route::get('/docs/bridge-api', function () {
-    $markdown = file_get_contents(base_path('docs/bridge-api.md')) ?: '';
+// Public-facing operator/developer markdown docs. Each route serves the
+// FR translation when the request locale resolves to `fr` AND a sibling
+// `*.fr.md` file exists, otherwise falls back to the EN base file. Locale
+// itself is set by `App\Http\Middleware\SetUserLocale` from the
+// authenticated user, the admin-wide `default_locale` setting, then
+// `config('app.locale')`.
+$renderDoc = function (string $slug, string $view): \Illuminate\Http\Response|\Illuminate\View\View {
+    // Locale resolution order : explicit `?lang=` query param wins, then
+    // SetUserLocale-driven app()->getLocale(). Public docs need the URL
+    // override so anonymous visitors can switch language without an admin
+    // session.
+    $requested = (string) request()->query('lang', '');
+    $locale = in_array($requested, ['en', 'fr'], true)
+        ? $requested
+        : app()->getLocale();
+
+    $localised = base_path("docs/{$slug}.{$locale}.md");
+    $path = is_file($localised) ? $localised : base_path("docs/{$slug}.md");
+
+    if (! is_file($path)) {
+        abort(404);
+    }
+
+    $markdown = (string) file_get_contents($path);
     $converter = new GithubFlavoredMarkdownConverter([
         'html_input' => 'allow',
         'allow_unsafe_links' => false,
     ]);
-    return view('docs.bridge-api', [
+
+    return view($view, [
         'content' => (string) $converter->convert($markdown),
+        'available_locales' => collect(['en', 'fr'])
+            ->filter(fn (string $l) => $l === 'en' || is_file(base_path("docs/{$slug}.{$l}.md")))
+            ->values()
+            ->all(),
+        'current_locale' => $locale,
     ]);
-})->name('docs.bridge-api');
+};
+
+// Bridge developer documentation — Bridge contract for shop developers.
+Route::get('/docs/bridge-api', fn () => $renderDoc('bridge-api', 'docs.bridge-api'))
+    ->name('docs.bridge-api');
 
 // Bridge — webhook orchestrator operator guide (Paymenter, WHMCS, …).
-// Public HTML render of docs/bridge-webhook-orchestrator.md. Targeted at
-// admins wiring up Pelican outgoing webhooks → Peregrine when a third-party
-// billing system (Paymenter, WHMCS, etc.) drives Pelican via its own module.
-Route::get('/docs/bridge-webhook-orchestrator', function () {
-    $markdown = file_get_contents(base_path('docs/bridge-webhook-orchestrator.md')) ?: '';
-    $converter = new GithubFlavoredMarkdownConverter([
-        'html_input' => 'allow',
-        'allow_unsafe_links' => false,
-    ]);
-    return view('docs.bridge-webhook-orchestrator', [
-        'content' => (string) $converter->convert($markdown),
-    ]);
-})->name('docs.bridge-webhook-orchestrator');
+Route::get('/docs/bridge-webhook-orchestrator', fn () => $renderDoc('bridge-webhook-orchestrator', 'docs.bridge-webhook-orchestrator'))
+    ->name('docs.bridge-webhook-orchestrator');
 
 // Backward-compat redirect — old URL kept stable for any external link.
 Route::redirect('/docs/bridge-paymenter', '/docs/bridge-webhook-orchestrator', 301);
 
-// WHMCS OAuth setup guide — picks the FR or EN markdown based on the
-// authenticated admin's locale (or app fallback). Both files live in docs/.
-Route::get('/docs/whmcs-oauth-setup', function () {
-    $locale = app()->getLocale();
-    $candidate = base_path("docs/whmcs-oauth-setup.{$locale}.md");
-    $path = is_file($candidate) ? $candidate : base_path('docs/whmcs-oauth-setup.md');
+// WHMCS OAuth setup guide.
+Route::get('/docs/whmcs-oauth-setup', fn () => $renderDoc('whmcs-oauth-setup', 'docs.whmcs-oauth-setup'))
+    ->name('docs.whmcs-oauth-setup');
 
-    $markdown = file_get_contents($path) ?: '';
-    $converter = new GithubFlavoredMarkdownConverter([
-        'html_input' => 'allow',
-        'allow_unsafe_links' => false,
-    ]);
-    return view('docs.whmcs-oauth-setup', [
-        'content' => (string) $converter->convert($markdown),
-    ]);
-})->name('docs.whmcs-oauth-setup');
+// Pelican webhook receiver setup guide. Works in any Bridge mode.
+Route::get('/docs/pelican-webhook', fn () => $renderDoc('pelican-webhook', 'docs.pelican-webhook'))
+    ->name('docs.pelican-webhook');
 
-// Pelican webhook receiver setup guide — public HTML render of docs/pelican-webhook.md.
-// Decoupled from Bridge mode : works in any mode (shop_stripe, paymenter, disabled).
-Route::get('/docs/pelican-webhook', function () {
-    $markdown = file_get_contents(base_path('docs/pelican-webhook.md')) ?: '';
-    $converter = new GithubFlavoredMarkdownConverter([
-        'html_input' => 'allow',
-        'allow_unsafe_links' => false,
-    ]);
-    return view('docs.pelican-webhook', [
-        'content' => (string) $converter->convert($markdown),
-    ]);
-})->name('docs.pelican-webhook');
+// Authentication architecture (multi-provider, 2FA, OAuth canonical IdPs).
+Route::get('/docs/authentication', fn () => $renderDoc('authentication', 'docs.authentication'))
+    ->name('docs.authentication');
+
+// Plugin developer & operator guide.
+Route::get('/docs/plugins', fn () => $renderDoc('plugins', 'docs.plugins'))
+    ->name('docs.plugins');
+
+// Queue worker setup (bare metal + supervisor + systemd).
+Route::get('/docs/operations/queue-worker', fn () => $renderDoc('operations/queue-worker', 'docs.operations.queue-worker'))
+    ->name('docs.operations.queue-worker');
 
 /*
  * OAuth social auth — MUST live in the web group so Socialite's session-based
