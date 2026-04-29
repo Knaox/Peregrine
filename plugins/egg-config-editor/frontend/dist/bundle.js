@@ -317,6 +317,8 @@
         var isSaving = props.isSaving;
         var canEdit = props.canEdit;
         var settings = props.settings;
+        var onToggleNonBoolean = props.onToggleNonBoolean;
+        var isTogglingBoolean = props.isTogglingBoolean;
 
         var initial = p.value;
         var state = React.useState(initial);
@@ -326,6 +328,25 @@
         React.useEffect(function () { setValue(initial); }, [initial]);
 
         var hasChanged = String(value == null ? "" : value) !== String(initial == null ? "" : initial);
+
+        // Boolean override flag from the backend. When true, the param was
+        // detected as boolean BUT the user (or admin) flagged it as "not
+        // actually a boolean" — backend forces inferred_type='text', and the
+        // frontend shows a "treat as boolean again" affordance. When false
+        // and the value/key looks bool-able, the affordance is "this isn't
+        // a boolean" instead. Only meaningful when canEdit (no point
+        // showing a toggle a subuser can't fire).
+        var booleanOverridden = !!p.boolean_overridden;
+        // The inferred type the backend would have returned without override.
+        // If it equals 'boolean' (or the user explicitly forced bool via the
+        // dict), or the raw value is literally "true"/"false", we surface
+        // the affordance — even on overridden params, so the user can put
+        // them back into bool mode.
+        var rawStr = (p.value == null ? "" : String(p.value)).toLowerCase();
+        var looksBool = rawStr === "true" || rawStr === "false";
+        var booleanAffordanceVisible = canEdit
+            && typeof onToggleNonBoolean === "function"
+            && (dict.type === "boolean" || booleanOverridden || looksBool);
 
         var inputEl;
         if (dict.type === "boolean") {
@@ -437,7 +458,63 @@
             } }, dict.description));
         }
 
-        children.push(h("div", { key: "input", style: { marginTop: "0.625rem" } }, inputEl));
+        // Discreet ≠ button rendered to the right of the input (or to the
+        // right of the toggle switch). One-click flips this key in/out of
+        // the EggConfigFile.non_boolean_keys list. Owners and users with
+        // eggconfig.write get the click; everyone else just sees the input.
+        var overrideBtn = null;
+        if (booleanAffordanceVisible) {
+            var tooltip = booleanOverridden
+                ? t("disable_boolean.tooltip_enable")
+                : t("disable_boolean.tooltip_disable");
+            var ariaLabel = booleanOverridden
+                ? t("disable_boolean.aria_enable")
+                : t("disable_boolean.aria_disable");
+            overrideBtn = h("button", {
+                type: "button",
+                title: tooltip,
+                "aria-label": ariaLabel,
+                disabled: !!isTogglingBoolean,
+                onClick: function () {
+                    if (typeof onToggleNonBoolean === "function") {
+                        onToggleNonBoolean(p.config_key);
+                    }
+                },
+                style: {
+                    flexShrink: 0,
+                    width: "22px",
+                    height: "22px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
+                    borderRadius: "var(--radius-sm, 0.25rem)",
+                    border: "1px solid var(--color-border)",
+                    background: booleanOverridden ? "rgba(var(--color-primary-rgb), 0.18)" : "transparent",
+                    color: booleanOverridden ? "var(--color-primary)" : "var(--color-text-muted)",
+                    fontSize: "0.75rem",
+                    lineHeight: 1,
+                    cursor: isTogglingBoolean ? "wait" : "pointer",
+                    opacity: isTogglingBoolean ? 0.5 : 0.7,
+                    transition: "opacity var(--transition-fast), background var(--transition-fast)"
+                },
+                onMouseEnter: function (e) { if (!isTogglingBoolean) e.currentTarget.style.opacity = "1"; },
+                onMouseLeave: function (e) { e.currentTarget.style.opacity = isTogglingBoolean ? "0.5" : "0.7"; }
+            }, booleanOverridden ? "B" : "≠");
+        }
+
+        children.push(h("div", {
+            key: "input",
+            style: {
+                marginTop: "0.625rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem"
+            }
+        }, [
+            h("div", { key: "field", style: { flex: 1, minWidth: 0 } }, inputEl),
+            overrideBtn
+        ]));
 
         if (hasChanged && canEdit) {
             children.push(h("button", {
@@ -446,7 +523,12 @@
                 disabled: isSaving,
                 onClick: function () {
                     var coerced = value;
-                    if (dict.type === "boolean") coerced = toBool(value);
+                    // Coerce to boolean only when the dict still says boolean
+                    // (i.e. the backend didn't force-text via the override).
+                    // If the param is currently overridden as non-boolean,
+                    // keep the raw string so the user's literal input
+                    // ("true", "yes", "On", whatever) lands in the file.
+                    if (dict.type === "boolean" && !booleanOverridden) coerced = toBool(value);
                     else if (dict.type === "number" && value !== "" && value !== null) coerced = Number(value);
                     onSave(p.config_key, coerced);
                 },

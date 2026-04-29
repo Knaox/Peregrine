@@ -512,7 +512,7 @@ return [
             'events_recommended' => 'Recommended (cuts manual sync)',
             'events_recommended_note' => 'Mirrors user email/name changes, node infrastructure, and egg/variable definitions in real time. With these ticked, the manual `sync:users / sync:nodes / sync:eggs` commands become safety nets you rarely need.',
             'events_blocklist' => 'DO NOT tick',
-            'events_blocklist_note' => 'Allocation / Backup / Database / DatabaseHost / ServerTransfer / Subuser are no longer mirrored — the SPA always reads Pelican live for /network /databases /backups /sub-users, so these events add no value (the invitations plugin reads sub-users live too). `Schedule` and `Task` fire on every cron tick (flood). `ActivityLog` fires on every user action (flood). `ApiKey` updates `last_used_at` on every API call (noise). `Webhook` / `WebhookConfiguration` create infinite loops.',
+            'events_blocklist_note' => 'Allocation / Backup / Database / DatabaseHost / ServerTransfer / Subuser : Peregrine no longer has tables for these — the SPA reads them live from Pelican when the user opens /network, /databases, /backups, /sub-users. Ticking them feeds nothing on our side and the receiver records them as ignored. `Schedule` and `Task` fire on every cron tick (flood). `ActivityLog` fires on every user action (flood). `ApiKey` updates `last_used_at` on every API call (noise). `Webhook` / `WebhookConfiguration` create infinite loops.',
             'docs' => 'Step-by-step walkthrough',
             'docs_note' => 'Full setup guide, troubleshooting, known limits, and how the install-status sync interacts with Bridge modes.',
             'audit' => 'Live audit of received webhooks',

@@ -112,20 +112,21 @@ Replaces the manual `sync:users / sync:nodes / sync:eggs` admin commands.
 
 ### À NE PAS cocher
 
-The Allocation / Backup / Database / DatabaseHost / ServerTransfer /
-Subuser events were tied to a now-cancelled "local DB read" feature ;
-the SPA always reads Pelican live for `/network /databases /backups
-/sub-users`, so these events add no value (they'd just feed mirror
-tables nothing reads). The invitations plugin reads sub-users live too.
+Allocation / Backup / Database / DatabaseHost / ServerTransfer / Subuser
+events have **no handler in Peregrine** anymore — the SPA reads these
+resources live from Pelican when the user opens `/network /databases
+/backups /sub-users`. Ticking them in Pelican's UI just feeds nothing
+on our side : the receiver records the call as `ignored` for audit
+and that's it.
 
 | Event                                     | Why                                                                              |
 |-------------------------------------------|----------------------------------------------------------------------------------|
-| `created/updated/deleted: Backup`         | Was for Phase 2 local DB reads — feature cancelled, page reads Pelican live.     |
-| `created/updated/deleted: Allocation`     | Same reason.                                                                     |
-| `created/updated/deleted: Database`       | Same reason.                                                                     |
-| `created/updated/deleted: DatabaseHost`   | Same reason.                                                                     |
-| `created/updated/deleted: ServerTransfer` | Same reason.                                                                     |
-| `eloquent.created/deleted: Subuser`       | Same reason — the invitations plugin reads sub-users from the live API.         |
+| `created/updated/deleted: Backup`         | No local table — `/backups` page reads Pelican live.                             |
+| `created/updated/deleted: Allocation`     | Same — `/network` reads live.                                                    |
+| `created/updated/deleted: Database`       | Same — `/databases` reads live.                                                  |
+| `created/updated/deleted: DatabaseHost`   | No handler.                                                                      |
+| `created/updated/deleted: ServerTransfer` | No handler.                                                                      |
+| `eloquent.created/deleted: Subuser`       | No handler — invitations plugin reads sub-users live from the API.              |
 | `event: Server\SubUserAdded/Removed`      | Same.                                                                            |
 | `event: ActivityLogged`                   | Fires on every user action (power.start, command, file.download, etc.). Volume too high — would flood the rate limiter. |
 | `created/updated/deleted: ActivityLog`    | Same as above.                                                                   |
@@ -213,51 +214,36 @@ so a short retention window suffices).
 - **`/admin/nodes` missing a node you added** : tick `created: Node` in
   Pelican. Until then, run `php artisan sync:nodes`.
 
-## Phase 2 — annulée
+## Tables locales mirorées
 
-Une feature "lecture DB locale" était prévue : les pages **Backups**,
-**Databases** et **Network** auraient lu depuis des tables miroir
-locales pour gagner en latence. Elle a été **annulée** — les pages
-restent toujours en API live sur Pelican (200 ms en cache miss, 0 ms
-en cache hit). Raison : la parité stricte entre la mirror et la
-réponse API live demandait trop de maintenance pour le gain perçu.
+Seules **quatre** tables locales mirorent Pelican : `users`, `nodes`,
+`eggs`, `servers`. Elles servent au panel admin Filament (listes,
+filtres, sync flows) et à la résolution rapide owner/egg sur la fiche
+serveur. Les autres ressources Pelican (allocations, backups, databases,
+sub-users) ne sont **pas** stockées localement — la SPA les lit en
+direct sur Pelican à chaque ouverture de page.
 
-Les tables miroir (`pelican_backups`, `pelican_databases`,
-`pelican_allocations`, `pelican_database_hosts`,
-`pelican_server_transfers`, `invitations_pelican_subusers`) sont
-**toujours alimentées** par les jobs sync webhook quand les events
-correspondants sont cochés — utile pour audit et reconciliation, pas
-pour l'affichage. Si tu ne te sers pas de la commande
-`pelican:diff-mirror` ni de la réconciliation horaire, **dé-tickeer**
-les events `Allocation` / `Backup` / `Database` / `DatabaseHost` /
-`ServerTransfer` côté Pelican retire ce trafic inutile.
-
-### Réconciliation horaire
-
-Un cron hourly maintient les tables miroir cohérentes selon le toggle
-webhook :
-
-| Webhook actif | Réconciliation |
-|---|---|
-| `pelican_webhook_enabled = true`  | Hourly safety-net : Backup + Allocation uniquement (rattrape `PruneOrphanedBackupsCommand`, transfers, etc.) |
-| `pelican_webhook_enabled = false` | Hourly fullSync : toutes les ressources miroirées (Servers, Users, Nodes, Eggs, Backups, Databases, Allocations, Transfers) — mode "polling complet" pour qui ne veut pas configurer le webhook |
-
-Logs visibles dans `/admin/bridge-sync-logs` (action `pelican_mirror_reconcile`).
-
-### Auditer un drift
+### Bootstrap manuel
 
 ```bash
-# Résumé global (tous les types)
-php artisan pelican:diff-mirror all
+# Idempotent — peuple users/nodes/eggs/servers depuis Pelican.
+php artisan pelican:backfill-mirrors
 
-# Cible un type particulier
-php artisan pelican:diff-mirror backups
-php artisan pelican:diff-mirror users
+# Resume après interruption (préserve la progression par ressource).
+php artisan pelican:backfill-mirrors --resume
+
+# Reset + redémarrer.
+php artisan pelican:backfill-mirrors --fresh
+
+# Une ressource à la fois.
+php artisan pelican:backfill-mirrors --only=users
 ```
 
-La sortie liste : nombre côté remote (Pelican), nombre local, manquants,
-orphelins. Lecture seule — n'écrit jamais, ne corrige rien. Pour
-forcer une resync : `php artisan pelican:backfill-mirrors --fresh`.
+Pour les installs non configurées avec le webhook receiver, c'est aussi
+le mécanisme de mise à jour : exécuter cette commande après un changement
+côté Pelican (nouveau node, nouvel egg, etc.). Avec le webhook activé,
+les events `created/updated/deleted: User|Node|Egg|Server` font le travail
+en temps réel.
 
 ## Filament admin map
 

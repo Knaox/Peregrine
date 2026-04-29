@@ -41,29 +41,6 @@ enum PelicanEventKind: string
     case EggVariableUpdated = 'egg_variable_updated';
     case EggVariableDeleted = 'egg_variable_deleted';
 
-    case BackupCreated = 'backup_created';
-    case BackupUpdated = 'backup_updated';
-    case BackupDeleted = 'backup_deleted';
-
-    case AllocationCreated = 'allocation_created';
-    case AllocationUpdated = 'allocation_updated';
-    case AllocationDeleted = 'allocation_deleted';
-
-    case DatabaseCreated = 'database_created';
-    case DatabaseUpdated = 'database_updated';
-    case DatabaseDeleted = 'database_deleted';
-
-    case DatabaseHostCreated = 'database_host_created';
-    case DatabaseHostUpdated = 'database_host_updated';
-    case DatabaseHostDeleted = 'database_host_deleted';
-
-    case ServerTransferCreated = 'server_transfer_created';
-    case ServerTransferUpdated = 'server_transfer_updated';
-    case ServerTransferDeleted = 'server_transfer_deleted';
-
-    case SubuserAdded = 'subuser_added';
-    case SubuserRemoved = 'subuser_removed';
-
     public function isServer(): bool
     {
         return in_array($this, [
@@ -82,12 +59,6 @@ enum PelicanEventKind: string
             self::NodeDeleted,
             self::EggDeleted,
             self::EggVariableDeleted,
-            self::BackupDeleted,
-            self::AllocationDeleted,
-            self::DatabaseDeleted,
-            self::DatabaseHostDeleted,
-            self::ServerTransferDeleted,
-            self::SubuserRemoved,
         ], true);
     }
 }

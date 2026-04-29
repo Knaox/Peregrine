@@ -117,7 +117,7 @@ class PluginBootstrap
                 $bundleUrl = "/plugins/{$plugin->plugin_id}/bundle.js?v={$version}";
             }
 
-            $manifests[] = [
+            $assembled = [
                 'id' => $manifest['id'],
                 'name' => $manifest['name'] ?? $manifest['id'],
                 'version' => $manifest['version'] ?? '0.0.0',
@@ -129,6 +129,14 @@ class PluginBootstrap
                 'settings' => $plugin->settings ?? [],
                 'bundle_url' => $bundleUrl,
             ];
+
+            // Plugins can register an enricher closure during boot to inject
+            // DB-derived state into their own manifest (e.g. egg-config-editor
+            // computes `requires_egg_ids` from rows in egg_config_files so the
+            // section is hidden on servers whose egg has no configs declared).
+            $assembled = ManifestEnricherRegistry::getInstance()->apply($plugin->plugin_id, $assembled);
+
+            $manifests[] = $assembled;
         }
 
         return $manifests;

@@ -3,6 +3,7 @@
 namespace Plugins\EggConfigEditor\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Plugin;
 use App\Models\Server;
 use App\Services\Pelican\PelicanFileService;
 use Illuminate\Http\Client\RequestException;
@@ -28,8 +29,12 @@ use Plugins\EggConfigEditor\Services\ConfigParserService;
  *        → writes back the values the player submitted, preserving comments
  *          and any non-listed lines via the parser's round-trip behaviour.
  *
- * Permission model : Pelican file manager parity. `file.read` to view,
- * `file.update` to save. Owners always pass.
+ * Permission model : when the `invitations` plugin is active, dedicated
+ * `eggconfig.read` / `eggconfig.write` claims gate access — admins can
+ * grant subusers config-editor rights without the broader `file.*` keys.
+ * When invitations is not active (or not installed), falls back to Pelican
+ * file-manager parity (`file.read` to view, `file.update` to save). Owners
+ * and admins always pass through `User::hasServerPermission()`.
  */
 class ConfigEditorController extends Controller
 {
@@ -102,16 +107,30 @@ class ConfigEditorController extends Controller
         // the file on save (preserve-unknown-lines), so the player can't
         // accidentally wipe `[ScalabilityGroups]` etc. by saving.
         $sectionsWhitelist = $this->normalizeSectionsWhitelist($config->sections, $config->file_type);
+        $nonBooleanKeys = $this->normalizeNonBooleanKeys($config->non_boolean_keys);
         $parameters = [];
         foreach ($parsed as $key => $value) {
             $section = $this->extractSection((string) $key, $config->file_type);
             if ($sectionsWhitelist !== null && ($section === null || ! in_array($section, $sectionsWhitelist, true))) {
                 continue;
             }
+            $configKey = (string) $key;
+            $inferred = $this->inferType($value);
+            $overridden = $inferred === 'boolean' && in_array($configKey, $nonBooleanKeys, true);
+            // When the admin/player flagged this key as "not actually a
+            // boolean", force the type back to text and short-circuit the
+            // frontend's bool coercion. The raw value is sent through
+            // unchanged so the user sees what's literally in the file.
+            $effectiveType = $overridden ? 'text' : $inferred;
             $parameters[] = [
-                'config_key' => (string) $key,
+                'config_key' => $configKey,
                 'value' => $value,
-                'inferred_type' => $this->inferType($value),
+                'inferred_type' => $effectiveType,
+                // Echoed back so the frontend can render a "treat as boolean
+                // again" affordance on params currently overridden, and a
+                // "this isn't a boolean" affordance on params still detected
+                // as boolean.
+                'boolean_overridden' => $overridden,
                 'section' => $section,
             ];
         }
@@ -128,6 +147,72 @@ class ConfigEditorController extends Controller
                 'parameters' => $parameters,
             ],
         ]);
+    }
+
+    /**
+     * Toggle a key in the `non_boolean_keys` list of a config file row.
+     * If present, remove it (treat as boolean again). If absent, add it
+     * (force raw-text rendering). Returns the up-to-date list so the
+     * frontend can update its local cache without a full refetch.
+     *
+     * Auth : same gate as save — the user must be able to modify the
+     * config (`eggconfig.write` or owner/admin). Reading the override is
+     * implied by reading the config itself, no separate scope.
+     */
+    public function toggleNonBooleanKey(int $serverId, int $configId, Request $request): JsonResponse
+    {
+        $server = $this->resolveServer($serverId, $request);
+        $this->authorizeWrite($server, $request);
+        $config = $this->resolveConfig($configId, $server->egg_id);
+
+        $validated = $request->validate([
+            'key' => ['required', 'string', 'max:512'],
+        ]);
+        $key = (string) $validated['key'];
+
+        $current = $this->normalizeNonBooleanKeys($config->non_boolean_keys);
+        $idx = array_search($key, $current, true);
+        if ($idx === false) {
+            $current[] = $key;
+        } else {
+            array_splice($current, $idx, 1);
+        }
+
+        // Persist as null when empty so the column reads cleanly in DB
+        // browsers — matches the way `sections` is serialized.
+        $config->non_boolean_keys = $current === [] ? null : array_values($current);
+        $config->save();
+
+        return response()->json([
+            'data' => [
+                'config_id' => $config->id,
+                'non_boolean_keys' => array_values($current),
+                'overridden' => in_array($key, $current, true),
+            ],
+        ]);
+    }
+
+    /**
+     * Sanitize the `non_boolean_keys` JSON column. Returns a list of
+     * trimmed non-empty strings — defends against null / non-array /
+     * non-string entries from older rows or hand-edited DB content.
+     *
+     * @param  mixed  $raw
+     * @return array<int, string>
+     */
+    private function normalizeNonBooleanKeys(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $entry) {
+            if (! is_string($entry)) continue;
+            $entry = trim($entry);
+            if ($entry === '') continue;
+            $out[] = $entry;
+        }
+        return $out;
     }
 
     public function saveConfig(int $serverId, int $configId, Request $request): JsonResponse
@@ -260,6 +345,22 @@ class ConfigEditorController extends Controller
         if ($this->isOwner($server, $user)) {
             return;
         }
+
+        // With invitations active, dedicated permissions own the gate. We
+        // accept either eggconfig.read OR eggconfig.write (writers can
+        // obviously also read). Without invitations, fall back to Pelican
+        // file-manager parity so admins who never installed the subuser
+        // plugin still have a working permission story for legacy setups.
+        if ($this->isInvitationsActive()) {
+            if ($user->hasServerPermission($server, 'eggconfig.write')) {
+                return;
+            }
+            if ($user->hasServerPermission($server, 'eggconfig.read')) {
+                return;
+            }
+            abort(403);
+        }
+
         if (! $user->hasServerPermission($server, 'file.read')) {
             abort(403);
         }
@@ -274,6 +375,14 @@ class ConfigEditorController extends Controller
         if ($this->isOwner($server, $user)) {
             return;
         }
+
+        if ($this->isInvitationsActive()) {
+            if (! $user->hasServerPermission($server, 'eggconfig.write')) {
+                abort(403);
+            }
+            return;
+        }
+
         if (! $user->hasServerPermission($server, 'file.update')) {
             abort(403);
         }
@@ -282,6 +391,33 @@ class ConfigEditorController extends Controller
     private function isOwner(Server $server, mixed $user): bool
     {
         return $server->user_id === $user->id;
+    }
+
+    /**
+     * Cache the "is the invitations plugin active?" check for the duration
+     * of the current request. Hot path : called twice per request when both
+     * authorize methods run, plus once per request from the boolean toggle
+     * endpoint. Class-level memoization is fine because each request gets a
+     * fresh controller instance.
+     */
+    private ?bool $invitationsActive = null;
+
+    private function isInvitationsActive(): bool
+    {
+        if ($this->invitationsActive !== null) {
+            return $this->invitationsActive;
+        }
+
+        try {
+            $this->invitationsActive = Plugin::query()
+                ->where('plugin_id', 'invitations')
+                ->where('is_active', true)
+                ->exists();
+        } catch (\Throwable) {
+            $this->invitationsActive = false;
+        }
+
+        return $this->invitationsActive;
     }
 
     /**

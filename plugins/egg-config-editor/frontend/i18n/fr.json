@@ -17,6 +17,12 @@
     "bool_off": "Désactivé",
     "file_missing": "Le fichier {{path}} n'existe pas encore sur le serveur. Démarre le serveur une fois pour qu'il soit généré, ou sauvegarde maintenant pour le créer.",
     "error_unknown": "Une erreur est survenue. Réessaie dans quelques secondes.",
+    "disable_boolean": {
+        "tooltip_disable": "Ce n'est pas un booléen — afficher la valeur brute",
+        "tooltip_enable": "Réactiver le mode booléen",
+        "aria_disable": "Désactiver la détection booléenne pour ce paramètre",
+        "aria_enable": "Réactiver la détection booléenne pour ce paramètre"
+    },
     "sections": {
         "ServerSettings": { "label": "Paramètres du serveur" },
         "MessageOfTheDay": { "label": "Message du jour" },

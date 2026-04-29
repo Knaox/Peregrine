@@ -24,6 +24,7 @@ class EggConfigFile extends Model
         'egg_ids',
         'file_paths',
         'sections',
+        'non_boolean_keys',
         'file_type',
         'enabled',
     ];
@@ -35,6 +36,7 @@ class EggConfigFile extends Model
             'egg_ids' => 'array',
             'file_paths' => 'array',
             'sections' => 'array',
+            'non_boolean_keys' => 'array',
             'enabled' => 'boolean',
         ];
     }

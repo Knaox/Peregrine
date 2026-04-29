@@ -47,20 +47,6 @@ class PelicanEventClassifier
             return PelicanEventKind::ServerInstalled;
         }
 
-        if (
-            str_ends_with($normalized, 'Server\\SubUserAdded')
-            || $normalized === 'event:Server\\SubUserAdded'
-        ) {
-            return PelicanEventKind::SubuserAdded;
-        }
-
-        if (
-            str_ends_with($normalized, 'Server\\SubUserRemoved')
-            || $normalized === 'event:Server\\SubUserRemoved'
-        ) {
-            return PelicanEventKind::SubuserRemoved;
-        }
-
         return null;
     }
 
@@ -107,44 +93,10 @@ class PelicanEventClassifier
                 'deleted' => PelicanEventKind::EggVariableDeleted,
                 default => null,
             },
-            'Backup' => match ($action) {
-                'created' => PelicanEventKind::BackupCreated,
-                'updated' => PelicanEventKind::BackupUpdated,
-                'deleted' => PelicanEventKind::BackupDeleted,
-                default => null,
-            },
-            'Allocation' => match ($action) {
-                'created' => PelicanEventKind::AllocationCreated,
-                'updated' => PelicanEventKind::AllocationUpdated,
-                'deleted' => PelicanEventKind::AllocationDeleted,
-                default => null,
-            },
-            'Database' => match ($action) {
-                'created' => PelicanEventKind::DatabaseCreated,
-                'updated' => PelicanEventKind::DatabaseUpdated,
-                'deleted' => PelicanEventKind::DatabaseDeleted,
-                default => null,
-            },
-            'DatabaseHost' => match ($action) {
-                'created' => PelicanEventKind::DatabaseHostCreated,
-                'updated' => PelicanEventKind::DatabaseHostUpdated,
-                'deleted' => PelicanEventKind::DatabaseHostDeleted,
-                default => null,
-            },
-            'ServerTransfer' => match ($action) {
-                'created' => PelicanEventKind::ServerTransferCreated,
-                'updated' => PelicanEventKind::ServerTransferUpdated,
-                'deleted' => PelicanEventKind::ServerTransferDeleted,
-                default => null,
-            },
-            'Subuser' => match ($action) {
-                // Eloquent CRUD on Subuser. We map both UI custom events
-                // (Server\SubUserAdded/Removed) and these eloquent events
-                // to the same kind to avoid duplicate processing.
-                'created' => PelicanEventKind::SubuserAdded,
-                'deleted' => PelicanEventKind::SubuserRemoved,
-                default => null,
-            },
+            // Per-server resources (Backup / Allocation / Database / Host /
+            // ServerTransfer / Subuser) used to feed mirror tables — that
+            // feature is gone, so the classifier stops dispatching them.
+            // Unknown model = `Ignored` outcome (audited but no job).
             default => null,
         };
     }

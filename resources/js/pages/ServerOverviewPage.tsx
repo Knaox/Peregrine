@@ -90,20 +90,28 @@ export function ServerOverviewPage() {
     const canReinstall = hasPerm('settings.reinstall');
 
     // Plugin-contributed home sections, sorted by their declared `order` then
-    // filtered by permissions. Owners always see them; subusers need the
-    // `required_permission` claim if the manifest declares one.
+    // filtered by permissions and (optional) egg whitelist. Owners always see
+    // them; subusers need the `required_permission` claim if the manifest
+    // declares one. The `requires_egg_ids` filter mirrors the sidebar-entry
+    // behaviour so plugins can dynamically opt out of mounting on servers
+    // they have no data for (e.g. egg-config-editor sets it from DB).
     const pluginHomeSections = useMemo(() => {
         const out: { key: string; Component: React.ComponentType<{ serverId: number }>; order: number }[] = [];
+        const currentEggId = Number(server?.egg?.id ?? 0);
         for (const manifest of pluginManifests) {
             for (const section of manifest.server_home_sections ?? []) {
                 if (section.required_permission && !hasPerm(section.required_permission)) continue;
+                if (Array.isArray(section.requires_egg_ids) && section.requires_egg_ids.length > 0
+                    && !section.requires_egg_ids.includes(currentEggId)) {
+                    continue;
+                }
                 const Component = pluginHomeSectionComponents[section.id];
                 if (!Component) continue;
                 out.push({ key: `${manifest.id}:${section.id}`, Component, order: section.order ?? 100 });
             }
         }
         return out.sort((a, b) => a.order - b.order);
-    }, [pluginManifests, pluginHomeSectionComponents, isOwner, perms]);
+    }, [pluginManifests, pluginHomeSectionComponents, isOwner, perms, server?.egg?.id]);
 
     const filteredEntries = useMemo(() => {
         // Merge core + plugin sidebar entries

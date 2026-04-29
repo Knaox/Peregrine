@@ -33,6 +33,15 @@ export interface PluginServerHomeSection {
     order?: number;
     /** Optional Peregrine permission key (e.g. `startup.read`) gating visibility. Owners always see it. */
     required_permission?: string;
+    /**
+     * Optional egg whitelist — same semantics as `PluginServerSidebarEntry`.
+     * When set and non-empty, the section is only rendered for servers whose
+     * `egg_id` is included. When omitted or empty, the section renders on
+     * every server. Useful for plugins that only have data for specific eggs
+     * (e.g. egg-config-editor populates this dynamically from DB so the card
+     * doesn't even mount on servers whose egg has no declared config files).
+     */
+    requires_egg_ids?: number[];
 }
 
 export interface PluginSettingsSchemaField {
