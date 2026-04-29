@@ -144,6 +144,18 @@ class SetupController extends Controller
                     // Same for Bridge config (toggle + HMAC + Stripe secret) —
                     // managed at /admin/bridge-settings post-install.
                 ]);
+
+                // Clear cached config + signal long-running queue workers to
+                // restart. Without this the BackfillStep that runs right after
+                // install enqueues a job whose worker still holds the empty
+                // pre-install PELICAN_URL in memory — calls fail with
+                // "Could not resolve host: api".
+                try {
+                    \Illuminate\Support\Facades\Artisan::call('config:clear');
+                    \Illuminate\Support\Facades\Artisan::call('queue:restart');
+                } catch (\Throwable) {
+                    // best-effort — admin can run it manually if needed
+                }
             });
 
             return response()->json(['success' => true]);
