@@ -28,6 +28,7 @@ final class SettingsPersister
     {
         $this->persistAppearance($data);
         $this->persistLogos($data);
+        $this->persistPelicanCredentials($data);
         $envValues = $this->collectEnvUpdates($data);
         $this->persistRuntimeFlags($data);
 
@@ -36,6 +37,27 @@ final class SettingsPersister
         }
 
         $this->settings->clearCache();
+    }
+
+    /**
+     * Pelican URL + API keys → `settings` table (DB), NOT .env.
+     * URL stored plaintext, API keys encrypted via Crypt::encryptString.
+     * Empty key inputs keep the previously-stored value (rotation pattern
+     * matches the bridge_shop_shared_secret + pelican_webhook_token UX).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function persistPelicanCredentials(array $data): void
+    {
+        if (isset($data['pelican_url'])) {
+            $this->settings->set('pelican_url', (string) $data['pelican_url']);
+        }
+        if (isset($data['pelican_admin_api_key']) && $data['pelican_admin_api_key'] !== '') {
+            $this->settings->set('pelican_admin_api_key', \Illuminate\Support\Facades\Crypt::encryptString((string) $data['pelican_admin_api_key']));
+        }
+        if (isset($data['pelican_client_api_key']) && $data['pelican_client_api_key'] !== '') {
+            $this->settings->set('pelican_client_api_key', \Illuminate\Support\Facades\Crypt::encryptString((string) $data['pelican_client_api_key']));
+        }
     }
 
     /**
@@ -89,16 +111,10 @@ final class SettingsPersister
      */
     private function collectEnvUpdates(array $data): array
     {
+        // Pelican URL + API keys live in the `settings` table (DB), NOT .env.
+        // Persisted separately via persistPelicanCredentials() — this method
+        // only collects env-bound values (DB connection, mail driver).
         $envValues = [];
-        if (isset($data['pelican_url'])) {
-            $envValues['PELICAN_URL'] = $data['pelican_url'];
-        }
-        if (isset($data['pelican_admin_api_key']) && $data['pelican_admin_api_key'] !== '') {
-            $envValues['PELICAN_ADMIN_API_KEY'] = $data['pelican_admin_api_key'];
-        }
-        if (isset($data['pelican_client_api_key']) && $data['pelican_client_api_key'] !== '') {
-            $envValues['PELICAN_CLIENT_API_KEY'] = $data['pelican_client_api_key'];
-        }
 
         $envValues['MAIL_MAILER'] = $data['mail_mailer'] ?? 'smtp';
         if (($data['mail_mailer'] ?? 'smtp') === 'smtp') {

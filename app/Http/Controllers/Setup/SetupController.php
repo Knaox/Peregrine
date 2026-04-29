@@ -124,9 +124,20 @@ class SetupController extends Controller
             // value so the redirect loop stops on the very next page load.
             @touch(storage_path('.installed'));
 
-            // 5. Send the response BEFORE writing .env (because artisan serve will restart)
+            // 5. Pelican URL + API keys → `settings` table (encrypted secrets).
+            //    Done synchronously NOW (before the response) — these writes go
+            //    to the DB so they don't share .env's permission limits, and
+            //    PelicanCredentials reads from settings on every call so the
+            //    BackfillStep that runs right after install picks them up
+            //    without a queue:restart dance.
+            $settings = app(SettingsService::class);
+            $settings->set('pelican_url', $validated['pelican']['url']);
+            $settings->set('pelican_admin_api_key', \Illuminate\Support\Facades\Crypt::encryptString($validated['pelican']['api_key']));
+            $settings->set('pelican_client_api_key', \Illuminate\Support\Facades\Crypt::encryptString($validated['pelican']['client_api_key']));
+
+            // 6. Send the response BEFORE writing .env (because artisan serve will restart)
             // We use register_shutdown_function to write the .env after the response is sent
-            register_shutdown_function(function () use ($validated, $dbHost, $dbPort, $dbName, $dbUser, $dbPass) {
+            register_shutdown_function(function () use ($dbHost, $dbPort, $dbName, $dbUser, $dbPass) {
                 $this->setupService->writeEnv([
                     'PANEL_INSTALLED' => 'true',
                     'DB_CONNECTION' => 'mysql',
@@ -136,26 +147,11 @@ class SetupController extends Controller
                     'DB_USERNAME' => $dbUser,
                     'DB_PASSWORD' => $dbPass,
                     'DB_SOCKET' => '',
-                    'PELICAN_URL' => $validated['pelican']['url'],
-                    'PELICAN_ADMIN_API_KEY' => $validated['pelican']['api_key'],
-                    'PELICAN_CLIENT_API_KEY' => $validated['pelican']['client_api_key'],
-                    // Auth config no longer lives in .env — it's in the
-                    // `settings` table, managed via /admin/auth-settings.
-                    // Same for Bridge config (toggle + HMAC + Stripe secret) —
-                    // managed at /admin/bridge-settings post-install.
+                    // Pelican URL + API keys live in the `settings` table now,
+                    // not .env — see step 5 above.
+                    // Auth config in `settings` (managed via /admin/auth-settings).
+                    // Bridge config in `settings` (managed at /admin/bridge-settings).
                 ]);
-
-                // Clear cached config + signal long-running queue workers to
-                // restart. Without this the BackfillStep that runs right after
-                // install enqueues a job whose worker still holds the empty
-                // pre-install PELICAN_URL in memory — calls fail with
-                // "Could not resolve host: api".
-                try {
-                    \Illuminate\Support\Facades\Artisan::call('config:clear');
-                    \Illuminate\Support\Facades\Artisan::call('queue:restart');
-                } catch (\Throwable) {
-                    // best-effort — admin can run it manually if needed
-                }
             });
 
             return response()->json(['success' => true]);

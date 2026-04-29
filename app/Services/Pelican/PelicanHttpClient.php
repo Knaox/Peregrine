@@ -65,11 +65,11 @@ class PelicanHttpClient
 
     private function baseUrl(): string
     {
-        return rtrim((string) config('panel.pelican.url'), '/');
+        return app(PelicanCredentials::class)->url();
     }
 
     private function apiKey(): string
     {
-        return (string) config('panel.pelican.admin_api_key');
+        return app(PelicanCredentials::class)->adminApiKey();
     }
 }

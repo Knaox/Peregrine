@@ -96,9 +96,13 @@ class Settings extends Page implements HasForms
 
         $this->header_links = json_decode($settings->get('header_links', '[]') ?? '[]', true) ?: [];
 
-        $this->pelican_url = config('services.pelican.url', '');
-        $this->pelican_admin_api_key = config('services.pelican.admin_api_key', '');
-        $this->pelican_client_api_key = config('panel.client_api_key', '');
+        // Pelican URL + API keys live in the `settings` table now.
+        // URL is plaintext, API keys are encrypted — we never display the
+        // stored API keys (admin types a new one to rotate; empty keeps the
+        // current encrypted value).
+        $this->pelican_url = (string) ($settings->get('pelican_url') ?? config('panel.pelican.url', ''));
+        $this->pelican_admin_api_key = '';
+        $this->pelican_client_api_key = '';
 
         // app_debug / app_timezone / trusted_proxies are now DB-backed
         // (table `settings`) so they survive a Docker stack redeploy. The

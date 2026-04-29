@@ -2,6 +2,7 @@
 
 namespace App\Services\Pelican\Concerns;
 
+use App\Services\Pelican\PelicanCredentials;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -9,12 +10,12 @@ trait MakesClientRequests
 {
     private function baseUrl(): string
     {
-        return rtrim((string) config('panel.pelican.url'), '/');
+        return app(PelicanCredentials::class)->url();
     }
 
     private function clientApiKey(): string
     {
-        return (string) config('panel.pelican.client_api_key');
+        return app(PelicanCredentials::class)->clientApiKey();
     }
 
     private function request(): PendingRequest
