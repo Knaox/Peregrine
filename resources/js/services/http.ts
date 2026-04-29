@@ -6,7 +6,7 @@
  */
 function getXsrfFromCookie(): string {
     const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
-    if (!match) return '';
+    if (!match || match[1] === undefined) return '';
     try {
         return decodeURIComponent(match[1]);
     } catch {
@@ -20,14 +20,34 @@ function getCsrfFromMeta(): string {
 }
 
 /**
- * Best-effort CSRF token: prefer the live cookie value, fall back to the
- * meta tag rendered into the initial HTML. The meta tag matches the very
- * first render's session, but loses sync as soon as Laravel rotates the
- * session — most commonly on login. The cookie always reflects the current
- * session because Sanctum's stateful middleware re-sets it on every reply.
+ * Returns headers carrying a valid CSRF proof for Laravel's VerifyCsrfToken
+ * middleware. Picks **exactly one** of:
+ *   - `X-XSRF-TOKEN` (the encrypted XSRF-TOKEN cookie value, URL-decoded —
+ *     Laravel decrypts it server-side)
+ *   - `X-CSRF-TOKEN` (the raw token rendered in `<meta name="csrf-token">`)
+ *
+ * Never both. Laravel checks X-CSRF-TOKEN first and treats it as a raw
+ * session token; if you populate it with the encrypted cookie value
+ * Laravel rejects with 419 without trying the X-XSRF-TOKEN fallback.
+ *
+ * The cookie is preferred because it stays in sync with Laravel's session
+ * (re-set on every Sanctum response). The meta tag is frozen at first
+ * paint and goes stale after any session rotation (login, 2FA, install).
+ */
+export function getCsrfHeaders(): Record<string, string> {
+    const cookieToken = getXsrfFromCookie();
+    if (cookieToken) return { 'X-XSRF-TOKEN': cookieToken };
+    const metaToken = getCsrfFromMeta();
+    if (metaToken) return { 'X-CSRF-TOKEN': metaToken };
+    return {};
+}
+
+/**
+ * @deprecated Use `getCsrfHeaders()` — the raw return value can't safely be
+ * placed in either header without knowing which header Laravel will read.
  */
 export function getCsrfToken(): string {
-    return getXsrfFromCookie() || getCsrfFromMeta();
+    return getCsrfFromMeta() || getXsrfFromCookie();
 }
 
 let csrfRefreshInFlight: Promise<void> | null = null;
@@ -64,10 +84,8 @@ function buildHeaders(extra: HeadersInit | undefined, jsonBody: boolean): Header
     if (!headers.has('Accept')) {
         headers.set('Accept', 'application/json');
     }
-    const token = getCsrfToken();
-    if (token) {
-        headers.set('X-XSRF-TOKEN', token);
-        headers.set('X-CSRF-TOKEN', token);
+    for (const [name, value] of Object.entries(getCsrfHeaders())) {
+        headers.set(name, value);
     }
     return headers;
 }
