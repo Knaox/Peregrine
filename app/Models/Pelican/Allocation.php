@@ -24,6 +24,7 @@ class Allocation extends Model
         'ip_alias',
         'notes',
         'is_locked',
+        'is_default',
         'pelican_created_at',
         'pelican_updated_at',
     ];
@@ -39,6 +40,7 @@ class Allocation extends Model
             'server_id' => 'integer',
             'port' => 'integer',
             'is_locked' => 'boolean',
+            'is_default' => 'boolean',
             'pelican_created_at' => 'datetime',
             'pelican_updated_at' => 'datetime',
         ];

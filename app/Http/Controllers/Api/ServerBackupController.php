@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Server\CreateBackupRequest;
 use App\Models\Server;
 use App\Services\Pelican\PelicanBackupService;
-use App\Services\SettingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -22,29 +21,6 @@ class ServerBackupController extends Controller
     {
         $this->authorize('readBackup', $server);
 
-        if ($this->mirrorReadsEnabled()) {
-            // Phase 2: read from local pelican_backups (DB locale).
-            // Webhook + hourly reconciliation keep this in sync.
-            $rows = $server->pelicanBackups()
-                ->orderByDesc('pelican_created_at')
-                ->get()
-                ->map(fn ($b) => [
-                    'uuid' => $b->uuid,
-                    'name' => $b->name,
-                    'is_successful' => $b->is_successful,
-                    'is_locked' => $b->is_locked,
-                    'checksum' => $b->checksum,
-                    'bytes' => $b->bytes,
-                    'completed_at' => $b->completed_at?->toIso8601String(),
-                    'created_at' => $b->pelican_created_at?->toIso8601String(),
-                ])
-                ->all();
-
-            return response()->json(['data' => $rows]);
-        }
-
-        // Legacy: API live + 2-min cache (kept for installs that haven't
-        // run pelican:backfill-mirrors yet).
         $data = Cache::remember("server_backups:{$server->identifier}", 120, function () use ($server): array {
             $backups = $this->backupService->listBackups($server->identifier);
 
@@ -55,12 +31,6 @@ class ServerBackupController extends Controller
         });
 
         return response()->json(['data' => $data]);
-    }
-
-    private function mirrorReadsEnabled(): bool
-    {
-        $value = (string) app(SettingsService::class)->get('mirror_reads_enabled', 'false');
-        return $value === 'true' || $value === '1';
     }
 
     public function store(CreateBackupRequest $request, Server $server): JsonResponse

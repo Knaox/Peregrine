@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Pages\BridgeSettings\BridgeSettingsHtmlHelpers;
-use App\Filament\Pages\Concerns\HasMirrorReadsSection;
 use App\Services\SettingsService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -40,7 +39,6 @@ use UnitEnum;
  */
 class PelicanWebhookSettings extends Page implements HasForms
 {
-    use HasMirrorReadsSection;
     use InteractsWithForms;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bolt';
@@ -172,8 +170,8 @@ class PelicanWebhookSettings extends Page implements HasForms
                             'deleted: EggVariable',
                         ], note: __('admin.webhook_settings.fields.events_recommended_note'))),
 
-                    Placeholder::make('pelican_events_phase2')
-                        ->label(__('admin.webhook_settings.fields.events_phase2'))
+                    Placeholder::make('pelican_events_blocklist')
+                        ->label(__('admin.webhook_settings.fields.events_blocklist'))
                         ->content(BridgeSettingsHtmlHelpers::renderTagList([
                             'created: Backup',
                             'updated: Backup',
@@ -190,11 +188,10 @@ class PelicanWebhookSettings extends Page implements HasForms
                             'created: ServerTransfer',
                             'updated: ServerTransfer',
                             'deleted: ServerTransfer',
-                        ], note: __('admin.webhook_settings.fields.events_phase2_note'))),
-
-                    Placeholder::make('pelican_events_blocklist')
-                        ->label(__('admin.webhook_settings.fields.events_blocklist'))
-                        ->content(BridgeSettingsHtmlHelpers::renderTagList([
+                            'eloquent.created: Subuser',
+                            'eloquent.deleted: Subuser',
+                            'event: Server\\SubUserAdded',
+                            'event: Server\\SubUserRemoved',
                             'event: ActivityLogged',
                             'created: Schedule',
                             'updated: Schedule',
@@ -207,8 +204,6 @@ class PelicanWebhookSettings extends Page implements HasForms
                             'updated: WebhookConfiguration',
                         ], note: __('admin.webhook_settings.fields.events_blocklist_note'))),
                 ]),
-
-            $this->mirrorReadsSection(),
 
             Section::make(__('admin.webhook_settings.sections.verify'))
                 ->description(__('admin.webhook_settings.sections.verify_description'))
@@ -238,11 +233,6 @@ class PelicanWebhookSettings extends Page implements HasForms
 
         $enabled = (bool) ($data['pelican_webhook_enabled'] ?? false);
         $settings->set('pelican_webhook_enabled', $enabled ? 'true' : 'false');
-
-        // mirror_reads_enabled is no longer toggled from this form — it's
-        // driven by the dedicated "Activer la lecture DB locale" action
-        // (HasMirrorReadsSection trait) which dispatches the backfill job
-        // and only flips the flag once the backfill completes successfully.
 
         $typedToken = (string) ($data['pelican_webhook_token'] ?? '');
         if ($typedToken !== '') {

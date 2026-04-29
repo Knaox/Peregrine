@@ -28,6 +28,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Reverb config consumed by `resources/js/services/echo.ts` to
+         drive live mirror-update broadcasts on /server/{id}/* pages.
+         Empty values disable the Echo client gracefully — the SPA
+         continues to work with its default TanStack staleTime. --}}
+    <meta name="reverb-key" content="{{ config('broadcasting.connections.reverb.key', '') }}">
+    <meta name="reverb-host" content="{{ env('REVERB_HOST', '') }}">
+    <meta name="reverb-port" content="{{ env('REVERB_PORT', '443') }}">
+    <meta name="reverb-scheme" content="{{ env('REVERB_SCHEME', 'https') }}">
     <title>{{ $appName }}</title>
     <link rel="icon" href="{{ $branding['favicon_url'] ?? '/images/favicon.ico' }}" type="image/x-icon">
     <script>window.__BRANDING__ = @json($branding);</script>

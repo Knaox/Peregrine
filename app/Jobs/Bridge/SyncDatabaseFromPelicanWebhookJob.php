@@ -3,6 +3,7 @@
 namespace App\Jobs\Bridge;
 
 use App\Enums\PelicanEventKind;
+use App\Events\Mirror\ServerMirrorChanged;
 use App\Models\Pelican\Database as PelicanDatabase;
 use App\Models\Pelican\DatabaseHost;
 use App\Models\Server;
@@ -88,6 +89,13 @@ class SyncDatabaseFromPelicanWebhookJob implements ShouldQueue
             $whitelisted,
         );
 
+        event(new ServerMirrorChanged(
+            serverId: (int) $server->id,
+            resource: ServerMirrorChanged::RESOURCE_DATABASE,
+            action: ServerMirrorChanged::ACTION_UPSERT,
+            resourceId: $this->pelicanDatabaseId,
+        ));
+
         Log::info('SyncDatabaseFromPelicanWebhookJob: database mirrored', [
             'pelican_database_id' => $this->pelicanDatabaseId,
             'local_database_id' => $database->id,
@@ -97,7 +105,18 @@ class SyncDatabaseFromPelicanWebhookJob implements ShouldQueue
 
     private function handleDeletion(): void
     {
-        PelicanDatabase::where('pelican_database_id', $this->pelicanDatabaseId)->delete();
+        $row = PelicanDatabase::where('pelican_database_id', $this->pelicanDatabaseId)->first();
+        $serverLocalId = $row?->server_id;
+        $row?->delete();
+
+        if ($serverLocalId !== null) {
+            event(new ServerMirrorChanged(
+                serverId: (int) $serverLocalId,
+                resource: ServerMirrorChanged::RESOURCE_DATABASE,
+                action: ServerMirrorChanged::ACTION_DELETE,
+                resourceId: $this->pelicanDatabaseId,
+            ));
+        }
     }
 
     private function parseDate(mixed $raw): ?Carbon

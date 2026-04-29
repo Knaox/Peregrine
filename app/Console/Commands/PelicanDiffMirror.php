@@ -13,9 +13,9 @@ use Illuminate\Console\Command;
 
 /**
  * Audits drift between Peregrine's local mirror tables and Pelican's
- * source-of-truth API. Read-only — does NOT mutate. Useful before
- * activating mirror_reads_enabled on a fresh deploy, or to investigate
- * a suspected sync issue.
+ * source-of-truth API. Read-only — does NOT mutate. Useful to investigate
+ * a suspected sync issue (the SPA always reads live API now, but the
+ * mirror is still fed by webhooks + reconciliation for audit).
  *
  *   php artisan pelican:diff-mirror users
  *   php artisan pelican:diff-mirror servers

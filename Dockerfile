@@ -96,6 +96,9 @@ ENV DOCKER=true \
     LOG_STDERR_FORMATTER=Monolog\\Formatter\\JsonFormatter
 
 EXPOSE 8080
+# Reverb is bound to 127.0.0.1:6001 inside the container and surfaced
+# through nginx's /app/ proxy on 8080. We don't EXPOSE 6001 publicly —
+# only the operator is allowed to reach Reverb directly (e.g. for debug).
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=5 \
     CMD curl -fsS http://localhost:8080/up || exit 1

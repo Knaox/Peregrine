@@ -3,6 +3,7 @@ import { useParams, Link, Routes, Route, Navigate, useLocation } from 'react-rou
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useServer } from '@/hooks/useServer';
+import { useServerLiveUpdates } from '@/hooks/useServerLiveUpdates';
 import { useSidebarConfig } from '@/hooks/useSidebarConfig';
 import { usePluginStore } from '@/plugins/pluginStore';
 import { SIDEBAR_ENTRY_PERMISSIONS } from '@/utils/serverPermissions';
@@ -69,6 +70,11 @@ export function ServerDetailPage() {
     const location = useLocation();
     const serverId = Number(id);
     const { data: server, isLoading, isError } = useServer(serverId);
+    // Subscribe to Pelican-driven mirror updates while the user is viewing
+    // this server. Refreshes /network /databases /backups /sub-users in
+    // real time without polling — degrades gracefully (returns 'unavailable')
+    // when Reverb isn't configured on the install.
+    useServerLiveUpdates(Number.isFinite(serverId) ? serverId : null);
     // Overview already shows the banner in its own hero — disable the shared
     // EggBackground there to avoid painting the same image twice.
     const isOverviewRoute = location.pathname === `/servers/${serverId}`;

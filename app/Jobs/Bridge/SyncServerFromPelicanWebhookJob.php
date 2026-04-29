@@ -3,6 +3,7 @@
 namespace App\Jobs\Bridge;
 
 use App\Events\Bridge\ServerInstalled;
+use App\Events\Mirror\ServerMirrorChanged;
 use App\Models\Server;
 use App\Models\User;
 use App\Services\Bridge\BridgeModeService;
@@ -94,9 +95,8 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
             ),
         ], fn ($v) => $v !== null);
 
-        // Install-state transition is the ONLY status mutation Pelican is
-        // allowed on a Shop-owned server. We never overwrite billing statuses
-        // (`suspended` / `terminated`) — those belong to Stripe webhooks.
+        // Install-state is the ONLY status mutation Pelican is allowed on a
+        // Shop-owned server — billing statuses belong to Stripe webhooks.
         $newStatus = $this->resolveInstallStatus($apiSnapshot, $previousStatus);
         if ($newStatus !== null && $newStatus !== $previousStatus) {
             $updates['status'] = $newStatus;
@@ -106,11 +106,8 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
             $server->update($updates);
         }
 
-        // STRICT ORDER : status update above MUST land before the event so any
-        // listener (e.g. SendServerInstalledNotification) sees the row in its
-        // final state. If you reorder these two, race conditions appear and
-        // double-emails / stale-status emails follow. Tested in
-        // SyncServerFromPelicanWebhookJobShopGuardTest.
+        // STRICT ORDER : status update MUST land before the event — listeners
+        // see the row in its final state. Tested in ShopGuardTest.
         if (
             $previousStatus === 'provisioning'
             && ($updates['status'] ?? null) === 'active'
@@ -118,6 +115,10 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
             && $server->user !== null
         ) {
             event(new ServerInstalled($server->fresh(), $server->user));
+        }
+
+        if ($updates !== []) {
+            event(new ServerMirrorChanged((int) $server->id, ServerMirrorChanged::RESOURCE_SERVER, ServerMirrorChanged::ACTION_UPSERT, (int) $server->id));
         }
 
         Log::info('SyncServerFromPelicanWebhookJob: shop-owned server updated', [
@@ -194,6 +195,8 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
             $owner->id => ['role' => 'owner', 'permissions' => null],
         ]);
 
+        event(new ServerMirrorChanged((int) $server->id, ServerMirrorChanged::RESOURCE_SERVER, ServerMirrorChanged::ACTION_UPSERT, (int) $server->id));
+
         Log::info('SyncServerFromPelicanWebhookJob: server mirrored', [
             'pelican_server_id' => $this->pelicanServerId,
             'event_type' => $this->eventType,
@@ -226,12 +229,10 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
 
     private function isDeletionEvent(): bool
     {
-        $normalized = str_replace(' ', '', $this->eventType);
-
         // Long form ("eloquent.deleted: App\Models\Server") and short form
-        // (Pelican UI label "deleted: Server") both end with "deleted: ...".
-        return str_starts_with($normalized, 'deleted:')
-            || str_contains($normalized, 'eloquent.deleted');
+        // ("deleted: Server") both end with "deleted: ...".
+        $normalized = str_replace(' ', '', $this->eventType);
+        return str_starts_with($normalized, 'deleted:') || str_contains($normalized, 'eloquent.deleted');
     }
 
     private function handleDeletion(BridgeModeService $bridgeMode): void
@@ -241,10 +242,8 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
             return;
         }
 
-        // Shop-owned servers are deleted by the Stripe-side
-        // `PurgeScheduledServerDeletionsJob` flow (after the grace period).
-        // Pelican-side deletion of a Shop-owned server is treated as drift
-        // we record but don't act on — admin investigates manually.
+        // Shop-owned deletions belong to PurgeScheduledServerDeletionsJob ;
+        // Pelican-side deletion is drift we log but don't act on.
         if ($this->isShopOwned($server) && $bridgeMode->isShopStripe()) {
             Log::warning('SyncServerFromPelicanWebhookJob: Pelican deleted a Shop-owned server, leaving local row in place for admin review', [
                 'pelican_server_id' => $this->pelicanServerId,
@@ -254,11 +253,13 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
             return;
         }
 
+        $serverLocalId = (int) $server->id;
         $server->delete();
+        event(new ServerMirrorChanged($serverLocalId, ServerMirrorChanged::RESOURCE_SERVER, ServerMirrorChanged::ACTION_DELETE, $serverLocalId));
 
         Log::info('SyncServerFromPelicanWebhookJob: server removed', [
             'pelican_server_id' => $this->pelicanServerId,
-            'local_server_id' => $server->id,
+            'local_server_id' => $serverLocalId,
         ]);
     }
 
@@ -270,20 +271,12 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
         return ServerStatusResolver::mapPelicanStatus($data);
     }
 
-    /**
-     * Pelican stores Paymenter's service id in `external_id`. Surface it
-     * locally for audit / support flows.
-     *
-     * @param  array<string, mixed>  $data
-     */
+    /** @param  array<string, mixed>  $data */
     private function extractExternalId(array $data): ?string
     {
+        // Pelican stores Paymenter's service id in `external_id`.
         $value = $data['external_id'] ?? null;
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        return (string) $value;
+        return ($value === null || $value === '') ? null : (string) $value;
     }
 
     /**

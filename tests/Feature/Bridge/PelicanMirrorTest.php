@@ -29,10 +29,12 @@ use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
- * Phase 2 mirror end-to-end : webhook receiver dispatches the correct job
- * for each new resource type, the job persists into the mirror table,
- * controllers serve from the mirror when mirror_reads_enabled is on,
- * and the security canary catches password fields if Pelican ever leaks.
+ * Pelican webhook → mirror end-to-end : webhook receiver dispatches the
+ * correct job for each resource type and the job persists into the
+ * mirror table. Controllers no longer read these tables (the "Lecture
+ * DB locale" feature was rolled back), but the writes stay alive for
+ * audit + the hourly reconciliation job. The security canary still
+ * catches password fields if Pelican ever leaks.
  */
 class PelicanMirrorTest extends TestCase
 {
@@ -256,36 +258,6 @@ class PelicanMirrorTest extends TestCase
             payload: [],
         ))->handle();
         Event::assertNotDispatched(SubuserSynced::class);
-    }
-
-    // -------- Controller refactor (mirror_reads_enabled flag) ---------------
-
-    public function test_backup_controller_reads_from_mirror_when_flag_on(): void
-    {
-        $user = User::factory()->create();
-        $server = Server::create([
-            'user_id' => $user->id, 'name' => 's', 'status' => 'active',
-            'pelican_server_id' => 60, 'identifier' => 'srvabcd',
-            'idempotency_key' => 'k60',
-        ]);
-        $server->accessUsers()->syncWithoutDetaching([
-            $user->id => ['role' => 'owner', 'permissions' => null],
-        ]);
-
-        Backup::create([
-            'pelican_backup_id' => 1, 'server_id' => $server->id,
-            'uuid' => 'u1', 'name' => 'localbk', 'is_successful' => true,
-            'is_locked' => false, 'bytes' => 0,
-            'pelican_created_at' => now()->subMinute(),
-        ]);
-
-        Setting::updateOrCreate(['key' => 'mirror_reads_enabled'], ['value' => 'true']);
-        app(SettingsService::class)->clearCache();
-
-        $this->actingAs($user)
-            ->getJson("/api/servers/{$server->id}/backups")
-            ->assertStatus(200)
-            ->assertJsonPath('data.0.name', 'localbk');
     }
 
     // -------- Helpers --------------------------------------------------------

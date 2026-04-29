@@ -116,5 +116,5 @@ php artisan storage:link 2>/dev/null || true
 # checks if the plugins table exists).
 php artisan plugin:relink-public 2>/dev/null || true
 
-# Hand off to supervisord (nginx + php-fpm + queue worker).
+# Hand off to supervisord (nginx + php-fpm + queue worker + reverb).
 exec "$@"

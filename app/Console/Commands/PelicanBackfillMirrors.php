@@ -3,52 +3,46 @@
 namespace App\Console\Commands;
 
 use App\Models\PelicanBackfillProgress;
-use App\Services\SettingsService;
 use App\Services\Sync\PelicanMirrorSyncer;
 use Illuminate\Console\Command;
 
 /**
- * Bootstraps the Pelican mirror tables from a clean state. Idempotent,
- * chunked, and resumable — re-run after interruption with `--resume`.
+ * Backfills the four CORE Pelican mirror tables : users, nodes, eggs,
+ * servers. These four are read by the Filament admin (lists, filters,
+ * /admin/users, /admin/servers, /admin/nodes, /admin/eggs) so they
+ * MUST be in sync with Pelican.
  *
- * Order matters: users → nodes → eggs → servers → backups → databases →
- * allocations → transfers. Each step delegates to PelicanMirrorSyncer.
+ * The downstream resources (backups / databases / allocations /
+ * transfers / subusers) are NOT backfilled here anymore : the SPA reads
+ * them live from Pelican on demand, mirror tables are dormant. Storing
+ * them just for the sake of mirroring would inflate the DB and obscure
+ * audit trails.
  *
- * Once all complete, sets `mirror_reads_enabled=true` so the controllers
- * switch from API-live reads to DB-locale reads.
+ * Idempotent, chunked, resumable (`--resume` after interruption).
+ *
+ * Order matters: nodes → users → eggs → servers (each step depends on
+ * the previous via FKs).
  */
 class PelicanBackfillMirrors extends Command
 {
     protected $signature = 'pelican:backfill-mirrors
         {--resume : Resume from where the last run stopped}
         {--fresh : Reset progress and start over}
-        {--only= : Backfill only one resource (users|nodes|eggs|servers|backups|databases|allocations|transfers|subusers)}
-        {--dry-run : Count remote items but don\'t write anything}
-        {--no-flag : Skip activating mirror_reads_enabled at the end}';
+        {--only= : Backfill only one resource (users|nodes|eggs|servers)}
+        {--dry-run : Count remote items but don\'t write anything}';
 
-    protected $description = 'Backfill the Pelican mirror tables (resumable, chunked)';
+    protected $description = 'Backfill the four core Pelican mirror tables (users, nodes, eggs, servers)';
 
     // Strict dependency order — each step depends on the previous ones :
-    //   1. Nodes      (no FK)
-    //   2. Users      (no FK — required by servers' owner_id)
-    //   3. Eggs       (no FK — required by servers' egg_id)
-    //   4. Servers    (FKs : owner_id → users, egg_id → eggs)
-    //   5. Backups    (FK : server_id → servers)
-    //   6. Databases  (FK : server_id → servers)
-    //   7. Allocations (FK : node_id → nodes, server_id nullable)
-    //   8. Transfers  (FK : server_id → servers)
+    //   1. Nodes   (no FK)
+    //   2. Users   (no FK — required by servers' owner_id)
+    //   3. Eggs    (no FK — required by servers' egg_id)
+    //   4. Servers (FKs : owner_id → users, egg_id → eggs)
     private const RESOURCES = [
         'nodes' => 'syncNodes',
         'users' => 'syncUsers',
         'eggs' => 'syncEggs',
         'servers' => 'syncServers',
-        'backups' => 'syncBackups',
-        'databases' => 'syncDatabases',
-        'allocations' => 'syncAllocations',
-        'transfers' => 'syncTransfers',
-        // subusers must run AFTER users (lookup by email → pelican_user_id)
-        // and AFTER servers (subusers are scoped per Pelican server).
-        'subusers' => 'syncSubusers',
     ];
 
     public function handle(PelicanMirrorSyncer $syncer): int
@@ -95,9 +89,8 @@ class PelicanBackfillMirrors extends Command
             }
         }
 
-        if (! $dryRun && $only === null && ! $this->option('no-flag')) {
-            app(SettingsService::class)->set('mirror_reads_enabled', 'true');
-            $this->info("\n<fg=green>✓ Backfill complete. mirror_reads_enabled set to true.</>");
+        if (! $dryRun && $only === null) {
+            $this->info("\n<fg=green>✓ Backfill complete.</>");
         }
 
         $duration = round(microtime(true) - $totalStart, 2);

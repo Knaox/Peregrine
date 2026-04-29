@@ -3,6 +3,7 @@
 namespace App\Jobs\Bridge;
 
 use App\Enums\PelicanEventKind;
+use App\Events\Mirror\ServerMirrorChanged;
 use App\Models\Node;
 use App\Models\Pelican\Allocation;
 use App\Models\Server;
@@ -45,7 +46,19 @@ class SyncAllocationFromPelicanWebhookJob implements ShouldQueue
     public function handle(): void
     {
         if ($this->eventKind === PelicanEventKind::AllocationDeleted) {
-            Allocation::where('pelican_allocation_id', $this->pelicanAllocationId)->delete();
+            $row = Allocation::where('pelican_allocation_id', $this->pelicanAllocationId)->first();
+            $serverLocalId = $row?->server_id;
+            $row?->delete();
+
+            if ($serverLocalId !== null) {
+                event(new ServerMirrorChanged(
+                    serverId: (int) $serverLocalId,
+                    resource: ServerMirrorChanged::RESOURCE_ALLOCATION,
+                    action: ServerMirrorChanged::ACTION_DELETE,
+                    resourceId: $this->pelicanAllocationId,
+                ));
+            }
+
             return;
         }
 
@@ -83,6 +96,12 @@ class SyncAllocationFromPelicanWebhookJob implements ShouldQueue
             $nodeId = Node::where('pelican_node_id', (int) $this->payload['node_id'])->value('id');
         }
 
+        // Pelican payloads exposed under different keys depending on the
+        // event source : Application API uses `alias`, Client API uses
+        // `ip_alias`. Read both so the mirror matches whatever the live
+        // path would have rendered.
+        $alias = $this->payload['ip_alias'] ?? $this->payload['alias'] ?? null;
+
         Allocation::updateOrCreate(
             ['pelican_allocation_id' => $this->pelicanAllocationId],
             [
@@ -90,13 +109,20 @@ class SyncAllocationFromPelicanWebhookJob implements ShouldQueue
                 'server_id' => $serverId,
                 'ip' => (string) ($this->payload['ip'] ?? '0.0.0.0'),
                 'port' => (int) ($this->payload['port'] ?? 0),
-                'ip_alias' => $this->payload['ip_alias'] ?? null,
+                'ip_alias' => $alias,
                 'notes' => $this->payload['notes'] ?? null,
                 'is_locked' => (bool) ($this->payload['is_locked'] ?? false),
                 'pelican_created_at' => $this->parseDate($this->payload['created_at'] ?? null),
                 'pelican_updated_at' => $this->parseDate($this->payload['updated_at'] ?? null),
             ],
         );
+
+        event(new ServerMirrorChanged(
+            serverId: (int) $serverId,
+            resource: ServerMirrorChanged::RESOURCE_ALLOCATION,
+            action: ServerMirrorChanged::ACTION_UPSERT,
+            resourceId: $this->pelicanAllocationId,
+        ));
 
         Log::info('SyncAllocationFromPelicanWebhookJob: allocation mirrored', [
             'pelican_allocation_id' => $this->pelicanAllocationId,

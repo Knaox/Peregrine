@@ -6,12 +6,10 @@ namespace App\Services\Pelican\DTOs;
  * Network allocation (IP+port) on a Pelican node.
  *
  * Source : Application API `/api/application/nodes/{id}/allocations`. Used by
- * Bridge::PortAllocator to find free port blocks at provisioning time, and
- * by AllocationMirrorBackfiller to mirror only assigned allocations.
+ * Bridge::PortAllocator to find free port blocks at provisioning time.
  *
  * `serverId` is populated when the request was made with `?include=server`.
- * Without that include the field stays null even on assigned allocations —
- * callers that need to filter by server attribution must request the include.
+ * Without that include the field stays null even on assigned allocations.
  */
 final readonly class PelicanAllocation
 {
@@ -42,10 +40,16 @@ final readonly class PelicanAllocation
                 ?? null;
         }
 
+        // Pelican exposes the alias under different keys depending on which
+        // API surface answered : Application API → `alias`, Client API →
+        // `ip_alias`. Read both so the mirror stores the same value the live
+        // API path returned, regardless of which endpoint fed the row.
+        $alias = $attributes['ip_alias'] ?? $attributes['alias'] ?? null;
+
         return new self(
             id: (int) $attributes['id'],
             ip: (string) $attributes['ip'],
-            ipAlias: $attributes['ip_alias'] ?? null,
+            ipAlias: $alias,
             port: (int) $attributes['port'],
             notes: $attributes['notes'] ?? null,
             assigned: (bool) ($attributes['assigned'] ?? false),

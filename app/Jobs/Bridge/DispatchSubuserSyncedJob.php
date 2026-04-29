@@ -4,6 +4,8 @@ namespace App\Jobs\Bridge;
 
 use App\Enums\PelicanEventKind;
 use App\Events\Bridge\SubuserSynced;
+use App\Events\Mirror\ServerMirrorChanged;
+use App\Models\Server;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -56,6 +58,23 @@ class DispatchSubuserSyncedJob implements ShouldQueue
             pelicanUserId: $userId,
             payload: $this->payload,
         ));
+
+        // Resolve the local server id and broadcast — only after the
+        // plugin listener had a chance to update its mirror table (the
+        // listener is sync, so it's already done by the time we get here).
+        $localServerId = Server::where('pelican_server_id', $serverId)->value('id');
+        if ($localServerId !== null) {
+            $action = $this->eventKind === PelicanEventKind::SubuserRemoved
+                ? ServerMirrorChanged::ACTION_DELETE
+                : ServerMirrorChanged::ACTION_UPSERT;
+
+            event(new ServerMirrorChanged(
+                serverId: (int) $localServerId,
+                resource: ServerMirrorChanged::RESOURCE_SUBUSER,
+                action: $action,
+                resourceId: $this->pelicanSubuserId,
+            ));
+        }
 
         Log::info('DispatchSubuserSyncedJob: fired SubuserSynced for plugin invitations', [
             'pelican_subuser_id' => $this->pelicanSubuserId,

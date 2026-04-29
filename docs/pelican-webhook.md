@@ -110,31 +110,31 @@ Replaces the manual `sync:users / sync:nodes / sync:eggs` admin commands.
 | `updated: EggVariable`   | Same as above.                                                       | Default values drift.                                             |
 | `deleted: EggVariable`   | Same as above.                                                       | Local egg keeps obsolete variables.                               |
 
-### Phase 2 preview — DB-local mirrors (not yet active)
-
-Reserved for the upcoming Phase 2 release. Tick them now if you want — the
-receiver will record them as `ignored` until Phase 2 ships, no harm.
-
-| Event                           | Future effect (Phase 2)                                                  |
-|---------------------------------|--------------------------------------------------------------------------|
-| `created/updated/deleted: Backup`         | `/server/{id}/backups` reads from local DB instead of calling Pelican every time. |
-| `created/updated/deleted: Allocation`     | `/server/{id}/network` reads from local DB.                              |
-| `created/updated/deleted: Database`       | `/server/{id}/databases` reads from local DB (mot de passe reste API live). |
-| `created/updated/deleted: DatabaseHost`   | Mirrors database host metadata.                                          |
-| `created/updated/deleted: ServerTransfer` | Badge "transfert en cours" sur la fiche serveur.                         |
-
 ### À NE PAS cocher
 
-| Event                                  | Why                                                                              |
-|----------------------------------------|----------------------------------------------------------------------------------|
-| `event: ActivityLogged`                | Fires on every user action (power.start, command, file.download, etc.). Volume too high — would flood the rate limiter. |
-| `created/updated/deleted: ActivityLog` | Same as above.                                                                   |
-| `created/updated: Schedule`            | Fires on every cron tick (each schedule run = 2 webhooks). Flood guaranteed.     |
-| `created/updated: Task`                | Same flood pattern as Schedule.                                                  |
-| `created/updated: ApiKey`              | `last_used_at` updated on every Pelican API call → constant noise.               |
-| `created/updated: Webhook`             | The webhook log table itself — would create infinite loops if not blacklisted.   |
-| `created/updated: WebhookConfiguration`| Pelican's own webhook config — meta-data, not useful to mirror.                  |
-| `created/updated: Role` / `NodeRole`   | Pelican RBAC — Peregrine has its own admin model, no value in mirroring.         |
+The Allocation / Backup / Database / DatabaseHost / ServerTransfer /
+Subuser events were tied to a now-cancelled "local DB read" feature ;
+the SPA always reads Pelican live for `/network /databases /backups
+/sub-users`, so these events add no value (they'd just feed mirror
+tables nothing reads). The invitations plugin reads sub-users live too.
+
+| Event                                     | Why                                                                              |
+|-------------------------------------------|----------------------------------------------------------------------------------|
+| `created/updated/deleted: Backup`         | Was for Phase 2 local DB reads — feature cancelled, page reads Pelican live.     |
+| `created/updated/deleted: Allocation`     | Same reason.                                                                     |
+| `created/updated/deleted: Database`       | Same reason.                                                                     |
+| `created/updated/deleted: DatabaseHost`   | Same reason.                                                                     |
+| `created/updated/deleted: ServerTransfer` | Same reason.                                                                     |
+| `eloquent.created/deleted: Subuser`       | Same reason — the invitations plugin reads sub-users from the live API.         |
+| `event: Server\SubUserAdded/Removed`      | Same.                                                                            |
+| `event: ActivityLogged`                   | Fires on every user action (power.start, command, file.download, etc.). Volume too high — would flood the rate limiter. |
+| `created/updated/deleted: ActivityLog`    | Same as above.                                                                   |
+| `created/updated: Schedule`               | Fires on every cron tick (each schedule run = 2 webhooks). Flood guaranteed.     |
+| `created/updated: Task`                   | Same flood pattern as Schedule.                                                  |
+| `created/updated: ApiKey`                 | `last_used_at` updated on every Pelican API call → constant noise.               |
+| `created/updated: Webhook`                | The webhook log table itself — would create infinite loops if not blacklisted.   |
+| `created/updated: WebhookConfiguration`   | Pelican's own webhook config — meta-data, not useful to mirror.                  |
+| `created/updated: Role` / `NodeRole`      | Pelican RBAC — Peregrine has its own admin model, no value in mirroring.         |
 
 ## 4. Tableau récap par effet
 
@@ -144,7 +144,6 @@ receiver will record them as `ignored` until Phase 2 ships, no harm.
 | Real-time email / name changes from Pelican           | `updated: User`, `deleted: User`                                               |
 | Auto-discovery of new nodes you add in Pelican        | `created: Node`, `updated: Node`, `deleted: Node`                              |
 | Auto-discovery of new eggs (game types)               | `created/updated/deleted: Egg` + `created/updated/deleted: EggVariable`        |
-| Phase 2 preview (Backup/Allocation/Database mirrors)  | The Phase 2 list above (no harm yet, will activate when shipped)               |
 
 ## 5. Verify
 
@@ -214,34 +213,28 @@ so a short retention window suffices).
 - **`/admin/nodes` missing a node you added** : tick `created: Node` in
   Pelican. Until then, run `php artisan sync:nodes`.
 
-## Phase 2 — Mirror local étendu
+## Phase 2 — annulée
 
-À partir de la Phase 2, les pages utilisateur **Backups**, **Databases** et
-**Network** lisent leurs données depuis des tables miroirs locales
-(`pelican_backups`, `pelican_databases`, `pelican_allocations`,
-`pelican_database_hosts`, `pelican_server_transfers`) au lieu d'appeler
-Pelican à chaque chargement de page. Résultat : pages instantanées
-(5-10 ms au lieu de 200 ms cache miss), Peregrine reste fonctionnel
-même si Pelican est temporairement indisponible.
+Une feature "lecture DB locale" était prévue : les pages **Backups**,
+**Databases** et **Network** auraient lu depuis des tables miroir
+locales pour gagner en latence. Elle a été **annulée** — les pages
+restent toujours en API live sur Pelican (200 ms en cache miss, 0 ms
+en cache hit). Raison : la parité stricte entre la mirror et la
+réponse API live demandait trop de maintenance pour le gain perçu.
 
-### Comment activer Phase 2
+Les tables miroir (`pelican_backups`, `pelican_databases`,
+`pelican_allocations`, `pelican_database_hosts`,
+`pelican_server_transfers`, `invitations_pelican_subusers`) sont
+**toujours alimentées** par les jobs sync webhook quand les events
+correspondants sont cochés — utile pour audit et reconciliation, pas
+pour l'affichage. Si tu ne te sers pas de la commande
+`pelican:diff-mirror` ni de la réconciliation horaire, **dé-tickeer**
+les events `Allocation` / `Backup` / `Database` / `DatabaseHost` /
+`ServerTransfer` côté Pelican retire ce trafic inutile.
 
-1. Cocher dans Pelican `/admin/webhooks` les events Phase 2 (cf. liste
-   "Recommended" et "Phase 2 preview" plus haut).
-2. Lancer `php artisan pelican:backfill-mirrors` — la commande importe
-   tous les backups, databases, allocations existants. Idempotente,
-   resumable (`--resume` après interruption), chunked (500 par batch).
-3. Vérifier l'absence de drift : `php artisan pelican:diff-mirror all`.
-4. Activer le toggle **"Phase 2 — Lectures DB locale"** dans
-   `/admin/pelican-webhook-settings`.
+### Réconciliation horaire
 
-À ce moment-là les controllers basculent en lecture DB locale. La
-réconciliation horaire automatique rattrape les rares cas de drift
-(mass-updates Pelican qui bypassent les events).
-
-### Réconciliation à 2 cadences
-
-Un cron hourly choisit automatiquement son scope selon le toggle
+Un cron hourly maintient les tables miroir cohérentes selon le toggle
 webhook :
 
 | Webhook actif | Réconciliation |
@@ -250,16 +243,6 @@ webhook :
 | `pelican_webhook_enabled = false` | Hourly fullSync : toutes les ressources miroirées (Servers, Users, Nodes, Eggs, Backups, Databases, Allocations, Transfers) — mode "polling complet" pour qui ne veut pas configurer le webhook |
 
 Logs visibles dans `/admin/bridge-sync-logs` (action `pelican_mirror_reconcile`).
-
-### Sécurité
-
-- **Aucun secret n'est miroré localement** — les fields `password` (DB),
-  `daemon_token` (Wings), `mfa_app_secret` (User) sont `$hidden +
-  encrypted` côté Pelican, donc absents du payload webhook.
-- Les jobs miroirs whitelist explicite des champs persistés. Un nouveau
-  field Pelican = ignoré silencieusement par défaut.
-- Canary explicite : si Pelican émet jamais un `password` dans un
-  payload (régression future), un `Log::critical` se déclenche.
 
 ### Auditer un drift
 
@@ -276,17 +259,6 @@ La sortie liste : nombre côté remote (Pelican), nombre local, manquants,
 orphelins. Lecture seule — n'écrit jamais, ne corrige rien. Pour
 forcer une resync : `php artisan pelican:backfill-mirrors --fresh`.
 
-### Dépannage Phase 2
-
-- **Page Backups vide après activation du toggle** : tu n'as pas lancé
-  `pelican:backfill-mirrors` avant. Désactive le toggle, lance le
-  backfill, réactive.
-- **`/admin/pelican-mirror/*` cachés du menu** : ces pages ne s'affichent
-  que si le webhook receiver est activé (`pelican_webhook_enabled=true`).
-- **Drift après transfer Pelican** : la réconciliation horaire le
-  rattrape automatiquement. Pour forcer immédiatement : déclencher la
-  commande artisan `pelican:backfill-mirrors --only=allocations`.
-
 ## Filament admin map
 
 | Page                                      | When visible                                  |
@@ -296,9 +268,6 @@ forcer une resync : `php artisan pelican:backfill-mirrors --fresh`.
 | `/admin/bridge-settings`                  | Always (Bridge has its own settings)          |
 | `/admin/bridge-sync-logs`                 | Only in `shop_stripe` mode                    |
 | `/admin/servers` (with stuck badge)       | Always — badge appears on `provisioning` rows older than 30 min |
-| `/admin/pelican-backups` (Phase 2)        | When `pelican_webhook_enabled` is `true`      |
-| `/admin/pelican-allocations` (Phase 2)    | When `pelican_webhook_enabled` is `true`      |
-| `/admin/pelican-server-transfers` (Phase 2)| When `pelican_webhook_enabled` is `true`     |
 
 ## Settings keys reference
 
@@ -307,4 +276,3 @@ forcer une resync : `php artisan pelican:backfill-mirrors --fresh`.
 | `pelican_webhook_enabled`        | string  | `'true'` / `'false'`. Gates the middleware and the logs page.    |
 | `pelican_webhook_token`          | string  | Encrypted via `Crypt::encryptString`. 64-char base64 recommended.|
 | `bridge_pelican_webhook_token`   | string  | **Legacy fallback** for installs that haven't run the extract migration. Read by the middleware if `pelican_webhook_token` is missing. Will be removed in a future release. |
-| `mirror_reads_enabled`           | string  | `'true'` / `'false'`. Phase 2 toggle: when on, controllers (`ServerBackupController`, `ServerDatabaseController`, `ServerNetworkController`) read from `pelican_*` mirror tables instead of calling Pelican live. Default off — flip on after running `pelican:backfill-mirrors`. |

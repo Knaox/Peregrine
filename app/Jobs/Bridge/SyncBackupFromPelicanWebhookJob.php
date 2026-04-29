@@ -3,6 +3,7 @@
 namespace App\Jobs\Bridge;
 
 use App\Enums\PelicanEventKind;
+use App\Events\Mirror\ServerMirrorChanged;
 use App\Models\Pelican\Backup;
 use App\Models\Server;
 use Illuminate\Bus\Queueable;
@@ -86,6 +87,13 @@ class SyncBackupFromPelicanWebhookJob implements ShouldQueue
             $whitelisted,
         );
 
+        event(new ServerMirrorChanged(
+            serverId: (int) $server->id,
+            resource: ServerMirrorChanged::RESOURCE_BACKUP,
+            action: ServerMirrorChanged::ACTION_UPSERT,
+            resourceId: $this->pelicanBackupId,
+        ));
+
         Log::info('SyncBackupFromPelicanWebhookJob: backup mirrored', [
             'pelican_backup_id' => $this->pelicanBackupId,
             'local_backup_id' => $backup->id,
@@ -100,7 +108,17 @@ class SyncBackupFromPelicanWebhookJob implements ShouldQueue
         if ($backup === null) {
             return;
         }
+        $serverLocalId = $backup->server_id;
         $backup->delete();
+
+        if ($serverLocalId !== null) {
+            event(new ServerMirrorChanged(
+                serverId: (int) $serverLocalId,
+                resource: ServerMirrorChanged::RESOURCE_BACKUP,
+                action: ServerMirrorChanged::ACTION_DELETE,
+                resourceId: $this->pelicanBackupId,
+            ));
+        }
     }
 
     private function parseDate(mixed $raw): ?Carbon
