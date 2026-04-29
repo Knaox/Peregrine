@@ -1,0 +1,84 @@
+<?php
+
+namespace Plugins\Invitations\Listeners;
+
+use App\Enums\PelicanEventKind;
+use App\Events\Bridge\SubuserSynced;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+use Plugins\Invitations\Models\PelicanSubuser;
+
+/**
+ * Persists a Pelican subuser change locally inside the invitations
+ * plugin's mirror table. Listens to the core `App\Events\Bridge\SubuserSynced`
+ * event fired by `App\Jobs\Bridge\DispatchSubuserSyncedJob` whenever
+ * Pelican forwards a subuser webhook.
+ *
+ * Plugin queue-safe contract (CLAUDE.md): this listener is SYNC — it
+ * runs in-process when the core job fires the event, so no plugin
+ * class is ever serialised into the queue payload.
+ *
+ * Final to follow the plugin queue-safe contract.
+ */
+final class SyncPelicanSubuser
+{
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function handle(SubuserSynced $event): void
+    {
+        if ($event->eventKind === PelicanEventKind::SubuserRemoved) {
+            $this->handleRemoval($event);
+            return;
+        }
+
+        $payload = $event->payload;
+
+        $permissions = $payload['permissions'] ?? null;
+        if (is_string($permissions)) {
+            $decoded = json_decode($permissions, true);
+            $permissions = is_array($decoded) ? $decoded : [];
+        }
+        if (! is_array($permissions)) {
+            $permissions = [];
+        }
+
+        PelicanSubuser::updateOrCreate(
+            ['pelican_subuser_id' => $event->pelicanSubuserId],
+            [
+                'pelican_server_id' => $event->pelicanServerId,
+                'pelican_user_id' => $event->pelicanUserId,
+                'permissions' => $permissions,
+                'pelican_created_at' => $this->parseDate($payload['created_at'] ?? null),
+                'pelican_updated_at' => $this->parseDate($payload['updated_at'] ?? null),
+            ],
+        );
+
+        Log::info('SyncPelicanSubuser: subuser mirrored in invitations plugin', [
+            'pelican_subuser_id' => $event->pelicanSubuserId,
+            'pelican_server_id' => $event->pelicanServerId,
+            'event_kind' => $event->eventKind->value,
+        ]);
+    }
+
+    private function handleRemoval(SubuserSynced $event): void
+    {
+        PelicanSubuser::where('pelican_subuser_id', $event->pelicanSubuserId)->delete();
+
+        Log::info('SyncPelicanSubuser: subuser removed from invitations plugin mirror', [
+            'pelican_subuser_id' => $event->pelicanSubuserId,
+        ]);
+    }
+
+    private function parseDate(mixed $raw): ?Carbon
+    {
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+        try {
+            return Carbon::parse((string) $raw);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+}
