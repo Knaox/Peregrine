@@ -2,7 +2,8 @@
 
 namespace App\Services;
 
-use App\Support\ColorUtils;
+use App\Services\Theme\CardConfigResolver;
+use App\Services\Theme\CssVariableBuilder;
 use App\Support\ThemePresets;
 use Illuminate\Support\Facades\Cache;
 
@@ -139,148 +140,23 @@ class ThemeService
 
     private function buildCssVariables(array $theme): array
     {
-        $vars = [];
-        foreach ($theme['colors'] as $key => $value) {
-            $cssKey = str_replace('_', '-', $key);
-            $vars["--color-{$cssKey}"] = $value;
-        }
-
-        // Auto-derive RGB triplets (for rgba() usage in components)
-        $vars['--color-primary-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['primary']);
-        $vars['--color-danger-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['danger']);
-        $vars['--color-success-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['success']);
-        $vars['--color-info-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['info']);
-        $vars['--color-warning-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['warning']);
-        $vars['--color-text-secondary-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['text_secondary']);
-        $vars['--color-suspended-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['suspended']);
-        $vars['--color-installing-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['installing']);
-
-        // Auto-derive glow colors (base color with alpha)
-        $vars['--color-primary-glow'] = ColorUtils::hexToRgba($theme['colors']['primary'], 0.15);
-        $vars['--color-danger-glow'] = ColorUtils::hexToRgba($theme['colors']['danger'], 0.15);
-        $vars['--color-success-glow'] = ColorUtils::hexToRgba($theme['colors']['success'], 0.15);
-        $vars['--color-suspended-glow'] = ColorUtils::hexToRgba($theme['colors']['suspended'], 0.15);
-        $vars['--color-installing-glow'] = ColorUtils::hexToRgba($theme['colors']['installing'], 0.15);
-
-        // Auto-derive glass colors from surface
-        $vars['--color-glass'] = ColorUtils::hexToRgba($theme['colors']['surface'], 0.75);
-        $vars['--color-glass-border'] = $theme['colors']['border'];
-
-        $vars['--radius'] = $theme['radius'];
-
-        // Scale radius variants from base radius
-        $radiusVal = (float) $theme['radius'];
-        $unit = str_contains($theme['radius'], 'rem') ? 'rem' : 'px';
-        $vars['--radius-sm'] = ($radiusVal > 0 ? round($radiusVal * 0.5, 3) : 0) . $unit;
-        $vars['--radius-lg'] = ($radiusVal > 0 ? round($radiusVal * 1.33, 3) : 0) . $unit;
-
-        $vars['--font-sans'] = $theme['font'] . ', system-ui, sans-serif';
-
-        // Shadow intensity: 0-100 → 0.0-1.0 scale for shadow alpha multiplier
-        $shadowPct = max(0, min(100, (int) $theme['shadow_intensity']));
-        $vars['--shadow-intensity'] = (string) round($shadowPct / 100, 3);
-
-        // Density: compact | comfortable | spacious → padding/gap multiplier
-        $vars['--density-scale'] = match ($theme['density']) {
-            'compact' => '0.75',
-            'spacious' => '1.25',
-            default => '1',
-        };
-
-        // Auto-derive secondary + ring RGB triplets for rgba() usage
-        $vars['--color-secondary-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['secondary']);
-        $vars['--color-ring-rgb'] = ColorUtils::hexToRgbTriplet($theme['colors']['ring']);
-
-        // Mode-dependent overlay + scrim tokens so components don't need to
-        // hardcode rgba(0,0,0,...) or rgba(255,255,255,...) for glass effects.
-        $isLight = ($theme['mode'] ?? 'dark') === 'light';
-        // Banner overlays sit on top of an egg image (always visually busy),
-        // so both modes use a dark gradient to keep the white text legible.
-        $vars['--banner-overlay']         = 'rgba(12, 10, 20, 0.92)';
-        $vars['--banner-overlay-soft']    = 'rgba(12, 10, 20, 0.55)';
-        $vars['--surface-overlay-soft']   = $isLight ? 'rgba(0, 0, 0, 0.04)'       : 'rgba(255, 255, 255, 0.08)';
-        $vars['--surface-overlay-strong'] = $isLight ? 'rgba(0, 0, 0, 0.08)'       : 'rgba(255, 255, 255, 0.15)';
-        $vars['--surface-overlay-hover']  = $isLight ? 'rgba(0, 0, 0, 0.06)'       : 'rgba(255, 255, 255, 0.06)';
-        $vars['--shadow-inset']           = $isLight ? 'inset 0 2px 8px rgba(0, 0, 0, 0.05)' : 'inset 0 2px 8px rgba(0, 0, 0, 0.3)';
-        $vars['--modal-scrim']            = $isLight ? 'rgba(15, 23, 42, 0.35)'    : 'rgba(0, 0, 0, 0.7)';
-        $vars['--text-on-banner']         = '#ffffff'; // banners always darkened enough to keep white text
-        $vars['--scrollbar-thumb']        = $isLight ? 'rgba(0, 0, 0, 0.2)'        : 'rgba(255, 255, 255, 0.15)';
-        // Ambient background veil: the AnimatedBackground draws this on top of
-        // body so the constellation + orbs get a unified tint. Dark: opaque
-        // black-purple to sit on top of the page bg. Light: very soft white
-        // brume that lets the body bg and orbs show through without masking.
-        // In light mode the overlay would just wash the page — skip it entirely.
-        // The orbes + body background provide enough ambiance on their own.
-        $vars['--ambient-overlay']        = $isLight ? 'transparent' : 'rgba(12, 10, 20, 0.75)';
-
-        // Egg banner bleed — luminosity blend at 25% opacity works on dark but
-        // leaves a distracting texture on a light page. Drop opacity and flip
-        // to multiply (darkens light into the egg image instead of revealing it).
-        $vars['--egg-bg-opacity'] = $isLight ? '0.15' : '0.25';
-        $vars['--egg-bg-blend']   = $isLight ? 'multiply' : 'luminosity';
-
-        return $vars;
+        return CssVariableBuilder::build($theme);
     }
 
     public function getCardConfig(): array
     {
-        $json = $this->settingsService->get('card_server_config');
-
-        $defaults = [
-            'layout' => 'grid',
-            'columns' => ['desktop' => 3, 'tablet' => 2, 'mobile' => 1],
-            'show_egg_icon' => true,
-            'show_egg_name' => true,
-            'show_plan_name' => true,
-            'show_status_badge' => true,
-            'show_stats_bars' => true,
-            'show_quick_actions' => true,
-            'show_ip_port' => false,
-            'show_uptime' => false,
-            'card_style' => 'glass',
-            'sort_default' => 'name',
-            'group_by' => 'none',
-        ];
-
-        if ($json) {
-            $decoded = json_decode($json, true);
-            if (is_array($decoded)) {
-                return array_merge($defaults, $decoded);
-            }
-        }
-
-        return $defaults;
+        return CardConfigResolver::mergeJson(
+            $this->settingsService->get('card_server_config'),
+            CardConfigResolver::cardDefaults(),
+        );
     }
 
     public function getSidebarConfig(): array
     {
-        $json = $this->settingsService->get('sidebar_server_config');
-
-        $defaults = [
-            'position' => 'left',
-            'style' => 'default',
-            'show_server_status' => true,
-            'show_server_name' => true,
-            'entries' => [
-                ['id' => 'overview', 'label_key' => 'servers.detail.overview', 'icon' => 'home', 'enabled' => true, 'route_suffix' => '', 'order' => 0],
-                ['id' => 'console', 'label_key' => 'servers.detail.console', 'icon' => 'terminal', 'enabled' => true, 'route_suffix' => '/console', 'order' => 1],
-                ['id' => 'files', 'label_key' => 'servers.detail.files', 'icon' => 'folder', 'enabled' => true, 'route_suffix' => '/files', 'order' => 2],
-                ['id' => 'databases', 'label_key' => 'servers.detail.databases', 'icon' => 'database', 'enabled' => true, 'route_suffix' => '/databases', 'order' => 3],
-                ['id' => 'backups', 'label_key' => 'servers.detail.backups', 'icon' => 'archive', 'enabled' => true, 'route_suffix' => '/backups', 'order' => 4],
-                ['id' => 'schedules', 'label_key' => 'servers.detail.schedules', 'icon' => 'clock', 'enabled' => true, 'route_suffix' => '/schedules', 'order' => 5],
-                ['id' => 'network', 'label_key' => 'servers.detail.network', 'icon' => 'globe', 'enabled' => true, 'route_suffix' => '/network', 'order' => 6],
-                ['id' => 'sftp', 'label_key' => 'servers.detail.sftp', 'icon' => 'key', 'enabled' => true, 'route_suffix' => '/sftp', 'order' => 7],
-            ],
-        ];
-
-        if ($json) {
-            $decoded = json_decode($json, true);
-            if (is_array($decoded)) {
-                return array_merge($defaults, $decoded);
-            }
-        }
-
-        return $defaults;
+        return CardConfigResolver::mergeJson(
+            $this->settingsService->get('sidebar_server_config'),
+            CardConfigResolver::sidebarDefaults(),
+        );
     }
 
     /**

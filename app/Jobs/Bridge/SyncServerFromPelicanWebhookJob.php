@@ -7,6 +7,8 @@ use App\Models\Server;
 use App\Models\User;
 use App\Services\Bridge\BridgeModeService;
 use App\Services\Pelican\PelicanApplicationService;
+use App\Services\Sync\EggResolver;
+use App\Services\Sync\ServerStatusResolver;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,45 +17,10 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Mirrors a Pelican Server change into the local DB.
- *
- * Triggered by Pelican outgoing webhooks (`eloquent.created/updated/deleted`
- * on App\Models\Server, plus App\Events\Server\Installed). The controller
- * passes the raw Pelican payload snapshot — we use it as the trigger and
- * refetch the canonical state from the Pelican Application API so the DTO's
- * `isSuspended` flag is the source of truth (Pelican's webhook payload omits
- * the canonical `suspended_at` field for `eloquent.updated` events).
- *
- * Behaviour depends on whether the Server is Shop-owned :
- *
- *   Shop-owned (has `stripe_subscription_id` OR `plan_id`)
- *     - The Shop is source of truth for ownership, name, billing status.
- *     - Pelican is only allowed to fill the gaps the Shop doesn't have :
- *       `pelican_server_id` (already set), `identifier`, `egg_id`,
- *       `paymenter_service_id`, AND the install transition
- *       `provisioning` → `active` / `provisioning_failed`.
- *     - Never touches `user_id`, `name`, billing-status (`suspended` /
- *       `terminated`), `plan_id`, `stripe_subscription_id`.
- *     - On `provisioning` → `active` transition AND shop_stripe mode, fires
- *       `ServerInstalled` so the "your server is playable" email goes out.
- *       Strict order : update status FIRST, fire event SECOND.
- *
- *   Not Shop-owned (Paymenter mode, or admin-imported servers)
- *     - Pelican is the source of truth → full upsert on every field.
- *     - No Peregrine event is dispatched (Paymenter sends its own emails).
- *
- *   Server doesn't exist locally + Shop+Stripe mode
- *     - Skip with a warning. The local row is supposed to be created by
- *       ProvisionServerJob (Stripe webhook). If a Pelican webhook arrives
- *       first, ignore — the next webhook (after the Stripe flow caught up)
- *       will succeed via the upsert path.
- *
- *   Server doesn't exist locally + Paymenter mode
- *     - Create it (existing behaviour).
- *
- * If the owner doesn't exist locally yet, dispatch SyncUserFromPelicanWebhookJob
- * and rely on retry to pick up the freshly-synced user. Three retries with
- * a short backoff cover the typical "user just created" race.
+ * Mirrors a Pelican Server change into the local DB. Two paths : Shop-owned
+ * servers get a strict whitelist update (only install-state + Pelican-derived
+ * fields), Paymenter / admin-imported servers get a full upsert. Owner sync
+ * is auto-triggered if the User row is missing locally.
  */
 class SyncServerFromPelicanWebhookJob implements ShouldQueue
 {
@@ -247,56 +214,14 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
             || $server->plan_id !== null;
     }
 
-    /**
-     * Compute the install-related status delta Pelican is allowed to apply
-     * on a Shop-owned server. Returns null when no transition should happen.
-     *
-     * Allowed transitions :
-     *   provisioning → active                (install finished)
-     *   provisioning → provisioning_failed   (install errored)
-     *
-     * Anything else (suspended, terminated, runtime states from Wings) is
-     * the Shop's / billing's / Wings' responsibility — we don't touch it.
-     */
-    private function resolveInstallStatus(
-        ?\App\Services\Pelican\DTOs\PelicanServer $apiSnapshot,
-        string $previousStatus,
-    ): ?string {
-        if ($previousStatus !== 'provisioning') {
-            return null;
-        }
-
-        if ($apiSnapshot !== null) {
-            // PelicanServer DTO exposes `installFailed()` / `isInstalling()`.
-            if ($apiSnapshot->installFailed()) {
-                return 'provisioning_failed';
-            }
-            if ($apiSnapshot->isInstalling()) {
-                return null;
-            }
-            // Install finished, server is healthy.
-            return 'active';
-        }
-
-        // No API snapshot — fall back to payload-only mapping.
-        $payloadStatus = $this->payloadSnapshot['status'] ?? null;
-        return match ($payloadStatus) {
-            'install_failed', 'reinstall_failed' => 'provisioning_failed',
-            'installing' => null,
-            null, '' => 'active',
-            default => null,
-        };
+    private function resolveInstallStatus(?\App\Services\Pelican\DTOs\PelicanServer $apiSnapshot, string $previousStatus): ?string
+    {
+        return ServerStatusResolver::resolveInstallStatus($apiSnapshot, $previousStatus, $this->payloadSnapshot);
     }
 
-    /**
-     * Translate the `isSuspended` flag from the Pelican Application API
-     * response into our local `servers.status` enum. Used only on the
-     * full-upsert path (Paymenter / admin-imported), where Pelican is the
-     * source of truth for the lifecycle status.
-     */
     private function mapStatusFromApi(bool $isSuspended): string
     {
-        return $isSuspended ? 'suspended' : 'active';
+        return ServerStatusResolver::mapStatusFromApi($isSuspended);
     }
 
     private function isDeletionEvent(): bool
@@ -338,26 +263,11 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
     }
 
     /**
-     * Translate Pelican's server status field into our local enum. Used on
-     * the full-upsert path only (Paymenter / admin-imported).
-     *
      * @param  array<string, mixed>  $data
      */
     private function mapPelicanStatus(array $data): string
     {
-        $isSuspended = (bool) ($data['suspended'] ?? false);
-        $status = $data['status'] ?? null;
-
-        if ($isSuspended || $status === 'suspended') {
-            return 'suspended';
-        }
-
-        return match ($status) {
-            'installing' => 'provisioning',
-            'install_failed', 'reinstall_failed' => 'provisioning_failed',
-            null, '' => 'active',
-            default => (string) $status,
-        };
+        return ServerStatusResolver::mapPelicanStatus($data);
     }
 
     /**
@@ -377,48 +287,10 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
     }
 
     /**
-     * Resolve the local egg id from the Pelican payload.
-     *
-     * Pelican ships the egg as `egg_id` at the top of the Server payload —
-     * that integer is Pelican's own egg id, NOT our local `eggs.id`. We
-     * mirror Pelican's id in our `eggs.pelican_egg_id` column via
-     * `php artisan sync:eggs`, so the lookup is a join on that column.
-     *
-     * If no local egg matches, auto-trigger a one-shot egg sync. After that,
-     * retry the lookup once. If still unresolved, return null.
-     *
      * @param  array<string, mixed>  $data
      */
     private function resolveLocalEggId(array $data): ?int
     {
-        $pelicanEggId = $data['egg_id'] ?? $data['egg'] ?? null;
-        if ($pelicanEggId === null || $pelicanEggId === '') {
-            return null;
-        }
-
-        $pelicanEggId = (int) $pelicanEggId;
-        $localEggId = \App\Models\Egg::where('pelican_egg_id', $pelicanEggId)->value('id');
-
-        if ($localEggId === null) {
-            try {
-                app(\App\Services\Sync\InfrastructureSync::class)->syncEggs();
-                $localEggId = \App\Models\Egg::where('pelican_egg_id', $pelicanEggId)->value('id');
-            } catch (\Throwable $e) {
-                Log::warning('SyncServerFromPelicanWebhookJob: egg auto-sync failed', [
-                    'pelican_server_id' => $this->pelicanServerId,
-                    'pelican_egg_id' => $pelicanEggId,
-                    'message' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        if ($localEggId === null) {
-            Log::info('SyncServerFromPelicanWebhookJob: egg not resolvable locally', [
-                'pelican_server_id' => $this->pelicanServerId,
-                'pelican_egg_id' => $pelicanEggId,
-            ]);
-        }
-
-        return $localEggId !== null ? (int) $localEggId : null;
+        return EggResolver::resolveLocalEggId($data, $this->pelicanServerId);
     }
 }

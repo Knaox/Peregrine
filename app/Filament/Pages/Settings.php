@@ -2,10 +2,11 @@
 
 namespace App\Filament\Pages;
 
+use App\Actions\Settings\TestSmtpConfigAction;
 use App\Filament\Pages\Settings\SettingsFormSchema;
+use App\Services\Settings\SettingsPersister;
 use App\Services\SettingsService;
 use App\Services\SetupService;
-use Illuminate\Support\Facades\Mail;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -155,90 +156,11 @@ class Settings extends Page implements HasForms
 
     public function save(): void
     {
-        $data = $this->form->getState();
-        $settings = app(SettingsService::class);
-        $setup = app(SetupService::class);
-
-        // Appearance → DB
-        $settings->set('app_name', $data['app_name'] ?? null);
-        $settings->set('show_app_name', ($data['show_app_name'] ?? true) ? 'true' : 'false');
-        $settings->set('logo_height', $data['logo_height'] ?? '40');
-        $defaultLocale = in_array($data['default_locale'] ?? 'en', ['en', 'fr'], true)
-            ? $data['default_locale']
-            : 'en';
-        $settings->set('default_locale', $defaultLocale);
-        $settings->set('header_links', json_encode($data['header_links'] ?? []));
-
-        $logoValue = $data['logo_url'] ?? null;
-        if ($logoValue) {
-            $path = is_array($logoValue) ? (array_values($logoValue)[0] ?? null) : $logoValue;
-            if ($path) {
-                $settings->set('app_logo_path', $path);
-            }
-        }
-
-        // Light-mode logo: optional; empty/cleared value persists as '' so the
-        // frontend falls back to the main logo.
-        $logoLightValue = $data['logo_url_light'] ?? null;
-        $logoLightPath = is_array($logoLightValue) ? (array_values($logoLightValue)[0] ?? null) : $logoLightValue;
-        $settings->set('app_logo_path_light', $logoLightPath ?: '');
-
-        $faviconValue = $data['favicon_url'] ?? null;
-        if ($faviconValue) {
-            $path = is_array($faviconValue) ? (array_values($faviconValue)[0] ?? null) : $faviconValue;
-            if ($path) {
-                $settings->set('app_favicon_path', $path);
-            }
-        }
-
-        // Pelican → .env
-        $envValues = [];
-        if (isset($data['pelican_url'])) {
-            $envValues['PELICAN_URL'] = $data['pelican_url'];
-        }
-        if (isset($data['pelican_admin_api_key']) && $data['pelican_admin_api_key'] !== '') {
-            $envValues['PELICAN_ADMIN_API_KEY'] = $data['pelican_admin_api_key'];
-        }
-        if (isset($data['pelican_client_api_key']) && $data['pelican_client_api_key'] !== '') {
-            $envValues['PELICAN_CLIENT_API_KEY'] = $data['pelican_client_api_key'];
-        }
-        // Auth config is owned by the dedicated AuthSettings page.
-        // Bridge config is owned by the dedicated BridgeSettings page.
-        // Both stay out of .env so admins can change them without a redeploy.
-
-        // SMTP → .env
-        $envValues['MAIL_MAILER'] = $data['mail_mailer'] ?? 'smtp';
-        if (($data['mail_mailer'] ?? 'smtp') === 'smtp') {
-            $envValues['MAIL_HOST'] = $data['mail_host'] ?? '';
-            $envValues['MAIL_PORT'] = $data['mail_port'] ?? '587';
-            $envValues['MAIL_ENCRYPTION'] = $data['mail_encryption'] ?? 'tls';
-            $envValues['MAIL_USERNAME'] = $data['mail_username'] ?? '';
-            if (! empty($data['mail_password'])) {
-                $envValues['MAIL_PASSWORD'] = $data['mail_password'];
-            }
-        }
-        $envValues['MAIL_FROM_ADDRESS'] = $data['mail_from_address'] ?? '';
-        $envValues['MAIL_FROM_NAME'] = $data['mail_from_name'] ?? config('app.name', 'Peregrine');
-
-        // Developer / General / Network → DB (table `settings`) instead of
-        // .env, so a Docker stack rebuild doesn't wipe them. AppServiceProvider
-        // overrides config('app.debug') and config('app.timezone') from these
-        // settings at boot ; DynamicTrustProxies middleware reads
-        // 'trusted_proxies' on every request.
-        $settings->set('app_debug', ($data['app_debug'] ?? false) ? 'true' : 'false');
-        $settings->set('app_timezone', (string) ($data['app_timezone'] ?? 'UTC'));
-
-        $proxies = $data['trusted_proxies'] ?? [];
-        $proxies = is_array($proxies)
-            ? array_values(array_filter(array_map('trim', $proxies), fn ($v): bool => $v !== ''))
-            : [];
-        $settings->set('trusted_proxies', empty($proxies) ? '*' : implode(',', $proxies));
-
-        if (! empty($envValues)) {
-            $setup->writeEnv($envValues);
-        }
-
-        $settings->clearCache();
+        $persister = new SettingsPersister(
+            app(SettingsService::class),
+            app(SetupService::class),
+        );
+        $persister->persist($this->form->getState());
 
         Notification::make()->title('Settings saved')
             ->body('Your settings have been updated successfully.')
@@ -247,34 +169,14 @@ class Settings extends Page implements HasForms
 
     public function testSmtp(): void
     {
-        $userEmail = auth()->user()?->email;
+        $userEmail = (string) (auth()->user()?->email ?? '');
+        $result = (new TestSmtpConfigAction())->execute($userEmail);
 
-        if (! $userEmail) {
-            Notification::make()->title('No email')->body('Cannot determine your email.')->danger()->send();
+        $notification = Notification::make()
+            ->title($result['ok'] ? 'Test email sent' : 'SMTP test failed')
+            ->body($result['message']);
 
-            return;
-        }
-
-        try {
-            Mail::raw(
-                'This is a test email from ' . config('app.name', 'Peregrine') . ".\n\nIf you received this, your SMTP is working.\n\nSent at: " . now()->toDateTimeString(),
-                function ($message) use ($userEmail): void {
-                    $message->to($userEmail)->subject(config('app.name', 'Peregrine') . ' — SMTP Test');
-                },
-            );
-
-            Notification::make()
-                ->title('Test email sent')
-                ->body("A test email was sent to {$userEmail}.")
-                ->success()
-                ->send();
-        } catch (\Throwable $e) {
-            Notification::make()
-                ->title('SMTP test failed')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
+        $result['ok'] ? $notification->success()->send() : $notification->danger()->send();
     }
 
     protected function getFormActions(): array
