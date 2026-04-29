@@ -29,7 +29,7 @@ class Plugins extends Page implements HasForms
 
     public static function getNavigationGroup(): ?string
     {
-        return __('admin.navigation.groups.settings');
+        return 'Settings';
     }
 
     public static function getNavigationLabel(): string

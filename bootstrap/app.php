@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(\App\Http\Middleware\EnsureInstalled::class);
+        // Read users.locale (or the panel-wide default_locale) into
+        // app()->setLocale() so every __() in Filament/Notifications/Mailables
+        // resolves against the right language file.
+        $middleware->append(\App\Http\Middleware\SetUserLocale::class);
         $middleware->statefulApi();
         // Trusted proxies are now read per-request from the `settings`
         // table by DynamicTrustProxies, so admins can change the list at

@@ -3,10 +3,12 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\RedirectAdminToFrontendLogin;
+use App\Http\Middleware\SetUserLocale;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
@@ -55,11 +57,23 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-arrow-left')
                     ->sort(100),
             ])
+            // Indexed-array form so matching happens by KEY (the fixed
+            // 'Servers'/'Integrations'/'Settings' string returned by each
+            // Resource/Page::getNavigationGroup()) while the LABEL is a
+            // closure that resolves the i18n key per request. Without the
+            // indexed form, matching falls back to label comparison and a
+            // French label ("Serveurs & Pelican") would no longer match the
+            // English key 'Servers' coming from the Resource.
             ->navigationGroups([
-                __('admin.navigation.groups.servers'),
-                __('admin.navigation.groups.pelican'),
-                __('admin.navigation.groups.pelican_mirror'),
-                __('admin.navigation.groups.settings'),
+                'Servers' => NavigationGroup::make()
+                    ->label(fn () => __('admin.navigation.groups.servers'))
+                    ->icon('heroicon-o-server-stack'),
+                'Integrations' => NavigationGroup::make()
+                    ->label(fn () => __('admin.navigation.groups.integrations'))
+                    ->icon('heroicon-o-link'),
+                'Settings' => NavigationGroup::make()
+                    ->label(fn () => __('admin.navigation.groups.settings'))
+                    ->icon('heroicon-o-cog-6-tooth'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -80,6 +94,12 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                // Re-apply the user-locale middleware here. The global stack
+                // already sets it for /api/* and /admin/*, but Filament boot
+                // happens before the global middleware in some hot paths
+                // (cached routes, queue listeners hitting Filament). Belt
+                // and braces.
+                SetUserLocale::class,
             ])
             ->authMiddleware([
                 RedirectAdminToFrontendLogin::class,

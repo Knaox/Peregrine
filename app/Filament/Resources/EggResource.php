@@ -30,7 +30,7 @@ class EggResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return __('admin.navigation.groups.pelican');
+        return 'Servers';
     }
 
     public static function getNavigationLabel(): string

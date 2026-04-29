@@ -20,7 +20,7 @@ class PelicanAllocationResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return __('admin.navigation.groups.pelican_mirror');
+        return 'Integrations';
     }
 
     public static function getNavigationLabel(): string
@@ -38,11 +38,13 @@ class PelicanAllocationResource extends Resource
         return __('admin.resources.pelican_allocations.plural');
     }
 
+    /**
+     * Hidden from the sidebar — allocations are visible per-server in the
+     * server detail page. Data still mirrors to the local table for audit.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        $value = (string) app(\App\Services\SettingsService::class)
-            ->get('pelican_webhook_enabled', 'false');
-        return $value === 'true' || $value === '1';
+        return false;
     }
 
     public static function canCreate(): bool

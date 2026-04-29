@@ -34,6 +34,11 @@ class UserResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Servers';
+    }
+
     public static function getNavigationLabel(): string
     {
         return __('admin.resources.users.navigation');

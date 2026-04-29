@@ -3,9 +3,8 @@
 return [
     'navigation' => [
         'groups' => [
-            'servers' => 'Servers',
-            'pelican' => 'Pelican',
-            'pelican_mirror' => 'Pelican Mirror',
+            'servers' => 'Servers & Pelican',
+            'integrations' => 'Integrations & Logs',
             'settings' => 'Settings',
         ],
         'player_panel' => 'Player panel',

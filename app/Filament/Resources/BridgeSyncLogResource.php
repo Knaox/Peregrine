@@ -27,7 +27,7 @@ class BridgeSyncLogResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return __('admin.navigation.groups.settings');
+        return 'Integrations';
     }
 
     public static function getNavigationLabel(): string

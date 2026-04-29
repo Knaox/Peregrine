@@ -24,7 +24,7 @@ class PelicanBackupResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return __('admin.navigation.groups.pelican_mirror');
+        return 'Integrations';
     }
 
     public static function getNavigationLabel(): string
@@ -42,11 +42,15 @@ class PelicanBackupResource extends Resource
         return __('admin.resources.pelican_backups.plural');
     }
 
+    /**
+     * Hidden from the sidebar — backups don't need a dedicated admin page.
+     * The data still lands in `pelican_backups` for support audit; query the
+     * table directly when needed. Re-enable by returning the original
+     * `pelican_webhook_enabled` check if a future need surfaces.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        $value = (string) app(\App\Services\SettingsService::class)
-            ->get('pelican_webhook_enabled', 'false');
-        return $value === 'true' || $value === '1';
+        return false;
     }
 
     public static function canCreate(): bool

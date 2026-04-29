@@ -20,7 +20,7 @@ class PelicanServerTransferResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return __('admin.navigation.groups.pelican_mirror');
+        return 'Integrations';
     }
 
     public static function getNavigationLabel(): string
@@ -38,11 +38,14 @@ class PelicanServerTransferResource extends Resource
         return __('admin.resources.pelican_server_transfers.plural');
     }
 
+    /**
+     * Hidden from the sidebar — server transfers are exceptional events
+     * surfaced through Pelican's own UI when needed. Local mirror retained
+     * for support audit.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        $value = (string) app(\App\Services\SettingsService::class)
-            ->get('pelican_webhook_enabled', 'false');
-        return $value === 'true' || $value === '1';
+        return false;
     }
 
     public static function canCreate(): bool
