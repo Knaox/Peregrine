@@ -90,6 +90,20 @@ class SocialAuthController extends Controller
             $request->session()->regenerate();
         }
 
+        // When 2FA enforcement is on for admins and the freshly-authenticated
+        // admin hasn't set up 2FA yet, send them straight to /2fa/setup
+        // instead of /dashboard. Otherwise they'd land on /dashboard, hit
+        // /admin, get a 403 from Filament's canAccessPanel, bounce back to
+        // /login, click "Login with Shop" again, get the OAuth consent
+        // prompt AGAIN — a frustrating loop that clears only when they
+        // finish 2FA setup. The setup page knows it's enforced via
+        // `?enforced=1` and disables the back/skip affordances.
+        $user = $outcome->user;
+        $enforceAdmin2fa = $this->settings->get('auth_2fa_required_admins', 'false') === 'true';
+        if ($enforceAdmin2fa && $user->is_admin && ! $user->hasTwoFactor()) {
+            return redirect('/2fa/setup?enforced=1');
+        }
+
         return redirect('/dashboard');
     }
 
