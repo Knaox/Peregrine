@@ -67,4 +67,32 @@ final class LinkPelicanAccountJob implements ShouldQueue, ShouldBeUnique
 
         $action->execute($user, $this->source);
     }
+
+    /**
+     * Dispatch on the user-facing critical path WITHOUT letting a sync-queue
+     * Pelican failure crash the request. With `QUEUE_CONNECTION=sync` the
+     * regular `dispatch()` runs the handler inline — if Pelican is down the
+     * job throws and bubbles up to the OAuth callback / login / register
+     * controller, surfacing as "Shop OAuth doesn't link" or "registration
+     * failed" to the user even though their auth state is fine.
+     *
+     * This wrapper catches AND logs the dispatch-time failure ; on real
+     * queues (database / redis) the dispatch never throws so the catch
+     * is dead code and the job retries via its tries/backoff. On sync,
+     * the user-facing flow continues and the daily orphan-link command
+     * (`auth:relink-orphans`) is the final safety net.
+     */
+    public static function dispatchSafely(int $userId, string $source): void
+    {
+        try {
+            self::dispatch($userId, $source);
+        } catch (\Throwable $e) {
+            Log::warning('LinkPelicanAccountJob dispatch failed (likely sync queue + Pelican unreachable) — user-facing flow continues, link will be retried by orphan sweep', [
+                'user_id' => $userId,
+                'source' => $source,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
 }

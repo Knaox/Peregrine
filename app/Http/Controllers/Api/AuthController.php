@@ -59,9 +59,11 @@ class AuthController extends Controller
         // Backfill: existing users created before the per-login Pelican link
         // feature have pelican_user_id=null. Dispatch async so the response
         // doesn't block on Pelican availability. The job is unique-by-user
-        // so we never duplicate work.
+        // so we never duplicate work. dispatchSafely covers the
+        // QUEUE_CONNECTION=sync case where a Pelican outage would
+        // otherwise surface as a failed login.
         if ($user->pelican_user_id === null) {
-            LinkPelicanAccountJob::dispatch($user->id, 'login-backfill');
+            LinkPelicanAccountJob::dispatchSafely($user->id, 'login-backfill');
         }
 
         return response()->json([
@@ -88,8 +90,10 @@ class AuthController extends Controller
 
         // Provision a Pelican account in the background so registration
         // doesn't block on Pelican uptime. If Pelican is down, the job
-        // retries up to ~1h; the daily orphan-link command is the final net.
-        LinkPelicanAccountJob::dispatch($user->id, 'register');
+        // retries up to ~1h; the daily orphan-link command is the final
+        // net. dispatchSafely covers the QUEUE_CONNECTION=sync case
+        // where a Pelican outage would otherwise crash the register POST.
+        LinkPelicanAccountJob::dispatchSafely($user->id, 'register');
 
         Auth::login($user);
         $request->session()->regenerate();

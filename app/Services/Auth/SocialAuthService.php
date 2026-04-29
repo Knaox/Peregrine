@@ -201,7 +201,10 @@ class SocialAuthService
         // OAuth callback returns immediately. The job is idempotent and
         // unique-by-user, so duplicate dispatches (e.g. login backfill firing
         // alongside this) collapse to a single execution.
-        LinkPelicanAccountJob::dispatch($user->id, "oauth:{$provider}");
+        // dispatchSafely : with QUEUE_CONNECTION=sync the regular dispatch
+        // runs the handler inline ; a Pelican outage would crash the OAuth
+        // callback and surface as "Shop OAuth doesn't link" to new users.
+        LinkPelicanAccountJob::dispatchSafely($user->id, "oauth:{$provider}");
 
         return $this->linkIdentity($user, $provider, $socialiteUser, $request);
     }
