@@ -69,17 +69,17 @@ class PelicanWebhookLogResource extends Resource
                 Tables\Columns\TextColumn::make('processed_at')
                     ->dateTime()
                     ->sortable()
-                    ->label('When'),
+                    ->label(__('admin.fields.when')),
                 Tables\Columns\TextColumn::make('event_type')
-                    ->label('Event')
+                    ->label(__('admin.fields.event'))
                     ->wrap()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('pelican_model_id')
-                    ->label('Pelican ID')
+                    ->label(__('admin.fields.pelican_id'))
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('response_status')
-                    ->label('HTTP')
+                    ->label(__('admin.fields.http'))
                     ->badge()
                     ->color(fn (int $state): string => match (true) {
                         $state >= 500 => 'danger',
@@ -89,12 +89,12 @@ class PelicanWebhookLogResource extends Resource
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('error_message')
-                    ->label('Error')
+                    ->label(__('admin.common.error'))
                     ->limit(60)
                     ->placeholder('—')
                     ->tooltip(fn ($state): ?string => $state),
                 Tables\Columns\TextColumn::make('idempotency_hash')
-                    ->label('Hash')
+                    ->label(__('admin.fields.hash'))
                     ->limit(12)
                     ->tooltip(fn ($state): ?string => $state)
                     ->copyable()
@@ -102,18 +102,18 @@ class PelicanWebhookLogResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('event_type')
-                    ->label('Event type')
+                    ->label(__('admin.fields.event_type'))
                     ->options(fn () => PelicanProcessedEvent::query()
                         ->distinct()
                         ->orderBy('event_type')
                         ->pluck('event_type', 'event_type')
                         ->all()),
                 Tables\Filters\SelectFilter::make('response_status')
-                    ->label('HTTP outcome')
+                    ->label(__('admin.fields.http_outcome'))
                     ->options([
-                        '2xx' => '2xx — accepted',
-                        '4xx' => '4xx — rejected',
-                        '5xx' => '5xx — handler error',
+                        '2xx' => __('admin.http_filters.accepted'),
+                        '4xx' => __('admin.http_filters.rejected'),
+                        '5xx' => __('admin.http_filters.handler_error'),
                     ])
                     ->query(function ($query, array $data) {
                         $value = $data['value'] ?? null;
@@ -125,23 +125,23 @@ class PelicanWebhookLogResource extends Resource
                         };
                     }),
                 Tables\Filters\TernaryFilter::make('error_message')
-                    ->label('Has error')
+                    ->label(__('admin.fields.has_error'))
                     ->nullable(),
             ])
             ->recordActions([
                 Action::make('viewError')
-                    ->label('View error')
+                    ->label(__('admin.common.view_error'))
                     ->icon('heroicon-o-exclamation-circle')
                     ->color('danger')
                     ->visible(fn (PelicanProcessedEvent $record): bool => ! empty($record->error_message))
-                    ->modalHeading('Handler error')
+                    ->modalHeading(__('admin.logs.pelican_handler_error'))
                     ->modalContent(fn (PelicanProcessedEvent $record): HtmlString => new HtmlString(
-                        '<pre class="text-xs bg-gray-50 dark:bg-gray-900 p-4 rounded-md overflow-auto max-h-[60vh] whitespace-pre-wrap break-all">'
+                        '<pre style="font-size: 0.75rem; background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 0.375rem; overflow: auto; max-height: 60vh; white-space: pre-wrap; word-break: break-all;">'
                         . e((string) $record->error_message)
                         . '</pre>'
                     ))
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Close'),
+                    ->modalCancelActionLabel(__('admin.common.close')),
             ])
             ->toolbarActions([])
             ->defaultSort('processed_at', 'desc')

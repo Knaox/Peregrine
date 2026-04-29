@@ -44,39 +44,35 @@ final class ServerPlanTable
     private static function columns(): array
     {
         return [
-            Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
-            Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
+            Tables\Columns\TextColumn::make('id')->label(__('admin.fields.id'))->sortable(),
+            Tables\Columns\TextColumn::make('name')->label(__('admin.fields.name'))->searchable()->sortable(),
             Tables\Columns\TextColumn::make('shop_plan_id')
-                ->label('Shop ID')
+                ->label(__('admin.fields.shop_id'))
                 ->placeholder('—')
                 ->sortable(),
             Tables\Columns\TextColumn::make('price_cents')
-                ->label('Price')
+                ->label(__('admin.fields.price'))
                 ->formatStateUsing(fn ($state, ServerPlan $record) =>
                     $state === null ? '—' : number_format($state / 100, 2).' '.($record->currency ?? '')
                 ),
             Tables\Columns\TextColumn::make('egg.name')
-                ->label('Egg')
+                ->label(__('admin.fields.egg'))
                 ->placeholder(__('admin.common.not_configured'))
                 ->color(fn ($state) => $state === null ? 'warning' : null)
                 ->icon(fn ($state) => $state === null ? 'heroicon-o-exclamation-triangle' : null)
-                ->tooltip(fn ($state) => $state === null
-                    ? 'No egg configured — provisioning will fail until you pick one in the plan edit page.'
-                    : null)
+                ->tooltip(fn ($state) => $state === null ? __('admin.plans.tooltips.no_egg') : null)
                 ->sortable(),
             Tables\Columns\TextColumn::make('node.name')
-                ->label('Node')
+                ->label(__('admin.fields.node'))
                 ->placeholder(__('admin.common.auto'))
-                ->tooltip(fn ($state) => $state === null
-                    ? 'Auto: a node from the allowed list will be picked at provisioning time based on resources.'
-                    : null)
+                ->tooltip(fn ($state) => $state === null ? __('admin.plans.tooltips.auto_node') : null)
                 ->sortable(),
             Tables\Columns\TextColumn::make('ram')
-                ->label('RAM')
+                ->label(__('admin.plans.fields.ram'))
                 ->formatStateUsing(fn ($state) => $state === null ? '—' : number_format($state).' MB')
                 ->sortable(),
             Tables\Columns\IconColumn::make('syncStatus')
-                ->label('Status')
+                ->label(__('admin.fields.status'))
                 ->getStateUsing(fn (ServerPlan $record) => $record->syncStatus())
                 ->icon(fn (string $state): string => match ($state) {
                     'ready' => 'heroicon-o-check-circle',
@@ -93,11 +89,11 @@ final class ServerPlanTable
                     default => 'gray',
                 })
                 ->tooltip(fn (string $state): string => match ($state) {
-                    'ready' => 'Ready to provision (egg + node configured)',
-                    'needs_config' => 'Configure egg + node before this plan can provision servers',
-                    'inactive' => 'Plan deactivated by the Shop — no new purchases possible',
-                    'sync_error' => 'Last Bridge sync from the Shop failed — check the audit log',
-                    default => 'Unknown',
+                    'ready' => __('admin.plans.sync_status.ready'),
+                    'needs_config' => __('admin.plans.sync_status.needs_config'),
+                    'inactive' => __('admin.plans.sync_status.inactive'),
+                    'sync_error' => __('admin.plans.sync_status.sync_error'),
+                    default => __('admin.common.unknown'),
                 }),
         ];
     }
@@ -108,9 +104,9 @@ final class ServerPlanTable
     private static function filters(): array
     {
         return [
-            Tables\Filters\TernaryFilter::make('is_active')->label('Active'),
+            Tables\Filters\TernaryFilter::make('is_active')->label(__('admin.plans.filters.active')),
             Tables\Filters\Filter::make('needs_config')
-                ->label('Needs config')
+                ->label(__('admin.plans.filters.needs_config'))
                 ->query(fn ($q) => $q->whereNull('egg_id')->orWhereNull('node_id')),
         ];
     }
@@ -124,15 +120,15 @@ final class ServerPlanTable
             EditAction::make(),
             DeleteAction::make()
                 ->requiresConfirmation()
-                ->modalHeading(fn (ServerPlan $record): string => "Delete plan \"{$record->name}\"?")
+                ->modalHeading(fn (ServerPlan $record): string => __('admin.plans.delete.modal_heading', ['name' => $record->name]))
                 ->modalDescription(function (ServerPlan $record): string {
                     $count = $record->servers()->count();
                     $base = $count === 0
-                        ? 'No server is currently linked to this plan.'
-                        : "{$count} provisioned server(s) currently reference this plan. Their `plan_id` will be set to NULL — the servers keep running, they just lose their billing reference.";
-                    return $base.' This is irreversible. Use the Shop\'s DELETE endpoint instead when possible (it just deactivates).';
+                        ? __('admin.plans.delete.no_servers')
+                        : __('admin.plans.delete.with_servers', ['count' => $count]);
+                    return $base.' '.__('admin.plans.delete.irreversible');
                 })
-                ->modalSubmitActionLabel('Yes, delete permanently'),
+                ->modalSubmitActionLabel(__('admin.plans.delete.submit')),
         ];
     }
 
@@ -145,16 +141,16 @@ final class ServerPlanTable
             BulkActionGroup::make([
                 DeleteBulkAction::make()
                     ->requiresConfirmation()
-                    ->modalHeading('Delete selected plans?')
+                    ->modalHeading(__('admin.plans.delete_bulk.modal_heading'))
                     ->modalDescription(function ($records): string {
                         $totalServers = collect($records)->sum(fn (ServerPlan $p) => $p->servers()->count());
-                        $base = "Deleting {$records->count()} plan(s).";
+                        $base = __('admin.plans.delete_bulk.count', ['count' => $records->count()]);
                         if ($totalServers > 0) {
-                            $base .= " {$totalServers} provisioned server(s) will lose their plan reference (set to NULL). The servers keep running.";
+                            $base .= ' '.__('admin.plans.delete_bulk.with_servers', ['count' => $totalServers]);
                         }
-                        return $base.' This is irreversible.';
+                        return $base.' '.__('admin.plans.delete_bulk.irreversible');
                     })
-                    ->modalSubmitActionLabel('Yes, delete all'),
+                    ->modalSubmitActionLabel(__('admin.plans.delete_bulk.submit')),
             ]),
         ];
     }

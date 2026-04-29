@@ -29,11 +29,18 @@ class RecentServersWidget extends BaseWidget
             )
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label(__('admin.fields.name'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label(__('servers.fields.owner', [], 'Owner') ?: 'Owner'),
+                    ->label(__('admin.fields.owner')),
                 Tables\Columns\TextColumn::make('status')
+                    ->label(__('admin.fields.status'))
                     ->badge()
+                    ->formatStateUsing(function (string $state): string {
+                        $key = 'admin.statuses.'.$state;
+                        $tr = __($key);
+                        return $tr === $key ? $state : $tr;
+                    })
                     ->color(fn (string $state): string => match ($state) {
                         'active', 'running' => 'success',
                         'stopped' => 'warning',
@@ -42,6 +49,7 @@ class RecentServersWidget extends BaseWidget
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('admin.fields.created_at'))
                     ->dateTime()
                     ->sortable(),
             ])

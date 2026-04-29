@@ -50,36 +50,40 @@ class NodeResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
+                    ->label(__('admin.fields.id'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('pelican_node_id')
-                    ->label('Pelican Node ID')
+                    ->label(__('admin.fields.pelican_node_id'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('name')
+                    ->label(__('admin.fields.name'))
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('fqdn')
-                    ->label('FQDN')
+                    ->label(__('admin.fields.fqdn'))
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('memory')
-                    ->label('Memory')
+                    ->label(__('admin.fields.memory'))
                     ->formatStateUsing(fn (int $state): string => number_format($state) . ' MB')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('disk')
-                    ->label('Disk')
+                    ->label(__('admin.fields.disk'))
                     ->formatStateUsing(fn (int $state): string => number_format($state) . ' MB')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('location')
+                    ->label(__('admin.fields.location'))
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('admin.fields.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('location')
+                    ->label(__('admin.fields.location'))
                     ->options(fn () => Node::query()
                         ->whereNotNull('location')
                         ->distinct()

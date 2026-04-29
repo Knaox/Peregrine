@@ -59,16 +59,19 @@ final class ServerTableSchemaBuilder
     private static function columns(bool $isShopStripe): array
     {
         $columns = [
-            Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
-            Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-            Tables\Columns\TextColumn::make('user.name')->label('Owner')->searchable()->sortable(),
+            Tables\Columns\TextColumn::make('id')->label(__('admin.fields.id'))->sortable(),
+            Tables\Columns\TextColumn::make('name')->label(__('admin.fields.name'))->searchable()->sortable(),
+            Tables\Columns\TextColumn::make('user.name')->label(__('admin.fields.owner'))->searchable()->sortable(),
             Tables\Columns\TextColumn::make('status')
+                ->label(__('admin.fields.status'))
                 ->badge()
                 ->formatStateUsing(function (string $state, Server $record): string {
                     if ($state === 'provisioning' && self::isStuckProvisioning($record)) {
-                        return 'provisioning (stuck)';
+                        return __('admin.statuses.provisioning_stuck');
                     }
-                    return $state;
+                    $key = 'admin.statuses.' . $state;
+                    $translated = __($key);
+                    return $translated === $key ? $state : $translated;
                 })
                 ->color(function (string $state, Server $record): string {
                     if ($state === 'provisioning' && self::isStuckProvisioning($record)) {
@@ -84,38 +87,36 @@ final class ServerTableSchemaBuilder
                 })
                 ->tooltip(function (string $state, Server $record): ?string {
                     if ($state === 'provisioning' && self::isStuckProvisioning($record)) {
-                        return 'This server has been awaiting the Pelican install-completion webhook for over 30 minutes. '
-                            . 'Most likely the events `updated: Server` and `event: Server\\Installed` are not ticked '
-                            . 'in your Pelican /admin/webhooks. Check /admin/pelican-webhook-logs for incoming events '
-                            . 'and /docs/pelican-webhook for the configuration guide.';
+                        return __('admin.servers.tooltips.stuck');
                     }
                     return null;
                 })
                 ->sortable(),
-            Tables\Columns\TextColumn::make('egg.name')->label('Egg')->searchable()->sortable(),
+            Tables\Columns\TextColumn::make('egg.name')->label(__('admin.fields.egg'))->searchable()->sortable(),
         ];
 
         if ($isShopStripe) {
             $columns[] = Tables\Columns\TextColumn::make('plan.name')
-                ->label('Plan')->sortable()->placeholder('—');
+                ->label(__('admin.fields.plan'))->sortable()->placeholder('—');
         }
 
         $columns[] = Tables\Columns\TextColumn::make('pelican_server_id')
-            ->label('Pelican ID')->sortable()->placeholder('—');
+            ->label(__('admin.fields.pelican_id'))->sortable()->placeholder('—');
 
         if ($isShopStripe) {
             $columns[] = Tables\Columns\TextColumn::make('stripe_subscription_id')
-                ->label('Stripe Sub.')->sortable()
+                ->label(__('admin.fields.stripe_subscription'))->sortable()
                 ->toggleable(isToggledHiddenByDefault: true)->placeholder('—');
             $columns[] = Tables\Columns\TextColumn::make('scheduled_deletion_at')
-                ->label('Scheduled deletion')->dateTime()->sortable()->placeholder('—')
+                ->label(__('admin.fields.scheduled_deletion'))->dateTime()->sortable()->placeholder('—')
                 ->color(fn ($state) => $state === null ? null : 'danger')
                 ->tooltip(fn ($state) => $state === null
                     ? null
-                    : 'This server will be hard-deleted at the date shown. Use the action menu → Cancel scheduled deletion to keep it.');
+                    : __('admin.servers.tooltips.scheduled_deletion'));
         }
 
         $columns[] = Tables\Columns\TextColumn::make('created_at')
+            ->label(__('admin.fields.created_at'))
             ->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true);
 
         return $columns;
@@ -128,33 +129,34 @@ final class ServerTableSchemaBuilder
     {
         $filters = [
             Tables\Filters\SelectFilter::make('status')
+                ->label(__('admin.fields.status'))
                 ->options([
-                    'active' => 'Active',
-                    'running' => 'Running',
-                    'stopped' => 'Stopped',
-                    'suspended' => 'Suspended',
-                    'terminated' => 'Terminated',
-                    'provisioning' => 'Provisioning',
-                    'provisioning_failed' => 'Provisioning failed',
-                    'offline' => 'Offline',
+                    'active' => __('admin.statuses.active'),
+                    'running' => __('admin.statuses.running'),
+                    'stopped' => __('admin.statuses.stopped'),
+                    'suspended' => __('admin.statuses.suspended'),
+                    'terminated' => __('admin.statuses.terminated'),
+                    'provisioning' => __('admin.statuses.provisioning'),
+                    'provisioning_failed' => __('admin.statuses.provisioning_failed'),
+                    'offline' => __('admin.statuses.offline'),
                 ])
                 ->multiple(),
             Tables\Filters\SelectFilter::make('user_id')
-                ->label('Owner')
+                ->label(__('admin.fields.owner'))
                 ->relationship('user', 'name')
                 ->searchable()
                 ->preload(),
             Tables\Filters\SelectFilter::make('egg_id')
-                ->label('Egg')
+                ->label(__('admin.fields.egg'))
                 ->relationship('egg', 'name')
                 ->searchable()
                 ->preload(),
         ];
 
         if ($isShopStripe) {
-            $filters[] = Tables\Filters\TernaryFilter::make('plan_id')->label('Has Plan')->nullable();
-            $filters[] = Tables\Filters\TernaryFilter::make('stripe_subscription_id')->label('Has Stripe Subscription')->nullable();
-            $filters[] = Tables\Filters\TernaryFilter::make('scheduled_deletion_at')->label('Scheduled for deletion')->nullable();
+            $filters[] = Tables\Filters\TernaryFilter::make('plan_id')->label(__('admin.fields.has_plan'))->nullable();
+            $filters[] = Tables\Filters\TernaryFilter::make('stripe_subscription_id')->label(__('admin.fields.has_stripe_subscription'))->nullable();
+            $filters[] = Tables\Filters\TernaryFilter::make('scheduled_deletion_at')->label(__('admin.fields.scheduled_for_deletion'))->nullable();
         }
 
         return $filters;
@@ -168,16 +170,16 @@ final class ServerTableSchemaBuilder
         $recordActions = [EditAction::make()];
 
         $recordActions[] = Action::make('retryProvisioning')
-            ->label('Retry provisioning')
+            ->label(__('admin.servers.retry.label'))
             ->icon('heroicon-o-arrow-path')
             ->color('primary')
             ->visible(fn (Server $record): bool => $record->status === 'provisioning_failed'
                 && $record->plan_id !== null
                 && $record->idempotency_key !== null)
             ->requiresConfirmation()
-            ->modalHeading(fn (Server $record): string => "Retry provisioning for \"{$record->name}\"?")
-            ->modalDescription('Re-dispatches a ProvisionServerJob with the same idempotency key — the local row is reused, no duplicate is created. Status flips back to "provisioning". Make sure the queue worker is running, otherwise the job will sit in `jobs` indefinitely.')
-            ->modalSubmitActionLabel('Retry now')
+            ->modalHeading(fn (Server $record): string => __('admin.servers.retry.modal_heading', ['name' => $record->name]))
+            ->modalDescription(__('admin.servers.retry.modal_description'))
+            ->modalSubmitActionLabel(__('admin.servers.retry.submit'))
             ->action(function (Server $record): void {
                 $record->update([
                     'status' => 'provisioning',
@@ -192,30 +194,29 @@ final class ServerTableSchemaBuilder
                     paymentIntentId: $record->payment_intent_id,
                 );
                 Notification::make()
-                    ->title('Retry dispatched')
-                    ->body("ProvisionServerJob queued for \"{$record->name}\". Watch the queue logs for progress.")
+                    ->title(__('admin.servers.retry.notification_title'))
+                    ->body(__('admin.servers.retry.notification_body', ['name' => $record->name]))
                     ->success()
                     ->send();
             });
 
         if ($isShopStripe) {
             $recordActions[] = Action::make('cancelScheduledDeletion')
-                ->label('Cancel scheduled deletion')
+                ->label(__('admin.servers.cancel_deletion.label'))
                 ->icon('heroicon-o-arrow-uturn-left')
                 ->color('warning')
                 ->visible(fn (Server $record): bool => $record->scheduled_deletion_at !== null)
                 ->requiresConfirmation()
-                ->modalHeading(fn (Server $record): string => "Cancel scheduled deletion for \"{$record->name}\"?")
-                ->modalDescription(fn (Server $record): string => sprintf(
-                    'Hard deletion is currently scheduled for %s. Cancelling will keep the server in suspended state. To re-enable the customer\'s access, also unsuspend it from Pelican.',
-                    $record->scheduled_deletion_at?->format('Y-m-d H:i') ?? '?',
-                ))
-                ->modalSubmitActionLabel('Yes, keep this server')
+                ->modalHeading(fn (Server $record): string => __('admin.servers.cancel_deletion.modal_heading', ['name' => $record->name]))
+                ->modalDescription(fn (Server $record): string => __('admin.servers.cancel_deletion.modal_description', [
+                    'date' => $record->scheduled_deletion_at?->format('Y-m-d H:i') ?? '?',
+                ]))
+                ->modalSubmitActionLabel(__('admin.servers.cancel_deletion.submit'))
                 ->action(function (Server $record): void {
                     $record->update(['scheduled_deletion_at' => null]);
                     Notification::make()
-                        ->title('Scheduled deletion cancelled')
-                        ->body("Server \"{$record->name}\" will not be hard-deleted. It remains suspended — unsuspend manually if the customer regains access.")
+                        ->title(__('admin.servers.cancel_deletion.notification_title'))
+                        ->body(__('admin.servers.cancel_deletion.notification_body', ['name' => $record->name]))
                         ->success()
                         ->send();
                 });

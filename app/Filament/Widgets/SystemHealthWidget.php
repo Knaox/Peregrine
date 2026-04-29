@@ -40,7 +40,7 @@ class SystemHealthWidget extends BaseWidget
         };
         $workerLabel = $jobs === 0
             ? __('admin.widgets.system_health.healthy')
-            : "{$jobs} queued";
+            : __('admin.widgets.stats.jobs_queued', ['n' => $jobs]);
 
         // Last Pelican sync — check the latest successful run from sync_logs.
         $lastSync = SyncLog::query()

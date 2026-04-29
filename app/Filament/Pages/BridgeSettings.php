@@ -143,7 +143,7 @@ class BridgeSettings extends Page implements HasForms
         $settings->set('bridge_stripe_billing_portal_url', (string) ($data['bridge_stripe_billing_portal_url'] ?? ''));
         $settings->set('bridge_resubscribe_url', (string) ($data['bridge_resubscribe_url'] ?? ''));
 
-        Notification::make()->title('Bridge settings saved')->success()->send();
+        Notification::make()->title(__('admin.notifications.bridge_settings_saved'))->success()->send();
 
         // Don't keep the typed secrets in the form state.
         $this->bridge_shop_shared_secret = '';
@@ -174,7 +174,7 @@ class BridgeSettings extends Page implements HasForms
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label('Save Settings')->submit('save'),
+            Action::make('save')->label(__('admin.actions.save_settings'))->submit('save'),
         ];
     }
 }

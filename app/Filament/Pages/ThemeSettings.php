@@ -155,16 +155,16 @@ class ThemeSettings extends Page implements HasForms
         $settings->clearCache();
         app(\App\Services\ThemeService::class)->clearCache();
 
-        Notification::make()->title('Theme saved')
-            ->body('All theme, card and sidebar settings have been updated.')
+        Notification::make()->title(__('admin.notifications.theme_saved_title'))
+            ->body(__('admin.notifications.theme_saved_body'))
             ->success()->send();
     }
 
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label('Save Theme')->submit('save'),
-            Action::make('reset')->label('Reset to Defaults')->color('gray')
+            Action::make('save')->label(__('admin.actions.save_theme'))->submit('save'),
+            Action::make('reset')->label(__('admin.actions.reset_defaults'))->color('gray')
                 ->requiresConfirmation()
                 ->action(fn () => $this->resetToDefaults()),
         ];
@@ -183,8 +183,8 @@ class ThemeSettings extends Page implements HasForms
         $settings->clearCache();
         $this->mount();
 
-        Notification::make()->title('All settings reset')
-            ->body('Theme, card and sidebar settings have been reset to defaults.')
+        Notification::make()->title(__('admin.notifications.theme_reset_title'))
+            ->body(__('admin.notifications.theme_reset_body'))
             ->success()->send();
     }
 

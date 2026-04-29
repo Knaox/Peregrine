@@ -155,8 +155,8 @@ class AuthSettings extends Page implements HasForms
             $user = auth()->user();
             if ($user !== null && $user->is_admin && ! $user->hasTwoFactor()) {
                 Notification::make()
-                    ->title('Set up 2FA first')
-                    ->body('Enable 2FA on your own admin account before forcing it for all admins.')
+                    ->title(__('admin.notifications.auth_2fa_setup_first_title'))
+                    ->body(__('admin.notifications.auth_2fa_setup_first_body'))
                     ->danger()
                     ->send();
 
@@ -171,8 +171,8 @@ class AuthSettings extends Page implements HasForms
         $paymenterWillBeEnabled = (bool) ($data['auth_paymenter_enabled'] ?? false);
         if ($shopWillBeEnabled && $paymenterWillBeEnabled) {
             Notification::make()
-                ->title('Only one canonical identity provider can be active')
-                ->body('Disable Shop before enabling Paymenter, or vice versa. Both Shop and Paymenter act as canonical IdPs and cannot coexist.')
+                ->title(__('admin.notifications.auth_only_one_idp_title'))
+                ->body(__('admin.notifications.auth_only_one_idp_body'))
                 ->danger()
                 ->send();
 
@@ -194,8 +194,8 @@ class AuthSettings extends Page implements HasForms
                 $exclusive = $registry->providerHasExclusiveUsers($pid);
                 if ($exclusive > 0 && ! $ack) {
                     Notification::make()
-                        ->title("Disabling {$pid} would lock out {$exclusive} user(s)")
-                        ->body('Tick "I understand the risk" under Safety, then save again.')
+                        ->title(__('admin.notifications.auth_disable_lockout_title', ['provider' => $pid, 'count' => $exclusive]))
+                        ->body(__('admin.notifications.auth_disable_lockout_body'))
                         ->danger()
                         ->send();
 
@@ -217,7 +217,7 @@ class AuthSettings extends Page implements HasForms
             'linkedin' => $this->defaultRedirect('linkedin'),
         ]);
 
-        Notification::make()->title('Auth settings saved')->success()->send();
+        Notification::make()->title(__('admin.notifications.auth_settings_saved'))->success()->send();
 
         // Reset the acknowledgement + secrets inputs so they don't stick.
         $this->acknowledge_disable_risk = false;
@@ -278,7 +278,7 @@ class AuthSettings extends Page implements HasForms
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label('Save Settings')->submit('save'),
+            Action::make('save')->label(__('admin.actions.save_settings'))->submit('save'),
         ];
     }
 }

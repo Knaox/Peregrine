@@ -212,15 +212,15 @@ class EmailTemplates extends Page implements HasForms
 
         $settings->clearCache();
 
-        Notification::make()->title('Email templates saved')->success()->send();
+        Notification::make()->title(__('admin.notifications.email_templates_saved'))->success()->send();
     }
 
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label('Save Templates')->submit('save'),
+            Action::make('save')->label(__('admin.actions.save_templates'))->submit('save'),
             Action::make('reset')
-                ->label('Reset to Defaults')
+                ->label(__('admin.actions.reset_defaults'))
                 ->color('gray')
                 ->requiresConfirmation()
                 ->action(fn () => $this->resetToDefaults()),
@@ -248,7 +248,7 @@ class EmailTemplates extends Page implements HasForms
         $settings->clearCache();
         $this->mount();
 
-        Notification::make()->title('Templates reset to defaults')->success()->send();
+        Notification::make()->title(__('admin.notifications.email_templates_reset'))->success()->send();
     }
 
     private function defaultBodyEn(): string

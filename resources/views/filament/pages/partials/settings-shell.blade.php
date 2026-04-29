@@ -1,57 +1,56 @@
 {{--
-    Shared shell for admin settings pages (Settings, AuthSettings, BridgeSettings,
-    ThemeSettings, EmailTemplates, PelicanWebhookSettings).
-    Used via @include('filament.pages.partials.settings-shell', [...]).
+    Shared shell for admin settings pages. Variables expected:
+      $subtitle (optional string)
+      $badges (optional array of ['label' => '…', 'color' => '…', 'icon' => 'heroicon-o-…'])
+      $form (Filament form, $this->form)
+      $actions (array, $this->getFormActions())
 
-    Variables:
-      - $subtitle (optional, string): caption under the title
-      - $badges (optional, array of [label, color]): pill badges shown next to the title
-      - $form (required): bound by parent layout via $this->form
+    Inline styles only — Filament's default theme does not compile arbitrary
+    Tailwind classes from custom blade views.
 --}}
 
 @php
     $subtitle ??= null;
     $badges ??= [];
+
+    $cardStyle = 'border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); padding: 0.875rem 1.125rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;';
+    $subtitleStyle = 'flex: 1 1 auto; min-width: 14rem; font-size: 0.875rem; color: rgba(255,255,255,0.65); margin: 0;';
+    $pillBase = 'display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;';
+
+    $colorMap = [
+        'success' => 'background: rgba(34,197,94,0.12); color: rgb(74,222,128);',
+        'warning' => 'background: rgba(245,158,11,0.12); color: rgb(252,211,77);',
+        'danger'  => 'background: rgba(239,68,68,0.12); color: rgb(248,113,113);',
+        'info'    => 'background: rgba(56,189,248,0.12); color: rgb(125,211,252);',
+        'primary' => 'background: rgba(var(--primary-500), 0.15); color: rgb(var(--primary-300));',
+        'gray'    => 'background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7);',
+    ];
 @endphp
 
-<div class="space-y-6">
-    @if ($subtitle || ! empty($badges))
-        <div class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200/60 bg-white/40 px-4 py-3 dark:border-white/5 dark:bg-white/[0.02]">
-            @if ($subtitle)
-                <p class="flex-1 text-sm text-gray-600 dark:text-gray-400">
-                    {{ $subtitle }}
-                </p>
-            @endif
+@if ($subtitle || ! empty($badges))
+    <div style="{{ $cardStyle }}">
+        @if ($subtitle)
+            <p style="{{ $subtitleStyle }}">{{ $subtitle }}</p>
+        @endif
 
-            @foreach ($badges as $badge)
-                @php
-                    $color = $badge['color'] ?? 'gray';
-                    $colorClasses = match ($color) {
-                        'success' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 ring-emerald-200/60 dark:ring-emerald-400/20',
-                        'warning' => 'bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300 ring-amber-200/60 dark:ring-amber-400/20',
-                        'danger'  => 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300 ring-rose-200/60 dark:ring-rose-400/20',
-                        'info'    => 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300 ring-sky-200/60 dark:ring-sky-400/20',
-                        'primary' => 'bg-primary-100 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300 ring-primary-200/60 dark:ring-primary-400/20',
-                        default   => 'bg-gray-100 text-gray-700 dark:bg-white/5 dark:text-gray-300 ring-gray-200/60 dark:ring-white/10',
-                    };
-                @endphp
-                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset {{ $colorClasses }}">
-                    @if (! empty($badge['icon']))
-                        <x-filament::icon :icon="$badge['icon']" class="h-3.5 w-3.5" />
-                    @endif
-                    {{ $badge['label'] }}
-                </span>
-            @endforeach
-        </div>
-    @endif
+        @foreach ($badges as $badge)
+            @php $tone = $colorMap[$badge['color'] ?? 'gray'] ?? $colorMap['gray']; @endphp
+            <span style="{{ $pillBase }} {{ $tone }}">
+                @if (! empty($badge['icon']))
+                    <x-filament::icon :icon="$badge['icon']" style="width: 0.875rem; height: 0.875rem;" />
+                @endif
+                {{ $badge['label'] }}
+            </span>
+        @endforeach
+    </div>
+@endif
 
-    <form wire:submit="save" class="space-y-6">
-        {{ $form }}
+<form wire:submit="save">
+    {{ $form }}
 
-        <div class="sticky bottom-0 -mx-4 mt-6 flex flex-wrap items-center gap-3 border-t border-gray-200/60 bg-white/80 px-4 py-3 backdrop-blur dark:border-white/5 dark:bg-gray-950/70 sm:-mx-6 sm:px-6">
-            @foreach ($actions as $action)
-                {{ $action }}
-            @endforeach
-        </div>
-    </form>
-</div>
+    <div style="margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.75rem;">
+        @foreach ($actions as $action)
+            {{ $action }}
+        @endforeach
+    </div>
+</form>

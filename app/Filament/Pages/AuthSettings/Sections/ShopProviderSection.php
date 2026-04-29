@@ -19,7 +19,7 @@ final class ShopProviderSection
 {
     public static function make(string $redirectUri): Section
     {
-        return Section::make('Shop — BiomeBounty')
+        return Section::make('Shop Custom')
             ->description('Canonical identity provider. When enabled, accounts are auto-created on first OAuth login, email is synced to Pelican, and local registration is forced off. Mutually exclusive with Paymenter.')
             ->icon('heroicon-o-shopping-bag')
             ->schema([

@@ -97,70 +97,70 @@ class PelicanWebhookSettings extends Page implements HasForms
         $docsUrl = url('/docs/pelican-webhook');
 
         return $schema->schema([
-            Section::make('Receiver')
-                ->description('Toggle the public webhook endpoint on or off. When off, Pelican calls return 503 and no events are processed.')
+            Section::make(__('admin.webhook_settings.sections.receiver'))
+                ->description(__('admin.webhook_settings.sections.receiver_description'))
                 ->icon('heroicon-o-power')
                 ->schema([
                     Toggle::make('pelican_webhook_enabled')
-                        ->label('Enable Pelican webhook receiver')
-                        ->helperText('Disable to temporarily stop accepting webhook events without losing the configured token.'),
+                        ->label(__('admin.webhook_settings.fields.enabled'))
+                        ->helperText(__('admin.webhook_settings.fields.enabled_helper')),
                 ]),
 
-            Section::make('1. Generate the bearer token')
-                ->description('Pelican does not sign its webhooks — auth relies entirely on this token.')
+            Section::make(__('admin.webhook_settings.sections.token'))
+                ->description(__('admin.webhook_settings.sections.token_description'))
                 ->icon('heroicon-o-key')
                 ->schema([
                     TextInput::make('pelican_webhook_token')
-                        ->label('Pelican webhook authentication token')
+                        ->label(__('admin.webhook_settings.fields.token'))
                         ->password()
                         ->revealable()
                         ->minLength(32)
-                        ->helperText('Click 🔑 to generate a fresh random 64-char token. Leave blank on save to keep the stored value (rotation requires updating the Pelican headers in lockstep).')
+                        ->helperText(__('admin.webhook_settings.fields.token_helper'))
                         ->suffixAction(
                             Action::make('generatePelicanToken')
                                 ->icon('heroicon-o-key')
-                                ->tooltip('Generate a new random 64-char token')
+                                ->tooltip(__('admin.webhook_settings.fields.token_action_tooltip'))
                                 ->action(function (Set $set): void {
                                     $token = base64_encode(random_bytes(48));
                                     $set('pelican_webhook_token', $token);
                                     Notification::make()
-                                        ->title('Token generated')
-                                        ->body('Copy it from the field, paste it in Pelican\'s webhook headers, then click Save.')
+                                        ->title(__('admin.webhook_settings.notifications.token_generated_title'))
+                                        ->body(__('admin.webhook_settings.notifications.token_generated_body'))
                                         ->success()
                                         ->send();
                                 }),
                         ),
                 ]),
 
-            Section::make('2. Configure Pelican (/admin/webhooks → Create Webhook)')
-                ->description('Top fields + headers + events to tick. The events list is grouped by priority — start with "Required", add others as needed.')
+            Section::make(__('admin.webhook_settings.sections.configure'))
+                ->description(__('admin.webhook_settings.sections.configure_description'))
                 ->icon('heroicon-o-clipboard-document-list')
                 ->schema([
                     Placeholder::make('pelican_top_fields_display')
-                        ->label('Top fields')
+                        ->label(__('admin.webhook_settings.fields.top_fields'))
                         ->content(BridgeSettingsHtmlHelpers::renderKeyValueList([
-                            ['Type',        'Regular'],
-                            ['Description', 'Peregrine — Pelican webhook receiver'],
+                            ['Type',        __('admin.webhook_settings.top_fields.type')],
+                            ['Description', __('admin.webhook_settings.top_fields.description')],
                             ['Endpoint',    $baseUrl.'/api/pelican/webhook'],
                         ])),
                     Placeholder::make('pelican_headers_display')
-                        ->label('Headers (keep the default row, add the second)')
+                        ->label(__('admin.webhook_settings.fields.headers'))
                         ->content(BridgeSettingsHtmlHelpers::renderHeadersList([
-                            ['X-Webhook-Event', '{{event}}', 'Pelican\'s default — keep it'],
-                            ['Authorization',   'Bearer &lt;token above&gt;', 'Add this row'],
+                            ['X-Webhook-Event', '{{event}}', __('admin.webhook_settings.header_descriptions.pelican_default')],
+                            ['Authorization',   __('admin.webhook_settings.header_values.token_placeholder'), __('admin.webhook_settings.header_descriptions.add_row')],
                         ])),
 
                     Placeholder::make('pelican_events_required')
-                        ->label('Required (Shop+Stripe install completion)')
+                        ->label(__('admin.webhook_settings.fields.events_required'))
                         ->content(BridgeSettingsHtmlHelpers::renderTagList([
                             'created: Server',
                             'updated: Server',
                             'deleted: Server',
                             'created: User',
-                        ], note: 'These four are mandatory in Shop+Stripe mode — `updated: Server` is the canonical install-completion signal (Pelican flips status from "installing" to null). Without it, servers created via Stripe stay in "provisioning" forever and a "stuck" badge shows in /admin/servers.')),
+                        ], note: __('admin.webhook_settings.fields.events_required_note'))),
 
                     Placeholder::make('pelican_events_recommended')
-                        ->label('Recommended — Phase 1 (cuts manual sync)')
+                        ->label(__('admin.webhook_settings.fields.events_recommended'))
                         ->content(BridgeSettingsHtmlHelpers::renderTagList([
                             'updated: User',
                             'deleted: User',
@@ -173,10 +173,10 @@ class PelicanWebhookSettings extends Page implements HasForms
                             'created: EggVariable',
                             'updated: EggVariable',
                             'deleted: EggVariable',
-                        ], note: 'Mirrors user email/name changes, node infrastructure, and egg/variable definitions in real time. With these ticked, the manual `sync:users / sync:nodes / sync:eggs` commands become safety nets you rarely need.')),
+                        ], note: __('admin.webhook_settings.fields.events_recommended_note'))),
 
                     Placeholder::make('pelican_events_phase2')
-                        ->label('Phase 2 preview — DB-local mirrors (not active yet)')
+                        ->label(__('admin.webhook_settings.fields.events_phase2'))
                         ->content(BridgeSettingsHtmlHelpers::renderTagList([
                             'created: Backup',
                             'updated: Backup',
@@ -193,10 +193,10 @@ class PelicanWebhookSettings extends Page implements HasForms
                             'created: ServerTransfer',
                             'updated: ServerTransfer',
                             'deleted: ServerTransfer',
-                        ], note: 'Reserved for the upcoming Phase 2 (DB-local mirrors that make /backups, /databases, /network pages instant). Ticking them now is harmless — the receiver will record them as ignored until Phase 2 ships.')),
+                        ], note: __('admin.webhook_settings.fields.events_phase2_note'))),
 
                     Placeholder::make('pelican_events_blocklist')
-                        ->label('À NE PAS cocher')
+                        ->label(__('admin.webhook_settings.fields.events_blocklist'))
                         ->content(BridgeSettingsHtmlHelpers::renderTagList([
                             'event: Server\\Installed',
                             'event: ActivityLogged',
@@ -209,32 +209,34 @@ class PelicanWebhookSettings extends Page implements HasForms
                             'updated: ApiKey',
                             'created: Webhook',
                             'updated: WebhookConfiguration',
-                        ], note: '`event: Server\\Installed` crashes Pelican\'s own queue on some releases (`Cannot use object as array`) — `updated: Server` already covers install-finished. `Schedule` and `Task` fire on every cron tick (flood). `ActivityLog` fires on every user action (flood). `ApiKey` updates `last_used_at` on every API call (noise). `Webhook` / `WebhookConfiguration` create infinite loops.')),
+                        ], note: __('admin.webhook_settings.fields.events_blocklist_note'))),
                 ]),
 
-            Section::make('Phase 2 — Lectures DB locale')
-                ->description('Active la lecture des pages Backups / Databases / Network depuis la base locale Peregrine au lieu d\'appeler Pelican à chaque chargement. Active uniquement APRÈS avoir lancé `php artisan pelican:backfill-mirrors` au moins une fois.')
+            Section::make(__('admin.webhook_settings.sections.phase2'))
+                ->description(__('admin.webhook_settings.sections.phase2_description'))
                 ->icon('heroicon-o-circle-stack')
                 ->schema([
                     Toggle::make('mirror_reads_enabled')
-                        ->label('Activer la lecture DB locale')
-                        ->helperText('Si désactivé, les controllers continuent d\'appeler l\'API Pelican avec un cache de 2-10 min (comportement Phase 1). Si activé, les pages lisent les tables miroir pelican_backups / pelican_databases / pelican_allocations — pages instantanées + Peregrine continue de fonctionner même si Pelican est temporairement indisponible.'),
+                        ->label(__('admin.webhook_settings.fields.mirror_reads'))
+                        ->helperText(__('admin.webhook_settings.fields.mirror_reads_helper')),
                 ]),
 
-            Section::make('3. Verify')
-                ->description('Once Pelican saves, every event lands here for audit.')
+            Section::make(__('admin.webhook_settings.sections.verify'))
+                ->description(__('admin.webhook_settings.sections.verify_description'))
                 ->icon('heroicon-o-check-circle')
                 ->schema([
                     Placeholder::make('pelican_docs_link')
-                        ->label('Step-by-step walkthrough')
-                        ->content(BridgeSettingsHtmlHelpers::renderDocLink($docsUrl, 'Full setup guide, troubleshooting, known limits, and how the install-status sync interacts with Bridge modes.')),
+                        ->label(__('admin.webhook_settings.fields.docs'))
+                        ->content(BridgeSettingsHtmlHelpers::renderDocLink($docsUrl, __('admin.webhook_settings.fields.docs_note'))),
                     Placeholder::make('pelican_audit_link')
-                        ->label('Live audit of received webhooks')
+                        ->label(__('admin.webhook_settings.fields.audit'))
                         ->content(new HtmlString(
                             '<a href="'.e($auditLogUrl).'" '
-                            .'class="text-primary-600 underline hover:text-primary-500">'
+                            .'style="color: rgb(var(--primary-400)); text-decoration: underline;">'
                             .'/admin/pelican-webhook-logs ↗</a>'
-                            .'<p class="mt-1 text-xs text-gray-500">Every accepted webhook event with HTTP status, error message, and idempotency hash.</p>'
+                            .'<p style="margin-top: 0.25rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">'
+                            .e(__('admin.webhook_settings.fields.audit_note'))
+                            .'</p>'
                         )),
                 ]),
         ]);
@@ -259,7 +261,7 @@ class PelicanWebhookSettings extends Page implements HasForms
             $settings->forget('bridge_pelican_webhook_token');
         }
 
-        Notification::make()->title('Pelican webhook settings saved')->success()->send();
+        Notification::make()->title(__('admin.webhook_settings.notifications.saved'))->success()->send();
 
         $this->pelican_webhook_token = '';
     }
@@ -270,7 +272,7 @@ class PelicanWebhookSettings extends Page implements HasForms
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label('Save Settings')->submit('save'),
+            Action::make('save')->label(__('admin.actions.save_settings'))->submit('save'),
         ];
     }
 }

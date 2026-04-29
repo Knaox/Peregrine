@@ -30,7 +30,7 @@ class StatsOverview extends BaseWidget
 
         $queueDescription = $pendingJobs === 0
             ? __('admin.widgets.system_health.queue_worker') . ' — ' . __('admin.widgets.system_health.healthy')
-            : "{$pendingJobs} jobs queued";
+            : __('admin.widgets.stats.jobs_queued', ['n' => $pendingJobs]);
 
         return [
             Stat::make(__('admin.widgets.stats.users'), User::count())

@@ -27,11 +27,11 @@ final class ResourceDeleteAction
     public static function row(?string $cascadeWarning = null): DeleteAction
     {
         return DeleteAction::make()
-            ->modalHeading('Delete resource')
+            ->modalHeading(__('admin.actions.delete_resource'))
             ->modalDescription(static::description($cascadeWarning))
             ->modalIcon('heroicon-o-trash')
             ->modalIconColor('danger')
-            ->modalSubmitActionLabel('Delete')
+            ->modalSubmitActionLabel(__('admin.actions.delete'))
             ->schema(static::strategySchema())
             ->fillForm(fn (): array => ['strategy' => ResourceDeletionService::STRATEGY_BOTH])
             ->action(function (Model $record, array $data): void {
@@ -45,13 +45,13 @@ final class ResourceDeleteAction
     public static function bulk(?string $cascadeWarning = null): BulkAction
     {
         return BulkAction::make('delete')
-            ->label('Delete selected')
+            ->label(__('admin.actions.delete_selected'))
             ->icon('heroicon-o-trash')
             ->color('danger')
             ->requiresConfirmation()
-            ->modalHeading('Delete selected resources')
+            ->modalHeading(__('admin.actions.delete_resources'))
             ->modalDescription(static::description($cascadeWarning))
-            ->modalSubmitActionLabel('Delete')
+            ->modalSubmitActionLabel(__('admin.actions.delete'))
             ->schema(static::strategySchema())
             ->fillForm(fn (): array => ['strategy' => ResourceDeletionService::STRATEGY_BOTH])
             ->deselectRecordsAfterCompletion()
@@ -67,11 +67,11 @@ final class ResourceDeleteAction
     {
         return [
             Radio::make('strategy')
-                ->label('Deletion target')
+                ->label(__('admin.actions.deletion_target'))
                 ->options([
-                    ResourceDeletionService::STRATEGY_PEREGRINE => 'Peregrine only (keep on Pelican)',
-                    ResourceDeletionService::STRATEGY_PELICAN => 'Pelican only (keep local record)',
-                    ResourceDeletionService::STRATEGY_BOTH => 'Both sides (delete everywhere)',
+                    ResourceDeletionService::STRATEGY_PEREGRINE => __('admin.actions.deletion_target_options.peregrine_only'),
+                    ResourceDeletionService::STRATEGY_PELICAN => __('admin.actions.deletion_target_options.pelican_only'),
+                    ResourceDeletionService::STRATEGY_BOTH => __('admin.actions.deletion_target_options.both'),
                 ])
                 ->default(ResourceDeletionService::STRATEGY_BOTH)
                 ->required(),
@@ -80,7 +80,7 @@ final class ResourceDeleteAction
 
     private static function description(?string $cascadeWarning): string
     {
-        $base = 'Choose where this resource should be removed. Peregrine-only leaves the Pelican record intact, Pelican-only removes it remotely while keeping the local sync data.';
+        $base = __('admin.actions.deletion_target_help');
 
         return $cascadeWarning
             ? $base . "\n\n" . $cascadeWarning
@@ -111,7 +111,9 @@ final class ResourceDeleteAction
 
         if ($failed === 0) {
             Notification::make()
-                ->title($ok === 1 ? 'Resource deleted' : "{$ok} resources deleted")
+                ->title($ok === 1
+                    ? __('admin.actions.resource_deleted')
+                    : __('admin.actions.resources_deleted', ['n' => $ok]))
                 ->success()
                 ->send();
 
@@ -119,8 +121,8 @@ final class ResourceDeleteAction
         }
 
         Notification::make()
-            ->title("Deleted {$ok} — failed {$failed}")
-            ->body('Some deletions failed (see logs). Local records for failed items were preserved.')
+            ->title(__('admin.actions.resources_deleted_partial_title', ['ok' => $ok, 'failed' => $failed]))
+            ->body(__('admin.actions.resources_deleted_partial_body'))
             ->danger()
             ->send();
     }

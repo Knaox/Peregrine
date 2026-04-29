@@ -58,10 +58,12 @@ class About extends Page
         $this->refreshLatest(useCache: false);
 
         Notification::make()
-            ->title($this->updateAvailable ? 'Update available' : 'Up to date')
+            ->title($this->updateAvailable
+                ? __('admin.about.update_notification_title.available')
+                : __('admin.about.update_notification_title.up_to_date'))
             ->body($this->updateAvailable
-                ? "Version {$this->latestVersion} is available."
-                : "You're running the latest version ({$this->currentVersion}).")
+                ? __('admin.about.update_notification_body.available', ['version' => $this->latestVersion])
+                : __('admin.about.update_notification_body.up_to_date', ['version' => $this->currentVersion]))
             ->success()
             ->send();
     }
@@ -167,13 +169,13 @@ class About extends Page
         if ($this->isDocker) {
             return [
                 [
-                    'title' => 'Pull latest images and restart',
-                    'description' => 'Fetches the latest published images and recreates the running containers.',
+                    'title' => __('admin.about.commands.docker_pull.title'),
+                    'description' => __('admin.about.commands.docker_pull.description'),
                     'command' => 'docker compose pull && docker compose up -d',
                 ],
                 [
-                    'title' => 'Run migrations inside the container',
-                    'description' => 'Applies any new database migrations shipped with this release.',
+                    'title' => __('admin.about.commands.docker_migrate.title'),
+                    'description' => __('admin.about.commands.docker_migrate.description'),
                     'command' => 'docker compose exec app php artisan migrate --force',
                 ],
             ];
@@ -181,23 +183,23 @@ class About extends Page
 
         return [
             [
-                'title' => 'Pull latest code',
-                'description' => 'Fetches the latest source from the main branch.',
+                'title' => __('admin.about.commands.git_pull.title'),
+                'description' => __('admin.about.commands.git_pull.description'),
                 'command' => 'git pull',
             ],
             [
-                'title' => 'Install PHP + JS dependencies',
-                'description' => 'Installs any added composer/pnpm dependencies.',
+                'title' => __('admin.about.commands.install_deps.title'),
+                'description' => __('admin.about.commands.install_deps.description'),
                 'command' => 'composer install --no-dev --optimize-autoloader && pnpm install',
             ],
             [
-                'title' => 'Build frontend assets',
-                'description' => 'Rebuilds the Vite bundle with production optimizations.',
+                'title' => __('admin.about.commands.build.title'),
+                'description' => __('admin.about.commands.build.description'),
                 'command' => 'pnpm run build',
             ],
             [
-                'title' => 'Migrate database + refresh caches',
-                'description' => 'Applies pending migrations and rebuilds config/route caches.',
+                'title' => __('admin.about.commands.migrate.title'),
+                'description' => __('admin.about.commands.migrate.description'),
                 'command' => 'php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan queue:restart',
             ],
         ];

@@ -44,17 +44,17 @@ class RecentWebhooksWidget extends BaseWidget
             )
             ->columns([
                 Tables\Columns\TextColumn::make('processed_at')
-                    ->label('When')
+                    ->label(__('admin.fields.when'))
                     ->dateTime()
                     ->since(),
                 Tables\Columns\TextColumn::make('event_type')
-                    ->label('Event')
+                    ->label(__('admin.fields.event'))
                     ->color('gray'),
                 Tables\Columns\TextColumn::make('pelican_model_id')
-                    ->label('Pelican ID')
+                    ->label(__('admin.fields.pelican_id'))
                     ->numeric(),
                 Tables\Columns\TextColumn::make('response_status')
-                    ->label('HTTP')
+                    ->label(__('admin.fields.http'))
                     ->badge()
                     ->color(fn (int $state): string => match (true) {
                         $state >= 500 => 'danger',
@@ -63,7 +63,7 @@ class RecentWebhooksWidget extends BaseWidget
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('error_message')
-                    ->label('Error')
+                    ->label(__('admin.common.error'))
                     ->limit(40)
                     ->placeholder('—')
                     ->tooltip(fn ($state): ?string => $state),

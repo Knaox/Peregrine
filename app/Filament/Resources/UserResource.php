@@ -64,8 +64,8 @@ class UserResource extends Resource
                 ->columns(2)
                 ->schema([
                     TextInput::make('pelican_user_id')
-                        ->label('Pelican User ID')
-                        ->helperText('Manual override — changing this re-maps the user to a different Pelican account without touching Pelican.')
+                        ->label(__('admin.fields.pelican_user_id'))
+                        ->helperText(__('admin.users.helpers.pelican_user_id'))
                         ->numeric()
                         ->nullable(),
                 ]),
@@ -77,9 +77,9 @@ class UserResource extends Resource
                 ->columns(2)
                 ->schema([
                     TextInput::make('stripe_customer_id')
-                        ->label('Stripe Customer ID')
+                        ->label(__('admin.fields.stripe_customer_id'))
                         ->maxLength(255)
-                        ->helperText('Set automatically by the first Stripe checkout. Edit only to fix a mismatch.'),
+                        ->helperText(__('admin.users.helpers.stripe_customer_id')),
                 ]);
         }
 
@@ -101,28 +101,32 @@ class UserResource extends Resource
 
         return $schema
             ->schema([
-                Section::make('Identity')
+                Section::make(__('admin.users.sections.identity'))
                     ->icon('heroicon-o-user')
                     ->columns(2)
                     ->schema([
                         TextInput::make('name')
+                            ->label(__('admin.fields.name'))
                             ->required()
                             ->maxLength(255),
                         TextInput::make('email')
+                            ->label(__('admin.fields.email'))
                             ->email()
                             ->required()
                             ->maxLength(255)
                             ->unique(ignoreRecord: true)
                             ->prefixIcon('heroicon-o-envelope'),
                         TextInput::make('password')
+                            ->label(__('admin.fields.password'))
                             ->password()
                             ->revealable()
                             ->required()
                             ->maxLength(255)
                             ->minLength(8)
                             ->visibleOn('create')
-                            ->helperText('Minimum 8 characters. Hashed with bcrypt before storage.'),
+                            ->helperText(__('admin.users.helpers.password')),
                         Select::make('locale')
+                            ->label(__('admin.fields.language'))
                             ->options([
                                 'en' => 'English',
                                 'fr' => 'Français',
@@ -130,8 +134,8 @@ class UserResource extends Resource
                             ->default('en')
                             ->native(false),
                         Toggle::make('is_admin')
-                            ->label('Administrator')
-                            ->helperText('Grants access to /admin and elevates Gate::before whitelist (Server only).')
+                            ->label(__('admin.fields.administrator'))
+                            ->helperText(__('admin.users.helpers.admin'))
                             ->default(false)
                             ->columnSpanFull(),
                     ]),
@@ -145,26 +149,28 @@ class UserResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
+                    ->label(__('admin.fields.id'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('name')
+                    ->label(__('admin.fields.name'))
                     ->searchable()
                     ->sortable()
                     ->weight('medium'),
                 Tables\Columns\TextColumn::make('email')
+                    ->label(__('admin.fields.email'))
                     ->searchable()
                     ->sortable()
                     ->copyable()
                     ->color('gray'),
                 Tables\Columns\TextColumn::make('locale')
-                    ->label('Lang')
+                    ->label(__('admin.fields.lang'))
                     ->formatStateUsing(fn (?string $state): string => strtoupper($state ?? 'EN'))
                     ->color('gray')
                     ->size('xs')
                     ->sortable(),
                 Tables\Columns\IconColumn::make('is_admin')
-                    ->label('Admin')
+                    ->label(__('admin.fields.admin'))
                     ->boolean()
                     ->sortable(),
                 Tables\Columns\IconColumn::make('pelican_user_id')
@@ -175,28 +181,30 @@ class UserResource extends Resource
                     ->falseIcon('heroicon-o-exclamation-triangle')
                     ->falseColor('warning')
                     ->tooltip(fn (User $record): string => $record->pelican_user_id !== null
-                        ? "Linked to Pelican user #{$record->pelican_user_id}"
-                        : 'No Pelican account yet — use the Link action to provision one.')
+                        ? __('admin.users.tooltips.pelican_linked', ['id' => $record->pelican_user_id])
+                        : __('admin.users.tooltips.pelican_unlinked'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('servers_count')
                     ->counts('servers')
-                    ->label('Servers')
+                    ->label(__('admin.fields.servers_count'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('admin.fields.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_admin')
-                    ->label('Administrator'),
+                    ->label(__('admin.fields.administrator')),
                 Tables\Filters\SelectFilter::make('locale')
+                    ->label(__('admin.fields.language'))
                     ->options([
                         'en' => 'English',
                         'fr' => 'Français',
                     ]),
                 Tables\Filters\TernaryFilter::make('pelican_user_id')
-                    ->label('Synced with Pelican')
+                    ->label(__('admin.fields.pelican_synced'))
                     ->nullable(),
             ])
             ->recordActions([
@@ -225,18 +233,18 @@ class UserResource extends Resource
     private static function linkToPelicanAction(): Action
     {
         return Action::make('link_to_pelican')
-                    ->label('Link to Pelican')
+                    ->label(__('admin.users.link_pelican.label'))
                     ->icon('heroicon-o-link')
                     ->color('success')
                     ->visible(fn (User $record): bool => $record->pelican_user_id === null)
                     ->requiresConfirmation()
-                    ->modalHeading('Provision a Pelican account')
-                    ->modalDescription('Dispatches a background job that finds the user in Pelican by email, or creates one if missing. Safe to retry — the job is idempotent.')
+                    ->modalHeading(__('admin.users.link_pelican.modal_heading'))
+                    ->modalDescription(__('admin.users.link_pelican.modal_description'))
                     ->action(function (User $record): void {
                         LinkPelicanAccountJob::dispatch($record->id, 'admin-manual');
                         Notification::make()
-                            ->title('Link job dispatched')
-                            ->body("Background job queued for {$record->email}. Refresh in a few seconds to see the linked status.")
+                            ->title(__('admin.users.link_pelican.notification_title'))
+                            ->body(__('admin.users.link_pelican.notification_body', ['email' => $record->email]))
                             ->success()
                             ->send();
                     });
@@ -245,25 +253,25 @@ class UserResource extends Resource
     private static function changePasswordAction(): Action
     {
         return Action::make('change_password')
-                    ->label('Change password')
+                    ->label(__('admin.users.change_password.label'))
                     ->icon('heroicon-o-key')
                     ->color('warning')
                     ->schema([
                         TextInput::make('password')
-                            ->label('New password')
+                            ->label(__('admin.fields.new_password'))
                             ->password()
                             ->revealable()
                             ->required()
                             ->minLength(8),
                         TextInput::make('password_confirmation')
-                            ->label('Confirm password')
+                            ->label(__('admin.fields.confirm_password'))
                             ->password()
                             ->revealable()
                             ->required()
                             ->same('password'),
                         Toggle::make('sync_pelican')
-                            ->label('Also update on Pelican')
-                            ->helperText('If this user is synced, push the new password to the Pelican account as well.')
+                            ->label(__('admin.users.change_password.sync_pelican'))
+                            ->helperText(__('admin.users.helpers.sync_pelican'))
                             ->default(true),
                     ])
                     ->action(function (User $record, array $data): void {
@@ -276,8 +284,8 @@ class UserResource extends Resource
                             } catch (RequestException $e) {
                                 report($e);
                                 Notification::make()
-                                    ->title('Local password updated, Pelican sync failed')
-                                    ->body('The local password was changed but Pelican could not be updated. Check the logs.')
+                                    ->title(__('admin.users.change_password.partial_failure_title'))
+                                    ->body(__('admin.users.change_password.partial_failure_body'))
                                     ->warning()
                                     ->send();
 
@@ -286,7 +294,7 @@ class UserResource extends Resource
                         }
 
                         Notification::make()
-                            ->title('Password changed')
+                            ->title(__('admin.users.change_password.success'))
                             ->success()
                             ->send();
                     });

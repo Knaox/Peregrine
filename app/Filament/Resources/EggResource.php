@@ -57,26 +57,26 @@ class EggResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('Egg metadata')
-                    ->description(__('admin.common.system_managed') . ' — edit in Pelican to change.')
+                Section::make(__('admin.eggs.sections.metadata'))
+                    ->description(__('admin.eggs.sections.metadata_description'))
                     ->icon('heroicon-o-lock-closed')
                     ->collapsed()
                     ->schema([
-                        TextInput::make('name')->disabled(),
-                        Textarea::make('description')->disabled()->rows(3),
-                        TextInput::make('docker_image')->disabled(),
+                        TextInput::make('name')->label(__('admin.fields.name'))->disabled(),
+                        Textarea::make('description')->label(__('admin.fields.description'))->disabled()->rows(3),
+                        TextInput::make('docker_image')->label(__('admin.fields.docker_image'))->disabled(),
                     ]),
-                Section::make('Local presentation')
-                    ->description('Override the banner image used in the player UI. Stored locally — Pelican never reads this.')
+                Section::make(__('admin.eggs.sections.local'))
+                    ->description(__('admin.eggs.sections.local_description'))
                     ->icon('heroicon-o-photo')
                     ->schema([
                         FileUpload::make('banner_image')
-                            ->label('Banner Image')
+                            ->label(__('admin.fields.banner_image'))
                             ->image()
                             ->directory('eggs/banners')
                             ->disk('public')
                             ->maxSize(2048)
-                            ->helperText('Recommended: 800x450px (16:9). Max 2MB.'),
+                            ->helperText(__('admin.eggs.helpers.banner')),
                     ]),
             ]);
     }
@@ -86,41 +86,41 @@ class EggResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
+                    ->label(__('admin.fields.id'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('pelican_egg_id')
-                    ->label('Pelican Egg ID')
+                    ->label(__('admin.fields.pelican_egg_id'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('name')
+                    ->label(__('admin.fields.name'))
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('nest.name')
-                    ->label('Nest')
+                    ->label(__('admin.fields.nest'))
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('docker_image')
-                    ->label('Docker Image')
+                    ->label(__('admin.fields.docker_image'))
                     ->searchable()
                     ->limit(40)
                     ->tooltip(fn ($state) => $state)
                     ->copyable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('admin.fields.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('nest_id')
-                    ->label('Nest')
+                    ->label(__('admin.fields.nest'))
                     ->relationship('nest', 'name')
                     ->preload(),
             ])
             ->recordActions([
                 ActionGroup::make([
                     EditAction::make(),
-                    ResourceDeleteAction::row(
-                        'Deletes this egg + every server built from it (FK cascade). Pick "Peregrine only" to drop just the local copy.',
-                    ),
+                    ResourceDeleteAction::row(__('admin.eggs.delete.row')),
                 ])
                     ->icon('heroicon-o-ellipsis-vertical')
                     ->size(Size::Small)
@@ -129,9 +129,7 @@ class EggResource extends Resource
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    ResourceDeleteAction::bulk(
-                        'Each deleted egg cascades to every server using it. Double-check before confirming.',
-                    ),
+                    ResourceDeleteAction::bulk(__('admin.eggs.delete.bulk')),
                 ]),
             ])
             ->defaultSort('id', 'desc')

@@ -62,19 +62,21 @@ class BridgeSyncLogResource extends Resource
                 Tables\Columns\TextColumn::make('attempted_at')
                     ->dateTime()
                     ->sortable()
-                    ->label('When'),
+                    ->label(__('admin.fields.when')),
                 Tables\Columns\TextColumn::make('action')
+                    ->label(__('admin.fields.event_type'))
                     ->badge()
+                    ->formatStateUsing(fn (string $state) => __('admin.statuses.'.$state))
                     ->color(fn (string $state): string => $state === 'upsert' ? 'info' : 'warning')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('shop_plan_id')
-                    ->label('Shop ID')
+                    ->label(__('admin.fields.shop_id'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('serverPlan.name')
-                    ->label('Plan')
+                    ->label(__('admin.fields.plan'))
                     ->placeholder('—'),
                 Tables\Columns\TextColumn::make('response_status')
-                    ->label('HTTP')
+                    ->label(__('admin.fields.http'))
                     ->badge()
                     ->color(fn (int $state): string => match (true) {
                         $state >= 500 => 'danger',
@@ -84,22 +86,23 @@ class BridgeSyncLogResource extends Resource
                     })
                     ->sortable(),
                 Tables\Columns\IconColumn::make('signature_valid')
-                    ->label('HMAC')
+                    ->label(__('admin.fields.hmac'))
                     ->boolean(),
                 Tables\Columns\TextColumn::make('ip_address')
-                    ->label('IP')
+                    ->label(__('admin.fields.ip'))
                     ->placeholder('—'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('action')
-                    ->options(['upsert' => 'Upsert', 'delete' => 'Delete']),
-                Tables\Filters\TernaryFilter::make('signature_valid')->label('Signature valid'),
+                    ->label(__('admin.fields.event_type'))
+                    ->options(['upsert' => __('admin.statuses.upsert'), 'delete' => __('admin.statuses.delete')]),
+                Tables\Filters\TernaryFilter::make('signature_valid')->label(__('admin.fields.signature_valid')),
                 Tables\Filters\SelectFilter::make('response_status')
-                    ->label('HTTP outcome')
+                    ->label(__('admin.fields.http_outcome'))
                     ->options([
-                        '2xx' => '2xx — success',
-                        '4xx' => '4xx — client error',
-                        '5xx' => '5xx — server error',
+                        '2xx' => __('admin.http_filters.success'),
+                        '4xx' => __('admin.http_filters.client_error'),
+                        '5xx' => __('admin.http_filters.server_error'),
                     ])
                     ->query(function ($query, array $data) {
                         $value = $data['value'] ?? null;
@@ -118,19 +121,19 @@ class BridgeSyncLogResource extends Resource
                     ->color('gray')
                     ->modalHeading(__('admin.common.payload_modal_title'))
                     ->modalContent(fn (BridgeSyncLog $record): HtmlString => new HtmlString(
-                        '<div class="space-y-3 text-xs">'
-                        . '<div><div class="font-semibold mb-1">Request</div>'
-                        . '<pre class="bg-gray-50 dark:bg-gray-900 p-3 rounded-md overflow-auto max-h-[30vh] whitespace-pre-wrap break-all">'
+                        '<div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.75rem;">'
+                        . '<div><div style="font-weight: 600; margin-bottom: 0.25rem;">'.e(__('admin.common.request')).'</div>'
+                        . '<pre style="background: rgba(0,0,0,0.4); padding: 0.75rem; border-radius: 0.375rem; overflow: auto; max-height: 30vh; white-space: pre-wrap; word-break: break-all;">'
                         . e(is_array($record->request_payload) ? json_encode($record->request_payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : (string) $record->request_payload)
                         . '</pre></div>'
-                        . '<div><div class="font-semibold mb-1">Response (HTTP ' . e((string) $record->response_status) . ')</div>'
-                        . '<pre class="bg-gray-50 dark:bg-gray-900 p-3 rounded-md overflow-auto max-h-[30vh] whitespace-pre-wrap break-all">'
+                        . '<div><div style="font-weight: 600; margin-bottom: 0.25rem;">'.e(__('admin.common.response')).' (HTTP '.e((string) $record->response_status).')</div>'
+                        . '<pre style="background: rgba(0,0,0,0.4); padding: 0.75rem; border-radius: 0.375rem; overflow: auto; max-height: 30vh; white-space: pre-wrap; word-break: break-all;">'
                         . e((string) ($record->response_body ?? '—'))
                         . '</pre></div>'
                         . '</div>'
                     ))
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Close'),
+                    ->modalCancelActionLabel(__('admin.common.close')),
             ])
             ->toolbarActions([])
             ->defaultSort('attempted_at', 'desc')

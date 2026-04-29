@@ -26,25 +26,27 @@ final class ServerFormSchemaBuilder
                 ->icon('heroicon-o-identification')
                 ->schema([
                     TextInput::make('name')
+                        ->label(__('admin.fields.name'))
                         ->required()
                         ->maxLength(255)
                         ->columnSpanFull(),
                     Select::make('user_id')
-                        ->label('Owner')
+                        ->label(__('admin.fields.owner'))
                         ->relationship('user', 'name')
                         ->searchable()
                         ->preload()
                         ->required(),
                     Select::make('status')
+                        ->label(__('admin.fields.status'))
                         ->options([
-                            'active' => 'Active',
-                            'running' => 'Running',
-                            'stopped' => 'Stopped',
-                            'suspended' => 'Suspended',
-                            'terminated' => 'Terminated',
-                            'provisioning' => 'Provisioning',
-                            'provisioning_failed' => 'Provisioning failed',
-                            'offline' => 'Offline',
+                            'active' => __('admin.statuses.active'),
+                            'running' => __('admin.statuses.running'),
+                            'stopped' => __('admin.statuses.stopped'),
+                            'suspended' => __('admin.statuses.suspended'),
+                            'terminated' => __('admin.statuses.terminated'),
+                            'provisioning' => __('admin.statuses.provisioning'),
+                            'provisioning_failed' => __('admin.statuses.provisioning_failed'),
+                            'offline' => __('admin.statuses.offline'),
                         ])
                         ->required(),
                 ])->columns(2),
@@ -58,15 +60,15 @@ final class ServerFormSchemaBuilder
                 ->icon('heroicon-o-bolt')
                 ->schema([
                     TextInput::make('pelican_server_id')
-                        ->label('Pelican Server ID')
+                        ->label(__('admin.fields.pelican_server_id'))
                         ->numeric()
-                        ->helperText('Internal Pelican identifier. Changing this re-maps the local row to a different Pelican server.'),
+                        ->helperText(__('admin.servers.helpers.pelican_id')),
                     TextInput::make('idempotency_key')
-                        ->label('Idempotency key')
+                        ->label(__('admin.fields.idempotency_key'))
                         ->disabled()
-                        ->helperText('Set by ProvisionServerJob — guarantees a single Pelican server per Stripe checkout.'),
+                        ->helperText(__('admin.servers.helpers.idempotency')),
                     TextInput::make('provisioning_error')
-                        ->label('Last provisioning error')
+                        ->label(__('admin.fields.last_provisioning_error'))
                         ->disabled()
                         ->placeholder('—')
                         ->columnSpanFull(),
@@ -78,20 +80,20 @@ final class ServerFormSchemaBuilder
                 ->icon('heroicon-o-credit-card')
                 ->schema([
                     TextInput::make('stripe_subscription_id')
-                        ->label('Stripe Subscription ID')
+                        ->label(__('admin.fields.stripe_subscription_id'))
                         ->maxLength(255)
                         ->nullable()
-                        ->helperText('Bound to the customer\'s active subscription. Cleared on cancellation.'),
+                        ->helperText(__('admin.servers.helpers.stripe_subscription')),
                     TextInput::make('payment_intent_id')
-                        ->label('Payment Intent ID')
+                        ->label(__('admin.fields.payment_intent_id'))
                         ->maxLength(255)
                         ->nullable()
                         ->disabled()
-                        ->helperText('Set automatically from the Stripe checkout — read-only.'),
+                        ->helperText(__('admin.servers.helpers.payment_intent')),
                     \Filament\Forms\Components\DateTimePicker::make('scheduled_deletion_at')
-                        ->label('Scheduled deletion at')
+                        ->label(__('admin.fields.scheduled_deletion_at'))
                         ->nullable()
-                        ->helperText('Set when the customer cancels — server is hard-deleted at this date if not unsuspended.'),
+                        ->helperText(__('admin.servers.helpers.scheduled_deletion')),
                 ])->columns(2);
         }
 
@@ -107,20 +109,22 @@ final class ServerFormSchemaBuilder
     {
         $fields = [
             Select::make('egg_id')
+                ->label(__('admin.fields.egg'))
                 ->relationship('egg', 'name')
                 ->searchable()
                 ->preload()
                 ->required()
-                ->helperText('The Pelican egg used to provision this server. Determines the docker image and start command.'),
+                ->helperText(__('admin.servers.helpers.egg')),
         ];
 
         if ($isShopStripe) {
             $fields[] = Select::make('plan_id')
+                ->label(__('admin.fields.plan'))
                 ->relationship('plan', 'name')
                 ->searchable()
                 ->preload()
                 ->nullable()
-                ->helperText('Optional — link this server to a Shop plan for billing reconciliation.');
+                ->helperText(__('admin.servers.helpers.plan'));
         }
 
         return $fields;

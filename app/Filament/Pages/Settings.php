@@ -177,8 +177,8 @@ class Settings extends Page implements HasForms
         );
         $persister->persist($this->form->getState());
 
-        Notification::make()->title('Settings saved')
-            ->body('Your settings have been updated successfully.')
+        Notification::make()->title(__('admin.notifications.settings_saved_title'))
+            ->body(__('admin.notifications.settings_saved_body'))
             ->success()->send();
     }
 
@@ -188,7 +188,7 @@ class Settings extends Page implements HasForms
         $result = (new TestSmtpConfigAction())->execute($userEmail);
 
         $notification = Notification::make()
-            ->title($result['ok'] ? 'Test email sent' : 'SMTP test failed')
+            ->title($result['ok'] ? __('admin.notifications.smtp_ok') : __('admin.notifications.smtp_failed'))
             ->body($result['message']);
 
         $result['ok'] ? $notification->success()->send() : $notification->danger()->send();
@@ -197,7 +197,7 @@ class Settings extends Page implements HasForms
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label('Save Settings')->submit('save'),
+            Action::make('save')->label(__('admin.actions.save_settings'))->submit('save'),
         ];
     }
 
@@ -205,13 +205,13 @@ class Settings extends Page implements HasForms
     {
         return [
             Action::make('testSmtp')
-                ->label('Test SMTP')
+                ->label(__('admin.actions.test_smtp'))
                 ->color('gray')
                 ->icon('heroicon-o-envelope')
                 ->requiresConfirmation()
-                ->modalHeading('Send test email')
-                ->modalDescription('A test email will be sent to your admin email address.')
-                ->modalSubmitActionLabel('Send test')
+                ->modalHeading(__('admin.actions.test_smtp_modal_heading'))
+                ->modalDescription(__('admin.actions.test_smtp_modal_description'))
+                ->modalSubmitActionLabel(__('admin.actions.test_smtp_send'))
                 ->action(fn () => $this->testSmtp()),
         ];
     }

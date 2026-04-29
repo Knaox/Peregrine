@@ -12,13 +12,6 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 
-/**
- * Form sections for `ServerPlanResource` — surfaced as Tabs.
- *
- * UX rule : the form is split in two — Shop-owned fields read-only (price,
- * RAM/CPU/disk promised to the customer) + Peregrine-only technical config
- * (egg, node, env mapping, runtime toggles).
- */
 final class ServerPlanFormSchema
 {
     public static function tabs(): Tabs
@@ -41,41 +34,43 @@ final class ServerPlanFormSchema
     private static function shopMirrorFields(): array
     {
         return [
-            TextInput::make('name')->disabled(),
-            TextInput::make('shop_plan_slug')->label('Shop slug')->disabled(),
-            TextInput::make('shop_plan_type')->label('Type')->disabled(),
-            Toggle::make('is_active')->label('Active (Shop)')->disabled()->inline(false),
-            TextInput::make('description')->disabled()->columnSpanFull(),
+            TextInput::make('name')->label(__('admin.fields.name'))->disabled(),
+            TextInput::make('shop_plan_slug')->label(__('admin.plans.fields.shop_slug'))->disabled(),
+            TextInput::make('shop_plan_type')->label(__('admin.plans.fields.type'))->disabled(),
+            Toggle::make('is_active')->label(__('admin.plans.fields.active_shop'))->disabled()->inline(false),
+            TextInput::make('description')->label(__('admin.fields.description'))->disabled()->columnSpanFull(),
 
             TextInput::make('price_cents')
-                ->label('Price')
+                ->label(__('admin.fields.price'))
                 ->disabled()
                 ->formatStateUsing(fn ($state, ServerPlan $record) =>
                     $state === null ? '—' : number_format($state / 100, 2).' '.($record->currency ?? '')
                 ),
             TextInput::make('interval')
-                ->label('Recurrence')
+                ->label(__('admin.plans.fields.recurrence'))
                 ->disabled()
                 ->formatStateUsing(fn ($state, ServerPlan $record) =>
-                    $state === null ? 'one-time' : 'every '.$record->interval_count.' '.$state
+                    $state === null
+                        ? __('admin.plans.fields.one_time')
+                        : __('admin.plans.fields.every', ['count' => $record->interval_count, 'unit' => $state])
                 ),
             TextInput::make('stripe_price_id')
-                ->label('Stripe Price')
+                ->label(__('admin.fields.stripe_price'))
                 ->disabled()
-                ->placeholder('Not yet synced to Stripe (Shop side)'),
+                ->placeholder(__('admin.plans.placeholders.stripe_not_synced')),
             TextInput::make('last_shop_synced_at')
-                ->label('Last synced from Shop')
+                ->label(__('admin.plans.fields.last_synced'))
                 ->disabled()
                 ->formatStateUsing(fn ($state) => $state
-                    ? \Illuminate\Support\Carbon::parse((string) $state)->diffForHumans()
+                    ? \Illuminate\Support\Carbon::parse((string) $state)->locale(app()->getLocale())->diffForHumans()
                     : '—'),
 
-            TextInput::make('ram')->label('RAM')->disabled()->suffix('MB'),
-            TextInput::make('cpu')->label('CPU')->disabled()->suffix('%'),
-            TextInput::make('disk')->label('Disk')->disabled()->suffix('MB'),
-            TextInput::make('swap_mb')->label('Swap')->disabled()->suffix('MB'),
-            TextInput::make('io_weight')->label('I/O weight')->disabled(),
-            TextInput::make('cpu_pinning')->label('CPU pinning')->disabled()->placeholder('—'),
+            TextInput::make('ram')->label(__('admin.plans.fields.ram'))->disabled()->suffix('MB'),
+            TextInput::make('cpu')->label(__('admin.plans.fields.cpu'))->disabled()->suffix('%'),
+            TextInput::make('disk')->label(__('admin.fields.disk'))->disabled()->suffix('MB'),
+            TextInput::make('swap_mb')->label(__('admin.plans.fields.swap'))->disabled()->suffix('MB'),
+            TextInput::make('io_weight')->label(__('admin.plans.fields.io_weight'))->disabled(),
+            TextInput::make('cpu_pinning')->label(__('admin.plans.fields.cpu_pinning'))->disabled()->placeholder('—'),
         ];
     }
 
@@ -84,19 +79,20 @@ final class ServerPlanFormSchema
     {
         return [
             Select::make('egg_id')
+                ->label(__('admin.fields.egg'))
                 ->relationship('egg', 'name')
                 ->searchable()
                 ->preload()
                 ->required()
-                ->helperText('The Pelican egg used when provisioning this plan. The nest is derived automatically.'),
+                ->helperText(__('admin.plans.helpers.egg')),
 
             Toggle::make('auto_deploy')
-                ->label('Auto-deploy on multiple nodes')
-                ->helperText('ON: provisioner picks one of the allowed nodes (least-loaded). OFF: every server lands on the default node.')
+                ->label(__('admin.plans.fields.auto_deploy'))
+                ->helperText(__('admin.plans.helpers.auto_deploy'))
                 ->live(),
 
             Select::make('default_node_id')
-                ->label('Default node')
+                ->label(__('admin.plans.fields.default_node'))
                 ->relationship('defaultNode', 'name')
                 ->searchable()
                 ->preload()
@@ -104,55 +100,57 @@ final class ServerPlanFormSchema
                 ->required(fn (Get $get) => ! $get('auto_deploy')),
 
             Select::make('allowed_node_ids')
-                ->label('Allowed nodes')
+                ->label(__('admin.plans.fields.allowed_nodes'))
                 ->multiple()
                 ->options(fn () => \App\Models\Node::pluck('name', 'id')->toArray())
                 ->searchable()
                 ->visible(fn (Get $get) => (bool) $get('auto_deploy'))
                 ->required(fn (Get $get) => (bool) $get('auto_deploy'))
-                ->helperText('At least one node must be selected when auto-deploy is on.'),
+                ->helperText(__('admin.plans.helpers.allowed_nodes')),
 
             TextInput::make('docker_image')
-                ->label('Docker image override')
+                ->label(__('admin.plans.fields.docker_override'))
                 ->maxLength(255)
-                ->placeholder('Leave empty to use the egg default'),
+                ->placeholder(__('admin.plans.placeholders.docker_default')),
 
             TextInput::make('port_count')
-                ->label('Number of consecutive ports to allocate')
+                ->label(__('admin.plans.fields.port_count'))
                 ->numeric()
                 ->minValue(1)
                 ->maxValue(10)
                 ->default(1)
                 ->required()
                 ->live()
-                ->helperText('1 = standard. Multiple ports = game-specific protocols (RCON, Telnet…).'),
+                ->helperText(__('admin.plans.helpers.port_count')),
 
             Repeater::make('env_var_mapping')
-                ->label('Environment variable mapping')
-                ->helperText('Override how Pelican environment variables are computed at provisioning time.')
+                ->label(__('admin.plans.fields.env_mapping'))
+                ->helperText(__('admin.plans.helpers.env_mapping'))
                 ->schema([
                     TextInput::make('variable_name')
+                        ->label(__('admin.plans.fields.variable_name'))
                         ->required()
                         ->alphaDash()
                         ->maxLength(100),
                     Select::make('type')
+                        ->label(__('admin.plans.fields.mapping_type'))
                         ->options([
-                            'offset' => 'Offset (consecutive port from base)',
-                            'random' => 'Random allocated port',
-                            'static' => 'Static literal value',
+                            'offset' => __('admin.plans.mapping_types.offset'),
+                            'random' => __('admin.plans.mapping_types.random'),
+                            'static' => __('admin.plans.mapping_types.static'),
                         ])
                         ->required()
                         ->live(),
                     Select::make('offset_value')
-                        ->label('Which allocated port')
+                        ->label(__('admin.plans.fields.which_port'))
                         ->options(function (Get $get): array {
                             $count = (int) ($get('../../port_count') ?? 1);
                             $count = max(1, min(10, $count));
                             $options = [];
                             for ($i = 0; $i < $count; $i++) {
                                 $options[$i] = $i === 0
-                                    ? 'Main port (port + 0)'
-                                    : 'Main port + '.$i;
+                                    ? __('admin.plans.fields.main_port')
+                                    : __('admin.plans.fields.main_port_plus', ['n' => $i]);
                             }
                             return $options;
                         })
@@ -160,6 +158,7 @@ final class ServerPlanFormSchema
                         ->visible(fn (Get $get) => $get('type') === 'offset')
                         ->required(fn (Get $get) => $get('type') === 'offset'),
                     TextInput::make('static_value')
+                        ->label(__('admin.plans.fields.static_value'))
                         ->visible(fn (Get $get) => $get('type') === 'static')
                         ->required(fn (Get $get) => $get('type') === 'static'),
                 ])
@@ -169,24 +168,24 @@ final class ServerPlanFormSchema
                 ->defaultItems(0),
 
             Toggle::make('enable_oom_killer')
-                ->label('Enable OOM Killer')
-                ->helperText('Terminates the server if memory limit is exceeded.'),
+                ->label(__('admin.plans.fields.enable_oom'))
+                ->helperText(__('admin.plans.helpers.enable_oom')),
             Toggle::make('start_on_completion')
-                ->label('Start automatically after install')
-                ->helperText('When OFF, the server stays stopped after installation completes.'),
+                ->label(__('admin.plans.fields.start_on_install'))
+                ->helperText(__('admin.plans.helpers.start_on_install')),
             Toggle::make('skip_install_script')
-                ->label('Skip install script')
-                ->helperText('Do not run the egg install script on first boot.'),
+                ->label(__('admin.plans.fields.skip_install'))
+                ->helperText(__('admin.plans.helpers.skip_install')),
             Toggle::make('dedicated_ip')
-                ->label('Dedicated IP')
-                ->helperText('Assign an IP not used by other servers.'),
+                ->label(__('admin.plans.fields.dedicated_ip'))
+                ->helperText(__('admin.plans.helpers.dedicated_ip')),
 
-            Section::make('Feature limits')
+            Section::make(__('admin.plans.fields.feature_limits'))
                 ->columns(3)
                 ->schema([
-                    TextInput::make('feature_limits_databases')->label('Databases')->numeric()->default(0),
-                    TextInput::make('feature_limits_backups')->label('Backups')->numeric()->default(3),
-                    TextInput::make('feature_limits_allocations')->label('Allocations')->numeric()->default(1),
+                    TextInput::make('feature_limits_databases')->label(__('admin.plans.fields.databases'))->numeric()->default(0),
+                    TextInput::make('feature_limits_backups')->label(__('admin.plans.fields.backups'))->numeric()->default(3),
+                    TextInput::make('feature_limits_allocations')->label(__('admin.plans.fields.allocations'))->numeric()->default(1),
                 ]),
         ];
     }
