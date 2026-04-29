@@ -28,7 +28,7 @@ final class AuthSettingsFormSchema
     /**
      * @return array<int, \Filament\Schemas\Components\Component>
      */
-    public static function tabs(string $shopRedirect, string $paymenterRedirect, string $googleRedirect, string $discordRedirect, string $linkedinRedirect): array
+    public static function tabs(string $shopRedirect, string $paymenterRedirect, string $whmcsRedirect, string $googleRedirect, string $discordRedirect, string $linkedinRedirect): array
     {
         return [
             Tabs::make('auth_settings_tabs')
@@ -42,6 +42,9 @@ final class AuthSettingsFormSchema
                     Tab::make(__('admin.auth_form.tabs.paymenter'))
                         ->icon('heroicon-o-credit-card')
                         ->schema([self::paymenter($paymenterRedirect)]),
+                    Tab::make(__('admin.auth_form.tabs.whmcs'))
+                        ->icon('heroicon-o-banknotes')
+                        ->schema([self::whmcs($whmcsRedirect)]),
                     Tab::make(__('admin.auth_form.tabs.social'))
                         ->icon('heroicon-o-user-group')
                         ->schema([
@@ -138,6 +141,11 @@ final class AuthSettingsFormSchema
     public static function paymenter(string $redirectUri): Section
     {
         return Sections\PaymenterProviderSection::make($redirectUri);
+    }
+
+    public static function whmcs(string $redirectUri): Section
+    {
+        return Sections\WhmcsProviderSection::make($redirectUri);
     }
 
     public static function safety(): Section

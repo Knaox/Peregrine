@@ -73,6 +73,14 @@ class AuthSettings extends Page implements HasForms
     public ?string $auth_paymenter_register_url = '';
     /** @var array<int, string>|null */
     public ?array $auth_paymenter_logo_path = [];
+    public bool $auth_whmcs_enabled = false;
+    public ?string $auth_whmcs_base_url = '';
+    public ?string $auth_whmcs_client_id = '';
+    public ?string $auth_whmcs_client_secret = '';
+    public ?string $auth_whmcs_redirect_uri = '';
+    public ?string $auth_whmcs_register_url = '';
+    /** @var array<int, string>|null */
+    public ?array $auth_whmcs_logo_path = [];
     public bool $auth_providers_google_enabled = false;
     public ?string $auth_providers_google_client_id = '';
     public ?string $auth_providers_google_client_secret = '';
@@ -119,6 +127,16 @@ class AuthSettings extends Page implements HasForms
         $paymenterLogoPath = (string) ($paymenter['logo_path'] ?? '');
         $this->auth_paymenter_logo_path = ($paymenterLogoPath !== '' && ! str_starts_with($paymenterLogoPath, '/')) ? [$paymenterLogoPath] : [];
 
+        $whmcs = $registry->whmcsConfig();
+        $this->auth_whmcs_enabled = $settings->get('auth_whmcs_enabled', 'false') === 'true';
+        $this->auth_whmcs_base_url = (string) ($whmcs['base_url'] ?? '');
+        $this->auth_whmcs_client_id = (string) ($whmcs['client_id'] ?? '');
+        $this->auth_whmcs_client_secret = '';
+        $this->auth_whmcs_redirect_uri = (string) ($whmcs['redirect_uri'] ?? '');
+        $this->auth_whmcs_register_url = (string) ($whmcs['register_url'] ?? '');
+        $whmcsLogoPath = (string) ($whmcs['logo_path'] ?? '');
+        $this->auth_whmcs_logo_path = ($whmcsLogoPath !== '' && ! str_starts_with($whmcsLogoPath, '/')) ? [$whmcsLogoPath] : [];
+
         $providers = $registry->decodeProviders();
         foreach (['google', 'discord', 'linkedin'] as $id) {
             $this->{"auth_providers_{$id}_enabled"} = (bool) ($providers[$id]['enabled'] ?? false);
@@ -138,6 +156,7 @@ class AuthSettings extends Page implements HasForms
         return $schema->schema(AuthSettingsFormSchema::tabs(
             shopRedirect: $this->defaultRedirect('shop'),
             paymenterRedirect: $this->defaultRedirect('paymenter'),
+            whmcsRedirect: $this->defaultRedirect('whmcs'),
             googleRedirect: $this->defaultRedirect('google'),
             discordRedirect: $this->defaultRedirect('discord'),
             linkedinRedirect: $this->defaultRedirect('linkedin'),
@@ -164,12 +183,14 @@ class AuthSettings extends Page implements HasForms
             }
         }
 
-        // Mutual exclusivity guard: only ONE canonical IdP can be active at a
-        // time (Shop OR Paymenter, never both). Block early so we never write
-        // an inconsistent state.
+        // Mutual exclusivity guard: only ONE canonical IdP can be active at
+        // a time (Shop OR Paymenter OR WHMCS — never two together). Block
+        // early so we never write an inconsistent state.
         $shopWillBeEnabled = (bool) ($data['auth_shop_enabled'] ?? false);
         $paymenterWillBeEnabled = (bool) ($data['auth_paymenter_enabled'] ?? false);
-        if ($shopWillBeEnabled && $paymenterWillBeEnabled) {
+        $whmcsWillBeEnabled = (bool) ($data['auth_whmcs_enabled'] ?? false);
+        $canonicalCount = (int) $shopWillBeEnabled + (int) $paymenterWillBeEnabled + (int) $whmcsWillBeEnabled;
+        if ($canonicalCount > 1) {
             Notification::make()
                 ->title(__('admin.notifications.auth_only_one_idp_title'))
                 ->body(__('admin.notifications.auth_only_one_idp_body'))
@@ -182,11 +203,12 @@ class AuthSettings extends Page implements HasForms
         // S8 disable guardrail — block if a provider is being turned off and
         // exclusive users remain, unless the admin explicitly acknowledges.
         $ack = (bool) ($data['acknowledge_disable_risk'] ?? false);
-        foreach (['shop', 'paymenter', 'google', 'discord', 'linkedin'] as $pid) {
+        foreach (['shop', 'paymenter', 'whmcs', 'google', 'discord', 'linkedin'] as $pid) {
             $wasEnabled = AuthSettingsPersister::wasPreviouslyEnabled($pid);
             $willBeEnabled = match ($pid) {
                 'shop' => $shopWillBeEnabled,
                 'paymenter' => $paymenterWillBeEnabled,
+                'whmcs' => $whmcsWillBeEnabled,
                 default => (bool) ($data["auth_providers_{$pid}_enabled"] ?? false),
             };
 
@@ -211,6 +233,7 @@ class AuthSettings extends Page implements HasForms
 
         AuthSettingsPersister::persistShop($data, $registry, $this->defaultRedirect('shop'));
         AuthSettingsPersister::persistPaymenter($data, $registry, $this->defaultRedirect('paymenter'));
+        AuthSettingsPersister::persistWhmcs($data, $registry, $this->defaultRedirect('whmcs'));
         AuthSettingsPersister::persistSocialProviders($data, $registry, [
             'google' => $this->defaultRedirect('google'),
             'discord' => $this->defaultRedirect('discord'),
@@ -223,6 +246,7 @@ class AuthSettings extends Page implements HasForms
         $this->acknowledge_disable_risk = false;
         $this->auth_shop_client_secret = '';
         $this->auth_paymenter_client_secret = '';
+        $this->auth_whmcs_client_secret = '';
         foreach (['google', 'discord', 'linkedin'] as $id) {
             $this->{"auth_providers_{$id}_client_secret"} = '';
         }
@@ -259,6 +283,13 @@ class AuthSettings extends Page implements HasForms
             'auth_paymenter_redirect_uri' => $this->auth_paymenter_redirect_uri,
             'auth_paymenter_register_url' => $this->auth_paymenter_register_url,
             'auth_paymenter_logo_path' => $this->auth_paymenter_logo_path,
+            'auth_whmcs_enabled' => $this->auth_whmcs_enabled,
+            'auth_whmcs_base_url' => $this->auth_whmcs_base_url,
+            'auth_whmcs_client_id' => $this->auth_whmcs_client_id,
+            'auth_whmcs_client_secret' => '',
+            'auth_whmcs_redirect_uri' => $this->auth_whmcs_redirect_uri,
+            'auth_whmcs_register_url' => $this->auth_whmcs_register_url,
+            'auth_whmcs_logo_path' => $this->auth_whmcs_logo_path,
             'auth_providers_google_enabled' => $this->auth_providers_google_enabled,
             'auth_providers_google_client_id' => $this->auth_providers_google_client_id,
             'auth_providers_google_client_secret' => '',

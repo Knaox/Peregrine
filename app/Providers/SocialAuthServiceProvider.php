@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\Auth\PaymenterSocialiteProvider;
 use App\Services\Auth\ShopSocialiteProvider;
+use App\Services\Auth\WhmcsSocialiteProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Socialite\Contracts\Factory as SocialiteFactory;
@@ -18,7 +19,7 @@ class SocialAuthServiceProvider extends ServiceProvider
      * fires SocialiteWasCalled when any driver is resolved — we hook in and
      * attach the Discord driver. Google + LinkedIn-OpenID are core drivers.
      *
-     * The 'shop' + 'paymenter' custom drivers are registered here via
+     * The 'shop' + 'paymenter' + 'whmcs' custom drivers are registered here via
      * Socialite::extend(). Their config is injected at runtime from the DB
      * settings by AuthProviderRegistry::configureSocialite('shop') before
      * each driver() call.
@@ -60,6 +61,22 @@ class SocialAuthServiceProvider extends ServiceProvider
 
             /** @var PaymenterSocialiteProvider $provider */
             $provider = $socialite->buildProvider(PaymenterSocialiteProvider::class, $cfg);
+
+            return $provider->withExtraConfig([
+                'authorize_url' => $cfg['authorize_url'] ?? '',
+                'token_url' => $cfg['token_url'] ?? '',
+                'user_url' => $cfg['user_url'] ?? '',
+            ]);
+        });
+
+        $this->app->make(SocialiteFactory::class)->extend('whmcs', function ($app) {
+            $cfg = (array) config('services.whmcs', []);
+
+            /** @var \Laravel\Socialite\Contracts\Factory $socialite */
+            $socialite = $app->make(SocialiteFactory::class);
+
+            /** @var WhmcsSocialiteProvider $provider */
+            $provider = $socialite->buildProvider(WhmcsSocialiteProvider::class, $cfg);
 
             return $provider->withExtraConfig([
                 'authorize_url' => $cfg['authorize_url'] ?? '',

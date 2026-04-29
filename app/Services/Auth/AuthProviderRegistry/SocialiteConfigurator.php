@@ -28,6 +28,11 @@ final class SocialiteConfigurator
             return;
         }
 
+        if ($provider === 'whmcs') {
+            self::applyWhmcs($registry);
+            return;
+        }
+
         self::applyGenericSocialProvider($registry, $provider);
     }
 
@@ -56,6 +61,23 @@ final class SocialiteConfigurator
             'authorize_url' => $base.'/oauth/authorize',
             'token_url' => $base.'/api/oauth/token',
             'user_url' => $base.'/api/me',
+        ]);
+    }
+
+    private static function applyWhmcs(AuthProviderRegistry $registry): void
+    {
+        $cfg = $registry->whmcsConfig();
+        $base = rtrim((string) ($cfg['base_url'] ?? ''), '/');
+        config()->set('services.whmcs', [
+            'client_id' => (string) ($cfg['client_id'] ?? ''),
+            'client_secret' => self::decryptSecret((string) ($cfg['client_secret_encrypted'] ?? '')),
+            'redirect' => (string) ($cfg['redirect_uri'] ?? self::defaultRedirect('whmcs')),
+            'base_url' => $base,
+            // WHMCS native OpenID Connect endpoints — fixed paths under
+            // <whmcs>/oauth/* (Configuration → System Settings → OpenID Connect).
+            'authorize_url' => $base.'/oauth/authorize.php',
+            'token_url' => $base.'/oauth/token.php',
+            'user_url' => $base.'/oauth/userinfo.php',
         ]);
     }
 

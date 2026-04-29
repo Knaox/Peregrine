@@ -43,6 +43,17 @@ final class EnabledProvidersList
             ];
         }
 
+        if ($registry->isEnabled('whmcs')) {
+            $wh = $registry->whmcsConfig();
+            $out[] = [
+                'id' => 'whmcs',
+                'enabled' => true,
+                'redirect_url' => (string) ($wh['redirect_uri'] ?? self::defaultRedirect('whmcs')),
+                'canonical' => true,
+                'logo_url' => self::logoUrl((string) ($wh['logo_path'] ?? '')),
+            ];
+        }
+
         $providers = $registry->decodeProviders();
         foreach (['google', 'discord', 'linkedin'] as $id) {
             if (! ($providers[$id]['enabled'] ?? false)) {

@@ -98,7 +98,7 @@ class BridgeSettings extends Page implements HasForms
     {
         $baseUrl = rtrim((string) config('app.url', ''), '/');
         $bridgeApiDocsUrl = url('/docs/bridge-api');
-        $paymenterDocsUrl = url('/docs/bridge-paymenter');
+        $paymenterDocsUrl = url('/docs/bridge-webhook-orchestrator');
         $pelicanWebhookSettingsUrl = url('/admin/pelican-webhook-settings');
 
         return $schema->schema([

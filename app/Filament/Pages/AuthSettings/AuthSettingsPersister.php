@@ -82,6 +82,33 @@ final class AuthSettingsPersister
 
     /**
      * @param  array<string, mixed>  $data
+     */
+    public static function persistWhmcs(array $data, AuthProviderRegistry $registry, string $defaultRedirect): void
+    {
+        $existing = $registry->whmcsConfig();
+        $existing['base_url'] = rtrim((string) ($data['auth_whmcs_base_url'] ?? ''), '/');
+        $existing['client_id'] = (string) ($data['auth_whmcs_client_id'] ?? '');
+        $existing['register_url'] = (string) ($data['auth_whmcs_register_url'] ?? '');
+
+        $typedRedirect = trim((string) ($data['auth_whmcs_redirect_uri'] ?? ''));
+        $existing['redirect_uri'] = $typedRedirect !== '' ? $typedRedirect : $defaultRedirect;
+
+        $logoValue = $data['auth_whmcs_logo_path'] ?? null;
+        $logoPath = is_array($logoValue) ? (array_values($logoValue)[0] ?? null) : $logoValue;
+        $existing['logo_path'] = $logoPath ?: '';
+
+        $settings = app(SettingsService::class);
+        $settings->set('auth_whmcs_config', json_encode($existing, JSON_THROW_ON_ERROR));
+        $settings->set('auth_whmcs_enabled', ($data['auth_whmcs_enabled'] ?? false) ? 'true' : 'false');
+
+        $typed = (string) ($data['auth_whmcs_client_secret'] ?? '');
+        if ($typed !== '') {
+            $registry->storeWhmcsClientSecret($typed);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
      * @param  array<int, string>  $defaultRedirects  per-provider redirect URIs
      */
     public static function persistSocialProviders(array $data, AuthProviderRegistry $registry, array $defaultRedirects): void
@@ -121,6 +148,10 @@ final class AuthSettingsPersister
 
         if ($providerId === 'paymenter') {
             return app(SettingsService::class)->get('auth_paymenter_enabled', 'false') === 'true';
+        }
+
+        if ($providerId === 'whmcs') {
+            return app(SettingsService::class)->get('auth_whmcs_enabled', 'false') === 'true';
         }
 
         $providers = app(AuthProviderRegistry::class)->decodeProviders();

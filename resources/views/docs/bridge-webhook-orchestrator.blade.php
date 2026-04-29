@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Peregrine Bridge Paymenter — Setup Guide</title>
+    <title>Peregrine Bridge — Webhook Orchestrator — Setup Guide</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo.svg') }}">
     <style>
         :root {

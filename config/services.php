@@ -66,4 +66,37 @@ return [
         'redirect' => '',
     ],
 
+    // Custom canonical OAuth providers. Defaults are placeholders — the live
+    // config is pushed at runtime by AuthProviderRegistry::configureSocialite()
+    // from the `settings` table. Endpoint URLs are derived from the base_url
+    // by SocialiteConfigurator::applyShop / applyPaymenter / applyWhmcs.
+    'shop' => [
+        'client_id' => '',
+        'client_secret' => '',
+        'redirect' => '',
+        'authorize_url' => '',
+        'token_url' => '',
+        'user_url' => '',
+    ],
+
+    'paymenter' => [
+        'client_id' => '',
+        'client_secret' => '',
+        'redirect' => '',
+        'base_url' => '',
+        'authorize_url' => '',
+        'token_url' => '',
+        'user_url' => '',
+    ],
+
+    'whmcs' => [
+        'client_id' => '',
+        'client_secret' => '',
+        'redirect' => '',
+        'base_url' => '',
+        'authorize_url' => '',
+        'token_url' => '',
+        'user_url' => '',
+    ],
+
 ];

@@ -117,6 +117,9 @@ class SocialUserMatcher
             'discord' => ($raw['verified'] ?? false) === true,
             'linkedin' => ($raw['email_verified'] ?? false) === true,
             'paymenter' => ($raw['email_verified'] ?? false) === true,
+            // WHMCS exposes the standard OIDC `email_verified` boolean claim
+            // on /oauth/userinfo.php — same shape as Google/LinkedIn.
+            'whmcs' => ($raw['email_verified'] ?? false) === true,
             default => false,
         };
     }

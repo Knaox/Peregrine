@@ -26,8 +26,8 @@ use Illuminate\Support\Facades\DB;
  */
 class AuthProviderRegistry
 {
-    /** Providers we know how to drive. Shop + Paymenter are canonical (custom drivers). */
-    private const SUPPORTED = ['shop', 'google', 'discord', 'linkedin', 'paymenter'];
+    /** Providers we know how to drive. Shop + Paymenter + WHMCS are canonical (custom drivers). */
+    private const SUPPORTED = ['shop', 'google', 'discord', 'linkedin', 'paymenter', 'whmcs'];
 
     /** Socialite core uses `linkedin-openid` for the modern OIDC flow. */
     private const SOCIALITE_DRIVER = [
@@ -36,6 +36,7 @@ class AuthProviderRegistry
         'discord' => 'discord',
         'linkedin' => 'linkedin-openid',
         'paymenter' => 'paymenter',
+        'whmcs' => 'whmcs',
     ];
 
     /**
@@ -43,9 +44,9 @@ class AuthProviderRegistry
      * local accounts on first login, sync the user's email to Pelican on every
      * callback, and may surface a register URL on the login page. Only ONE
      * canonical provider can be active at a time (Filament save() enforces).
-     * Order = priority when both are accidentally enabled (defensive fallback).
+     * Order = priority when several are accidentally enabled (defensive fallback).
      */
-    private const CANONICAL_PROVIDERS = ['shop', 'paymenter'];
+    private const CANONICAL_PROVIDERS = ['shop', 'paymenter', 'whmcs'];
 
     public function __construct(
         private readonly SettingsService $settings,
@@ -68,6 +69,10 @@ class AuthProviderRegistry
 
         if ($provider === 'paymenter') {
             return $this->settings->get('auth_paymenter_enabled', 'false') === 'true';
+        }
+
+        if ($provider === 'whmcs') {
+            return $this->settings->get('auth_whmcs_enabled', 'false') === 'true';
         }
 
         $providers = $this->decodeProviders();
@@ -198,6 +203,13 @@ class AuthProviderRegistry
         $this->settings->set('auth_paymenter_config', json_encode($cfg, JSON_THROW_ON_ERROR));
     }
 
+    public function storeWhmcsClientSecret(string $plaintext): void
+    {
+        $cfg = $this->whmcsConfig();
+        $cfg['client_secret_encrypted'] = $plaintext === '' ? '' : Crypt::encryptString($plaintext);
+        $this->settings->set('auth_whmcs_config', json_encode($cfg, JSON_THROW_ON_ERROR));
+    }
+
     public function storeProviderClientSecret(string $provider, string $plaintext): void
     {
         $providers = $this->decodeProviders();
@@ -239,7 +251,23 @@ class AuthProviderRegistry
     }
 
     /**
-     * Active canonical config (whichever of shop/paymenter is currently
+     * @return array<string, mixed>
+     */
+    public function whmcsConfig(): array
+    {
+        $raw = (string) $this->settings->get('auth_whmcs_config', '{}');
+
+        try {
+            $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return [];
+        }
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * Active canonical config (whichever of shop/paymenter/whmcs is currently
      * enabled). Returns an empty array when none is active.
      *
      * @return array<string, mixed>
@@ -249,6 +277,7 @@ class AuthProviderRegistry
         return match ($this->canonicalProvider()) {
             'shop' => $this->shopConfig(),
             'paymenter' => $this->paymenterConfig(),
+            'whmcs' => $this->whmcsConfig(),
             default => [],
         };
     }

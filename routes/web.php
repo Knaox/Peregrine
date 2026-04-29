@@ -40,19 +40,40 @@ Route::get('/docs/bridge-api', function () {
     ]);
 })->name('docs.bridge-api');
 
-// Bridge Paymenter operator guide — public HTML render of docs/bridge-paymenter.md.
-// Targeted at admins wiring up Pelican outgoing webhooks → Peregrine in
-// Paymenter mode (no Stripe, no plan push).
-Route::get('/docs/bridge-paymenter', function () {
-    $markdown = file_get_contents(base_path('docs/bridge-paymenter.md')) ?: '';
+// Bridge — webhook orchestrator operator guide (Paymenter, WHMCS, …).
+// Public HTML render of docs/bridge-webhook-orchestrator.md. Targeted at
+// admins wiring up Pelican outgoing webhooks → Peregrine when a third-party
+// billing system (Paymenter, WHMCS, etc.) drives Pelican via its own module.
+Route::get('/docs/bridge-webhook-orchestrator', function () {
+    $markdown = file_get_contents(base_path('docs/bridge-webhook-orchestrator.md')) ?: '';
     $converter = new GithubFlavoredMarkdownConverter([
         'html_input' => 'allow',
         'allow_unsafe_links' => false,
     ]);
-    return view('docs.bridge-paymenter', [
+    return view('docs.bridge-webhook-orchestrator', [
         'content' => (string) $converter->convert($markdown),
     ]);
-})->name('docs.bridge-paymenter');
+})->name('docs.bridge-webhook-orchestrator');
+
+// Backward-compat redirect — old URL kept stable for any external link.
+Route::redirect('/docs/bridge-paymenter', '/docs/bridge-webhook-orchestrator', 301);
+
+// WHMCS OAuth setup guide — picks the FR or EN markdown based on the
+// authenticated admin's locale (or app fallback). Both files live in docs/.
+Route::get('/docs/whmcs-oauth-setup', function () {
+    $locale = app()->getLocale();
+    $candidate = base_path("docs/whmcs-oauth-setup.{$locale}.md");
+    $path = is_file($candidate) ? $candidate : base_path('docs/whmcs-oauth-setup.md');
+
+    $markdown = file_get_contents($path) ?: '';
+    $converter = new GithubFlavoredMarkdownConverter([
+        'html_input' => 'allow',
+        'allow_unsafe_links' => false,
+    ]);
+    return view('docs.whmcs-oauth-setup', [
+        'content' => (string) $converter->convert($markdown),
+    ]);
+})->name('docs.whmcs-oauth-setup');
 
 // Pelican webhook receiver setup guide — public HTML render of docs/pelican-webhook.md.
 // Decoupled from Bridge mode : works in any mode (shop_stripe, paymenter, disabled).
@@ -76,9 +97,9 @@ Route::get('/docs/pelican-webhook', function () {
 Route::prefix('api/auth')->group(function () {
     Route::get('social/{provider}/redirect', [SocialAuthController::class, 'redirect'])
         ->middleware('throttle:social-redirect')
-        ->where('provider', 'shop|google|discord|linkedin|paymenter');
+        ->where('provider', 'shop|google|discord|linkedin|paymenter|whmcs');
     Route::get('social/{provider}/callback', [SocialAuthController::class, 'callback'])
-        ->where('provider', 'shop|google|discord|linkedin|paymenter');
+        ->where('provider', 'shop|google|discord|linkedin|paymenter|whmcs');
 });
 
 // Plugin JS bundle — controller fallback for the static symlink at
