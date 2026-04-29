@@ -56,3 +56,41 @@ export async function detectDocker(): Promise<{ is_docker: boolean; db_ready: bo
     });
     return response.json() as Promise<{ is_docker: boolean; db_ready: boolean; defaults: Partial<DatabaseConfig> }>;
 }
+
+export interface BackfillResource {
+    processed: number;
+    total: number;
+    completed: boolean;
+    started_at: string | null;
+    completed_at: string | null;
+    last_error: string | null;
+}
+
+export interface BackfillStatus {
+    resources: Record<string, BackfillResource>;
+    all_completed: boolean;
+}
+
+export async function startBackfill(): Promise<{ started: boolean }> {
+    return apiCall('/backfill/start', {});
+}
+
+export async function getBackfillStatus(): Promise<BackfillStatus> {
+    const response = await fetch(`${API_BASE}/backfill/status`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+    });
+    return await response.json() as BackfillStatus;
+}
+
+export async function generateWebhookToken(): Promise<{ token: string; endpoint: string }> {
+    return apiCall('/webhook/generate-token', {});
+}
+
+export async function getWebhookHeartbeat(): Promise<{ enabled: boolean; token_configured: boolean }> {
+    const response = await fetch(`${API_BASE}/webhook/heartbeat`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+    });
+    return await response.json() as { enabled: boolean; token_configured: boolean };
+}

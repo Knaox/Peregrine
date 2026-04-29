@@ -6,6 +6,7 @@ use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Models\Server;
 use App\Services\Pelican\PelicanNetworkService;
+use App\Services\SettingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -20,6 +21,23 @@ class ServerNetworkController extends Controller
     {
         $this->authorize('readAllocation', $server);
 
+        if ($this->mirrorReadsEnabled()) {
+            $rows = $server->pelicanAllocations()
+                ->orderBy('port')
+                ->get()
+                ->map(fn ($a) => [
+                    'id' => $a->pelican_allocation_id,
+                    'ip' => $a->ip,
+                    'ip_alias' => $a->ip_alias,
+                    'port' => $a->port,
+                    'notes' => $a->notes,
+                    'is_default' => false,
+                ])
+                ->all();
+
+            return response()->json(['data' => $rows]);
+        }
+
         $data = Cache::remember("server_network:{$server->identifier}", 600, function () use ($server): array {
             $allocations = $this->networkService->listAllocations($server->identifier);
 
@@ -30,6 +48,12 @@ class ServerNetworkController extends Controller
         });
 
         return response()->json(['data' => $data]);
+    }
+
+    private function mirrorReadsEnabled(): bool
+    {
+        $value = (string) app(SettingsService::class)->get('mirror_reads_enabled', 'false');
+        return $value === 'true' || $value === '1';
     }
 
     public function store(Server $server): JsonResponse

@@ -5,6 +5,8 @@ import { LanguageStep } from './steps/LanguageStep';
 import { DatabaseStep } from './steps/DatabaseStep';
 import { AdminStep } from './steps/AdminStep';
 import { PelicanStep } from './steps/PelicanStep';
+import { BackfillStep } from './steps/BackfillStep';
+import { WebhookStep } from './steps/WebhookStep';
 import { AuthStep } from './steps/AuthStep';
 import { SummaryStep } from './steps/SummaryStep';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
@@ -19,6 +21,8 @@ const STEP_COMPONENTS: ComponentType<StepProps>[] = [
     DatabaseStep,
     AdminStep,
     PelicanStep,
+    BackfillStep,
+    WebhookStep,
     AuthStep,
     SummaryStep,
 ];

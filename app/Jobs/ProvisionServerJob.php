@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Actions\Pelican\EnsurePelicanAccountAction;
 use App\Events\Bridge\ServerProvisioned;
-use App\Jobs\Bridge\MonitorServerInstallationJob;
 use App\Models\Egg;
 use App\Models\Node;
 use App\Models\Server;
@@ -14,7 +13,6 @@ use App\Services\Bridge\EnvironmentResolver;
 use App\Services\Bridge\PortAllocator;
 use App\Services\Pelican\DTOs\CreateServerRequest;
 use App\Services\Pelican\PelicanApplicationService;
-use App\Services\SettingsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -198,37 +196,27 @@ class ProvisionServerJob implements ShouldQueue
                 // Without it the local row exists but the SPA can't talk
                 // to Wings → 500 on /api/servers/{id}/startup, /websocket…
                 'identifier' => $pelicanServer->identifier,
-                'status' => 'active',
+                // Status STAYS 'provisioning' here. Pelican is still
+                // installing in the background — the canonical "install
+                // completed" signal is the Pelican webhook (`updated: Server`
+                // when status flips installing→null, or `event: Server\Installed`).
+                // SyncServerFromPelicanWebhookJob detects the transition
+                // provisioning→active and fires ServerInstalled. If admin
+                // never configured the webhook, the server stays stuck and
+                // the badge in /admin/servers surfaces it explicitly.
                 'provisioning_error' => null,
             ]);
 
-            Log::info('ProvisionServerJob: success', [
+            Log::info('ProvisionServerJob: pelican-side row created, awaiting webhook', [
                 'server_id' => $server->id,
                 'pelican_server_id' => $pelicanServer->id,
                 'plan_id' => $plan->id,
             ]);
 
-            // Dispatch the ServerProvisioned event so listeners (notification
-            // email, plugin hooks, analytics) react. Done AFTER the local
-            // update so listeners observe the row in its final state.
+            // ServerProvisioned fires now (Pelican-side row exists). It's a
+            // separate signal from ServerInstalled (install completed) which
+            // is now fired exclusively by the webhook flow.
             event(new ServerProvisioned($server->fresh(), $user));
-
-            // Pelican is still installing in the background. Pick the polling
-            // mode based on whether the Pelican webhook receiver is enabled :
-            //   webhook ON  → SHORT mode (3 attempts, ~5 min cap). The
-            //                 webhook normally fires ServerInstalled itself;
-            //                 this is just a safety net in case the admin
-            //                 misconfigured Pelican-side or the event is lost.
-            //   webhook OFF → LONG mode (20 attempts, ~10 min cap). We're
-            //                 the only signal Peregrine has.
-            $webhookEnabled = (string) app(SettingsService::class)
-                ->get('pelican_webhook_enabled', 'false');
-            $monitorMode = ($webhookEnabled === 'true' || $webhookEnabled === '1')
-                ? MonitorServerInstallationJob::MODE_SHORT
-                : MonitorServerInstallationJob::MODE_LONG;
-
-            MonitorServerInstallationJob::dispatch($server->id, $monitorMode)
-                ->delay(now()->addSeconds(30));
         } catch (\Throwable $e) {
             $server->update([
                 'status' => 'provisioning_failed',

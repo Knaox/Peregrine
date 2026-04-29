@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\ServerPowerController;
 use App\Http\Controllers\Api\ServerScheduleController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Setup\BackfillController;
 use App\Http\Controllers\Setup\SetupController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,10 @@ Route::prefix('setup')->group(function () {
     Route::post('test-pelican', [SetupController::class, 'testPelican']);
     Route::post('install', [SetupController::class, 'install']);
     Route::get('docker-detect', [SetupController::class, 'dockerDetect']);
+    Route::post('backfill/start', [BackfillController::class, 'start']);
+    Route::get('backfill/status', [BackfillController::class, 'status']);
+    Route::post('webhook/generate-token', [BackfillController::class, 'generateWebhookToken']);
+    Route::get('webhook/heartbeat', [BackfillController::class, 'heartbeat']);
 });
 
 // Auth routes
@@ -167,6 +172,7 @@ Route::middleware('auth')->group(function () {
     // Server databases
     Route::get('servers/{server}/databases', [ServerDatabaseController::class, 'index']);
     Route::post('servers/{server}/databases', [ServerDatabaseController::class, 'store']);
+    Route::get('servers/{server}/databases/{database}/credentials', [ServerDatabaseController::class, 'credentials']);
     Route::post('servers/{server}/databases/{database}/rotate-password', [ServerDatabaseController::class, 'rotatePassword']);
     Route::delete('servers/{server}/databases/{database}', [ServerDatabaseController::class, 'destroy']);
 

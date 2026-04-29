@@ -59,6 +59,8 @@ class PelicanWebhookSettings extends Page implements HasForms
 
     public ?string $pelican_webhook_token = '';
 
+    public bool $mirror_reads_enabled = false;
+
     public function mount(): void
     {
         $settings = app(SettingsService::class);
@@ -66,12 +68,16 @@ class PelicanWebhookSettings extends Page implements HasForms
         $enabled = (string) $settings->get('pelican_webhook_enabled', 'false');
         $this->pelican_webhook_enabled = $enabled === 'true' || $enabled === '1';
 
+        $mirror = (string) $settings->get('mirror_reads_enabled', 'false');
+        $this->mirror_reads_enabled = $mirror === 'true' || $mirror === '1';
+
         // Never display the stored token — admin types a new one to replace.
         $this->pelican_webhook_token = '';
 
         $this->form->fill([
             'pelican_webhook_enabled' => $this->pelican_webhook_enabled,
             'pelican_webhook_token' => $this->pelican_webhook_token,
+            'mirror_reads_enabled' => $this->mirror_reads_enabled,
         ]);
     }
 
@@ -118,7 +124,7 @@ class PelicanWebhookSettings extends Page implements HasForms
                 ]),
 
             Section::make('2. Configure Pelican (/admin/webhooks → Create Webhook)')
-                ->description('Three pieces of config to enter on the Pelican side. Take them in order.')
+                ->description('Top fields + headers + events to tick. The events list is grouped by priority — start with "Required", add others as needed.')
                 ->icon('heroicon-o-clipboard-document-list')
                 ->schema([
                     Placeholder::make('pelican_top_fields_display')
@@ -134,14 +140,76 @@ class PelicanWebhookSettings extends Page implements HasForms
                             ['X-Webhook-Event', '{{event}}', 'Pelican\'s default — keep it'],
                             ['Authorization',   'Bearer &lt;token above&gt;', 'Add this row'],
                         ])),
-                    Placeholder::make('pelican_events_display')
-                        ->label('Events to tick (use the search bar)')
+
+                    Placeholder::make('pelican_events_required')
+                        ->label('Required (Shop+Stripe install completion)')
                         ->content(BridgeSettingsHtmlHelpers::renderTagList([
                             'created: Server',
                             'updated: Server',
                             'deleted: Server',
                             'created: User',
-                        ], note: 'These cover create / suspend / unsuspend / rename / build update / delete / install-finished. The `updated: Server` event is the one that fires when an install finishes (Pelican flips status from "installing" to null). ℹ️ Note: do NOT tick `event: Server\\Installed` — in some Pelican releases it crashes Pelican\'s own queue with `Cannot use object as array`. The `updated: Server` event covers install-finished anyway.')),
+                        ], note: 'These four are mandatory in Shop+Stripe mode — `updated: Server` is the canonical install-completion signal (Pelican flips status from "installing" to null). Without it, servers created via Stripe stay in "provisioning" forever and a "stuck" badge shows in /admin/servers.')),
+
+                    Placeholder::make('pelican_events_recommended')
+                        ->label('Recommended — Phase 1 (cuts manual sync)')
+                        ->content(BridgeSettingsHtmlHelpers::renderTagList([
+                            'updated: User',
+                            'deleted: User',
+                            'created: Node',
+                            'updated: Node',
+                            'deleted: Node',
+                            'created: Egg',
+                            'updated: Egg',
+                            'deleted: Egg',
+                            'created: EggVariable',
+                            'updated: EggVariable',
+                            'deleted: EggVariable',
+                        ], note: 'Mirrors user email/name changes, node infrastructure, and egg/variable definitions in real time. With these ticked, the manual `sync:users / sync:nodes / sync:eggs` commands become safety nets you rarely need.')),
+
+                    Placeholder::make('pelican_events_phase2')
+                        ->label('Phase 2 preview — DB-local mirrors (not active yet)')
+                        ->content(BridgeSettingsHtmlHelpers::renderTagList([
+                            'created: Backup',
+                            'updated: Backup',
+                            'deleted: Backup',
+                            'created: Allocation',
+                            'updated: Allocation',
+                            'deleted: Allocation',
+                            'created: Database',
+                            'updated: Database',
+                            'deleted: Database',
+                            'created: DatabaseHost',
+                            'updated: DatabaseHost',
+                            'deleted: DatabaseHost',
+                            'created: ServerTransfer',
+                            'updated: ServerTransfer',
+                            'deleted: ServerTransfer',
+                        ], note: 'Reserved for the upcoming Phase 2 (DB-local mirrors that make /backups, /databases, /network pages instant). Ticking them now is harmless — the receiver will record them as ignored until Phase 2 ships.')),
+
+                    Placeholder::make('pelican_events_blocklist')
+                        ->label('À NE PAS cocher')
+                        ->content(BridgeSettingsHtmlHelpers::renderTagList([
+                            'event: Server\\Installed',
+                            'event: ActivityLogged',
+                            'created: Schedule',
+                            'updated: Schedule',
+                            'deleted: Schedule',
+                            'created: Task',
+                            'updated: Task',
+                            'created: ApiKey',
+                            'updated: ApiKey',
+                            'created: Webhook',
+                            'updated: WebhookConfiguration',
+                        ], note: '`event: Server\\Installed` crashes Pelican\'s own queue on some releases (`Cannot use object as array`) — `updated: Server` already covers install-finished. `Schedule` and `Task` fire on every cron tick (flood). `ActivityLog` fires on every user action (flood). `ApiKey` updates `last_used_at` on every API call (noise). `Webhook` / `WebhookConfiguration` create infinite loops.')),
+                ]),
+
+            Section::make('Phase 2 — Lectures DB locale')
+                ->description('Active la lecture des pages Backups / Databases / Network depuis la base locale Peregrine au lieu d\'appeler Pelican à chaque chargement. Active uniquement APRÈS avoir lancé `php artisan pelican:backfill-mirrors` au moins une fois.')
+                ->icon('heroicon-o-circle-stack')
+                ->schema([
+                    Toggle::make('mirror_reads_enabled')
+                        ->label('Activer la lecture DB locale')
+                        ->helperText('Si désactivé, les controllers continuent d\'appeler l\'API Pelican avec un cache de 2-10 min (comportement Phase 1). Si activé, les pages lisent les tables miroir pelican_backups / pelican_databases / pelican_allocations — pages instantanées + Peregrine continue de fonctionner même si Pelican est temporairement indisponible.'),
                 ]),
 
             Section::make('3. Verify')
@@ -170,6 +238,9 @@ class PelicanWebhookSettings extends Page implements HasForms
 
         $enabled = (bool) ($data['pelican_webhook_enabled'] ?? false);
         $settings->set('pelican_webhook_enabled', $enabled ? 'true' : 'false');
+
+        $mirrorReads = (bool) ($data['mirror_reads_enabled'] ?? false);
+        $settings->set('mirror_reads_enabled', $mirrorReads ? 'true' : 'false');
 
         $typedToken = (string) ($data['pelican_webhook_token'] ?? '');
         if ($typedToken !== '') {

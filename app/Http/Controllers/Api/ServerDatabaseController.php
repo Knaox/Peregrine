@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Server\CreateDatabaseRequest;
 use App\Models\Server;
 use App\Services\Pelican\PelicanDatabaseService;
+use App\Services\SettingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
@@ -20,6 +21,31 @@ class ServerDatabaseController extends Controller
     {
         $this->authorize('readDatabase', $server);
 
+        if ($this->mirrorReadsEnabled()) {
+            // Phase 2: DB locale read. Plaintext password is never stored —
+            // the user clicks "Show password" to fetch live via the
+            // dedicated `credentials` endpoint.
+            $rows = $server->pelicanDatabases()
+                ->with('host')
+                ->orderByDesc('pelican_created_at')
+                ->get()
+                ->map(fn ($db) => [
+                    'id' => $db->pelican_database_id,
+                    'database' => $db->database,
+                    'username' => $db->username,
+                    'remote' => $db->remote,
+                    'max_connections' => $db->max_connections,
+                    'host' => $db->host ? [
+                        'address' => $db->host->host,
+                        'port' => $db->host->port,
+                    ] : null,
+                ])
+                ->all();
+
+            return response()->json(['data' => $rows]);
+        }
+
+        // Legacy API + cache.
         $data = Cache::remember("server_databases:{$server->identifier}", 120, function () use ($server): array {
             $databases = $this->databaseService->listDatabases($server->identifier);
 
@@ -30,6 +56,35 @@ class ServerDatabaseController extends Controller
         });
 
         return response()->json(['data' => $data]);
+    }
+
+    /**
+     * Live fetch of the database list including the plaintext password.
+     * Never cached, never persisted. Triggered when the user clicks
+     * "Show password" on the SPA. Always hits Pelican Client API.
+     */
+    public function credentials(Server $server, string $database): JsonResponse
+    {
+        $this->authorize('readDatabase', $server);
+
+        $databases = $this->databaseService->listDatabases($server->identifier);
+
+        foreach ($databases as $row) {
+            $attrs = $row['attributes'] ?? $row;
+            $attrId = (string) ($attrs['id'] ?? '');
+            if ($attrId === $database) {
+                $this->audit($server, 'server.database.show_credentials', ['database' => $database]);
+                return response()->json(['data' => $attrs]);
+            }
+        }
+
+        return response()->json(['error' => 'database_not_found'], 404);
+    }
+
+    private function mirrorReadsEnabled(): bool
+    {
+        $value = (string) app(SettingsService::class)->get('mirror_reads_enabled', 'false');
+        return $value === 'true' || $value === '1';
     }
 
     public function store(CreateDatabaseRequest $request, Server $server): JsonResponse

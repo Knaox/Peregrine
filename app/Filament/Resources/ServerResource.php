@@ -113,12 +113,36 @@ class ServerResource extends Resource
             Tables\Columns\TextColumn::make('user.name')->label('Owner')->searchable()->sortable(),
             Tables\Columns\TextColumn::make('status')
                 ->badge()
-                ->color(fn (string $state): string => match ($state) {
-                    'active', 'running' => 'success',
-                    'stopped' => 'warning',
-                    'suspended', 'terminated' => 'danger',
-                    'offline' => 'gray',
-                    default => 'gray',
+                ->formatStateUsing(function (string $state, Server $record): string {
+                    // "Stuck" suffix flags a provisioning server that's been
+                    // waiting on the Pelican webhook for more than 30 min —
+                    // most likely the admin forgot to tick `updated: Server`
+                    // in /admin/webhooks on the Pelican side.
+                    if ($state === 'provisioning' && self::isStuckProvisioning($record)) {
+                        return 'provisioning (stuck)';
+                    }
+                    return $state;
+                })
+                ->color(function (string $state, Server $record): string {
+                    if ($state === 'provisioning' && self::isStuckProvisioning($record)) {
+                        return 'danger';
+                    }
+                    return match ($state) {
+                        'active', 'running' => 'success',
+                        'stopped', 'provisioning' => 'warning',
+                        'suspended', 'terminated', 'provisioning_failed' => 'danger',
+                        'offline' => 'gray',
+                        default => 'gray',
+                    };
+                })
+                ->tooltip(function (string $state, Server $record): ?string {
+                    if ($state === 'provisioning' && self::isStuckProvisioning($record)) {
+                        return 'This server has been awaiting the Pelican install-completion webhook for over 30 minutes. '
+                            . 'Most likely the events `updated: Server` and `event: Server\\Installed` are not ticked '
+                            . 'in your Pelican /admin/webhooks. Check /admin/pelican-webhook-logs for incoming events '
+                            . 'and /docs/pelican-webhook for the configuration guide.';
+                    }
+                    return null;
                 })
                 ->sortable(),
             Tables\Columns\TextColumn::make('egg.name')->label('Egg')->searchable()->sortable(),
@@ -261,6 +285,24 @@ class ServerResource extends Resource
     public static function getRelations(): array
     {
         return [];
+    }
+
+    /**
+     * Server is "stuck in provisioning" when status='provisioning' and
+     * created_at is older than the install grace window (30 min). The
+     * webhook normally flips status within seconds — anything past 30 min
+     * means the Pelican-side `updated: Server` event is not configured
+     * (the canonical install-completion signal since Phase 1).
+     */
+    private static function isStuckProvisioning(Server $server): bool
+    {
+        if ($server->status !== 'provisioning') {
+            return false;
+        }
+        if ($server->created_at === null) {
+            return false;
+        }
+        return $server->created_at->lt(now()->subMinutes(30));
     }
 
     public static function getPages(): array

@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Pelican\Allocation as PelicanAllocation;
+use App\Models\Pelican\Backup as PelicanBackup;
+use App\Models\Pelican\Database as PelicanDatabase;
+use App\Models\Pelican\ServerTransfer as PelicanServerTransfer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Server extends Model
 {
@@ -108,6 +113,38 @@ class Server extends Model
      *
      * @return array<int, string>|null
      */
+    /**
+     * Phase 2 mirror: locally-cached Pelican backups for this server.
+     */
+    public function pelicanBackups(): HasMany
+    {
+        return $this->hasMany(PelicanBackup::class);
+    }
+
+    /**
+     * Phase 2 mirror: locally-cached Pelican databases for this server.
+     */
+    public function pelicanDatabases(): HasMany
+    {
+        return $this->hasMany(PelicanDatabase::class);
+    }
+
+    /**
+     * Phase 2 mirror: locally-cached Pelican allocations for this server.
+     */
+    public function pelicanAllocations(): HasMany
+    {
+        return $this->hasMany(PelicanAllocation::class);
+    }
+
+    /**
+     * Phase 2 mirror: locally-cached Pelican server transfers for this server.
+     */
+    public function pelicanTransfers(): HasMany
+    {
+        return $this->hasMany(PelicanServerTransfer::class);
+    }
+
     public function permissionsForUser(User $user): ?array
     {
         $pivot = $this->accessUsers()->where('user_id', $user->id)->first();

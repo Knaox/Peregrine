@@ -7,12 +7,14 @@ use App\Models\User;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /**
- * Fired by MonitorServerInstallationJob once Pelican reports the server's
- * status has flipped out of `installing` (i.e. install script finished and
- * Wings has the server in its idle/running state).
+ * Fired by SyncServerFromPelicanWebhookJob once Pelican's webhook signals
+ * the server has finished installing (status flips from `installing` to
+ * null/running and the local row's status transitions provisioning→active).
  *
- * Distinct from `ServerProvisioned` which fires right after the Pelican
- * createServer call returns — at that moment the install hasn't started yet.
+ * Distinct from `ServerProvisioned` which fires right after ProvisionServerJob's
+ * Pelican createServer call returns — at that moment the install hasn't
+ * started yet, and the local server still sits in `provisioning` until
+ * the webhook arrives.
  */
 class ServerInstalled
 {
