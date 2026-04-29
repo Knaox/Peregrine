@@ -1,13 +1,13 @@
-export type AuthProviderId = 'shop' | 'google' | 'discord' | 'linkedin' | 'paymenter';
+export type AuthProviderId = 'shop' | 'google' | 'discord' | 'linkedin' | 'paymenter' | 'whmcs';
 
 /** Canonical IdPs auto-create users, sync email to Pelican, and may surface a register URL. */
-export type CanonicalProviderId = 'shop' | 'paymenter';
+export type CanonicalProviderId = 'shop' | 'paymenter' | 'whmcs';
 
 export interface AuthProvider {
     id: AuthProviderId;
     enabled: boolean;
     redirect_url: string;
-    /** True for canonical IdPs (Shop or Paymenter) when active. */
+    /** True for canonical IdPs (Shop, Paymenter, WHMCS) when active. */
     canonical: boolean;
     /** Absolute URL of an admin-uploaded button logo. Null = use default SVG. */
     logo_url: string | null;

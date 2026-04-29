@@ -93,7 +93,7 @@
                 "label": "Allow local registration",
                 "help": "When enabled, new users can create an account with email + password at /register. Turn off if users must come through an OAuth provider only."
             },
-            "post_install_note": "OAuth providers (Shop, Google, Discord, LinkedIn) and two-factor authentication are configured after installation in Settings → Auth & Security."
+            "post_install_note": "OAuth providers (Shop, Paymenter, WHMCS, Google, Discord, LinkedIn) and two-factor authentication are configured after installation in Settings → Auth & Security."
         },
         "bridge": {
             "title": "Bridge Module",
@@ -142,7 +142,8 @@
             "google": "Google",
             "discord": "Discord",
             "linkedin": "LinkedIn",
-            "paymenter": "Paymenter"
+            "paymenter": "Paymenter",
+            "whmcs": "WHMCS"
         },
         "social": {
             "register_on_canonical_first": "No account found. Please register on {{provider}} first, then sign in here.",

@@ -93,7 +93,7 @@
                 "label": "Autoriser l'inscription locale",
                 "help": "Quand activé, les nouveaux utilisateurs peuvent créer un compte avec email + mot de passe sur /register. Désactivez pour forcer l'arrivée via un fournisseur OAuth uniquement."
             },
-            "post_install_note": "Les fournisseurs OAuth (Shop, Google, Discord, LinkedIn) et la double authentification se configurent après l'installation dans Paramètres → Auth & Sécurité."
+            "post_install_note": "Les fournisseurs OAuth (Shop, Paymenter, WHMCS, Google, Discord, LinkedIn) et la double authentification se configurent après l'installation dans Paramètres → Auth & Sécurité."
         },
         "bridge": {
             "title": "Module Bridge",
@@ -142,7 +142,8 @@
             "google": "Google",
             "discord": "Discord",
             "linkedin": "LinkedIn",
-            "paymenter": "Paymenter"
+            "paymenter": "Paymenter",
+            "whmcs": "WHMCS"
         },
         "social": {
             "register_on_canonical_first": "Aucun compte trouvé. Inscrivez-vous d'abord sur {{provider}}, puis revenez vous connecter ici.",
