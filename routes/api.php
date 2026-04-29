@@ -32,6 +32,7 @@ Route::prefix('setup')->group(function () {
     Route::post('test-pelican', [SetupController::class, 'testPelican']);
     Route::post('install', [SetupController::class, 'install']);
     Route::post('finalize', [SetupController::class, 'finalize']);
+    Route::get('state', [SetupController::class, 'state']);
     Route::get('docker-detect', [SetupController::class, 'dockerDetect']);
     Route::post('backfill/start', [BackfillController::class, 'start']);
     Route::get('backfill/status', [BackfillController::class, 'status']);

@@ -102,4 +102,33 @@ class SetupWizardFinishingTest extends TestCase
 
         $response->assertOk()->assertJsonStructure(['is_docker', 'db_ready', 'defaults']);
     }
+
+    public function test_state_endpoint_reports_fresh_install(): void
+    {
+        config(['panel.installed' => false]);
+
+        $response = $this->getJson('/api/setup/state');
+
+        $response->assertOk()->assertJson(['installed' => false, 'finishing' => false]);
+    }
+
+    public function test_state_endpoint_reports_finishing_in_progress(): void
+    {
+        config(['panel.installed' => true]);
+        @touch($this->finishingSentinel);
+
+        $response = $this->getJson('/api/setup/state');
+
+        $response->assertOk()->assertJson(['installed' => true, 'finishing' => true]);
+    }
+
+    public function test_state_endpoint_reports_fully_installed(): void
+    {
+        config(['panel.installed' => true]);
+        // No wizard_finishing sentinel.
+
+        $response = $this->getJson('/api/setup/state');
+
+        $response->assertOk()->assertJson(['installed' => true, 'finishing' => false]);
+    }
 }

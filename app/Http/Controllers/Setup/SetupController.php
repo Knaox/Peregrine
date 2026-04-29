@@ -189,6 +189,29 @@ class SetupController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * Tell the SPA which step it should resume on. Used on mount to
+     * recover from page reloads that wipe React state — typically
+     * triggered by `php artisan serve` restarting after .env writes.
+     *
+     * - `installed=false` : fresh install, SPA starts at step 0.
+     * - `installed=true && finishing=true` : install already ran but
+     *    Finish wasn't clicked yet → SPA resumes at the Backfill step
+     *    (index 6 in STEP_COMPONENTS, the 7th step).
+     * - `installed=true && finishing=false` : wizard fully done — SPA
+     *    redirects to / (no point showing it).
+     */
+    public function state(): JsonResponse
+    {
+        $installed = config('panel.installed') || file_exists(storage_path('.installed'));
+        $finishing = file_exists(storage_path('.wizard_finishing'));
+
+        return response()->json([
+            'installed' => $installed,
+            'finishing' => $finishing,
+        ]);
+    }
+
     public function dockerDetect(): JsonResponse
     {
         $isDocker = filter_var(env('DOCKER', false), FILTER_VALIDATE_BOOLEAN);

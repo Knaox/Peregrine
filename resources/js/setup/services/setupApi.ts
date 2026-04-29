@@ -108,3 +108,17 @@ export async function finalizeSetup(): Promise<void> {
         // best-effort cleanup — sentinel staleness cap takes over.
     }
 }
+
+/**
+ * Ask the backend which step the wizard should resume on. Lets the SPA
+ * recover from a `php artisan serve` restart triggered by writing .env
+ * during install — without this, React state resets to step 0 and the
+ * admin has to redo every step.
+ */
+export async function getSetupState(): Promise<{ installed: boolean; finishing: boolean }> {
+    const response = await fetch(`${API_BASE}/state`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+    });
+    return await response.json() as { installed: boolean; finishing: boolean };
+}

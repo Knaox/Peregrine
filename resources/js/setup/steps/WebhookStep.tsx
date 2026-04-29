@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StepProps } from '../types';
 import { generateWebhookToken, getWebhookHeartbeat, finalizeSetup } from '../services/setupApi';
+import { clearPersistedStep } from '../hooks/useSetupWizard';
 
 export function WebhookStep(_: StepProps) {
     const { t } = useTranslation();
@@ -201,10 +202,13 @@ export function WebhookStep(_: StepProps) {
                     type="button"
                     onClick={async () => {
                         // Tell the backend the wizard is done so EnsureInstalled
-                        // stops keeping /setup reachable, THEN navigate to /. We
-                        // await the call but don't block on errors — the sentinel
-                        // also auto-expires after 1h.
+                        // stops keeping /setup reachable, clear the persisted
+                        // step from localStorage (so a stale visit to /setup
+                        // doesn't try to resume), THEN navigate to /. The
+                        // finalize call is best-effort — sentinel auto-expires
+                        // after 1h anyway.
                         await finalizeSetup();
+                        clearPersistedStep();
                         window.location.href = '/';
                     }}
                     className="rounded-lg bg-[var(--color-primary)] px-5 py-2 text-sm font-medium text-white"
