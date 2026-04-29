@@ -10,6 +10,7 @@ use App\Models\Pelican\Backup;
 use App\Models\Pelican\Database as PelicanDatabase;
 use App\Models\Pelican\DatabaseHost;
 use App\Models\Server;
+use App\Models\User;
 use App\Services\Pelican\PelicanApplicationService;
 use App\Services\Pelican\PelicanBackupService;
 use App\Services\Pelican\PelicanDatabaseService;
@@ -30,7 +31,20 @@ final class PelicanMirrorSyncer
         private readonly PelicanApplicationService $pelican,
         private readonly PelicanBackupService $backupService,
         private readonly PelicanDatabaseService $databaseService,
+        private readonly UserSync $userSync,
+        private readonly ServerSync $serverSync,
     ) {}
+
+    public function syncUsers(bool $dryRun): int
+    {
+        $comparison = $this->userSync->compareUsers();
+        $newPelicanIds = array_map(fn ($u) => $u->id, $comparison->new);
+
+        if ($dryRun) {
+            return count($newPelicanIds);
+        }
+        return $this->userSync->importUsers($newPelicanIds);
+    }
 
     public function syncNodes(bool $dryRun): int
     {
@@ -90,10 +104,27 @@ final class PelicanMirrorSyncer
 
     public function syncServers(bool $dryRun): int
     {
-        // Servers are multi-tenant (plan_id, stripe_subscription_id) — the
-        // upstream `sync:servers` command owns the import logic. Backfill
-        // only counts here to avoid duplicating it.
-        return count($this->pelican->listServers());
+        $comparison = $this->serverSync->compareServers();
+        $imports = [];
+
+        foreach ($comparison->new as $pelicanServer) {
+            // Match the Pelican server's owner to a local user (by pelican_user_id).
+            // Skip servers whose owner isn't synced yet — caller should run
+            // syncUsers() before syncServers() (the backfill command does that).
+            $localUserId = User::where('pelican_user_id', $pelicanServer->userId)->value('id');
+            if ($localUserId === null) {
+                continue;
+            }
+            $imports[] = [
+                'pelican_server_id' => $pelicanServer->id,
+                'user_id' => (int) $localUserId,
+            ];
+        }
+
+        if ($dryRun) {
+            return count($imports);
+        }
+        return $this->serverSync->importServers($imports);
     }
 
     public function syncBackups(bool $dryRun): int

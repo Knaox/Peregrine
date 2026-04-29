@@ -28,8 +28,18 @@ class PelicanBackfillMirrors extends Command
 
     protected $description = 'Backfill the Pelican mirror tables (resumable, chunked)';
 
+    // Strict dependency order — each step depends on the previous ones :
+    //   1. Nodes      (no FK)
+    //   2. Users      (no FK — required by servers' owner_id)
+    //   3. Eggs       (no FK — required by servers' egg_id)
+    //   4. Servers    (FKs : owner_id → users, egg_id → eggs)
+    //   5. Backups    (FK : server_id → servers)
+    //   6. Databases  (FK : server_id → servers)
+    //   7. Allocations (FK : node_id → nodes, server_id nullable)
+    //   8. Transfers  (FK : server_id → servers)
     private const RESOURCES = [
         'nodes' => 'syncNodes',
+        'users' => 'syncUsers',
         'eggs' => 'syncEggs',
         'servers' => 'syncServers',
         'backups' => 'syncBackups',
