@@ -29,7 +29,47 @@ final class ThemeDefaults
         'theme_shadow_intensity' => '50',
         'theme_density' => 'comfortable',
         'theme_custom_css' => '',
+        // Layout — Vague 3 démarrage. Defaults reproduce the prior hardcoded
+        // AppLayout exactly (h-16, sticky, max-w-7xl ≈ 1280, comfortable
+        // padding) so existing installs see no visual change after upgrade.
+        'theme_layout_header_height' => '64',
+        'theme_layout_header_sticky' => '1',
+        'theme_layout_header_align' => 'default',
+        'theme_layout_container_max' => '1280',
+        'theme_layout_page_padding' => 'comfortable',
+        // Sidebar in-server avancée (Vague 3 complète). Defaults preserve
+        // current LeftSidebar geometry exactly: 224 / 64 / 256 / 12 / off.
+        'theme_sidebar_classic_width' => '224',
+        'theme_sidebar_rail_width' => '64',
+        'theme_sidebar_mobile_width' => '256',
+        'theme_sidebar_blur_intensity' => '12',
+        'theme_sidebar_floating' => '0',
+        // Login templates (Vague 3 complète). centered = current layout.
+        'theme_login_template' => 'centered',
+        'theme_login_background_image' => '',
+        'theme_login_background_blur' => '0',
+        'theme_login_background_pattern' => 'gradient',
+        // Per-page layout overrides (Vague 3 complète).
+        'theme_page_console_fullwidth' => '0',
+        'theme_page_files_fullwidth' => '0',
+        'theme_page_dashboard_expanded' => '0',
+        // Footer (Vague 3 complète). Off by default — zero-regression.
+        'theme_footer_enabled' => '0',
+        'theme_footer_text' => '',
+        // Refinements (Vague 3 complète — "plus de perso"). Defaults match
+        // the prior hardcoded values so existing installs see no change.
+        'theme_animation_speed' => 'default',
+        'theme_hover_scale' => 'default',
+        'theme_border_width' => '1',
+        'theme_glass_blur_global' => '16',
+        'theme_font_size_scale' => 'default',
+        // App-wide background pattern (Vague 3 complète). Same enum as
+        // login templates — applied behind the AppLayout content.
+        'theme_app_background_pattern' => 'none',
     ];
+
+    /** @var array<int, array{label: string, url: string}> */
+    public const FOOTER_LINKS = [];
 
     public const CARD_CONFIG = [
         'layout' => 'grid',

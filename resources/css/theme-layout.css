@@ -1,0 +1,136 @@
+/* -------------------------------------------------------------------------
+ * Layout shell — Vague 3 démarrage + complète
+ * -------------------------------------------------------------------------
+ * The Theme Studio drives these via --layout-* CSS vars (computed by
+ * CssVariableBuilder.php / buildPreviewVariables.ts) plus data-attrs on
+ * <html> set by ThemeProvider:
+ *   - data-header-sticky="true|false"
+ *   - data-header-align="default|centered|split"
+ *   - data-sidebar-floating="true|false"
+ *   - data-page-{console,files}-fullwidth="true|false"
+ *   - data-page-dashboard-expanded="true|false"
+ *
+ * Defaults below ensure that an install with NO theme settings (fresh DB,
+ * no data-attr applied yet) falls back to the prior hardcoded AppLayout
+ * exactly: 64px sticky header, 1280px container, comfortable padding.
+ */
+
+:root {
+    --layout-header-height: 64px;
+    --layout-container-max: 1280px;
+    --layout-page-px-mobile: 0.75rem;
+    --layout-page-px-tablet: 1.5rem;
+    --layout-page-px-desktop: 2.5rem;
+    --layout-page-py-mobile: 1.25rem;
+    --layout-page-py-tablet: 2rem;
+    --layout-page-py-desktop: 2rem;
+    --layout-header-px-mobile: 1rem;
+    --layout-header-px-tablet: 1.5rem;
+    --layout-header-px-desktop: 2rem;
+}
+
+.app-container {
+    margin-inline: auto;
+    width: 100%;
+}
+
+.app-header {
+    padding-inline: var(--layout-header-px-mobile);
+}
+@media (min-width: 640px) {
+    .app-header { padding-inline: var(--layout-header-px-tablet); }
+}
+@media (min-width: 1024px) {
+    .app-header { padding-inline: var(--layout-header-px-desktop); }
+}
+
+.app-page {
+    padding-inline: var(--layout-page-px-mobile);
+    padding-block: var(--layout-page-py-mobile);
+}
+@media (min-width: 640px) {
+    .app-page {
+        padding-inline: var(--layout-page-px-tablet);
+        padding-block: var(--layout-page-py-tablet);
+    }
+}
+@media (min-width: 1024px) {
+    .app-page {
+        padding-inline: var(--layout-page-px-desktop);
+        padding-block: var(--layout-page-py-desktop);
+    }
+}
+
+:root[data-header-sticky="false"] .app-nav {
+    position: static;
+    top: auto;
+}
+
+:root[data-header-align="centered"] .app-header-row {
+    justify-content: center;
+    gap: 2rem;
+}
+:root[data-header-align="split"] .app-header-row {
+    justify-content: space-around;
+}
+
+/* Sidebar in-server — floating style. Selector targets the explicit
+   `.server-sidebar` class for stability across Tailwind versions.
+   `overflow: hidden` clips child backgrounds (button hover states,
+   dividers) to the rounded corners — without it, hovering the back
+   button bleeds past the curve. The collapse-toggle chevron is now
+   positioned at `right: 0.5rem` (inside the card) so it's not clipped. */
+:root[data-sidebar-floating="true"] .server-sidebar {
+    margin: 0.75rem;
+    height: calc(100% - 1.5rem);
+    border: 1px solid var(--color-glass-border);
+    border-radius: var(--radius-lg, 1rem);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25), 0 4px 8px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+/* When the sidebar is floating, restyle the collapse chevron to match
+   the glass aesthetic. Default position (`right: -3`) leaves the toggle
+   half-outside the rounded card which looks broken — pull it back inside
+   the card and swap solid surface for glass blur. */
+:root[data-sidebar-floating="true"] .server-sidebar-collapse-toggle {
+    right: 0.5rem !important;
+    background: var(--color-glass) !important;
+    backdrop-filter: blur(12px) saturate(180%);
+    border-color: var(--color-glass-border) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Mobile drawer also goes floating when the admin opts in. The slide-in
+   animation (translateX from -100% to 0) is unaffected by margins, so the
+   drawer simply rests with a small inset on the left/top/bottom and
+   rounded corners on its right edge. The scrim behind it (z-30) still
+   covers the rest of the screen for the dismiss tap. */
+:root[data-sidebar-floating="true"] .server-sidebar-drawer {
+    top: 0.75rem !important;
+    left: 0.75rem !important;
+    height: calc(100dvh - 1.5rem) !important;
+    border: 1px solid var(--color-glass-border);
+    border-radius: var(--radius-lg, 1rem);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.15);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Per-page layout overrides. */
+:root[data-page-console-fullwidth="true"] .server-page-content[data-route="console"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+:root[data-page-files-fullwidth="true"] .server-page-content[data-route="files"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+@media (min-width: 1280px) {
+    :root[data-page-dashboard-expanded="true"] .dashboard-cards-grid {
+        /* The component itself sets grid-template-columns with !important
+           via an inline <style> block keyed on --cols-desktop. We override
+           with !important too — our specificity (root attribute) wins. */
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}

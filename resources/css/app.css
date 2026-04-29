@@ -1,15 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "./theme.css";
+@import "./theme-layout.css";
+@import "./bg-patterns.css";
+@import "./theme-studio.css";
 @import "tailwindcss";
 
 body {
     font-family: var(--font-sans);
+    /* Base size driven by `theme_font_size_scale` (Refinements). Applies
+       to all em/rem-based child sizing — switching to "Large" / "XL"
+       scales up the entire UI uniformly. */
+    font-size: var(--font-size-base, 16px);
     background: var(--color-background);
     background-image:
         radial-gradient(ellipse at 20% 50%, rgba(249, 115, 22, 0.03) 0%, transparent 50%),
         radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.02) 0%, transparent 50%);
     background-attachment: fixed;
     color: var(--color-text-primary);
+}
+
+/* Hover scale for interactive elements that opt in via `.scale-on-hover`.
+   Driven by --hover-scale (Refinements) so admins can tune subtle / default
+   / pronounced from /theme-studio. */
+.scale-on-hover:hover:not(:disabled):not([aria-disabled="true"]) {
+    transform: scale(var(--hover-scale, 1.05));
+}
+.scale-on-hover {
+    transition: transform var(--transition-base, 250ms) ease;
+}
+.scale-on-hover:active:not(:disabled) {
+    transform: scale(0.97);
 }
 
 ::selection {

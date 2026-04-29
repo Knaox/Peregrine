@@ -1,0 +1,60 @@
+/* -------------------------------------------------------------------------
+ * Theme Studio polish — slider track/thumb + iframe entrance
+ * -------------------------------------------------------------------------
+ * Used only by /theme-studio. Out of band from the rest of the app so we
+ * don't pay the cost of these styles on regular page loads (the imports
+ * tree-shakes nothing here, but conceptually this scope is admin-only).
+ */
+
+/* Custom range input. Track is sized via inline `background` linear-gradient
+   (set per instance to show the fill ratio in --color-primary), thumb is
+   a ring around a primary dot. */
+.theme-studio-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 999px;
+    outline: none;
+}
+.theme-studio-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 2px solid var(--color-primary);
+    cursor: grab;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.theme-studio-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 6px var(--color-primary-glow);
+}
+.theme-studio-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 2px solid var(--color-primary);
+    cursor: grab;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.theme-studio-slider:focus-visible {
+    box-shadow: 0 0 0 3px var(--color-primary-glow);
+}
+
+/* Iframe entrance — gentle fade-in when scene/breakpoint switches. */
+.theme-studio-frame {
+    animation: theme-studio-frame-in 200ms ease-out;
+}
+@keyframes theme-studio-frame-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .theme-studio-frame {
+        animation: none;
+    }
+}

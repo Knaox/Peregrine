@@ -25,6 +25,7 @@ import { TwoFactorChallengePage } from '@/pages/TwoFactorChallengePage';
 import { TwoFactorSetupPage } from '@/pages/TwoFactorSetupPage';
 import { SecurityPage } from '@/pages/settings/SecurityPage';
 import { AdminServersPage } from '@/pages/AdminServersPage';
+import { ThemeStudioPage } from '@/pages/admin/ThemeStudioPage';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -50,6 +51,9 @@ function App() {
                             <Route element={<ProtectedRoute />}>
                                 {/* Standalone full-screen setup page — no sidebar. */}
                                 <Route path="/2fa/setup" element={<TwoFactorSetupPage />} />
+                                {/* Theme Studio — full-screen split editor (admin-only,
+                                    guard enforced inside the page). */}
+                                <Route path="/theme-studio" element={<ThemeStudioPage />} />
                                 <Route element={<AppLayout />}>
                                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                     <Route path="/dashboard" element={<DashboardPage />} />

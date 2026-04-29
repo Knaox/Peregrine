@@ -89,20 +89,32 @@ function ServerCardImpl({
             onMouseMove={handleMouseMove}
             className={clsx(
                 'group relative min-h-[8rem] sm:h-36 cursor-pointer overflow-hidden border-glow rounded-[var(--radius-lg)]',
-                !hasBanner && 'bg-[var(--color-surface)] border border-[var(--color-border)]',
-                hasBanner && 'border border-transparent',
-                'transition-[box-shadow,border-color] duration-300',
-                'hover:border-[var(--color-border-hover)] hover:shadow-[var(--shadow-lg),var(--shadow-glow)]',
+                'transition-[box-shadow,border-color,transform] duration-300',
                 isDragging && 'opacity-50',
                 isSelected && 'ring-2 ring-[var(--color-primary)] ring-offset-1 ring-offset-[var(--color-background)]',
+                // Card style applies different visual treatments. The banner
+                // takes over the background regardless, so the style only
+                // affects the no-banner layer + border + hover behaviour.
+                cardConfig.card_style === 'glass' && !hasBanner &&
+                    'border border-[var(--color-glass-border)] backdrop-blur-md hover:border-[var(--color-border-hover)] hover:shadow-[var(--shadow-lg),var(--shadow-glow)]',
+                cardConfig.card_style === 'elevated' && !hasBanner &&
+                    'bg-[var(--color-surface-elevated)] border border-[var(--color-border)] shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg),var(--shadow-glow)] hover:-translate-y-0.5',
+                cardConfig.card_style === 'minimal' && !hasBanner &&
+                    'bg-transparent border border-[var(--color-border)]/40 hover:bg-[var(--color-surface-hover)]/50',
+                (cardConfig.card_style === 'default' || !cardConfig.card_style) && !hasBanner &&
+                    'bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] hover:shadow-[var(--shadow-lg),var(--shadow-glow)]',
+                hasBanner && 'border border-transparent hover:border-[var(--color-border-hover)] hover:shadow-[var(--shadow-lg),var(--shadow-glow)]',
             )}
-            style={
-                isSuspended
+            style={{
+                ...(cardConfig.card_style === 'glass' && !hasBanner
+                    ? { background: 'var(--color-glass)' }
+                    : {}),
+                ...(isSuspended
                     ? { borderLeft: '3px solid var(--color-suspended)' }
                     : isProvisioning
                         ? { borderLeft: '3px solid var(--color-installing)' }
-                        : undefined
-            }
+                        : {}),
+            }}
         >
             {/* Full background image */}
             {hasBanner && (
@@ -218,10 +230,10 @@ function ServerCardImpl({
                             <span className="hidden lg:flex items-center gap-1 text-white/70 text-xs">
                                 {DiskIcon} {formatBytes(stats.disk_bytes)}
                             </span>
-                            {cardConfig.show_uptime && stats.uptime > 0 && (
+                            {cardConfig.show_uptime && (
                                 <span className="hidden xl:flex items-center gap-1 text-white/70 text-xs">
                                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    {formatUptime(stats.uptime)}
+                                    {stats.uptime > 0 ? formatUptime(stats.uptime) : '—'}
                                 </span>
                             )}
                         </div>

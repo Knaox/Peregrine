@@ -24,7 +24,7 @@ export function TopTabsBar({ server, config }: TopTabsBarProps) {
             className="flex flex-col flex-shrink-0"
             style={{
                 background: 'var(--color-glass)',
-                backdropFilter: 'blur(14px) saturate(180%)',
+                backdropFilter: 'blur(calc(var(--sidebar-blur-intensity, 12px) + 2px)) saturate(180%)',
                 borderBottom: '1px solid var(--color-border)',
             }}
         >

@@ -100,7 +100,7 @@ export function DockBar({ server, config }: DockBarProps) {
                     style={{
                         borderRadius: '9999px',
                         background: 'var(--color-glass)',
-                        backdropFilter: 'blur(18px) saturate(180%)',
+                        backdropFilter: 'blur(calc(var(--sidebar-blur-intensity, 12px) + 6px)) saturate(180%)',
                         border: '1px solid var(--color-glass-border)',
                         boxShadow: 'var(--shadow-lg), var(--glass-highlight)',
                     }}

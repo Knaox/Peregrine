@@ -1,5 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
-import { request } from '@/services/http';
+import { useResolvedTheme } from '@/hooks/useResolvedTheme';
 
 export interface CardConfig {
     layout: string;
@@ -15,10 +14,6 @@ export interface CardConfig {
     card_style: string;
     sort_default: string;
     group_by: string;
-}
-
-interface ThemeResponse {
-    card_config: CardConfig;
 }
 
 const DEFAULTS: CardConfig = {
@@ -37,12 +32,12 @@ const DEFAULTS: CardConfig = {
     group_by: 'none',
 };
 
+/**
+ * Card config consumer. Goes through `useResolvedTheme()` so the Theme
+ * Studio's preview iframe sees postMessage-driven changes — not just the
+ * cached API response (which was stale in preview mode).
+ */
 export function useCardConfig(): CardConfig {
-    const { data } = useQuery({
-        queryKey: ['theme'],
-        queryFn: () => request<ThemeResponse>('/api/settings/theme'),
-        staleTime: 60 * 60 * 1000,
-    });
-
-    return data?.card_config ?? DEFAULTS;
+    const theme = useResolvedTheme();
+    return theme?.card_config ?? DEFAULTS;
 }

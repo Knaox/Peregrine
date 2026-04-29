@@ -140,6 +140,22 @@ class ThemeSettings extends Page implements HasForms
         ]);
     }
 
+    /**
+     * Header action — opens the React Theme Studio (live preview, scenes,
+     * breakpoint switcher) in a new tab. The Filament page stays available
+     * as a simple fallback for admins who only want to flip a preset.
+     */
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('open_studio')
+                ->label(__('admin.actions.open_theme_studio'))
+                ->icon('heroicon-o-paint-brush')
+                ->color('primary')
+                ->url('/theme-studio', shouldOpenInNewTab: true),
+        ];
+    }
+
     public function save(): void
     {
         $data = $this->form->getState();

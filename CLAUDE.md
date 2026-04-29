@@ -458,6 +458,7 @@ Aucune dette critique.
 
 - Bridge P3 (Stripe webhook + lifecycle + emails) **livré 2026-04-23**.
 - Bridge Paymenter (Pelican webhook → mirror, no emails / no plans) **livré 2026-04-23** (mode mutuellement exclusif avec Shop+Stripe via enum `bridge_mode`).
+- **Theme Studio v1 + Vague 3 complète + Refinements** **livré 2026-04-29** (Vagues 1, 3 démarrage, 3 complète, parité Filament, plus de perso, bug fixes — voir `## Theme Studio` ci-dessous).
 
 Backlog optionnel (à faire seulement si besoin produit explicite) :
 - OneTimeProduct sync depuis le Shop (endpoints dédiés `/api/bridge/one-time-products/upsert`) — quand le Shop commencera à pousser des produits one-shot
@@ -465,6 +466,138 @@ Backlog optionnel (à faire seulement si besoin produit explicite) :
 - Migration vers Horizon quand le volume Stripe le justifie (cf. `docs/operations/queue-worker.md` § Future)
 - Cleanup migration pour drop la setting legacy `bridge_enabled` (gardée 1 release pour fallback de `BridgeModeService::current()`)
 - Surface `paymenter_service_id` dans l'admin servers (column + filter) — utile au support pour relier Server local ↔ service Paymenter
+
+### Theme Studio — prochaines vagues (planifiées)
+
+**Vague 4 — Marketplace de thèmes (~3-4j)** — recommandé en premier
+- Sauvegarde / import / export d'un thème complet en JSON (tout `theme_*` + card_config + sidebar_config dans un blob)
+- Fork d'un preset existant (duplique → renomme → édite)
+- Marketplace communautaire (même pattern que `Knaox/peregrine-plugins` — registry distant `Knaox/peregrine-themes`, branche `main`, `raw.githubusercontent.com/.../registry.json`)
+- "Theme from logo" — extrait les couleurs dominantes du `branding.app_logo_path` et propose une palette
+- AI assist (optionnel) — "génère-moi un thème fintech sombre" → LLM via Claude API
+
+**Vague 2 — Token system v2 (~5j)**
+- Échelles 50→950 par couleur (auto-générées en HSL à partir d'une teinte)
+- Typo fine : weights / line-heights / letter-spacing par rôle (display, h1-h6, body, caption, label) — Material 5 type roles
+- 5 niveaux d'ombres paramétrables (offset / blur / opacity)
+- Gradients réutilisables (l'admin définit 3-5 gradients nommés, les composants les consomment)
+- Background patterns app : déjà fait, mais ajouter des background patterns par-section (header / sidebar / cards) au-delà du global
+
+**Vague 5 — Polish & accessibilité (~3-4j)**
+- Contrast checker live : badge WCAG AA/AAA sur chaque couple texte/fond + auto-fix suggéré
+- Color-blind simulator (deutéranopie / protanopie / tritanopie) en preview
+- Monaco editor pour `theme_custom_css` (au lieu du textarea actuel) — autocomplete sur les `--color-*` etc.
+- Preview email — voir le rendu des templates d'emails avec le branding appliqué
+- Per-user overrides : laisser l'utilisateur final ajuster sa propre taille de police, mode dark/light, density (dans `/settings/appearance`)
+
+**Phase 1D-E — Polish studio (~1.5j)**
+- Workflow draft / publish avec brouillon persisté en DB (au lieu de saving direct)
+- Undo/redo avec historique des 20 derniers changements (Cmd+Z / Cmd+Shift+Z)
+
+**Filament parity reverse (~2j)**
+- Ajouter sidebar avancée + login templates + footer + refinements + page overrides à `/admin/theme-settings` Filament pour parité avec studio (pas urgent — le studio est l'entry-point principal).
+
+### Sources de bugs connus (à surveiller)
+
+- **Tailwind v4** : `flex-shrink-0` deprecated, certains selectors CSS `aside.relative.flex-shrink-0` ne matchent plus → toujours utiliser une classe explicite (`server-sidebar`, `dashboard-cards-grid`, etc.) pour les overrides CSS.
+- **Laravel 11+** : disk `local` root est `storage/app/private` (pas `storage/app`). Pour exposer via `/storage`, **toujours utiliser `Storage::disk('public')`** (root = `storage/app/public`).
+- **CSRF post-rotation** : `getCsrfHeaders()` dans `services/http.ts` envoie soit `X-XSRF-TOKEN` (cookie, frais) soit `X-CSRF-TOKEN` (meta, peut être stale). **Jamais les deux** — Laravel rejette en 419 si X-CSRF-TOKEN est rempli avec une valeur cookie encryptée.
+- **Theme propagation en preview** : tous les consommateurs doivent passer par `useResolvedTheme()` (lit `ThemeContext` exposé par `ThemeProvider`), pas par leur propre `useQuery(['theme'])`. Sinon en mode preview iframe, ils lisent l'API en cache au lieu du postMessage du studio.
+
+## Theme Studio — architecture (livré 2026-04-29)
+
+Page admin React full-screen à `/theme-studio` (entrée via Filament `/admin/theme-settings` → bouton "Open Theme Studio"). Live preview en split-screen : panneau d'édition à gauche, iframe preview à droite synchronisée par `postMessage`.
+
+### Vue d'ensemble
+
+**Entry point** : `app/Filament/Pages/ThemeSettings.php` (header action `open_studio` qui ouvre `/theme-studio`).
+
+**Page React** : `resources/js/pages/admin/ThemeStudioPage.tsx` (admin-only, hors `AppLayout`, route enregistrée dans `app.tsx` à l'intérieur de `<ProtectedRoute>`).
+
+**Hook central** : `resources/js/hooks/useThemeStudio.ts` (244 lignes) — gère 3 drafts en mémoire (`ThemeDraft` flat + `CardConfig` + `SidebarConfig`), envoie le payload combiné en `postMessage` à l'iframe à chaque édition (debounced via React state batching), POST `/api/admin/theme/save` au clic "Publier".
+
+### Backend
+
+| Fichier | Rôle |
+|---|---|
+| `app/Filament/Pages/Theme/ThemeDefaults.php` | Defaults source-of-truth pour TOUS les `theme_*` settings (~60 clés au total). Ajouter une clé ici la rend automatiquement éditable + persistable + reset-able. |
+| `app/Services/ThemeService.php` (196 lignes) | `getTheme()` agrège les colonnes en sous-clés (`colors`, `layout`, `sidebar_advanced`, `login`, `page_overrides`, `footer`, `refinements`, `app`). Cache Redis 1 h. |
+| `app/Services/Theme/ThemeAdvancedSettings.php` (extracted helper, 117 lignes) | Build les sous-sections nouvelles de Vague 3+ (layout / sidebar / login / page_overrides / footer / refinements / app). Garde ThemeService sous 200 lignes. |
+| `app/Services/Theme/CssVariableBuilder.php` (232 lignes) | Convertit le tableau de thème en map `--key: value` consommé par le `<style>:root>` et l'iframe via `setProperty`. Émet ~50 vars (`--color-*`, `--radius-*`, `--font-sans`, `--shadow-intensity`, `--density-scale`, `--layout-*`, `--sidebar-*`, `--transition-base`, `--hover-scale`, `--border-width`, `--glass-blur`, `--font-size-base`). |
+| `app/Http/Controllers/Api/Admin/AdminThemeController.php` (203 lignes) | Endpoints `/api/admin/theme/*` : `state`, `presets`, `save`, `reset`, `upload-asset`. Tous `admin` middleware. **Important** : `uploadAsset` utilise `Storage::disk('public')` (PAS le défaut `local` qui pointe vers `storage/app/private` depuis Laravel 11). |
+| `app/Http/Requests/Admin/SaveThemeRequest.php` (107 lignes) | Validation de tous les `theme_*` + `card_config` + `sidebar_config` + `theme_footer_links` (array of {label, url}). |
+| `app/Http/Requests/Admin/UploadThemeAssetRequest.php` | Multipart upload validation (image, max 5 MB, mimes JPG/PNG/WEBP). Slot enum (actuellement `login_background`, extensible). |
+
+### Frontend — bridge & state management
+
+| Fichier | Rôle |
+|---|---|
+| `resources/js/components/ThemeProvider.tsx` (179 lignes) | **SOURCE DE VÉRITÉ unique** du thème résolu. Crée UN seul `useThemePreviewBridge` (postMessage listener), expose le résultat via `ThemeContext`. Applique CSS vars + data-attrs (`data-theme`, `data-header-sticky/align`, `data-sidebar-floating`, `data-page-*`) sur `<html>`. |
+| `resources/js/hooks/useResolvedTheme.ts` (24 lignes) | `useContext(ThemeContext)`. **TOUS les consommateurs (useCardConfig, useSidebarConfig, AppLayout, LoginPage, etc.) DOIVENT passer par lui** — pas de useQuery `['theme']` indépendant, sinon en preview mode ils lisent l'API en cache et ratent les postMessage updates. |
+| `resources/js/hooks/useThemePreviewBridge.ts` | Détecte `?preview=1`, écoute `peregrine:theme:update` / `peregrine:theme:setMode`, envoie `peregrine:theme:ready` au parent au mount. Origin-checked. |
+| `resources/js/lib/themeStudio/buildPreviewVariables.ts` (188 lignes) | TS mirror de `CssVariableBuilder.php` — calcul instantané des CSS vars côté studio sans round-trip API. **À garder en sync avec le PHP** sinon le live preview diverge du rendu réel après save. |
+| `resources/js/lib/themeStudio/buildModeVariants.ts` | Compose `mode_variants: {dark, light}` pour que le toggle dark/light du toolbar studio fonctionne (active mode = couleurs draft, inverse mode = couleurs preset). |
+
+### Frontend — UI du studio
+
+Toutes dans `resources/js/components/admin/theme-studio/` :
+
+- `ThemeEditorPanel.tsx` (252 lignes — proche de la limite, splitter si on rajoute) — orchestrateur des sections
+- `ThemePresetSelector.tsx` — picker visuel des 7 presets (Orange/Amber/Crimson/Emerald/Indigo/Violet/Slate)
+- `ThemeLayoutSection.tsx` — header height/sticky/align + container max + page padding
+- `ThemeSidebarSection.tsx` — sidebar widths (classic/rail/mobile) + blur + floating toggle
+- `ThemeSidebarNavSection.tsx` — sidebar legacy (position/style/show toggles + repeater entrées avec ▲▼)
+- `ThemeCardsSection.tsx` — 14 fields server cards (8 visibility toggles + style + sort + group + 3 sliders colonnes)
+- `ThemeLoginSection.tsx` — template + image upload + blur + pattern
+- `ThemePagesSection.tsx` — 3 toggles per-page overrides (console/files fullwidth + dashboard 4 cols)
+- `ThemeFooterSection.tsx` — toggle + textarea + repeater de liens
+- `ThemeRefinementsSection.tsx` — animation speed + hover scale + border width + glass blur global + font size scale + app background pattern
+- `ThemePreviewToolbar.tsx` — switcher 8 scènes (4 user + 4 server) + mode dark/light + breakpoint mobile/tablet/desktop
+- `ThemePreviewFrame.tsx` — iframe wrapper avec `?preview=1` + `key` qui force remount au switch
+- `fields/ColorField.tsx`, `SelectField.tsx`, `SliderField.tsx`, `ToggleField.tsx`, `TextareaField.tsx`, `ImageUploadField.tsx` — composants atomiques
+
+### Frontend — login templates
+
+`resources/js/pages/LoginPage.tsx` est devenu un dispatcher pur (53 lignes) qui rend l'un des 4 templates :
+
+- `auth/templates/LoginCenteredTemplate.tsx` — défaut (animated gradient + particles + glow + glass card)
+- `auth/templates/LoginSplitTemplate.tsx` — form gauche / image droite
+- `auth/templates/LoginOverlayTemplate.tsx` — image plein écran + form en glass card flottante
+- `auth/templates/LoginMinimalTemplate.tsx` — solid bg + form, sans décoration
+
+`auth/LoginFormCard.tsx` (290 lignes — proche limite) — partagé par les 4 templates, gère social buttons + form local + register link. 3 variants visuels (`glass` / `solid` / `flush`).
+
+`auth/LoginBackgroundLayer.tsx` — applique `.bg-pattern-{none/gradient/mesh/dots/grid/aurora/orbs/noise}` en couche absolute. Utilisé aussi par AppLayout pour le pattern global de l'app.
+
+### CSS
+
+4 fichiers dans `resources/css/` (chacun <300 lignes) :
+
+- `app.css` (52 lignes) — imports, body, scrollbar, classe utilitaire `.scale-on-hover` (consomme `--hover-scale`)
+- `theme.css` (352 lignes — pré-existant, pas touché) — defaults des CSS vars `:root`
+- `theme-layout.css` (135 lignes) — règles layout shell (`.app-container`, `.app-header`, `.app-page`, sticky/align via data-attrs, sidebar floating, per-page overrides, dashboard 4 cols)
+- `bg-patterns.css` (113 lignes) — 8 patterns réutilisables (`.bg-pattern-X`)
+- `theme-studio.css` (60 lignes) — slider track/thumb + iframe entrance fade-in
+
+### Endpoints API
+
+Tous sous `/api/admin/theme` (middleware `admin`) :
+
+| Méthode | Path | Rôle |
+|---|---|---|
+| GET | `/state` | Charge le draft initial (lecture brute des `theme_*` settings) + card_config + sidebar_config |
+| GET | `/presets` | Liste les 7 brand presets avec leurs valeurs dark + light |
+| POST | `/save` | Persiste tout + clear cache + invalide query `['theme']` |
+| POST | `/reset` | Reset toutes les `theme_*` aux defaults de `ThemeDefaults::COLORS` |
+| POST | `/upload-asset` | Multipart, slot enum, retourne `/storage/branding/{slot}/{hash}.{ext}` |
+
+### Pièges à connaître
+
+1. **Tailwind v4** : `hover:scale-X` est hardcodé dans certains composants, ne consomme PAS `--hover-scale`. Solution : utiliser la classe utilitaire `.scale-on-hover` qui pile lit la var.
+2. **Storage Laravel 11** : disk `local` root = `storage/app/private`. Pour les uploads exposés via `/storage`, utiliser `Storage::disk('public')`.
+3. **CSS var blur** : `backdrop-filter: blur(var(--xxx))` doit avoir un fallback `var(--xxx, 12px)` sinon Safari peut casser le rendu si la var n'est pas encore set.
+4. **Mode preview** : NE JAMAIS faire un `useQuery(['theme'])` indépendant dans un consommateur. Toujours `useResolvedTheme()`.
+5. **Filament parity** : la page Filament `ThemeFormSchema` n'a PAS les nouveaux contrôles (sidebar avancée, login templates, footer, refinements, page overrides). Reste fonctionnelle (defaults safe), mais le studio est l'entry-point principal. Sync à faire en Vague 5 polish.
 
 ## Bridge — implémentation actuelle (P3 + Paymenter)
 

@@ -4,14 +4,19 @@ namespace App\Services;
 
 use App\Services\Theme\CardConfigResolver;
 use App\Services\Theme\CssVariableBuilder;
+use App\Services\Theme\ThemeAdvancedSettings;
 use App\Support\ThemePresets;
 use Illuminate\Support\Facades\Cache;
 
 class ThemeService
 {
+    private ThemeAdvancedSettings $advanced;
+
     public function __construct(
         private SettingsService $settingsService,
-    ) {}
+    ) {
+        $this->advanced = new ThemeAdvancedSettings($settingsService);
+    }
 
     public function getTheme(): array
     {
@@ -54,6 +59,13 @@ class ThemeService
             'shadow_intensity' => (int) $this->settingsService->get('theme_shadow_intensity', '50'),
             'density' => $this->settingsService->get('theme_density', 'comfortable'),
             'custom_css' => $this->settingsService->get('theme_custom_css', ''),
+            'layout' => $this->advanced->layout(),
+            'sidebar_advanced' => $this->advanced->sidebarAdvanced(),
+            'login' => $this->advanced->login(),
+            'page_overrides' => $this->advanced->pageOverrides(),
+            'footer' => $this->advanced->footer(),
+            'refinements' => $this->advanced->refinements(),
+            'app' => $this->advanced->app(),
         ];
     }
 
@@ -135,6 +147,13 @@ class ThemeService
             'shadow_intensity' => (int) $this->settingsService->get('theme_shadow_intensity', $values['theme_shadow_intensity']),
             'density' => $this->settingsService->get('theme_density', $values['theme_density']),
             'custom_css' => '',
+            'layout' => $this->advanced->layout(),
+            'sidebar_advanced' => $this->advanced->sidebarAdvanced(),
+            'login' => $this->advanced->login(),
+            'page_overrides' => $this->advanced->pageOverrides(),
+            'footer' => $this->advanced->footer(),
+            'refinements' => $this->advanced->refinements(),
+            'app' => $this->advanced->app(),
         ];
     }
 

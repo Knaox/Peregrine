@@ -1,6 +1,6 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
-import { getCsrfToken } from './http';
+import { getCsrfHeaders } from './http';
 
 /**
  * Lazy-instantiated Laravel Echo singleton tied to the panel's Reverb
@@ -65,7 +65,7 @@ export function getEcho(): Echo<'reverb'> | null {
         authEndpoint: '/broadcasting/auth',
         auth: {
             headers: {
-                'X-CSRF-TOKEN': getCsrfToken(),
+                ...getCsrfHeaders(),
                 'X-Requested-With': 'XMLHttpRequest',
             },
         },

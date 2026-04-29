@@ -542,6 +542,7 @@ return [
         'save_theme' => 'Enregistrer le thème',
         'save_templates' => 'Enregistrer les templates',
         'reset_defaults' => 'Réinitialiser',
+        'open_theme_studio' => 'Ouvrir le studio de thème',
         'test_smtp' => 'Tester SMTP',
         'test_smtp_modal_heading' => 'Envoyer un email de test',
         'test_smtp_modal_description' => "Un email de test sera envoyé à votre adresse admin.",
