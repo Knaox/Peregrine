@@ -167,8 +167,14 @@ class ServerPlan extends Model
     /**
      * Un plan est "ready to provision" quand :
      *  - egg_id est défini ET
-     *  - soit node_id défini (déploiement sur un node spécifique),
+     *  - soit node_id défini (legacy, déploiement sur un node spécifique),
+     *  - soit default_node_id défini (auto_deploy off + node par défaut choisi
+     *    dans le formulaire admin),
      *  - soit auto_deploy actif AVEC au moins un allowed_node_ids.
+     *
+     * Doit rester aligné avec ProvisionServerJob::pickNode() qui résout dans
+     * le même ordre — sinon le plan est rejeté en "needs_config" alors que
+     * le job aurait su trouver un node.
      */
     public function isReadyToProvision(): bool
     {
@@ -177,6 +183,10 @@ class ServerPlan extends Model
         }
 
         if ($this->node_id !== null) {
+            return true;
+        }
+
+        if ($this->default_node_id !== null) {
             return true;
         }
 
