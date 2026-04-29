@@ -176,9 +176,9 @@ class PelicanApplicationService
      *
      * @throws RequestException
      */
-    public function listNodeAllocations(int $nodeId): array
+    public function listNodeAllocations(int $nodeId, bool $includeServer = false): array
     {
-        return $this->infra->listNodeAllocations($nodeId);
+        return $this->infra->listNodeAllocations($nodeId, $includeServer);
     }
 
     /** @throws RequestException */

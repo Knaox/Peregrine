@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Pages\BridgeSettings\BridgeSettingsHtmlHelpers;
+use App\Filament\Pages\Concerns\HasMirrorReadsSection;
 use App\Services\SettingsService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -39,6 +40,7 @@ use UnitEnum;
  */
 class PelicanWebhookSettings extends Page implements HasForms
 {
+    use HasMirrorReadsSection;
     use InteractsWithForms;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bolt';
@@ -68,8 +70,6 @@ class PelicanWebhookSettings extends Page implements HasForms
 
     public ?string $pelican_webhook_token = '';
 
-    public bool $mirror_reads_enabled = false;
-
     public function mount(): void
     {
         $settings = app(SettingsService::class);
@@ -77,16 +77,12 @@ class PelicanWebhookSettings extends Page implements HasForms
         $enabled = (string) $settings->get('pelican_webhook_enabled', 'false');
         $this->pelican_webhook_enabled = $enabled === 'true' || $enabled === '1';
 
-        $mirror = (string) $settings->get('mirror_reads_enabled', 'false');
-        $this->mirror_reads_enabled = $mirror === 'true' || $mirror === '1';
-
         // Never display the stored token — admin types a new one to replace.
         $this->pelican_webhook_token = '';
 
         $this->form->fill([
             'pelican_webhook_enabled' => $this->pelican_webhook_enabled,
             'pelican_webhook_token' => $this->pelican_webhook_token,
-            'mirror_reads_enabled' => $this->mirror_reads_enabled,
         ]);
     }
 
@@ -212,14 +208,7 @@ class PelicanWebhookSettings extends Page implements HasForms
                         ], note: __('admin.webhook_settings.fields.events_blocklist_note'))),
                 ]),
 
-            Section::make(__('admin.webhook_settings.sections.phase2'))
-                ->description(__('admin.webhook_settings.sections.phase2_description'))
-                ->icon('heroicon-o-circle-stack')
-                ->schema([
-                    Toggle::make('mirror_reads_enabled')
-                        ->label(__('admin.webhook_settings.fields.mirror_reads'))
-                        ->helperText(__('admin.webhook_settings.fields.mirror_reads_helper')),
-                ]),
+            $this->mirrorReadsSection(),
 
             Section::make(__('admin.webhook_settings.sections.verify'))
                 ->description(__('admin.webhook_settings.sections.verify_description'))
@@ -250,8 +239,10 @@ class PelicanWebhookSettings extends Page implements HasForms
         $enabled = (bool) ($data['pelican_webhook_enabled'] ?? false);
         $settings->set('pelican_webhook_enabled', $enabled ? 'true' : 'false');
 
-        $mirrorReads = (bool) ($data['mirror_reads_enabled'] ?? false);
-        $settings->set('mirror_reads_enabled', $mirrorReads ? 'true' : 'false');
+        // mirror_reads_enabled is no longer toggled from this form — it's
+        // driven by the dedicated "Activer la lecture DB locale" action
+        // (HasMirrorReadsSection trait) which dispatches the backfill job
+        // and only flips the flag once the backfill completes successfully.
 
         $typedToken = (string) ($data['pelican_webhook_token'] ?? '');
         if ($typedToken !== '') {

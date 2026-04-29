@@ -29,6 +29,20 @@ class PelicanSubuserService
             }
         }
 
+        return $this->listSubusersFromApi($serverIdentifier);
+    }
+
+    /**
+     * Direct Pelican Client API fetch. Used :
+     *  - by listSubusers() when the local mirror is OFF or unreachable,
+     *  - by SubuserMirrorBackfiller to populate the mirror table on the
+     *    "Activer la lecture DB locale" run (we want the live truth, not
+     *    whatever the mirror happens to hold).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function listSubusersFromApi(string $serverIdentifier): array
+    {
         $response = $this->request()
             ->get("/api/client/servers/{$serverIdentifier}/users")
             ->throw();

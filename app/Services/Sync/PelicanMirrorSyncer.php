@@ -218,32 +218,63 @@ final class PelicanMirrorSyncer
         $count = 0;
         foreach (Node::whereNotNull('pelican_node_id')->cursor() as $node) {
             try {
-                $remote = $this->pelican->listNodeAllocations((int) $node->pelican_node_id);
+                // include=server fills the DTO's `serverId` so we can skip
+                // unassigned allocations rather than mirror every free port
+                // on the panel (the legacy behaviour that bloated the table).
+                $remote = $this->pelican->listNodeAllocations((int) $node->pelican_node_id, includeServer: true);
             } catch (\Throwable) {
                 continue;
             }
             foreach ($remote as $r) {
+                if ($r->serverId === null) {
+                    // Free port — never mirrored. Re-allocations populate
+                    // the table later via the assigned-allocation webhook
+                    // or the next backfill pass.
+                    continue;
+                }
+
+                $serverLocalId = Server::where('pelican_server_id', $r->serverId)->value('id');
+                if ($serverLocalId === null) {
+                    // Server known to Pelican but not yet to us — wait for
+                    // the server mirror to catch up first.
+                    continue;
+                }
+
                 $count++;
                 if ($dryRun) {
                     continue;
-                }
-                $serverLocalId = null;
-                if (property_exists($r, 'serverId') && $r->serverId !== null) {
-                    $serverLocalId = Server::where('pelican_server_id', $r->serverId)->value('id');
                 }
                 Allocation::updateOrCreate(
                     ['pelican_allocation_id' => $r->id],
                     [
                         'node_id' => $node->id,
                         'server_id' => $serverLocalId,
-                        'ip' => property_exists($r, 'ip') ? (string) $r->ip : '0.0.0.0',
-                        'port' => property_exists($r, 'port') ? (int) $r->port : 0,
-                        'is_locked' => property_exists($r, 'isLocked') ? (bool) $r->isLocked : false,
+                        'ip' => $r->ip,
+                        'ip_alias' => $r->ipAlias,
+                        'port' => $r->port,
+                        'notes' => $r->notes,
+                        'is_locked' => false,
                     ],
                 );
             }
         }
         return $count;
+    }
+
+    /**
+     * Backfill the invitations plugin's subuser mirror (per-server, via
+     * the Client API). Delegates to the dedicated backfiller — this method
+     * exists so `pelican:backfill-mirrors --only=subusers` keeps working.
+     */
+    public function syncSubusers(bool $dryRun): int
+    {
+        if ($dryRun) {
+            return 0;
+        }
+
+        $report = app(\App\Services\Mirror\SubuserMirrorBackfiller::class)->run();
+
+        return (int) ($report['written'] ?? 0);
     }
 
     public function syncTransfers(bool $dryRun): int

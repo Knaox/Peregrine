@@ -43,11 +43,17 @@ final class SyncPelicanSubuser
             $permissions = [];
         }
 
+        // Match on (pelican_server_id, pelican_user_id) — the natural pair
+        // both sources can produce. A backfilled row (no subuser_id yet)
+        // will be filled in here when the next webhook arrives, instead of
+        // being duplicated.
         PelicanSubuser::updateOrCreate(
-            ['pelican_subuser_id' => $event->pelicanSubuserId],
             [
                 'pelican_server_id' => $event->pelicanServerId,
                 'pelican_user_id' => $event->pelicanUserId,
+            ],
+            [
+                'pelican_subuser_id' => $event->pelicanSubuserId,
                 'permissions' => $permissions,
                 'pelican_created_at' => $this->parseDate($payload['created_at'] ?? null),
                 'pelican_updated_at' => $this->parseDate($payload['updated_at'] ?? null),
@@ -63,10 +69,16 @@ final class SyncPelicanSubuser
 
     private function handleRemoval(SubuserSynced $event): void
     {
-        PelicanSubuser::where('pelican_subuser_id', $event->pelicanSubuserId)->delete();
+        // Match on the (server, user) pair so a backfill-only row (which
+        // has no `pelican_subuser_id`) is still removable.
+        PelicanSubuser::where('pelican_server_id', $event->pelicanServerId)
+            ->where('pelican_user_id', $event->pelicanUserId)
+            ->delete();
 
         Log::info('SyncPelicanSubuser: subuser removed from invitations plugin mirror', [
             'pelican_subuser_id' => $event->pelicanSubuserId,
+            'pelican_server_id' => $event->pelicanServerId,
+            'pelican_user_id' => $event->pelicanUserId,
         ]);
     }
 

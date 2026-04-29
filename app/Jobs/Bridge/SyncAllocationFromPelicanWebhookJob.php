@@ -49,14 +49,38 @@ class SyncAllocationFromPelicanWebhookJob implements ShouldQueue
             return;
         }
 
+        // Skip free allocations — same rule as the backfill / sync job.
+        // The mirror only tracks allocations attributed to a server. When
+        // the allocation transitions free → assigned (server attaches it),
+        // an `updated: Allocation` webhook fires with a non-null server_id
+        // and we mirror it then. Conversely if a server detaches it,
+        // we drop the mirror row to mirror the free state.
+        $rawServerId = $this->payload['server_id'] ?? null;
+        if ($rawServerId === null || $rawServerId === '') {
+            Allocation::where('pelican_allocation_id', $this->pelicanAllocationId)->delete();
+
+            Log::info('SyncAllocationFromPelicanWebhookJob: free allocation skipped', [
+                'pelican_allocation_id' => $this->pelicanAllocationId,
+            ]);
+
+            return;
+        }
+
+        $serverId = Server::where('pelican_server_id', (int) $rawServerId)->value('id');
+        if ($serverId === null) {
+            // Server known to Pelican but not yet to us — bail and let the
+            // server-mirror catch up first (a Server webhook will arrive).
+            Log::warning('SyncAllocationFromPelicanWebhookJob: local server not found, skipping', [
+                'pelican_allocation_id' => $this->pelicanAllocationId,
+                'pelican_server_id' => (int) $rawServerId,
+            ]);
+
+            return;
+        }
+
         $nodeId = null;
         if (isset($this->payload['node_id'])) {
             $nodeId = Node::where('pelican_node_id', (int) $this->payload['node_id'])->value('id');
-        }
-
-        $serverId = null;
-        if (isset($this->payload['server_id']) && $this->payload['server_id'] !== null) {
-            $serverId = Server::where('pelican_server_id', (int) $this->payload['server_id'])->value('id');
         }
 
         Allocation::updateOrCreate(

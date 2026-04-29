@@ -193,17 +193,20 @@ class PelicanInfrastructureClient
 
     /**
      * List all network allocations on a node (paginated). Used by the Bridge
-     * PortAllocator to find a contiguous block of free ports.
+     * PortAllocator to find a contiguous block of free ports, and by the
+     * mirror backfiller to mirror only the allocations attributed to a server
+     * (set `$includeServer = true` so the response carries `server_id`).
      *
      * @return PelicanAllocation[]
      *
      * @throws RequestException
      */
-    public function listNodeAllocations(int $nodeId): array
+    public function listNodeAllocations(int $nodeId, bool $includeServer = false): array
     {
         return $this->http->fetchAllPages(
             "/api/application/nodes/{$nodeId}/allocations",
             PelicanAllocation::class,
+            $includeServer ? ['include' => 'server'] : [],
         );
     }
 

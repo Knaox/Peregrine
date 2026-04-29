@@ -22,7 +22,7 @@ class PelicanBackfillMirrors extends Command
     protected $signature = 'pelican:backfill-mirrors
         {--resume : Resume from where the last run stopped}
         {--fresh : Reset progress and start over}
-        {--only= : Backfill only one resource (users|nodes|eggs|servers|backups|databases|allocations|transfers)}
+        {--only= : Backfill only one resource (users|nodes|eggs|servers|backups|databases|allocations|transfers|subusers)}
         {--dry-run : Count remote items but don\'t write anything}
         {--no-flag : Skip activating mirror_reads_enabled at the end}';
 
@@ -46,6 +46,9 @@ class PelicanBackfillMirrors extends Command
         'databases' => 'syncDatabases',
         'allocations' => 'syncAllocations',
         'transfers' => 'syncTransfers',
+        // subusers must run AFTER users (lookup by email → pelican_user_id)
+        // and AFTER servers (subusers are scoped per Pelican server).
+        'subusers' => 'syncSubusers',
     ];
 
     public function handle(PelicanMirrorSyncer $syncer): int

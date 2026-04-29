@@ -157,23 +157,48 @@ class PelicanMirrorTest extends TestCase
         ]);
     }
 
-    public function test_allocation_job_upserts_with_node_lookup(): void
+    public function test_allocation_job_upserts_assigned_allocation(): void
     {
         $node = Node::create([
             'pelican_node_id' => 7, 'name' => 'eu', 'fqdn' => 'eu.example',
             'memory' => 0, 'disk' => 0, 'location' => '',
         ]);
+        $user = User::factory()->create();
+        $server = Server::create([
+            'user_id' => $user->id, 'name' => 's-alloc', 'status' => 'active',
+            'pelican_server_id' => 555, 'idempotency_key' => 'k-alloc',
+        ]);
 
         (new SyncAllocationFromPelicanWebhookJob(
             pelicanAllocationId: 100,
-            payload: ['node_id' => 7, 'ip' => '1.2.3.4', 'port' => 25565],
+            payload: ['node_id' => 7, 'server_id' => 555, 'ip' => '1.2.3.4', 'port' => 25565],
             eventKind: PelicanEventKind::AllocationCreated,
         ))->handle();
 
         $this->assertDatabaseHas('pelican_allocations', [
-            'pelican_allocation_id' => 100, 'node_id' => $node->id,
-            'ip' => '1.2.3.4', 'port' => 25565,
+            'pelican_allocation_id' => 100,
+            'node_id' => $node->id,
+            'server_id' => $server->id,
+            'ip' => '1.2.3.4',
+            'port' => 25565,
         ]);
+    }
+
+    public function test_allocation_job_skips_free_allocation(): void
+    {
+        Node::create([
+            'pelican_node_id' => 7, 'name' => 'eu', 'fqdn' => 'eu.example',
+            'memory' => 0, 'disk' => 0, 'location' => '',
+        ]);
+
+        // Free port — server_id absent. Mirror must stay empty.
+        (new SyncAllocationFromPelicanWebhookJob(
+            pelicanAllocationId: 101,
+            payload: ['node_id' => 7, 'ip' => '1.2.3.4', 'port' => 25566],
+            eventKind: PelicanEventKind::AllocationCreated,
+        ))->handle();
+
+        $this->assertDatabaseMissing('pelican_allocations', ['pelican_allocation_id' => 101]);
     }
 
     public function test_database_job_never_persists_password(): void
