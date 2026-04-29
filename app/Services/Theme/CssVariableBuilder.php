@@ -75,16 +75,18 @@ class CssVariableBuilder
         // Mode-dependent overlay + scrim tokens so components don't need to
         // hardcode rgba(0,0,0,...) or rgba(255,255,255,...) for glass effects.
         $isLight = ($theme['mode'] ?? 'dark') === 'light';
-        // Banner overlays sit on top of an egg image (always visually busy),
-        // so both modes use a dark gradient to keep the white text legible.
-        $vars['--banner-overlay']         = 'rgba(12, 10, 20, 0.92)';
-        $vars['--banner-overlay-soft']    = 'rgba(12, 10, 20, 0.55)';
+        // Banner overlays sit on top of an egg image (always visually busy).
+        // Dark mode uses a dark gradient with white text; light mode uses a
+        // light gradient with dark text so the banner doesn't look like a
+        // hard black band on an otherwise bright page.
+        $vars['--banner-overlay']         = $isLight ? 'rgba(248, 250, 252, 0.92)' : 'rgba(12, 10, 20, 0.92)';
+        $vars['--banner-overlay-soft']    = $isLight ? 'rgba(248, 250, 252, 0.55)' : 'rgba(12, 10, 20, 0.55)';
         $vars['--surface-overlay-soft']   = $isLight ? 'rgba(0, 0, 0, 0.04)'       : 'rgba(255, 255, 255, 0.08)';
         $vars['--surface-overlay-strong'] = $isLight ? 'rgba(0, 0, 0, 0.08)'       : 'rgba(255, 255, 255, 0.15)';
         $vars['--surface-overlay-hover']  = $isLight ? 'rgba(0, 0, 0, 0.06)'       : 'rgba(255, 255, 255, 0.06)';
         $vars['--shadow-inset']           = $isLight ? 'inset 0 2px 8px rgba(0, 0, 0, 0.05)' : 'inset 0 2px 8px rgba(0, 0, 0, 0.3)';
         $vars['--modal-scrim']            = $isLight ? 'rgba(15, 23, 42, 0.35)'    : 'rgba(0, 0, 0, 0.7)';
-        $vars['--text-on-banner']         = '#ffffff';
+        $vars['--text-on-banner']         = $isLight ? $theme['colors']['text_primary'] : '#ffffff';
         $vars['--scrollbar-thumb']        = $isLight ? 'rgba(0, 0, 0, 0.2)'        : 'rgba(255, 255, 255, 0.15)';
         $vars['--ambient-overlay']        = $isLight ? 'transparent' : 'rgba(12, 10, 20, 0.75)';
 
