@@ -2,7 +2,6 @@
 
 namespace Plugins\EggConfigEditor;
 
-use App\Models\Plugin;
 use App\Services\Plugin\ManifestEnricherRegistry;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Cache;
@@ -77,30 +76,28 @@ class EggConfigEditorServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register the `eggconfig.read` / `eggconfig.write` permissions in the
-     * Invitations plugin's PermissionRegistry — but only when Invitations
-     * is itself active. Without it, no subuser system exists, so the
-     * permissions would be dead entries.
+     * Register the `eggconfig.read` / `eggconfig.write` permissions in
+     * the Invitations plugin's PermissionRegistry. Registration is gated
+     * on the registry CLASS being autoloadable — i.e. the Invitations
+     * plugin is installed on disk and its PSR-4 has been registered. We
+     * deliberately do NOT also gate on the `plugins.is_active` DB row
+     * because boot order isn't guaranteed : Invitations might activate
+     * AFTER EggConfigEditor's boot (or tests might create the row
+     * mid-flight), and re-running the boot isn't free. The
+     * PermissionRegistry singleton is harmless when nothing reads it —
+     * if Invitations is inactive, its routes aren't wired and the
+     * `/api/plugins/invitations/.../permissions` endpoint doesn't exist,
+     * so the group entries simply have no UI surface.
      *
-     * Detection is a single DB query, cached by Laravel's connection-level
-     * statement cache. Catches Throwable defensively so a missing
-     * `plugins` table during fresh setup never blocks boot.
+     * The `availableForServer` filter ensures the group only surfaces in
+     * the picker for servers whose egg actually has at least one enabled
+     * EggConfigFile : without that, the permissions would appear for
+     * every server, including those for which Config Editor has nothing
+     * to show — confusing the admin and offering claims that grant
+     * access to a feature that doesn't exist for that server.
      */
     private function registerSubuserPermissions(): void
     {
-        try {
-            $invitationsActive = Plugin::query()
-                ->where('plugin_id', 'invitations')
-                ->where('is_active', true)
-                ->exists();
-        } catch (\Throwable) {
-            return;
-        }
-
-        if (! $invitationsActive) {
-            return;
-        }
-
         $registryClass = '\\Plugins\\Invitations\\Services\\PermissionRegistry';
 
         if (! class_exists($registryClass)) {
@@ -123,6 +120,22 @@ class EggConfigEditorServiceProvider extends ServiceProvider
                     'fr' => 'Modifier les configs de jeu',
                 ],
             ],
+            availableForServer: function (\App\Models\Server $server): bool {
+                $eggId = (int) $server->egg_id;
+                if ($eggId <= 0) {
+                    return false;
+                }
+                try {
+                    return EggConfigFile::query()
+                        ->forEgg($eggId)
+                        ->where('enabled', true)
+                        ->exists();
+                } catch (\Throwable) {
+                    // DB hiccup → conservative : hide the group rather
+                    // than offer permissions whose backend may be down.
+                    return false;
+                }
+            },
         );
     }
 

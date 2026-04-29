@@ -221,12 +221,17 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('servers/{serverIdentifier}/permissions', function (string $serverIdentifier, Request $request): JsonResponse {
-        Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
+        $server = Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
 
         $locale = $request->header('Accept-Language', 'en');
         $locale = str_starts_with($locale, 'fr') ? 'fr' : 'en';
 
-        return response()->json(['data' => PermissionRegistry::getInstance()->toArray($locale)]);
+        // Per-server filtering : groups can declare an `availableForServer`
+        // closure (see PermissionRegistry::registerGroup) so per-egg plugins
+        // like egg-config-editor only surface their permissions when the
+        // server's egg actually has data for them. Groups with no filter
+        // remain always-visible (every native Pelican group).
+        return response()->json(['data' => PermissionRegistry::getInstance()->toArrayForServer($locale, $server)]);
     });
 
     // Accept invitation (authenticated user)

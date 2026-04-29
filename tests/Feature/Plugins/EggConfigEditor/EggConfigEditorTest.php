@@ -50,6 +50,11 @@ class EggConfigEditorTest extends TestCase
             $loader->addPsr4('Plugins\\Invitations\\', base_path('plugins/invitations/src/'));
 
             $this->app->register(EggConfigEditorServiceProvider::class);
+            // Register the Invitations provider too so its routes are
+            // wired and tests can hit /api/plugins/invitations/... — the
+            // PermissionRegistry singleton is shared so registrations
+            // from EggConfigEditor land in it regardless of order.
+            $this->app->register(\Plugins\Invitations\InvitationsServiceProvider::class);
         });
 
         parent::setUp();
@@ -384,6 +389,83 @@ class EggConfigEditorTest extends TestCase
         $manifests = app(PluginBootstrap::class)->getActiveManifests();
         $section = collect($manifests)->firstWhere('id', 'egg-config-editor')['server_home_sections'][0];
         $this->assertEqualsCanonicalizing([42], $section['requires_egg_ids']);
+    }
+
+    // ============================================================
+    //  Per-server permission filtering (eggconfig.* visibility)
+    // ============================================================
+
+    public function test_eggconfig_permissions_hidden_when_no_config_file_covers_egg(): void
+    {
+        $this->activateInvitations();
+
+        $owner = User::factory()->create();
+        $server = $this->makeServer($owner);
+        // No EggConfigFile rows — Config Editor has nothing to expose for
+        // this server's egg, so the eggconfig group must not appear.
+
+        $response = $this->actingAs($owner)
+            ->getJson("/api/plugins/invitations/servers/{$server->identifier}/permissions");
+
+        $response->assertOk();
+        $groupKeys = collect($response->json('data'))->pluck('group')->all();
+        $this->assertNotContains('eggconfig', $groupKeys);
+        // Native Pelican groups are always visible regardless.
+        $this->assertContains('control', $groupKeys);
+        $this->assertContains('file', $groupKeys);
+    }
+
+    public function test_eggconfig_permissions_visible_when_config_file_covers_egg(): void
+    {
+        $this->activateInvitations();
+
+        $owner = User::factory()->create();
+        $server = $this->makeServer($owner);
+        $this->makeConfigFile($server->egg_id);
+
+        $response = $this->actingAs($owner)
+            ->getJson("/api/plugins/invitations/servers/{$server->identifier}/permissions");
+
+        $response->assertOk();
+        $groups = collect($response->json('data'));
+        $eggconfig = $groups->firstWhere('group', 'eggconfig');
+        $this->assertNotNull($eggconfig, 'eggconfig group missing from picker for a covered egg');
+        $permKeys = collect($eggconfig['permissions'])->pluck('key')->all();
+        $this->assertEqualsCanonicalizing(['eggconfig.read', 'eggconfig.write'], $permKeys);
+    }
+
+    public function test_eggconfig_permissions_hidden_when_config_file_is_disabled(): void
+    {
+        $this->activateInvitations();
+
+        $owner = User::factory()->create();
+        $server = $this->makeServer($owner);
+        // Row exists but disabled — same outcome as no row at all.
+        $this->makeConfigFile($server->egg_id, ['enabled' => false]);
+
+        $response = $this->actingAs($owner)
+            ->getJson("/api/plugins/invitations/servers/{$server->identifier}/permissions");
+
+        $response->assertOk();
+        $groupKeys = collect($response->json('data'))->pluck('group')->all();
+        $this->assertNotContains('eggconfig', $groupKeys);
+    }
+
+    public function test_eggconfig_permissions_hidden_when_config_file_targets_other_egg(): void
+    {
+        $this->activateInvitations();
+
+        // Server has egg_id=1, config file covers a DIFFERENT egg.
+        $owner = User::factory()->create();
+        $server = $this->makeServer($owner);
+        $this->makeConfigFile(99, ['egg_ids' => [99]]);
+
+        $response = $this->actingAs($owner)
+            ->getJson("/api/plugins/invitations/servers/{$server->identifier}/permissions");
+
+        $response->assertOk();
+        $groupKeys = collect($response->json('data'))->pluck('group')->all();
+        $this->assertNotContains('eggconfig', $groupKeys);
     }
 
     // ============================================================

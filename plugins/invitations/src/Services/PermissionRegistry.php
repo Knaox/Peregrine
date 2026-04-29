@@ -2,6 +2,9 @@
 
 namespace Plugins\Invitations\Services;
 
+use App\Models\Server;
+use Closure;
+
 /**
  * Registry of permissions available for server invitations.
  *
@@ -16,7 +19,13 @@ namespace Plugins\Invitations\Services;
  *           'mods.install' => ['en' => 'Install mods', 'fr' => 'Installer des mods'],
  *           'mods.remove'  => ['en' => 'Remove mods', 'fr' => 'Supprimer des mods'],
  *       ],
+ *       availableForServer: fn(Server $server) => $server->egg_id === 35,  // optional
  *   );
+ *
+ * The optional `availableForServer` filter is applied when the picker is
+ * rendered for a specific server — useful for per-egg plugins that should
+ * only surface their permissions when relevant. When no filter is set the
+ * group is always visible (legacy behaviour).
  */
 class PermissionRegistry
 {
@@ -31,7 +40,13 @@ class PermissionRegistry
         return self::$instance;
     }
 
-    /** @var array<string, array{label: array<string, string>, permissions: array<string, array<string, string>>}> */
+    /**
+     * @var array<string, array{
+     *   label: array<string, string>,
+     *   permissions: array<string, array<string, string>>,
+     *   filter: ?Closure
+     * }>
+     */
     private array $groups = [];
 
     /**
@@ -40,14 +55,20 @@ class PermissionRegistry
      * @param string $groupKey Unique group key (e.g., 'control', 'file', 'mods')
      * @param array<string, string> $groupLabel Labels per locale (['en' => '...', 'fr' => '...'])
      * @param array<string, array<string, string>> $permissions Map of permission key => labels per locale
+     * @param Closure|null $availableForServer Optional `fn(Server $server): bool` —
+     *        return true to surface this group for the given server, false to hide it.
+     *        Omit (or pass null) for an always-visible group.
      */
     public function registerGroup(
         string $groupKey,
         array $groupLabel,
         array $permissions,
+        ?Closure $availableForServer = null,
     ): void {
         if (isset($this->groups[$groupKey])) {
-            // Merge permissions into existing group
+            // Merge permissions into existing group ; the filter passed
+            // on the FIRST registration wins (a plugin extending another
+            // plugin's group shouldn't fight its visibility rules).
             $this->groups[$groupKey]['permissions'] = array_merge(
                 $this->groups[$groupKey]['permissions'],
                 $permissions,
@@ -59,6 +80,7 @@ class PermissionRegistry
         $this->groups[$groupKey] = [
             'label' => $groupLabel,
             'permissions' => $permissions,
+            'filter' => $availableForServer,
         ];
     }
 
@@ -73,15 +95,55 @@ class PermissionRegistry
     }
 
     /**
-     * Get all permission groups formatted for API response.
+     * Get all permission groups formatted for API response. No per-server
+     * filtering — every registered group is returned. Useful for admin
+     * UIs that need to see the full catalogue, or for callers that have
+     * no server context.
      *
      * @return array<int, array<string, mixed>>
      */
     public function toArray(string $locale = 'en'): array
     {
+        return $this->serializeGroups($this->groups, $locale);
+    }
+
+    /**
+     * Same as toArray() but applies each group's optional
+     * `availableForServer` filter against the given Server. Groups whose
+     * filter returns false are excluded ; groups with no filter are always
+     * included. A throwing filter is treated as "not available" so a buggy
+     * plugin can't take down the picker for the whole panel.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function toArrayForServer(string $locale, Server $server): array
+    {
+        $filtered = [];
+        foreach ($this->groups as $key => $group) {
+            $filter = $group['filter'] ?? null;
+            if ($filter !== null) {
+                try {
+                    if (! (bool) $filter($server)) {
+                        continue;
+                    }
+                } catch (\Throwable) {
+                    continue;
+                }
+            }
+            $filtered[$key] = $group;
+        }
+        return $this->serializeGroups($filtered, $locale);
+    }
+
+    /**
+     * @param array<string, array{label: array<string, string>, permissions: array<string, array<string, string>>, filter?: ?Closure}> $groups
+     * @return array<int, array<string, mixed>>
+     */
+    private function serializeGroups(array $groups, string $locale): array
+    {
         $result = [];
 
-        foreach ($this->groups as $key => $group) {
+        foreach ($groups as $key => $group) {
             $permissions = [];
 
             foreach ($group['permissions'] as $permKey => $labels) {
