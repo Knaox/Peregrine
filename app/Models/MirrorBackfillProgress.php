@@ -50,15 +50,43 @@ class MirrorBackfillProgress extends Model
     /**
      * Most recent run — null on a fresh install with no backfill ever
      * launched. Drives the Filament UI state.
+     *
+     * Defensive against the table being absent on legacy deployments where
+     * the migration `2025_01_01_000040_create_mirror_backfill_progress_table`
+     * never ran (e.g. integration servers whose `migrations` ledger is out
+     * of sync with the actual schema). The page degrades gracefully to the
+     * "never run" state instead of crashing with a 500.
      */
     public static function latest(): ?self
     {
-        return self::query()->orderByDesc('started_at')->first();
+        try {
+            return self::query()->orderByDesc('started_at')->first();
+        } catch (\Illuminate\Database\QueryException $e) {
+            if (self::isMissingTableException($e)) {
+                return null;
+            }
+            throw $e;
+        }
     }
 
     public static function isAnyRunning(): bool
     {
-        return self::query()->where('state', self::STATE_RUNNING)->exists();
+        try {
+            return self::query()->where('state', self::STATE_RUNNING)->exists();
+        } catch (\Illuminate\Database\QueryException $e) {
+            if (self::isMissingTableException($e)) {
+                return false;
+            }
+            throw $e;
+        }
+    }
+
+    private static function isMissingTableException(\Illuminate\Database\QueryException $e): bool
+    {
+        // MySQL 1146, SQLite "no such table", PostgreSQL "undefined_table".
+        return str_contains($e->getMessage(), "doesn't exist")
+            || str_contains($e->getMessage(), 'no such table')
+            || str_contains($e->getMessage(), 'undefined_table');
     }
 
     /**
