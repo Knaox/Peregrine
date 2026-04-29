@@ -39,6 +39,9 @@ export function WebhookStep(_: StepProps) {
         }
     };
 
+    const selectAll = (e: React.MouseEvent<HTMLInputElement>) =>
+        (e.target as HTMLInputElement).select();
+
     return (
         <div className="space-y-6">
             <div>
@@ -61,52 +64,114 @@ export function WebhookStep(_: StepProps) {
             )}
 
             {token && (
-                <div className="space-y-3">
+                <div className="space-y-5">
+                    <div className="rounded-lg border border-[var(--color-primary)]/40 bg-[var(--color-primary)]/5 p-4 text-sm">
+                        <p className="font-medium text-[var(--color-text-primary)]">
+                            {t('setup.webhook.howto_intro', { defaultValue: 'Dans Pelican, va dans /admin/webhooks → Create Webhook et remplis exactement comme ci-dessous.' })}
+                        </p>
+                    </div>
+
+                    {/* === Pelican form: Type === */}
                     <div>
                         <label className="text-xs font-medium uppercase text-[var(--color-text-secondary)]">
-                            {t('setup.webhook.endpoint_label', { defaultValue: 'Endpoint à coller dans Pelican /admin/webhooks' })}
+                            {t('setup.webhook.type_label', { defaultValue: 'Type (champ Pelican)' })}
+                        </label>
+                        <input
+                            type="text"
+                            readOnly
+                            value="Regular"
+                            onClick={selectAll}
+                            className="mt-1 w-full rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass)] px-3 py-2 font-mono text-sm"
+                        />
+                    </div>
+
+                    {/* === Pelican form: Endpoint === */}
+                    <div>
+                        <label className="text-xs font-medium uppercase text-[var(--color-text-secondary)]">
+                            {t('setup.webhook.endpoint_label', { defaultValue: 'Endpoint (champ Pelican)' })}
                         </label>
                         <input
                             type="text"
                             readOnly
                             value={endpoint}
-                            onClick={(e) => (e.target as HTMLInputElement).select()}
+                            onClick={selectAll}
                             className="mt-1 w-full rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass)] px-3 py-2 font-mono text-sm"
                         />
                     </div>
+
+                    {/* === Pelican form: Headers (2 rows) === */}
                     <div>
                         <label className="text-xs font-medium uppercase text-[var(--color-text-secondary)]">
-                            {t('setup.webhook.token_label', { defaultValue: 'Token (header Authorization: Bearer ...)' })}
+                            {t('setup.webhook.headers_label', { defaultValue: 'Headers (section Pelican — clique sur "Add row" pour ajouter Authorization)' })}
                         </label>
-                        <input
-                            type="text"
-                            readOnly
-                            value={token}
-                            onClick={(e) => (e.target as HTMLInputElement).select()}
-                            className="mt-1 w-full rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass)] px-3 py-2 font-mono text-sm"
-                        />
+                        <div className="mt-1 overflow-hidden rounded-lg border border-[var(--color-glass-border)]">
+                            <div className="grid grid-cols-2 gap-px bg-[var(--color-glass-border)] text-xs uppercase tracking-wide">
+                                <div className="bg-[var(--color-surface)] px-3 py-2 text-[var(--color-text-secondary)]">Key</div>
+                                <div className="bg-[var(--color-surface)] px-3 py-2 text-[var(--color-text-secondary)]">Value</div>
+                            </div>
+                            {/* Row 1 — Pelican's default, do NOT remove */}
+                            <div className="grid grid-cols-2 gap-px border-t border-[var(--color-glass-border)] bg-[var(--color-glass-border)]">
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value="X-Webhook-Event"
+                                    onClick={selectAll}
+                                    className="bg-[var(--color-glass)] px-3 py-2 font-mono text-sm"
+                                />
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value="{{event}}"
+                                    onClick={selectAll}
+                                    className="bg-[var(--color-glass)] px-3 py-2 font-mono text-sm"
+                                />
+                            </div>
+                            {/* Row 2 — Authorization Bearer */}
+                            <div className="grid grid-cols-2 gap-px border-t border-[var(--color-glass-border)] bg-[var(--color-glass-border)]">
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value="Authorization"
+                                    onClick={selectAll}
+                                    className="bg-[var(--color-glass)] px-3 py-2 font-mono text-sm"
+                                />
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={`Bearer ${token}`}
+                                    onClick={selectAll}
+                                    className="bg-[var(--color-glass)] px-3 py-2 font-mono text-sm"
+                                />
+                            </div>
+                        </div>
+                        <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+                            {t('setup.webhook.headers_hint', { defaultValue: 'La 1ère ligne (X-Webhook-Event = {{event}}) est le défaut Pelican — laisse-la. La 2ème ligne (Authorization) est à AJOUTER manuellement via "Add row".' })}
+                        </p>
                         <p className="mt-1 text-xs text-amber-500">
-                            {t('setup.webhook.copy_warning', { defaultValue: 'Copie maintenant — il ne sera plus affiché.' })}
+                            {t('setup.webhook.copy_warning', { defaultValue: 'Copie le token maintenant — il ne sera plus affiché en clair après cette étape.' })}
                         </p>
                     </div>
+
+                    {/* === Events to tick === */}
                     <div className="rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass)] p-4 text-sm">
-                        <p className="font-medium">{t('setup.webhook.events_to_tick', { defaultValue: 'Events à cocher dans Pelican' })}</p>
+                        <p className="font-medium">{t('setup.webhook.events_to_tick', { defaultValue: 'Events à cocher (recherche-les dans la liste Pelican)' })}</p>
                         <ul className="mt-2 list-inside list-disc space-y-1 text-[var(--color-text-secondary)]">
-                            <li><code>created: Server</code></li>
-                            <li><code>updated: Server</code></li>
-                            <li><code>deleted: Server</code></li>
-                            <li><code>created: User</code> + <code>updated: User</code> + <code>deleted: User</code></li>
+                            <li><code>created: Server</code> · <code>updated: Server</code> · <code>deleted: Server</code></li>
+                            <li><code>event: Server\Installed</code> <span className="text-xs">— {t('setup.webhook.installed_note', { defaultValue: 'optionnel, sur Pelican 0.46+ stable' })}</span></li>
+                            <li><code>created: User</code> · <code>updated: User</code> · <code>deleted: User</code></li>
                             <li><code>created/updated/deleted: Node</code></li>
-                            <li><code>created/updated/deleted: Egg</code> + <code>EggVariable</code></li>
+                            <li><code>created/updated/deleted: Egg</code> · <code>EggVariable</code></li>
                             <li><code>created/updated/deleted: Backup</code></li>
                             <li><code>created/updated/deleted: Allocation</code></li>
-                            <li><code>created/updated/deleted: Database</code> + <code>DatabaseHost</code></li>
+                            <li><code>created/updated/deleted: Database</code> · <code>DatabaseHost</code></li>
                             <li><code>created/updated/deleted: ServerTransfer</code></li>
+                            <li><code>event: Server\SubUserAdded</code> · <code>event: Server\SubUserRemoved</code></li>
                         </ul>
-                        <p className="mt-2 text-xs text-rose-500">
-                            {t('setup.webhook.do_not_tick', { defaultValue: 'NE PAS cocher : event: Server\\Installed (bug Pelican), ActivityLogged, Schedule, ApiKey, Webhook (loop).' })}
+                        <p className="mt-3 text-xs text-rose-500">
+                            {t('setup.webhook.do_not_tick', { defaultValue: 'NE PAS cocher (flood / boucles) : event: ActivityLogged, Schedule, Task, ApiKey, Webhook, WebhookConfiguration.' })}
                         </p>
                     </div>
+
                     <button
                         type="button"
                         onClick={verify}
