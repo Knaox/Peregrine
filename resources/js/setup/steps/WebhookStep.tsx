@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { StepProps } from '../types';
 import { generateWebhookToken, getWebhookHeartbeat } from '../services/setupApi';
 
-export function WebhookStep({ onNext, onPrevious }: StepProps) {
+export function WebhookStep(_: StepProps) {
     const { t } = useTranslation();
     const [token, setToken] = useState<string | null>(null);
     const [endpoint, setEndpoint] = useState<string>('');
@@ -129,22 +129,17 @@ export function WebhookStep({ onNext, onPrevious }: StepProps) {
                 </div>
             )}
 
-            <div className="flex justify-between pt-4">
+            <div className="flex justify-end pt-4">
+                {/* Last step of the wizard — no Précédent (going back would
+                    rerun the install on Summary). Finish redirects to /. */}
                 <button
                     type="button"
-                    onClick={onPrevious}
-                    className="rounded-lg border border-[var(--color-glass-border)] px-5 py-2 text-sm hover:bg-[var(--color-glass)]"
-                >
-                    {t('common.previous', { defaultValue: 'Précédent' })}
-                </button>
-                <button
-                    type="button"
-                    onClick={onNext}
+                    onClick={() => { window.location.href = '/'; }}
                     className="rounded-lg bg-[var(--color-primary)] px-5 py-2 text-sm font-medium text-white"
                 >
                     {token
-                        ? t('common.next', { defaultValue: 'Suivant' })
-                        : t('setup.webhook.skip', { defaultValue: 'Passer (sync quotidienne)' })}
+                        ? t('setup.webhook.finish', { defaultValue: 'Terminer' })
+                        : t('setup.webhook.skip', { defaultValue: 'Passer et terminer (sync quotidienne)' })}
                 </button>
             </div>
         </div>

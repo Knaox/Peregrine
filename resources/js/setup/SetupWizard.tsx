@@ -16,15 +16,20 @@ import type { ComponentType } from 'react';
 // Bridge is no longer asked during install — it's configured post-install at
 // /admin/bridge-settings (toggle + HMAC secret + Stripe webhook secret in
 // the same place). Keeps the wizard short for users who don't run the Shop.
+// Sequence : we run the install action (Summary → POST /api/setup/install) BEFORE
+// the Backfill+Webhook steps so PELICAN_URL / api keys are already in .env when
+// the BackfillStep dispatches its job. Pre-install dispatch fails with
+// "Could not resolve host: api" because the queue worker reads config from
+// the not-yet-written .env.
 const STEP_COMPONENTS: ComponentType<StepProps>[] = [
     LanguageStep,
     DatabaseStep,
     AdminStep,
     PelicanStep,
-    BackfillStep,
-    WebhookStep,
     AuthStep,
     SummaryStep,
+    BackfillStep,
+    WebhookStep,
 ];
 
 export function SetupWizard() {

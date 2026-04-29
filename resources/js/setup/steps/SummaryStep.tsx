@@ -5,7 +5,7 @@ import { install } from '../services/setupApi';
 
 type InstallStatus = 'idle' | 'installing' | 'success' | 'error';
 
-export function SummaryStep({ data, onPrevious }: StepProps) {
+export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
     const { t } = useTranslation();
     const [status, setStatus] = useState<InstallStatus>('idle');
     const [error, setError] = useState<string>('');
@@ -18,9 +18,9 @@ export function SummaryStep({ data, onPrevious }: StepProps) {
             const response = await install(data);
             if (response.success) {
                 setStatus('success');
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 2000);
+                // Advance to BackfillStep — Pelican config is now in .env so the
+                // queued job can reach the Pelican API. WebhookStep follows.
+                setTimeout(() => onNext(), 2000);
             } else {
                 setStatus('error');
                 setError(response.error ?? t('common.error'));
@@ -131,8 +131,8 @@ export function SummaryStep({ data, onPrevious }: StepProps) {
                 </button>
                 <button
                     type="button"
-                    onClick={handleInstall}
-                    disabled={status === 'installing' || status === 'success'}
+                    onClick={status === 'success' ? onNext : handleInstall}
+                    disabled={status === 'installing'}
                     className="px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {status === 'installing' ? (
@@ -143,6 +143,8 @@ export function SummaryStep({ data, onPrevious }: StepProps) {
                             </svg>
                             {t('common.installing')}
                         </span>
+                    ) : status === 'success' ? (
+                        t('common.next', { defaultValue: 'Suivant' })
                     ) : (
                         t('setup.summary.install_button')
                     )}

@@ -7,7 +7,7 @@ import {
     type BackfillResource,
 } from '../services/setupApi';
 
-export function BackfillStep({ onNext, onPrevious }: StepProps) {
+export function BackfillStep({ onNext }: StepProps) {
     const { t } = useTranslation();
     const [resources, setResources] = useState<Record<string, BackfillResource>>({});
     const [allCompleted, setAllCompleted] = useState(false);
@@ -87,19 +87,14 @@ export function BackfillStep({ onNext, onPrevious }: StepProps) {
                 </div>
             )}
 
-            <div className="flex justify-between pt-4">
-                <button
-                    type="button"
-                    onClick={onPrevious}
-                    className="rounded-lg border border-[var(--color-glass-border)] px-5 py-2 text-sm hover:bg-[var(--color-glass)]"
-                >
-                    {t('common.previous', { defaultValue: 'Précédent' })}
-                </button>
+            <div className="flex justify-end pt-4">
+                {/* No Précédent — install already ran on the previous step,
+                    going back would attempt a second install. Backfill is
+                    idempotent, can run later via `php artisan pelican:backfill-mirrors`. */}
                 <button
                     type="button"
                     onClick={onNext}
-                    disabled={! allCompleted}
-                    className="rounded-lg bg-[var(--color-primary)] px-5 py-2 text-sm font-medium text-white disabled:opacity-50"
+                    className="rounded-lg bg-[var(--color-primary)] px-5 py-2 text-sm font-medium text-white"
                 >
                     {allCompleted
                         ? t('common.next', { defaultValue: 'Suivant' })

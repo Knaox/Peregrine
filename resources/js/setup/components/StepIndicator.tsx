@@ -13,10 +13,10 @@ const STEP_KEYS = [
     'setup.steps.database',
     'setup.steps.admin',
     'setup.steps.pelican',
-    'setup.steps.backfill',
-    'setup.steps.webhook',
     'setup.steps.auth',
     'setup.steps.summary',
+    'setup.steps.backfill',
+    'setup.steps.webhook',
 ] as const;
 
 export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
