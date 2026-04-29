@@ -183,7 +183,7 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
                 'identifier' => $apiSnapshot?->identifier
                     ?? (string) ($this->payloadSnapshot['identifier'] ?? $this->payloadSnapshot['uuid_short'] ?? ''),
                 'status' => $apiSnapshot !== null
-                    ? $this->mapStatusFromApi($apiSnapshot->isSuspended)
+                    ? $this->mapStatusFromApi($apiSnapshot)
                     : $this->mapPelicanStatus($this->payloadSnapshot),
                 'paymenter_service_id' => $this->extractExternalId($this->payloadSnapshot),
                 'egg_id' => $eggId,
@@ -219,9 +219,9 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
         return ServerStatusResolver::resolveInstallStatus($apiSnapshot, $previousStatus, $this->payloadSnapshot);
     }
 
-    private function mapStatusFromApi(bool $isSuspended): string
+    private function mapStatusFromApi(\App\Services\Pelican\DTOs\PelicanServer $snapshot): string
     {
-        return ServerStatusResolver::mapStatusFromApi($isSuspended);
+        return ServerStatusResolver::mapStatusFromApi($snapshot);
     }
 
     private function isDeletionEvent(): bool

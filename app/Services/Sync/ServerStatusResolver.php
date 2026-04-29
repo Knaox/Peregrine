@@ -51,14 +51,25 @@ final class ServerStatusResolver
     }
 
     /**
-     * Translate the `isSuspended` flag from the Pelican Application API
-     * response into our local `servers.status` enum. Used only on the
-     * full-upsert path (Paymenter / admin-imported), where Pelican is the
-     * source of truth for the lifecycle status.
+     * Translate a full Pelican Application API snapshot into our local
+     * `servers.status` enum. Used on the full-upsert path (Paymenter /
+     * admin-imported), where Pelican is the source of truth.
+     *
+     * Order matters : suspension wins over install state (a suspended server
+     * mid-reinstall is still suspended for billing purposes).
      */
-    public static function mapStatusFromApi(bool $isSuspended): string
+    public static function mapStatusFromApi(PelicanServer $snapshot): string
     {
-        return $isSuspended ? 'suspended' : 'active';
+        if ($snapshot->isSuspended) {
+            return 'suspended';
+        }
+        if ($snapshot->isInstalling()) {
+            return 'provisioning';
+        }
+        if ($snapshot->installFailed()) {
+            return 'provisioning_failed';
+        }
+        return 'active';
     }
 
     /**

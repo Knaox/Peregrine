@@ -49,7 +49,7 @@ class PelicanMirrorSyncTest extends TestCase
      * needs this because the job refetches the server (the webhook payload
      * doesn't carry the suspended state directly).
      */
-    private function mockPelicanGetServer(int $pelicanServerId, int $userId, int $eggId = 1, bool $isSuspended = false, string $name = 'srv', string $identifier = 'iden'): \Mockery\MockInterface
+    private function mockPelicanGetServer(int $pelicanServerId, int $userId, int $eggId = 1, bool $isSuspended = false, string $name = 'srv', string $identifier = 'iden', ?string $status = null): \Mockery\MockInterface
     {
         $dto = new PelicanServer(
             id: $pelicanServerId,
@@ -62,6 +62,7 @@ class PelicanMirrorSyncTest extends TestCase
             nestId: 0,
             isSuspended: $isSuspended,
             limits: new ServerLimits(memory: 1024, swap: 0, disk: 5000, io: 500, cpu: 100),
+            status: $status,
         );
 
         $mock = Mockery::mock(PelicanApplicationService::class);
@@ -171,6 +172,105 @@ class PelicanMirrorSyncTest extends TestCase
         $job->handle($mock, app(\App\Services\Bridge\BridgeModeService::class));
 
         $this->assertDatabaseMissing('servers', ['pelican_server_id' => 100]);
+    }
+
+    public function test_install_lifecycle_starts_persists_provisioning_status(): void
+    {
+        // `created: Server` fires the moment Pelican inserts the row with
+        // status=installing. Peregrine should mirror that as `provisioning`
+        // so the UI can show "Installation en cours…" without polling.
+        $owner = User::factory()->create(['pelican_user_id' => 7]);
+        $this->mockPelicanGetServer(150, 7, name: 'fresh', identifier: 'fr3sh', status: 'installing');
+
+        $job = new SyncServerFromPelicanWebhookJob(
+            eventType: 'eloquent.created: App\\Models\\Server',
+            pelicanServerId: 150,
+            payloadSnapshot: [
+                'id' => 150,
+                'identifier' => 'fr3sh',
+                'name' => 'fresh',
+                'user' => 7,
+                'status' => 'installing',
+                'updated_at' => '2026-04-29 11:45:00',
+            ],
+        );
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
+
+        $this->assertDatabaseHas('servers', [
+            'pelican_server_id' => 150,
+            'status' => 'provisioning',
+        ]);
+    }
+
+    public function test_install_lifecycle_completion_flips_provisioning_to_active(): void
+    {
+        // `event: Server\Installed` (successful) — Pelican has cleared the
+        // installing status (DTO.status === null). The full-upsert path must
+        // bring the local row to `active`.
+        $owner = User::factory()->create(['pelican_user_id' => 7]);
+        Server::create([
+            'pelican_server_id' => 151,
+            'user_id' => $owner->id,
+            'name' => 'fresh',
+            'identifier' => 'fr3sh',
+            'status' => 'provisioning',
+        ]);
+        $this->mockPelicanGetServer(151, 7, name: 'fresh', identifier: 'fr3sh', status: null);
+
+        $job = new SyncServerFromPelicanWebhookJob(
+            eventType: 'event: Server\\Installed',
+            pelicanServerId: 151,
+            payloadSnapshot: [
+                'id' => 151,
+                'identifier' => 'fr3sh',
+                'name' => 'fresh',
+                'user' => 7,
+                'status' => null,
+                'installed_at' => '2026-04-29 11:50:00',
+                'updated_at' => '2026-04-29 11:50:00',
+            ],
+        );
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
+
+        $this->assertDatabaseHas('servers', [
+            'pelican_server_id' => 151,
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_install_lifecycle_failure_flips_to_provisioning_failed(): void
+    {
+        // `event: Server\Installed` with successful=false — Pelican sets
+        // server.status to `install_failed`. Peregrine mirrors that as
+        // `provisioning_failed` so the UI can prompt for retry.
+        $owner = User::factory()->create(['pelican_user_id' => 7]);
+        Server::create([
+            'pelican_server_id' => 152,
+            'user_id' => $owner->id,
+            'name' => 'broken',
+            'identifier' => 'brk',
+            'status' => 'provisioning',
+        ]);
+        $this->mockPelicanGetServer(152, 7, name: 'broken', identifier: 'brk', status: 'install_failed');
+
+        $job = new SyncServerFromPelicanWebhookJob(
+            eventType: 'event: Server\\Installed',
+            pelicanServerId: 152,
+            payloadSnapshot: [
+                'id' => 152,
+                'identifier' => 'brk',
+                'name' => 'broken',
+                'user' => 7,
+                'status' => 'install_failed',
+                'updated_at' => '2026-04-29 11:50:00',
+            ],
+        );
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
+
+        $this->assertDatabaseHas('servers', [
+            'pelican_server_id' => 152,
+            'status' => 'provisioning_failed',
+        ]);
     }
 
     public function test_server_with_unknown_owner_dispatches_user_sync_first(): void
