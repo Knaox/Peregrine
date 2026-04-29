@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StepProps } from '../types';
-import { generateWebhookToken, getWebhookHeartbeat } from '../services/setupApi';
+import { generateWebhookToken, getWebhookHeartbeat, finalizeSetup } from '../services/setupApi';
 
 export function WebhookStep(_: StepProps) {
     const { t } = useTranslation();
@@ -199,7 +199,14 @@ export function WebhookStep(_: StepProps) {
                     rerun the install on Summary). Finish redirects to /. */}
                 <button
                     type="button"
-                    onClick={() => { window.location.href = '/'; }}
+                    onClick={async () => {
+                        // Tell the backend the wizard is done so EnsureInstalled
+                        // stops keeping /setup reachable, THEN navigate to /. We
+                        // await the call but don't block on errors — the sentinel
+                        // also auto-expires after 1h.
+                        await finalizeSetup();
+                        window.location.href = '/';
+                    }}
                     className="rounded-lg bg-[var(--color-primary)] px-5 py-2 text-sm font-medium text-white"
                 >
                     {token

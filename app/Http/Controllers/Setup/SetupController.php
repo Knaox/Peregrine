@@ -124,6 +124,15 @@ class SetupController extends Controller
             // value so the redirect loop stops on the very next page load.
             @touch(storage_path('.installed'));
 
+            // Drop a "wizard finishing" sentinel so EnsureInstalled keeps
+            // /setup reachable while the admin completes step 7 (Backfill)
+            // and step 8 (Webhook). Without this, a browser refresh or any
+            // asset reload between Summary success and Finish would kick
+            // the admin to / and leave them stuck. The sentinel is removed
+            // by the Finish button (POST /api/setup/finalize) and auto-
+            // expires after 1h to recover from abandoned wizards.
+            @touch(storage_path('.wizard_finishing'));
+
             // 5. Pelican URL + API keys → `settings` table (encrypted secrets).
             //    Done synchronously NOW (before the response) — these writes go
             //    to the DB so they don't share .env's permission limits, and
@@ -161,6 +170,23 @@ class SetupController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Mark the wizard as finished — removes the `.wizard_finishing`
+     * sentinel so the next visit to /setup gets redirected to / (no
+     * accidental re-entry). Called by WebhookStep's Finish button.
+     *
+     * Idempotent : missing sentinel returns success too. No auth — the
+     * sentinel itself is the only authority over wizard state.
+     */
+    public function finalize(): JsonResponse
+    {
+        $sentinel = storage_path('.wizard_finishing');
+        if (file_exists($sentinel)) {
+            @unlink($sentinel);
+        }
+        return response()->json(['success' => true]);
     }
 
     public function dockerDetect(): JsonResponse

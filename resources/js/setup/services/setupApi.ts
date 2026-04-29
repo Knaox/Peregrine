@@ -94,3 +94,17 @@ export async function getWebhookHeartbeat(): Promise<{ enabled: boolean; token_c
     });
     return await response.json() as { enabled: boolean; token_configured: boolean };
 }
+
+/**
+ * Tell the backend the wizard is done — removes the .wizard_finishing
+ * sentinel so EnsureInstalled stops keeping /setup reachable. Best-
+ * effort : the sentinel auto-expires after 1h anyway, so a transient
+ * network failure here doesn't leave anything broken.
+ */
+export async function finalizeSetup(): Promise<void> {
+    try {
+        await apiCall('/finalize', {});
+    } catch {
+        // best-effort cleanup — sentinel staleness cap takes over.
+    }
+}

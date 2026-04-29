@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AdminServersController;
+use App\Http\Controllers\Api\Admin\AdminThemeController;
 use App\Http\Controllers\Api\Auth\SocialAuthController;
 use App\Http\Controllers\Api\Auth\TwoFactorController;
 use App\Http\Controllers\Api\AuthController;
@@ -30,6 +31,7 @@ Route::prefix('setup')->group(function () {
     Route::post('test-database', [SetupController::class, 'testDatabase']);
     Route::post('test-pelican', [SetupController::class, 'testPelican']);
     Route::post('install', [SetupController::class, 'install']);
+    Route::post('finalize', [SetupController::class, 'finalize']);
     Route::get('docker-detect', [SetupController::class, 'dockerDetect']);
     Route::post('backfill/start', [BackfillController::class, 'start']);
     Route::get('backfill/status', [BackfillController::class, 'status']);
@@ -204,6 +206,16 @@ Route::middleware('auth')->group(function () {
     // the two-factor middleware so the tightening of `auth_2fa_required_admins`
     // applies consistently with the Filament panel.
     Route::middleware(['admin', 'two-factor'])->get('admin/servers', [AdminServersController::class, 'index']);
+
+    // Admin: Theme Studio — saves the entire theme payload (colors, typo,
+    // density, sidebar/card config) in one shot from the React studio at
+    // /theme-studio. Filament's ThemeSettings page still works in parallel.
+    Route::middleware('admin')->prefix('admin/theme')->group(function () {
+        Route::get('state', [AdminThemeController::class, 'state']);
+        Route::get('presets', [AdminThemeController::class, 'presets']);
+        Route::post('save', [AdminThemeController::class, 'save']);
+        Route::post('reset', [AdminThemeController::class, 'reset']);
+    });
 
     // Admin: plugins management
     Route::middleware('admin')->prefix('admin/plugins')->group(function () {
