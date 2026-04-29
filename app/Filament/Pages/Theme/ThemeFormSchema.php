@@ -11,10 +11,30 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Set;
 
 final class ThemeFormSchema
 {
+    public static function tabs(): Tabs
+    {
+        return Tabs::make('theme-tabs')
+            ->tabs([
+                Tab::make(__('admin.tabs.colors'))
+                    ->icon('heroicon-o-swatch')
+                    ->schema(self::colorSections()),
+                Tab::make(__('admin.tabs.cards'))
+                    ->icon('heroicon-o-rectangle-group')
+                    ->schema([self::cardSection()]),
+                Tab::make(__('admin.tabs.sidebar'))
+                    ->icon('heroicon-o-bars-3-bottom-left')
+                    ->schema([self::sidebarSection()]),
+            ])
+            ->columnSpanFull();
+    }
+
+
     /** @return array<Section> */
     public static function colorSections(): array
     {

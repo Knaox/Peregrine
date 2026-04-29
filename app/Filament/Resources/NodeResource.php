@@ -6,7 +6,6 @@ use App\Filament\Actions\ResourceDeleteAction;
 use App\Filament\Resources\NodeResource\Pages;
 use App\Models\Node;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -19,9 +18,27 @@ class NodeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cpu-chip';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Pelican';
-
     protected static ?int $navigationSort = 3;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.pelican');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.nodes.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.resources.nodes.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.resources.nodes.plural');
+    }
 
     public static function canCreate(): bool
     {
@@ -61,9 +78,15 @@ class NodeResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([])
+            ->filters([
+                Tables\Filters\SelectFilter::make('location')
+                    ->options(fn () => Node::query()
+                        ->whereNotNull('location')
+                        ->distinct()
+                        ->pluck('location', 'location')
+                        ->all()),
+            ])
             ->recordActions([
-                ViewAction::make(),
                 ResourceDeleteAction::row(),
             ])
             ->toolbarActions([
@@ -71,7 +94,10 @@ class NodeResource extends Resource
                     ResourceDeleteAction::bulk(),
                 ]),
             ])
-            ->defaultSort('id', 'desc');
+            ->defaultSort('id', 'desc')
+            ->emptyStateIcon('heroicon-o-cpu-chip')
+            ->emptyStateHeading(__('admin.resources.nodes.plural'))
+            ->emptyStateDescription(__('admin.common.empty_states.nodes'));
     }
 
     public static function getPages(): array

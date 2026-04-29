@@ -16,11 +16,27 @@ class PelicanAllocationResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-globe-alt';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Pelican Mirror';
-
     protected static ?int $navigationSort = 42;
 
-    protected static ?string $navigationLabel = 'Allocations';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.pelican_mirror');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.pelican_allocations.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.resources.pelican_allocations.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.resources.pelican_allocations.plural');
+    }
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -52,7 +68,10 @@ class PelicanAllocationResource extends Resource
             ])
             ->defaultSort('port', 'asc')
             ->recordActions([])
-            ->toolbarActions([]);
+            ->toolbarActions([])
+            ->emptyStateIcon('heroicon-o-globe-alt')
+            ->emptyStateHeading(__('admin.resources.pelican_allocations.plural'))
+            ->emptyStateDescription(__('admin.common.empty_states.logs'));
     }
 
     public static function getPages(): array

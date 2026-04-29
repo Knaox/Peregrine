@@ -43,21 +43,23 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->userMenuItems([
                 MenuItem::make()
-                    ->label('Player panel')
+                    ->label(fn () => __('admin.navigation.player_panel'))
                     ->url('/')
                     ->icon('heroicon-o-arrow-left'),
             ])
             ->sidebarCollapsibleOnDesktop()
             ->navigationItems([
-                NavigationItem::make('Player panel')
+                NavigationItem::make('player-panel')
+                    ->label(fn () => __('admin.navigation.player_panel'))
                     ->url('/')
                     ->icon('heroicon-o-arrow-left')
                     ->sort(100),
             ])
             ->navigationGroups([
-                'Servers',
-                'Pelican',
-                'Settings',
+                __('admin.navigation.groups.servers'),
+                __('admin.navigation.groups.pelican'),
+                __('admin.navigation.groups.pelican_mirror'),
+                __('admin.navigation.groups.settings'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

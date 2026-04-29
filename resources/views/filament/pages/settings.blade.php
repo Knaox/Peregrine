@@ -1,11 +1,7 @@
 <x-filament-panels::page>
-    <form wire:submit="save">
-        {{ $this->form }}
-
-        <div class="mt-6 flex gap-3">
-            @foreach ($this->getFormActions() as $action)
-                {{ $action }}
-            @endforeach
-        </div>
-    </form>
+    @include('filament.pages.partials.settings-shell', [
+        'subtitle' => __('admin.pages.settings.subtitle'),
+        'form' => $this->form,
+        'actions' => $this->getFormActions(),
+    ])
 </x-filament-panels::page>

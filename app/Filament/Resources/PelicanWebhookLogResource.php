@@ -9,6 +9,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use UnitEnum;
+use Filament\Actions\Action;
+use Illuminate\Support\HtmlString;
 
 /**
  * Read-only audit page for Pelican outgoing webhooks Peregrine has accepted.
@@ -25,11 +27,27 @@ class PelicanWebhookLogResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Pelican';
-
     protected static ?int $navigationSort = 31;
 
-    protected static ?string $navigationLabel = 'Webhook logs';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.pelican');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.pelican_webhook_logs.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.resources.pelican_webhook_logs.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.resources.pelican_webhook_logs.plural');
+    }
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -82,9 +100,54 @@ class PelicanWebhookLogResource extends Resource
                     ->copyable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->recordActions([])
+            ->filters([
+                Tables\Filters\SelectFilter::make('event_type')
+                    ->label('Event type')
+                    ->options(fn () => PelicanProcessedEvent::query()
+                        ->distinct()
+                        ->orderBy('event_type')
+                        ->pluck('event_type', 'event_type')
+                        ->all()),
+                Tables\Filters\SelectFilter::make('response_status')
+                    ->label('HTTP outcome')
+                    ->options([
+                        '2xx' => '2xx — accepted',
+                        '4xx' => '4xx — rejected',
+                        '5xx' => '5xx — handler error',
+                    ])
+                    ->query(function ($query, array $data) {
+                        $value = $data['value'] ?? null;
+                        return match ($value) {
+                            '2xx' => $query->whereBetween('response_status', [200, 299]),
+                            '4xx' => $query->whereBetween('response_status', [400, 499]),
+                            '5xx' => $query->whereBetween('response_status', [500, 599]),
+                            default => $query,
+                        };
+                    }),
+                Tables\Filters\TernaryFilter::make('error_message')
+                    ->label('Has error')
+                    ->nullable(),
+            ])
+            ->recordActions([
+                Action::make('viewError')
+                    ->label('View error')
+                    ->icon('heroicon-o-exclamation-circle')
+                    ->color('danger')
+                    ->visible(fn (PelicanProcessedEvent $record): bool => ! empty($record->error_message))
+                    ->modalHeading('Handler error')
+                    ->modalContent(fn (PelicanProcessedEvent $record): HtmlString => new HtmlString(
+                        '<pre class="text-xs bg-gray-50 dark:bg-gray-900 p-4 rounded-md overflow-auto max-h-[60vh] whitespace-pre-wrap break-all">'
+                        . e((string) $record->error_message)
+                        . '</pre>'
+                    ))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Close'),
+            ])
             ->toolbarActions([])
-            ->defaultSort('processed_at', 'desc');
+            ->defaultSort('processed_at', 'desc')
+            ->emptyStateIcon('heroicon-o-bolt')
+            ->emptyStateHeading(__('admin.resources.pelican_webhook_logs.plural'))
+            ->emptyStateDescription(__('admin.common.empty_states.logs'));
     }
 
     public static function getPages(): array

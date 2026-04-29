@@ -21,15 +21,24 @@ class ThemeSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-paint-brush';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Settings';
-
     protected static ?int $navigationSort = 90;
 
-    protected static ?string $title = 'Theme';
-
-    protected static ?string $navigationLabel = 'Theme';
-
     protected string $view = 'filament.pages.theme-settings';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.pages.theme_settings.navigation');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.pages.theme_settings.title');
+    }
 
     // Theme color properties
     public ?string $theme_preset = 'orange';
@@ -127,9 +136,7 @@ class ThemeSettings extends Page implements HasForms
     public function form(Schema $schema): Schema
     {
         return $schema->schema([
-            ...ThemeFormSchema::colorSections(),
-            ThemeFormSchema::cardSection(),
-            ThemeFormSchema::sidebarSection(),
+            ThemeFormSchema::tabs(),
         ]);
     }
 

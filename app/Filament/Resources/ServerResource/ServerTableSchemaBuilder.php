@@ -7,9 +7,11 @@ use App\Jobs\ProvisionServerJob;
 use App\Models\Server;
 use App\Services\Bridge\BridgeModeService;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
+use Filament\Support\Enums\Size;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -33,13 +35,22 @@ final class ServerTableSchemaBuilder
         return $table
             ->columns($columns)
             ->filters($filters)
-            ->recordActions($recordActions)
+            ->recordActions([
+                ActionGroup::make($recordActions)
+                    ->icon('heroicon-o-ellipsis-vertical')
+                    ->size(Size::Small)
+                    ->button()
+                    ->dropdownPlacement('bottom-end'),
+            ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     ResourceDeleteAction::bulk(),
                 ]),
             ])
-            ->defaultSort('id', 'desc');
+            ->defaultSort('id', 'desc')
+            ->emptyStateIcon('heroicon-o-server-stack')
+            ->emptyStateHeading(__('admin.resources.servers.plural'))
+            ->emptyStateDescription(__('admin.common.empty_states.servers'));
     }
 
     /**
@@ -123,13 +134,27 @@ final class ServerTableSchemaBuilder
                     'stopped' => 'Stopped',
                     'suspended' => 'Suspended',
                     'terminated' => 'Terminated',
+                    'provisioning' => 'Provisioning',
+                    'provisioning_failed' => 'Provisioning failed',
                     'offline' => 'Offline',
-                ]),
+                ])
+                ->multiple(),
+            Tables\Filters\SelectFilter::make('user_id')
+                ->label('Owner')
+                ->relationship('user', 'name')
+                ->searchable()
+                ->preload(),
+            Tables\Filters\SelectFilter::make('egg_id')
+                ->label('Egg')
+                ->relationship('egg', 'name')
+                ->searchable()
+                ->preload(),
         ];
 
         if ($isShopStripe) {
             $filters[] = Tables\Filters\TernaryFilter::make('plan_id')->label('Has Plan')->nullable();
             $filters[] = Tables\Filters\TernaryFilter::make('stripe_subscription_id')->label('Has Stripe Subscription')->nullable();
+            $filters[] = Tables\Filters\TernaryFilter::make('scheduled_deletion_at')->label('Scheduled for deletion')->nullable();
         }
 
         return $filters;

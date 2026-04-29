@@ -13,7 +13,10 @@ class RecentServersWidget extends BaseWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    protected static ?string $heading = 'Recent Servers';
+    public function getHeading(): string
+    {
+        return __('admin.widgets.recent_servers');
+    }
 
     public function table(Table $table): Table
     {
@@ -28,7 +31,7 @@ class RecentServersWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label('Owner'),
+                    ->label(__('servers.fields.owner', [], 'Owner') ?: 'Owner'),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {

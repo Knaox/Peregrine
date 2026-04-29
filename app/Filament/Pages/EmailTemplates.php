@@ -23,15 +23,24 @@ class EmailTemplates extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-envelope';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Settings';
-
     protected static ?int $navigationSort = 85;
 
-    protected static ?string $title = 'Email Templates';
-
-    protected static ?string $navigationLabel = 'Email Templates';
-
     protected string $view = 'filament.pages.email-templates';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.pages.email_templates.navigation');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.pages.email_templates.title');
+    }
 
     // Invitation template fields — legacy layout kept as-is for backward compat
     public ?string $invitation_subject_en = '';

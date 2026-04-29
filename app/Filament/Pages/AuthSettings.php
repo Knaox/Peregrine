@@ -32,13 +32,24 @@ class AuthSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Settings';
-
     protected static ?int $navigationSort = 50;
 
-    protected static ?string $title = 'Auth & Security';
-
     protected string $view = 'filament.pages.auth-settings';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.pages.auth_settings.navigation');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.pages.auth_settings.title');
+    }
 
     public bool $auth_local_enabled = true;
     public bool $auth_local_registration_enabled = true;

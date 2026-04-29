@@ -41,13 +41,24 @@ class BridgeSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-link';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Settings';
-
     protected static ?int $navigationSort = 55;
 
-    protected static ?string $title = 'Bridge';
-
     protected string $view = 'filament.pages.bridge-settings';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.pages.bridge_settings.navigation');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.pages.bridge_settings.title');
+    }
 
     public string $bridge_mode = 'disabled';
 

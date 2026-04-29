@@ -23,15 +23,24 @@ class Plugins extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-puzzle-piece';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Settings';
-
     protected static ?int $navigationSort = 80;
 
-    protected static ?string $title = 'Plugins';
-
-    protected static ?string $navigationLabel = 'Plugins';
-
     protected string $view = 'filament.pages.plugins';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.pages.plugins.navigation');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.pages.plugins.title');
+    }
 
     /** @var array<int, array<string, mixed>> */
     public array $plugins = [];

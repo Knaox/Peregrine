@@ -31,11 +31,27 @@ class ServerPlanResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Servers';
-
     protected static ?int $navigationSort = 2;
 
-    protected static ?string $navigationLabel = 'Plans';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.servers');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.server_plans.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.resources.server_plans.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.resources.server_plans.plural');
+    }
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -47,8 +63,7 @@ class ServerPlanResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            ServerPlanFormSchema::shopMirrorSection(),
-            ServerPlanFormSchema::peregrineConfigSection(),
+            ServerPlanFormSchema::tabs(),
         ]);
     }
 

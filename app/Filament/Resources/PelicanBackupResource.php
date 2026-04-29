@@ -20,11 +20,27 @@ class PelicanBackupResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-archive-box';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Pelican Mirror';
-
     protected static ?int $navigationSort = 41;
 
-    protected static ?string $navigationLabel = 'Backups';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.pelican_mirror');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.pelican_backups.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.resources.pelican_backups.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.resources.pelican_backups.plural');
+    }
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -57,7 +73,10 @@ class PelicanBackupResource extends Resource
             ])
             ->defaultSort('pelican_created_at', 'desc')
             ->recordActions([])
-            ->toolbarActions([]);
+            ->toolbarActions([])
+            ->emptyStateIcon('heroicon-o-archive-box')
+            ->emptyStateHeading(__('admin.resources.pelican_backups.plural'))
+            ->emptyStateDescription(__('admin.common.empty_states.logs'));
     }
 
     public static function getPages(): array

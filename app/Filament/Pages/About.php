@@ -13,15 +13,24 @@ class About extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-information-circle';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Settings';
-
     protected static ?int $navigationSort = 99;
 
-    protected static ?string $title = 'About & Updates';
-
-    protected static ?string $navigationLabel = 'About';
-
     protected string $view = 'filament.pages.about';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.pages.about.navigation');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.pages.about.title');
+    }
 
     public string $currentVersion = '';
 

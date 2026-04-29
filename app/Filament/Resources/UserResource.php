@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\Pelican\PelicanApplicationService;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
@@ -18,6 +19,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Size;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Http\Client\RequestException;
@@ -30,17 +32,73 @@ class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static string|UnitEnum|null $navigationGroup = null;
-
     protected static ?int $navigationSort = 1;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.users.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.resources.users.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.resources.users.plural');
+    }
 
     public static function form(Schema $schema): Schema
     {
         $isShopStripe = app(\App\Services\Bridge\BridgeModeService::class)->isShopStripe();
 
+        $integrationFields = [
+            Section::make(__('admin.tabs.pelican_link'))
+                ->icon('heroicon-o-link')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('pelican_user_id')
+                        ->label('Pelican User ID')
+                        ->helperText('Manual override — changing this re-maps the user to a different Pelican account without touching Pelican.')
+                        ->numeric()
+                        ->nullable(),
+                ]),
+        ];
+
+        if ($isShopStripe) {
+            $integrationFields[] = Section::make(__('admin.tabs.stripe_link'))
+                ->icon('heroicon-o-credit-card')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('stripe_customer_id')
+                        ->label('Stripe Customer ID')
+                        ->maxLength(255)
+                        ->helperText('Set automatically by the first Stripe checkout. Edit only to fix a mismatch.'),
+                ]);
+        }
+
+        $integrationFields[] = Section::make(__('admin.tabs.oauth_link'))
+            ->icon('heroicon-o-identification')
+            ->description(__('admin.common.system_managed'))
+            ->columns(2)
+            ->collapsed()
+            ->schema([
+                TextInput::make('oauth_provider')
+                    ->label('OAuth Provider')
+                    ->disabled()
+                    ->placeholder('—'),
+                TextInput::make('oauth_id')
+                    ->label('OAuth ID')
+                    ->disabled()
+                    ->placeholder('—'),
+            ]);
+
         return $schema
             ->schema([
-                Section::make('User Information')
+                Section::make('Identity')
+                    ->icon('heroicon-o-user')
+                    ->columns(2)
                     ->schema([
                         TextInput::make('name')
                             ->required()
@@ -49,43 +107,31 @@ class UserResource extends Resource
                             ->email()
                             ->required()
                             ->maxLength(255)
-                            ->unique(ignoreRecord: true),
+                            ->unique(ignoreRecord: true)
+                            ->prefixIcon('heroicon-o-envelope'),
                         TextInput::make('password')
                             ->password()
+                            ->revealable()
                             ->required()
                             ->maxLength(255)
-                            ->visibleOn('create'),
+                            ->minLength(8)
+                            ->visibleOn('create')
+                            ->helperText('Minimum 8 characters. Hashed with bcrypt before storage.'),
                         Select::make('locale')
                             ->options([
                                 'en' => 'English',
                                 'fr' => 'Français',
                             ])
-                            ->default('en'),
+                            ->default('en')
+                            ->native(false),
                         Toggle::make('is_admin')
                             ->label('Administrator')
-                            ->default(false),
-                    ])->columns(2),
+                            ->helperText('Grants access to /admin and elevates Gate::before whitelist (Server only).')
+                            ->default(false)
+                            ->columnSpanFull(),
+                    ]),
 
-                Section::make('External Integrations')
-                    ->schema(array_filter([
-                        TextInput::make('pelican_user_id')
-                            ->label('Pelican User ID')
-                            ->helperText('Manual override — changing this re-maps the user to a different Pelican account without touching Pelican.')
-                            ->numeric()
-                            ->nullable(),
-                        // Stripe Customer ID only relevant in Shop+Stripe mode.
-                        $isShopStripe
-                            ? TextInput::make('stripe_customer_id')
-                                ->label('Stripe Customer ID')
-                                ->maxLength(255)
-                            : null,
-                        TextInput::make('oauth_provider')
-                            ->label('OAuth Provider')
-                            ->disabled(),
-                        TextInput::make('oauth_id')
-                            ->label('OAuth ID')
-                            ->disabled(),
-                    ]))->columns(2),
+                ...$integrationFields,
             ]);
     }
 
@@ -95,15 +141,22 @@ class UserResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('medium'),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->copyable()
+                    ->color('gray'),
                 Tables\Columns\TextColumn::make('locale')
-                    ->badge()
+                    ->label('Lang')
+                    ->formatStateUsing(fn (?string $state): string => strtoupper($state ?? 'EN'))
+                    ->color('gray')
+                    ->size('xs')
                     ->sortable(),
                 Tables\Columns\IconColumn::make('is_admin')
                     ->label('Admin')
@@ -142,8 +195,31 @@ class UserResource extends Resource
                     ->nullable(),
             ])
             ->recordActions([
-                EditAction::make(),
-                Action::make('link_to_pelican')
+                ActionGroup::make([
+                    EditAction::make(),
+                    self::linkToPelicanAction(),
+                    self::changePasswordAction(),
+                    ResourceDeleteAction::row(),
+                ])
+                    ->icon('heroicon-o-ellipsis-vertical')
+                    ->size(Size::Small)
+                    ->button()
+                    ->dropdownPlacement('bottom-end'),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    ResourceDeleteAction::bulk(),
+                ]),
+            ])
+            ->defaultSort('id', 'desc')
+            ->emptyStateIcon('heroicon-o-users')
+            ->emptyStateHeading(__('admin.resources.users.plural'))
+            ->emptyStateDescription(__('admin.common.empty_states.users'));
+    }
+
+    private static function linkToPelicanAction(): Action
+    {
+        return Action::make('link_to_pelican')
                     ->label('Link to Pelican')
                     ->icon('heroicon-o-link')
                     ->color('success')
@@ -158,8 +234,12 @@ class UserResource extends Resource
                             ->body("Background job queued for {$record->email}. Refresh in a few seconds to see the linked status.")
                             ->success()
                             ->send();
-                    }),
-                Action::make('change_password')
+                    });
+    }
+
+    private static function changePasswordAction(): Action
+    {
+        return Action::make('change_password')
                     ->label('Change password')
                     ->icon('heroicon-o-key')
                     ->color('warning')
@@ -204,15 +284,7 @@ class UserResource extends Resource
                             ->title('Password changed')
                             ->success()
                             ->send();
-                    }),
-                ResourceDeleteAction::row(),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    ResourceDeleteAction::bulk(),
-                ]),
-            ])
-            ->defaultSort('id', 'desc');
+                    });
     }
 
     public static function getRelations(): array

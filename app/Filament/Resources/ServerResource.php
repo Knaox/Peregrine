@@ -18,9 +18,27 @@ class ServerResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-server-stack';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Servers';
-
     protected static ?int $navigationSort = 1;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.servers');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.servers.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.resources.servers.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.resources.servers.plural');
+    }
 
     public static function form(Schema $schema): Schema
     {

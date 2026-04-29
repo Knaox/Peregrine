@@ -1,11 +1,16 @@
 <x-filament-panels::page>
-    <form wire:submit="save">
-        {{ $this->form }}
+    @php
+        $bridgeActive = app(\App\Services\Bridge\BridgeModeService::class)->isShopStripe();
+        $badges = [];
+        if ($bridgeActive) {
+            $badges[] = ['label' => __('admin.badges.bridge_mode.shop_stripe'), 'color' => 'success', 'icon' => 'heroicon-o-link'];
+        }
+    @endphp
 
-        <div class="mt-6 flex gap-3">
-            @foreach ($this->getFormActions() as $action)
-                {{ $action }}
-            @endforeach
-        </div>
-    </form>
+    @include('filament.pages.partials.settings-shell', [
+        'subtitle' => __('admin.pages.email_templates.subtitle'),
+        'badges' => $badges,
+        'form' => $this->form,
+        'actions' => $this->getFormActions(),
+    ])
 </x-filament-panels::page>

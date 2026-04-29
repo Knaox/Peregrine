@@ -22,13 +22,24 @@ class Settings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Settings';
-
     protected static ?int $navigationSort = 99;
 
-    protected static ?string $title = 'Settings';
-
     protected string $view = 'filament.pages.settings';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.pages.settings.navigation');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.pages.settings.title');
+    }
 
     // Appearance
     public ?string $app_name = '';

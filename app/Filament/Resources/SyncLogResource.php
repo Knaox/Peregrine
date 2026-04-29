@@ -4,10 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SyncLogResource\Pages;
 use App\Models\SyncLog;
-use Filament\Actions\ViewAction;
+use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use BackedEnum;
 use UnitEnum;
 
@@ -17,11 +18,27 @@ class SyncLogResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-path';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Settings';
-
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $navigationLabel = 'Sync Logs';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.settings');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.sync_logs.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.resources.sync_logs.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.resources.sync_logs.plural');
+    }
 
     public static function canCreate(): bool
     {
@@ -51,9 +68,15 @@ class SyncLogResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('summary')
                     ->label('Summary')
-                    ->formatStateUsing(fn ($state): string => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : (string) $state)
-                    ->wrap()
-                    ->limit(80),
+                    ->formatStateUsing(function ($state): string {
+                        if (! is_array($state)) {
+                            return (string) $state;
+                        }
+                        $first = collect($state)->take(2)->map(fn ($v, $k) => "{$k}: " . (is_scalar($v) ? $v : json_encode($v)))->implode(' • ');
+                        return $first ?: '—';
+                    })
+                    ->limit(60)
+                    ->color('gray'),
                 Tables\Columns\TextColumn::make('started_at')
                     ->dateTime()
                     ->sortable(),
@@ -77,12 +100,39 @@ class SyncLogResource extends Resource
                     })
                     ->placeholder('—'),
             ])
-            ->filters([])
+            ->filters([
+                Tables\Filters\SelectFilter::make('type')
+                    ->options(fn () => SyncLog::query()
+                        ->distinct()
+                        ->pluck('type', 'type')
+                        ->all()),
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'running' => 'Running',
+                        'completed' => 'Completed',
+                        'failed' => 'Failed',
+                    ]),
+            ])
             ->recordActions([
-                ViewAction::make(),
+                Action::make('viewPayload')
+                    ->label(__('admin.common.view_payload'))
+                    ->icon('heroicon-o-code-bracket')
+                    ->color('gray')
+                    ->modalHeading(__('admin.common.payload_modal_title'))
+                    ->modalContent(fn (SyncLog $record): HtmlString => new HtmlString(
+                        '<pre class="text-xs bg-gray-50 dark:bg-gray-900 p-4 rounded-md overflow-auto max-h-[60vh] whitespace-pre-wrap break-all">'
+                        . e(is_array($record->summary) ? json_encode($record->summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : (string) $record->summary)
+                        . '</pre>'
+                    ))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Close'),
             ])
             ->toolbarActions([])
-            ->defaultSort('id', 'desc');
+            ->defaultSort('id', 'desc')
+            ->emptyStateIcon('heroicon-o-arrow-path')
+            ->emptyStateHeading(__('admin.resources.sync_logs.plural'))
+            ->emptyStateDescription(__('admin.common.empty_states.logs'));
     }
 
     public static function getPages(): array

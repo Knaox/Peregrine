@@ -32,7 +32,10 @@ final class ServerPlanTable
             ->filters(self::filters())
             ->recordActions(self::recordActions())
             ->toolbarActions(self::toolbarActions())
-            ->defaultSort('id', 'desc');
+            ->defaultSort('id', 'desc')
+            ->emptyStateIcon('heroicon-o-clipboard-document-list')
+            ->emptyStateHeading(__('admin.resources.server_plans.plural'))
+            ->emptyStateDescription(__('admin.common.empty_states.plans'));
     }
 
     /**
@@ -54,11 +57,19 @@ final class ServerPlanTable
                 ),
             Tables\Columns\TextColumn::make('egg.name')
                 ->label('Egg')
-                ->placeholder('⚠️ Not configured')
+                ->placeholder(__('admin.common.not_configured'))
+                ->color(fn ($state) => $state === null ? 'warning' : null)
+                ->icon(fn ($state) => $state === null ? 'heroicon-o-exclamation-triangle' : null)
+                ->tooltip(fn ($state) => $state === null
+                    ? 'No egg configured — provisioning will fail until you pick one in the plan edit page.'
+                    : null)
                 ->sortable(),
             Tables\Columns\TextColumn::make('node.name')
                 ->label('Node')
-                ->placeholder('Auto')
+                ->placeholder(__('admin.common.auto'))
+                ->tooltip(fn ($state) => $state === null
+                    ? 'Auto: a node from the allowed list will be picked at provisioning time based on resources.'
+                    : null)
                 ->sortable(),
             Tables\Columns\TextColumn::make('ram')
                 ->label('RAM')

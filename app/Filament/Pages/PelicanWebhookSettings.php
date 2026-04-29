@@ -43,17 +43,26 @@ class PelicanWebhookSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bolt';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Pelican';
-
     protected static ?int $navigationSort = 30;
-
-    protected static ?string $title = 'Pelican Webhook';
-
-    protected static ?string $navigationLabel = 'Webhook receiver';
 
     protected static ?string $slug = 'pelican-webhook-settings';
 
     protected string $view = 'filament.pages.pelican-webhook-settings';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.pelican');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.pages.pelican_webhook_settings.navigation');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.pages.pelican_webhook_settings.title');
+    }
 
     public bool $pelican_webhook_enabled = false;
 

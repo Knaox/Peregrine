@@ -16,11 +16,27 @@ class PelicanServerTransferResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrows-right-left';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Pelican Mirror';
-
     protected static ?int $navigationSort = 43;
 
-    protected static ?string $navigationLabel = 'Server transfers';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.groups.pelican_mirror');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.pelican_server_transfers.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.resources.pelican_server_transfers.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.resources.pelican_server_transfers.plural');
+    }
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -42,7 +58,10 @@ class PelicanServerTransferResource extends Resource
                 Tables\Columns\TextColumn::make('server.name')->label('Server')->searchable(),
                 Tables\Columns\TextColumn::make('old_node')->label('From node')->placeholder('—'),
                 Tables\Columns\TextColumn::make('new_node')->label('To node')->placeholder('—'),
-                Tables\Columns\IconColumn::make('successful')->boolean()->placeholder('⏳'),
+                Tables\Columns\IconColumn::make('successful')
+                    ->boolean()
+                    ->placeholder('—')
+                    ->tooltip(fn ($state) => $state === null ? 'In progress' : null),
                 Tables\Columns\IconColumn::make('archived')->boolean(),
                 Tables\Columns\TextColumn::make('pelican_created_at')->label('Started')->dateTime()->sortable(),
             ])
@@ -52,7 +71,10 @@ class PelicanServerTransferResource extends Resource
             ])
             ->defaultSort('pelican_created_at', 'desc')
             ->recordActions([])
-            ->toolbarActions([]);
+            ->toolbarActions([])
+            ->emptyStateIcon('heroicon-o-arrows-right-left')
+            ->emptyStateHeading(__('admin.resources.pelican_server_transfers.plural'))
+            ->emptyStateDescription(__('admin.common.empty_states.logs'));
     }
 
     public static function getPages(): array
