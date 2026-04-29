@@ -89,14 +89,14 @@ class EmailTemplates extends Page implements HasForms
     public function form(Schema $schema): Schema
     {
         $sections = [
-            Section::make('Global')
-                ->description('Settings applied to all emails sent by Peregrine.')
+            Section::make(__('admin.email_templates.global_section'))
+                ->description(__('admin.email_templates.global_description'))
                 ->icon('heroicon-o-cog-6-tooth')
                 ->collapsible()
                 ->schema([
                     TextInput::make('email_footer_text')
-                        ->label('Footer text')
-                        ->helperText('Appears at the bottom of every email. Leave empty for default.'),
+                        ->label(__('admin.email_templates.footer'))
+                        ->helperText(__('admin.email_templates.footer_helper')),
                 ]),
         ];
 
@@ -114,24 +114,24 @@ class EmailTemplates extends Page implements HasForms
 
         // Only show invitation templates if the invitations plugin is active
         if ($this->isPluginActive('invitations')) {
-            $sections[] = Section::make('Invitation Email — English')
-                ->description('Template for server invitation emails (EN). Use variables: {inviter_name}, {server_name}, {permissions_list}, {accept_url}, {expires_at}, {app_name}.')
+            $sections[] = Section::make(__('admin.email_templates.invitation_en'))
+                ->description(__('admin.email_templates.invitation_en_description'))
                 ->icon('heroicon-o-envelope')
                 ->collapsible()
                 ->collapsed()
                 ->schema([
-                    TextInput::make('invitation_subject_en')->label('Subject'),
-                    Textarea::make('invitation_body_en')->label('Body (HTML)')->rows(12),
+                    TextInput::make('invitation_subject_en')->label(__('admin.email_templates.subject')),
+                    Textarea::make('invitation_body_en')->label(__('admin.email_templates.body'))->rows(12),
                 ]);
 
-            $sections[] = Section::make('Invitation Email — French')
-                ->description('Template sent to recipients with a French locale.')
+            $sections[] = Section::make(__('admin.email_templates.invitation_fr'))
+                ->description(__('admin.email_templates.invitation_fr_description'))
                 ->icon('heroicon-o-envelope')
                 ->collapsible()
                 ->collapsed()
                 ->schema([
-                    TextInput::make('invitation_subject_fr')->label('Subject'),
-                    Textarea::make('invitation_body_fr')->label('Body (HTML)')->rows(12),
+                    TextInput::make('invitation_subject_fr')->label(__('admin.email_templates.subject')),
+                    Textarea::make('invitation_body_fr')->label(__('admin.email_templates.body'))->rows(12),
                 ]);
         }
 
@@ -151,10 +151,10 @@ class EmailTemplates extends Page implements HasForms
             ->collapsible()
             ->collapsed()
             ->schema([
-                TextInput::make("template_values.{$tpl['id']}.subject_en")->label('Subject (EN)'),
-                TextInput::make("template_values.{$tpl['id']}.subject_fr")->label('Subject (FR)'),
-                Textarea::make("template_values.{$tpl['id']}.body_en")->label('Body EN (HTML)')->rows(10),
-                Textarea::make("template_values.{$tpl['id']}.body_fr")->label('Body FR (HTML)')->rows(10),
+                TextInput::make("template_values.{$tpl['id']}.subject_en")->label(__('admin.email_templates.subject_en')),
+                TextInput::make("template_values.{$tpl['id']}.subject_fr")->label(__('admin.email_templates.subject_fr')),
+                Textarea::make("template_values.{$tpl['id']}.body_en")->label(__('admin.email_templates.body_en'))->rows(10),
+                Textarea::make("template_values.{$tpl['id']}.body_fr")->label(__('admin.email_templates.body_fr'))->rows(10),
             ]);
     }
 

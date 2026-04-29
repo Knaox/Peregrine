@@ -10,44 +10,44 @@ final class BrandingSection
 {
     public static function make(): Section
     {
-        return Section::make('Logo & Favicon')
-            ->description('Visual identity — uploaded files are served from /storage/branding.')
+        return Section::make(__('admin.settings_form.branding.section'))
+            ->description(__('admin.settings_form.branding.description'))
             ->icon('heroicon-o-photo')
             ->schema([
                 Select::make('logo_height')
-                    ->label('Logo Size')
+                    ->label(__('admin.settings_form.branding.logo_size'))
                     ->options([
-                        '24' => 'Small (24px)',
-                        '32' => 'Medium (32px)',
-                        '40' => 'Large (40px)',
-                        '48' => 'Extra Large (48px)',
-                        '56' => 'XXL (56px)',
+                        '24' => __('admin.settings_form.branding.logo_size_options.small'),
+                        '32' => __('admin.settings_form.branding.logo_size_options.medium'),
+                        '40' => __('admin.settings_form.branding.logo_size_options.large'),
+                        '48' => __('admin.settings_form.branding.logo_size_options.xl'),
+                        '56' => __('admin.settings_form.branding.logo_size_options.xxl'),
                     ])
                     ->default('40'),
                 FileUpload::make('logo_url')
-                    ->label('Logo (dark mode)')
+                    ->label(__('admin.settings_form.branding.logo_dark'))
                     ->image()
                     ->directory('branding')
                     ->disk('public')
                     ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
                     ->maxSize(3072)
-                    ->helperText('Default logo — shown in dark mode. Upload SVG, PNG, JPEG or WebP (max 3MB).'),
+                    ->helperText(__('admin.settings_form.branding.logo_dark_helper')),
                 FileUpload::make('logo_url_light')
-                    ->label('Logo (light mode)')
+                    ->label(__('admin.settings_form.branding.logo_light'))
                     ->image()
                     ->directory('branding')
                     ->disk('public')
                     ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'])
                     ->maxSize(3072)
-                    ->helperText('Optional — shown to users in light mode. If empty, the dark-mode logo is used for both.'),
+                    ->helperText(__('admin.settings_form.branding.logo_light_helper')),
                 FileUpload::make('favicon_url')
-                    ->label('Favicon')
+                    ->label(__('admin.settings_form.branding.favicon'))
                     ->image()
                     ->directory('branding')
                     ->disk('public')
                     ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/x-icon', 'image/vnd.microsoft.icon'])
                     ->maxSize(1024)
-                    ->helperText('Upload SVG, PNG or ICO (max 1MB).'),
+                    ->helperText(__('admin.settings_form.branding.favicon_helper')),
             ])->columns(1);
     }
 }

@@ -15,45 +15,54 @@ final class GeneralSection
      */
     public static function make(array $timezoneOptions): Section
     {
-        return Section::make('Identity')
-            ->description('Application name, default language, and top-bar navigation links.')
+        return Section::make(__('admin.settings_form.general.section'))
+            ->description(__('admin.settings_form.general.description'))
             ->icon('heroicon-o-identification')
             ->schema([
                 TextInput::make('app_name')
-                    ->label('Application Name')
+                    ->label(__('admin.settings_form.general.app_name'))
                     ->placeholder('Peregrine')
                     ->maxLength(255),
                 Toggle::make('show_app_name')
-                    ->label('Show application name in header')
-                    ->helperText('Disable if your logo already contains the name.'),
+                    ->label(__('admin.settings_form.general.show_app_name'))
+                    ->helperText(__('admin.settings_form.general.show_app_name_helper')),
                 Select::make('default_locale')
-                    ->label('Default language')
+                    ->label(__('admin.settings_form.general.default_language'))
                     ->options(['en' => 'English', 'fr' => 'Français'])
                     ->default('en')
                     ->required()
-                    ->helperText('Used for newly registered users (until they pick their own) and for the SPA when no language is detected from the browser.'),
+                    ->helperText(__('admin.settings_form.general.default_language_helper')),
                 Select::make('app_timezone')
-                    ->label('Application timezone')
+                    ->label(__('admin.settings_form.general.timezone'))
                     ->options($timezoneOptions)
                     ->default('UTC')
                     ->required()
                     ->searchable()
-                    ->helperText('Used by Carbon::now(), scheduled jobs, sync logs, and email timestamps. Changes apply on the next request — no restart required. Stored in DB so a Docker stack rebuild does not reset it.'),
+                    ->helperText(__('admin.settings_form.general.timezone_helper')),
                 Repeater::make('header_links')
-                    ->label('Header Navigation Links')
-                    ->helperText('Add custom links to the top navigation bar.')
+                    ->label(__('admin.settings_form.general.header_links'))
+                    ->helperText(__('admin.settings_form.general.header_links_helper'))
                     ->schema([
-                        TextInput::make('label')->label('Label (EN)')->required()->placeholder('Shop'),
-                        TextInput::make('label_fr')->label('Label (FR)')->placeholder('Boutique'),
-                        TextInput::make('url')->label('URL')->required()->placeholder('https://example.com'),
-                        Select::make('icon')->label('Icon')->options([
-                            'none' => 'No icon', 'home' => 'Home', 'shopping-bag' => 'Shop',
-                            'ticket' => 'Ticket', 'user' => 'User', 'cog' => 'Settings',
-                            'chat' => 'Chat / Discord', 'book' => 'Documentation', 'globe' => 'Website',
-                            'server' => 'Server', 'shield' => 'Security', 'heart' => 'Donate',
-                            'star' => 'Premium', 'link' => 'Link',
+                        TextInput::make('label')->label(__('admin.settings_form.general.label_en'))->required()->placeholder('Shop'),
+                        TextInput::make('label_fr')->label(__('admin.settings_form.general.label_fr'))->placeholder('Boutique'),
+                        TextInput::make('url')->label(__('admin.settings_form.general.url'))->required()->placeholder('https://example.com'),
+                        Select::make('icon')->label(__('admin.settings_form.general.icon'))->options([
+                            'none' => __('admin.settings_form.general.icons.none'),
+                            'home' => __('admin.settings_form.general.icons.home'),
+                            'shopping-bag' => __('admin.settings_form.general.icons.shop'),
+                            'ticket' => __('admin.settings_form.general.icons.ticket'),
+                            'user' => __('admin.settings_form.general.icons.user'),
+                            'cog' => __('admin.settings_form.general.icons.settings'),
+                            'chat' => __('admin.settings_form.general.icons.discord'),
+                            'book' => __('admin.settings_form.general.icons.docs'),
+                            'globe' => __('admin.settings_form.general.icons.website'),
+                            'server' => __('admin.settings_form.general.icons.server'),
+                            'shield' => __('admin.settings_form.general.icons.security'),
+                            'heart' => __('admin.settings_form.general.icons.donate'),
+                            'star' => __('admin.settings_form.general.icons.premium'),
+                            'link' => __('admin.settings_form.general.icons.link'),
                         ])->default('none'),
-                        Toggle::make('new_tab')->label('New tab')->default(true),
+                        Toggle::make('new_tab')->label(__('admin.settings_form.general.new_tab'))->default(true),
                     ])->columns(5)->reorderable()->defaultItems(0),
             ])->columns(1);
     }

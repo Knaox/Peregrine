@@ -20,64 +20,61 @@ final class PaymenterProviderSection
 {
     public static function make(string $redirectUri): Section
     {
-        return Section::make('Paymenter')
-            ->description('Open-source billing platform (paymenter.org). Acts as a canonical identity provider — auto-creates local users, syncs email to Pelican, surfaces a register URL. Mutually exclusive with Shop.')
+        return Section::make(__('admin.auth_form.paymenter.section'))
+            ->description(__('admin.auth_form.paymenter.description'))
             ->icon('heroicon-o-credit-card')
             ->schema([
-                Toggle::make('auth_paymenter_enabled')->label('Enable Paymenter as identity provider'),
+                Toggle::make('auth_paymenter_enabled')->label(__('admin.auth_form.paymenter.enable')),
 
                 TextInput::make('auth_paymenter_base_url')
-                    ->label('Paymenter base URL')
+                    ->label(__('admin.auth_form.paymenter.base_url'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder('https://billing.example.com')
-                    ->helperText('Root URL of your Paymenter install (no trailing slash). Peregrine derives <code>/oauth/authorize</code>, <code>/api/oauth/token</code> and <code>/api/me</code> from this base — you don\'t need to fill them separately.'),
+                    ->helperText(__('admin.auth_form.paymenter.base_url_helper')),
 
                 TextInput::make('auth_paymenter_client_id')
-                    ->label('Client ID')
+                    ->label(__('admin.auth_form.paymenter.client_id'))
                     ->maxLength(255)
-                    ->helperText('Created in Paymenter admin (OAuth Clients section). Copy the "Client ID" here.'),
+                    ->helperText(__('admin.auth_form.paymenter.client_id_helper')),
 
                 TextInput::make('auth_paymenter_client_secret')
-                    ->label('Client secret')
+                    ->label(__('admin.auth_form.paymenter.client_secret'))
                     ->password()
                     ->revealable()
                     ->maxLength(255)
-                    ->helperText('Leave blank to keep the stored value. Typing a new value replaces the encrypted envelope on save.'),
+                    ->helperText(__('admin.auth_form.paymenter.client_secret_helper')),
 
                 TextInput::make('auth_paymenter_redirect_uri')
-                    ->label('Redirect URI')
+                    ->label(__('admin.auth_form.paymenter.redirect'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder($redirectUri)
-                    ->helperText(
-                        'Where the OAuth server sends the user back. <strong>Must match EXACTLY</strong> the URL configured in Paymenter\'s OAuth Client. '
-                        . 'If you installed before setting up your reverse proxy, this may contain a stale internal IP — click "Reset to default" to use APP_URL.'
-                    )
+                    ->helperText(__('admin.auth_form.paymenter.redirect_helper'))
                     ->suffixAction(
                         Action::make('resetPaymenterRedirect')
                             ->icon('heroicon-o-arrow-path')
-                            ->tooltip('Reset to APP_URL default')
+                            ->tooltip(__('admin.auth_form.paymenter.reset_tooltip'))
                             ->color('gray')
                             ->action(function (Set $set) use ($redirectUri): void {
                                 $set('auth_paymenter_redirect_uri', $redirectUri);
                                 Notification::make()
-                                    ->title('Reset to APP_URL default')
-                                    ->body('Don\'t forget to update Paymenter\'s OAuth Client redirect URI to match — and click Save.')
+                                    ->title(__('admin.auth_form.paymenter.reset_notification_title'))
+                                    ->body(__('admin.auth_form.paymenter.reset_notification_body'))
                                     ->success()
                                     ->send();
                             }),
                     ),
 
                 TextInput::make('auth_paymenter_register_url')
-                    ->label('Paymenter register page URL (optional)')
+                    ->label(__('admin.auth_form.paymenter.register_url'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder('https://billing.example.com/register')
-                    ->helperText('Surface a "Create account on Paymenter" link on Peregrine\'s login page. Leave empty to keep local-only.'),
+                    ->helperText(__('admin.auth_form.paymenter.register_url_helper')),
 
                 FileUpload::make('auth_paymenter_logo_path')
-                    ->label('Custom button logo (optional)')
+                    ->label(__('admin.auth_form.paymenter.logo'))
                     ->image()
                     ->directory('branding/oauth')
                     ->disk('public')
@@ -90,7 +87,7 @@ final class PaymenterProviderSection
                         'image/vnd.microsoft.icon',
                     ])
                     ->maxSize(1024)
-                    ->helperText('Replaces the default Paymenter icon on the login button. SVG / PNG / JPEG / WebP / ICO, square preferred (max 1MB).'),
+                    ->helperText(__('admin.auth_form.paymenter.logo_helper')),
             ]);
     }
 }

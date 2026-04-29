@@ -39,12 +39,12 @@ final class ThemeFormSchema
     public static function colorSections(): array
     {
         return [
-            Section::make('Presets')
-                ->description('Apply a named bundle of colors, surfaces and accents in one click — then fine-tune below.')
+            Section::make(__('admin.theme_form.presets.section'))
+                ->description(__('admin.theme_form.presets.description'))
                 ->icon('heroicon-o-sparkles')
                 ->schema([
                     Select::make('theme_preset')
-                        ->label('Theme Preset')
+                        ->label(__('admin.theme_form.presets.theme_preset'))
                         ->options(ThemePresets::options())
                         ->default('orange')
                         ->live()
@@ -56,59 +56,61 @@ final class ThemeFormSchema
                                 $set($key, $value);
                             }
                         }),
-                    Select::make('theme_mode')->label('Color Mode')->options([
-                        'dark' => 'Dark', 'light' => 'Light', 'auto' => 'Auto (system)',
+                    Select::make('theme_mode')->label(__('admin.theme_form.presets.color_mode'))->options([
+                        'dark' => __('admin.theme_form.presets.mode_dark'),
+                        'light' => __('admin.theme_form.presets.mode_light'),
+                        'auto' => __('admin.theme_form.presets.mode_auto'),
                     ])->default('dark'),
                 ])->columns(2),
 
-            Section::make('Brand Colors')
+            Section::make(__('admin.theme_form.brand_colors.section'))
                 ->icon('heroicon-o-swatch')
                 ->collapsible()
                 ->schema([
-                    ColorPicker::make('theme_primary')->label('Primary'),
-                    ColorPicker::make('theme_primary_hover')->label('Primary Hover'),
-                    ColorPicker::make('theme_secondary')->label('Secondary / Accent'),
-                    ColorPicker::make('theme_ring')->label('Focus Ring'),
-                    ColorPicker::make('theme_danger')->label('Danger'),
-                    ColorPicker::make('theme_warning')->label('Warning'),
-                    ColorPicker::make('theme_success')->label('Success'),
-                    ColorPicker::make('theme_info')->label('Info'),
+                    ColorPicker::make('theme_primary')->label(__('admin.theme_form.brand_colors.primary')),
+                    ColorPicker::make('theme_primary_hover')->label(__('admin.theme_form.brand_colors.primary_hover')),
+                    ColorPicker::make('theme_secondary')->label(__('admin.theme_form.brand_colors.secondary')),
+                    ColorPicker::make('theme_ring')->label(__('admin.theme_form.brand_colors.ring')),
+                    ColorPicker::make('theme_danger')->label(__('admin.theme_form.brand_colors.danger')),
+                    ColorPicker::make('theme_warning')->label(__('admin.theme_form.brand_colors.warning')),
+                    ColorPicker::make('theme_success')->label(__('admin.theme_form.brand_colors.success')),
+                    ColorPicker::make('theme_info')->label(__('admin.theme_form.brand_colors.info')),
                     ColorPicker::make('theme_suspended')
-                        ->label('Suspended server accent')
+                        ->label(__('admin.theme_form.brand_colors.suspended'))
                         ->default('#f59e0b')
-                        ->helperText('Tiny pill + left border on server cards for suspended servers.'),
+                        ->helperText(__('admin.theme_form.brand_colors.suspended_helper')),
                     ColorPicker::make('theme_installing')
-                        ->label('Installing server accent')
+                        ->label(__('admin.theme_form.brand_colors.installing'))
                         ->default('#3b82f6')
-                        ->helperText('Tiny pill + left border on server cards during install.'),
+                        ->helperText(__('admin.theme_form.brand_colors.installing_helper')),
                 ])->columns(4),
 
-            Section::make('Background & Surfaces')
+            Section::make(__('admin.theme_form.background.section'))
                 ->icon('heroicon-o-square-3-stack-3d')
                 ->collapsible()
                 ->schema([
-                    ColorPicker::make('theme_background')->label('Background'),
-                    ColorPicker::make('theme_surface')->label('Surface'),
-                    ColorPicker::make('theme_surface_hover')->label('Surface Hover'),
-                    ColorPicker::make('theme_surface_elevated')->label('Surface Elevated'),
+                    ColorPicker::make('theme_background')->label(__('admin.theme_form.background.background')),
+                    ColorPicker::make('theme_surface')->label(__('admin.theme_form.background.surface')),
+                    ColorPicker::make('theme_surface_hover')->label(__('admin.theme_form.background.surface_hover')),
+                    ColorPicker::make('theme_surface_elevated')->label(__('admin.theme_form.background.surface_elevated')),
                 ])->columns(2),
 
-            Section::make('Borders & Text')
+            Section::make(__('admin.theme_form.borders.section'))
                 ->icon('heroicon-o-language')
                 ->collapsible()
                 ->schema([
-                    TextInput::make('theme_border')->label('Border'),
-                    TextInput::make('theme_border_hover')->label('Border Hover'),
-                    ColorPicker::make('theme_text_primary')->label('Text Primary'),
-                    ColorPicker::make('theme_text_secondary')->label('Text Secondary'),
-                    ColorPicker::make('theme_text_muted')->label('Text Muted'),
+                    TextInput::make('theme_border')->label(__('admin.theme_form.borders.border')),
+                    TextInput::make('theme_border_hover')->label(__('admin.theme_form.borders.border_hover')),
+                    ColorPicker::make('theme_text_primary')->label(__('admin.theme_form.borders.text_primary')),
+                    ColorPicker::make('theme_text_secondary')->label(__('admin.theme_form.borders.text_secondary')),
+                    ColorPicker::make('theme_text_muted')->label(__('admin.theme_form.borders.text_muted')),
                 ])->columns(3),
 
-            Section::make('Typography, Shape & Density')
+            Section::make(__('admin.theme_form.typography.section'))
                 ->icon('heroicon-o-pencil-square')
                 ->collapsible()
                 ->schema([
-                    Select::make('theme_font')->label('Font Family')->options([
+                    Select::make('theme_font')->label(__('admin.theme_form.typography.font_family'))->options([
                         'Inter' => 'Inter',
                         'Plus Jakarta Sans' => 'Plus Jakarta Sans',
                         'Space Grotesk' => 'Space Grotesk',
@@ -117,75 +119,88 @@ final class ThemeFormSchema
                         'Lexend' => 'Lexend',
                         'DM Sans' => 'DM Sans',
                         'Figtree' => 'Figtree',
-                        'system-ui' => 'System Default',
+                        'system-ui' => __('admin.theme_form.typography.font_system'),
                     ]),
-                    Select::make('theme_radius')->label('Border Radius')->options([
-                        '0' => 'None (sharp)', '0.25rem' => 'Small', '0.375rem' => 'Medium',
-                        '0.75rem' => 'Large (default)', '1rem' => 'Extra Large', '1.5rem' => '2XL',
+                    Select::make('theme_radius')->label(__('admin.theme_form.typography.border_radius'))->options([
+                        '0' => __('admin.theme_form.typography.radius_none'),
+                        '0.25rem' => __('admin.theme_form.typography.radius_small'),
+                        '0.375rem' => __('admin.theme_form.typography.radius_medium'),
+                        '0.75rem' => __('admin.theme_form.typography.radius_large'),
+                        '1rem' => __('admin.theme_form.typography.radius_xl'),
+                        '1.5rem' => __('admin.theme_form.typography.radius_xxl'),
                     ]),
-                    Select::make('theme_density')->label('Density')->options([
-                        'compact' => 'Compact',
-                        'comfortable' => 'Comfortable (default)',
-                        'spacious' => 'Spacious',
-                    ])->helperText('Controls padding and spacing across cards, buttons and inputs.'),
+                    Select::make('theme_density')->label(__('admin.theme_form.typography.density'))->options([
+                        'compact' => __('admin.theme_form.typography.density_compact'),
+                        'comfortable' => __('admin.theme_form.typography.density_comfortable'),
+                        'spacious' => __('admin.theme_form.typography.density_spacious'),
+                    ])->helperText(__('admin.theme_form.typography.density_helper')),
                     TextInput::make('theme_shadow_intensity')
-                        ->label('Shadow Intensity')
+                        ->label(__('admin.theme_form.typography.shadow_intensity'))
                         ->numeric()
                         ->minValue(0)
                         ->maxValue(100)
                         ->suffix('%')
-                        ->helperText('0 = flat, 100 = heavy shadows.'),
+                        ->helperText(__('admin.theme_form.typography.shadow_helper')),
                 ])->columns(2),
 
-            Section::make('Custom CSS')
+            Section::make(__('admin.theme_form.custom_css.section'))
                 ->icon('heroicon-o-code-bracket')
                 ->collapsible()->collapsed()
                 ->schema([
-                    Textarea::make('theme_custom_css')->label('')->rows(6)->placeholder('/* Your custom CSS here */'),
+                    Textarea::make('theme_custom_css')->label('')->rows(6)->placeholder(__('admin.theme_form.custom_css.placeholder')),
                 ]),
         ];
     }
 
     public static function cardSection(): Section
     {
-        return Section::make('Server Cards')
-            ->description('Configure what is displayed on each server card.')
+        return Section::make(__('admin.theme_form.cards.section'))
+            ->description(__('admin.theme_form.cards.description'))
             ->icon('heroicon-o-rectangle-group')
             ->collapsible()
             ->schema([
-                Toggle::make('show_egg_icon')->label('Show egg icon/banner'),
-                Toggle::make('show_egg_name')->label('Show egg name'),
-                Toggle::make('show_plan_name')->label('Show plan name'),
-                Toggle::make('show_status_badge')->label('Show status badge'),
-                Toggle::make('show_stats_bars')->label('Show stats bars'),
-                Toggle::make('show_quick_actions')->label('Show power actions'),
-                Toggle::make('show_ip_port')->label('Show IP:port'),
-                Toggle::make('show_uptime')->label('Show uptime'),
-                Select::make('card_style')->label('Card Style')->options([
-                    'default' => 'Default', 'elevated' => 'Elevated', 'glass' => 'Glass', 'minimal' => 'Minimal',
+                Toggle::make('show_egg_icon')->label(__('admin.theme_form.cards.show_egg_icon')),
+                Toggle::make('show_egg_name')->label(__('admin.theme_form.cards.show_egg_name')),
+                Toggle::make('show_plan_name')->label(__('admin.theme_form.cards.show_plan_name')),
+                Toggle::make('show_status_badge')->label(__('admin.theme_form.cards.show_status_badge')),
+                Toggle::make('show_stats_bars')->label(__('admin.theme_form.cards.show_stats_bars')),
+                Toggle::make('show_quick_actions')->label(__('admin.theme_form.cards.show_quick_actions')),
+                Toggle::make('show_ip_port')->label(__('admin.theme_form.cards.show_ip_port')),
+                Toggle::make('show_uptime')->label(__('admin.theme_form.cards.show_uptime')),
+                Select::make('card_style')->label(__('admin.theme_form.cards.card_style'))->options([
+                    'default' => __('admin.theme_form.cards.style_default'),
+                    'elevated' => __('admin.theme_form.cards.style_elevated'),
+                    'glass' => __('admin.theme_form.cards.style_glass'),
+                    'minimal' => __('admin.theme_form.cards.style_minimal'),
                 ]),
-                Select::make('sort_default')->label('Default Sort')->options([
-                    'name' => 'Name', 'status' => 'Status', 'created_at' => 'Date Created', 'egg' => 'Egg Type',
+                Select::make('sort_default')->label(__('admin.theme_form.cards.sort_default'))->options([
+                    'name' => __('admin.theme_form.cards.sort_name'),
+                    'status' => __('admin.theme_form.cards.sort_status'),
+                    'created_at' => __('admin.theme_form.cards.sort_created'),
+                    'egg' => __('admin.theme_form.cards.sort_egg'),
                 ]),
-                Select::make('group_by')->label('Group By')->options([
-                    'none' => 'No Grouping', 'egg' => 'Egg Type', 'status' => 'Status', 'plan' => 'Plan',
+                Select::make('group_by')->label(__('admin.theme_form.cards.group_by'))->options([
+                    'none' => __('admin.theme_form.cards.group_none'),
+                    'egg' => __('admin.theme_form.cards.group_egg'),
+                    'status' => __('admin.theme_form.cards.group_status'),
+                    'plan' => __('admin.theme_form.cards.group_plan'),
                 ]),
-                Select::make('columns_desktop')->label('Desktop Columns')->options([1 => '1', 2 => '2', 3 => '3', 4 => '4']),
-                Select::make('columns_tablet')->label('Tablet Columns')->options([1 => '1', 2 => '2', 3 => '3']),
-                Select::make('columns_mobile')->label('Mobile Columns')->options([1 => '1', 2 => '2']),
+                Select::make('columns_desktop')->label(__('admin.theme_form.cards.cols_desktop'))->options([1 => '1', 2 => '2', 3 => '3', 4 => '4']),
+                Select::make('columns_tablet')->label(__('admin.theme_form.cards.cols_tablet'))->options([1 => '1', 2 => '2', 3 => '3']),
+                Select::make('columns_mobile')->label(__('admin.theme_form.cards.cols_mobile'))->options([1 => '1', 2 => '2']),
             ])->columns(2);
     }
 
     public static function sidebarSection(): Section
     {
-        return Section::make('Server Sidebar')
-            ->description('Configure the sidebar on server detail pages.')
+        return Section::make(__('admin.theme_form.sidebar.section'))
+            ->description(__('admin.theme_form.sidebar.description'))
             ->icon('heroicon-o-bars-3-bottom-left')
             ->collapsible()
             ->schema([
                 Select::make('sidebar_preset')
-                    ->label('Sidebar Preset')
-                    ->helperText('Pick a complete layout — position, style and header together. Choose Custom to fine-tune each field.')
+                    ->label(__('admin.theme_form.sidebar.preset'))
+                    ->helperText(__('admin.theme_form.sidebar.preset_helper'))
                     ->options(SidebarPresets::options())
                     ->default('classic')
                     ->live()
@@ -203,26 +218,41 @@ final class ThemeFormSchema
                         }
                     })
                     ->columnSpanFull(),
-                Select::make('sidebar_position')->label('Position')->options([
-                    'left' => 'Left sidebar',
-                    'top' => 'Top tabs',
-                    'dock' => 'Bottom dock',
+                Select::make('sidebar_position')->label(__('admin.theme_form.sidebar.position'))->options([
+                    'left' => __('admin.theme_form.sidebar.position_left'),
+                    'top' => __('admin.theme_form.sidebar.position_top'),
+                    'dock' => __('admin.theme_form.sidebar.position_dock'),
                 ]),
-                Select::make('sidebar_style')->label('Style')->options(['default' => 'Default', 'compact' => 'Compact (rail)', 'pills' => 'Pills']),
-                Toggle::make('show_server_status')->label('Show status dot'),
-                Toggle::make('show_server_name')->label('Show server name'),
-                Repeater::make('entries')->label('Sidebar Links')->schema([
-                    TextInput::make('id')->label('ID')->disabled()->dehydrated(),
-                    TextInput::make('label_key')->label('i18n Key'),
-                    Select::make('icon')->label('Icon')->options([
-                        'home' => 'Home', 'terminal' => 'Terminal', 'folder' => 'Folder',
-                        'database' => 'Database', 'archive' => 'Archive', 'clock' => 'Clock',
-                        'globe' => 'Globe', 'key' => 'Key', 'settings' => 'Settings',
-                        'shield' => 'Shield', 'users' => 'Users', 'server' => 'Server',
-                        'link' => 'Link', 'code' => 'Code', 'cpu' => 'CPU', 'hard-drive' => 'Hard Drive',
+                Select::make('sidebar_style')->label(__('admin.theme_form.sidebar.style'))->options([
+                    'default' => __('admin.theme_form.sidebar.style_default'),
+                    'compact' => __('admin.theme_form.sidebar.style_compact'),
+                    'pills' => __('admin.theme_form.sidebar.style_pills'),
+                ]),
+                Toggle::make('show_server_status')->label(__('admin.theme_form.sidebar.show_status')),
+                Toggle::make('show_server_name')->label(__('admin.theme_form.sidebar.show_name')),
+                Repeater::make('entries')->label(__('admin.theme_form.sidebar.links'))->schema([
+                    TextInput::make('id')->label(__('admin.theme_form.sidebar.link_id'))->disabled()->dehydrated(),
+                    TextInput::make('label_key')->label(__('admin.theme_form.sidebar.link_label_key')),
+                    Select::make('icon')->label(__('admin.theme_form.sidebar.link_icon'))->options([
+                        'home' => __('admin.theme_form.sidebar.icons.home'),
+                        'terminal' => __('admin.theme_form.sidebar.icons.terminal'),
+                        'folder' => __('admin.theme_form.sidebar.icons.folder'),
+                        'database' => __('admin.theme_form.sidebar.icons.database'),
+                        'archive' => __('admin.theme_form.sidebar.icons.archive'),
+                        'clock' => __('admin.theme_form.sidebar.icons.clock'),
+                        'globe' => __('admin.theme_form.sidebar.icons.globe'),
+                        'key' => __('admin.theme_form.sidebar.icons.key'),
+                        'settings' => __('admin.theme_form.sidebar.icons.settings'),
+                        'shield' => __('admin.theme_form.sidebar.icons.shield'),
+                        'users' => __('admin.theme_form.sidebar.icons.users'),
+                        'server' => __('admin.theme_form.sidebar.icons.server'),
+                        'link' => __('admin.theme_form.sidebar.icons.link'),
+                        'code' => __('admin.theme_form.sidebar.icons.code'),
+                        'cpu' => __('admin.theme_form.sidebar.icons.cpu'),
+                        'hard-drive' => __('admin.theme_form.sidebar.icons.hard_drive'),
                     ]),
-                    TextInput::make('route_suffix')->label('Route'),
-                    Toggle::make('enabled')->label('On'),
+                    TextInput::make('route_suffix')->label(__('admin.theme_form.sidebar.link_route')),
+                    Toggle::make('enabled')->label(__('admin.theme_form.sidebar.link_on')),
                 ])->columns(5)->reorderable()->addable(false)->deletable(false)->columnSpanFull(),
             ])->columns(2);
     }

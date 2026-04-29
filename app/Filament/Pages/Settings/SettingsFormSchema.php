@@ -31,22 +31,22 @@ final class SettingsFormSchema
         return [
             Tabs::make('settings_tabs')
                 ->tabs([
-                    Tab::make('General')
+                    Tab::make(__('admin.settings_form.tabs.general'))
                         ->icon('heroicon-o-home')
                         ->schema([self::general()]),
-                    Tab::make('Branding')
+                    Tab::make(__('admin.settings_form.tabs.branding'))
                         ->icon('heroicon-o-paint-brush')
                         ->schema([self::branding()]),
-                    Tab::make('Pelican')
+                    Tab::make(__('admin.settings_form.tabs.pelican'))
                         ->icon('heroicon-o-globe-alt')
                         ->schema([self::pelican()]),
-                    Tab::make('Mail')
+                    Tab::make(__('admin.settings_form.tabs.mail'))
                         ->icon('heroicon-o-envelope')
                         ->schema([self::smtp()]),
-                    Tab::make('Network')
+                    Tab::make(__('admin.settings_form.tabs.network'))
                         ->icon('heroicon-o-shield-check')
                         ->schema([self::network()]),
-                    Tab::make('Advanced')
+                    Tab::make(__('admin.settings_form.tabs.advanced'))
                         ->icon('heroicon-o-wrench-screwdriver')
                         ->schema([self::developer()]),
                 ])

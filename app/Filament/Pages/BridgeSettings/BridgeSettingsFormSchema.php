@@ -31,16 +31,16 @@ final class BridgeSettingsFormSchema
 {
     public static function modeSelector(): Section
     {
-        return Section::make('Mode')
-            ->description('Select which bridge backend should be active. Only one can run at a time — Shop+Stripe and Paymenter cannot coexist.')
+        return Section::make(__('admin.bridge_form.mode.section'))
+            ->description(__('admin.bridge_form.mode.description'))
             ->icon('heroicon-o-arrows-right-left')
             ->schema([
                 Radio::make('bridge_mode')
-                    ->label('Active bridge backend')
+                    ->label(__('admin.bridge_form.mode.label'))
                     ->options([
-                        BridgeMode::Disabled->value => BridgeMode::Disabled->label() . ' — no external bridge',
-                        BridgeMode::ShopStripe->value => BridgeMode::ShopStripe->label() . ' — your shop pushes plans via signed HTTP, Stripe sends webhooks',
-                        BridgeMode::Paymenter->value => BridgeMode::Paymenter->label() . ' — Paymenter orchestrates, Pelican forwards events',
+                        BridgeMode::Disabled->value => __('admin.bridge_form.mode.options.disabled'),
+                        BridgeMode::ShopStripe->value => __('admin.bridge_form.mode.options.shop_stripe'),
+                        BridgeMode::Paymenter->value => __('admin.bridge_form.mode.options.paymenter'),
                     ])
                     ->default(BridgeMode::Disabled->value)
                     ->required()
@@ -50,98 +50,98 @@ final class BridgeSettingsFormSchema
 
     public static function shopStripeSection(string $baseUrl, string $bridgeApiDocsUrl): Section
     {
-        return Section::make('Bridge Shop ↔ Peregrine + Stripe')
-            ->description('Your shop pushes plan definitions to Peregrine via signed HTTP. Stripe sends subscription lifecycle events directly. Independent channels — both belong to this mode.')
+        return Section::make(__('admin.bridge_form.shop_stripe.section'))
+            ->description(__('admin.bridge_form.shop_stripe.description'))
             ->icon('heroicon-o-shopping-bag')
             ->visible(fn (Get $get): bool => $get('bridge_mode') === BridgeMode::ShopStripe->value)
             ->schema([
 
-                Section::make('1. Shop API channel')
-                    ->description('Authenticate the shop and tell it where Peregrine lives.')
+                Section::make(__('admin.bridge_form.shop_stripe.shop_section'))
+                    ->description(__('admin.bridge_form.shop_stripe.shop_section_description'))
                     ->icon('heroicon-o-arrow-path')
                     ->compact()
                     ->schema([
                         TextInput::make('bridge_shop_url')
-                            ->label('Shop base URL')
+                            ->label(__('admin.bridge_form.shop_stripe.shop_url'))
                             ->url()
                             ->maxLength(255)
                             ->placeholder('https://int.biomebounty.com')
-                            ->helperText('Informational only — used for "back to Shop" links in the admin UI later.'),
+                            ->helperText(__('admin.bridge_form.shop_stripe.shop_url_helper')),
                         TextInput::make('bridge_shop_shared_secret')
-                            ->label('Shared HMAC secret')
+                            ->label(__('admin.bridge_form.shop_stripe.hmac_secret'))
                             ->password()
                             ->revealable()
                             ->minLength(32)
-                            ->helperText('Leave blank to keep the stored value. Click 🔑 to generate a fresh 64-char secret. Must match the value configured on the shop side.')
+                            ->helperText(__('admin.bridge_form.shop_stripe.hmac_secret_helper'))
                             ->suffixAction(
                                 Action::make('generateShopSecret')
                                     ->icon('heroicon-o-key')
-                                    ->tooltip('Generate a new random 64-char secret')
+                                    ->tooltip(__('admin.bridge_form.shop_stripe.hmac_action_tooltip'))
                                     ->action(function (Set $set): void {
                                         $secret = base64_encode(random_bytes(48));
                                         $set('bridge_shop_shared_secret', $secret);
                                         Notification::make()
-                                            ->title('Secret generated')
-                                            ->body('Copy it from the field, paste it on the shop side, then click Save.')
+                                            ->title(__('admin.bridge_form.shop_stripe.hmac_notification_title'))
+                                            ->body(__('admin.bridge_form.shop_stripe.hmac_notification_body'))
                                             ->success()
                                             ->send();
                                     }),
                             ),
                         Placeholder::make('bridge_base_url_display')
-                            ->label('Paste this URL on the shop side')
-                            ->content(BridgeSettingsHtmlHelpers::renderUrlBox($baseUrl, 'Use the base URL only — the shop client appends /api/bridge/* paths automatically. Never include a path here.')),
+                            ->label(__('admin.bridge_form.shop_stripe.paste_url'))
+                            ->content(BridgeSettingsHtmlHelpers::renderUrlBox($baseUrl, __('admin.bridge_form.shop_stripe.paste_url_hint'))),
                         Placeholder::make('bridge_endpoints_display')
-                            ->label('Endpoints the shop will call')
+                            ->label(__('admin.bridge_form.shop_stripe.endpoints'))
                             ->content(BridgeSettingsHtmlHelpers::renderEndpointList([
-                                ['POST',   $baseUrl.'/api/bridge/ping',                       'Health check'],
-                                ['POST',   $baseUrl.'/api/bridge/plans/upsert',               'Create or refresh a plan'],
-                                ['DELETE', $baseUrl.'/api/bridge/plans/{shop_plan_id}',      'Deactivate a plan'],
+                                ['POST',   $baseUrl.'/api/bridge/ping',                       __('admin.bridge_form.shop_stripe.endpoint_health')],
+                                ['POST',   $baseUrl.'/api/bridge/plans/upsert',               __('admin.bridge_form.shop_stripe.endpoint_upsert')],
+                                ['DELETE', $baseUrl.'/api/bridge/plans/{shop_plan_id}',      __('admin.bridge_form.shop_stripe.endpoint_delete')],
                             ])),
                         Placeholder::make('bridge_docs_link')
-                            ->label('Developer documentation')
-                            ->content(BridgeSettingsHtmlHelpers::renderDocLink($bridgeApiDocsUrl, 'Full API contract, payload schema, HMAC signing examples (PHP / Node / Python), error codes.')),
+                            ->label(__('admin.bridge_form.shop_stripe.docs'))
+                            ->content(BridgeSettingsHtmlHelpers::renderDocLink($bridgeApiDocsUrl, __('admin.bridge_form.shop_stripe.docs_hint'))),
                     ]),
 
-                Section::make('2. Stripe webhook channel')
-                    ->description('Stripe sends subscription lifecycle events straight to Peregrine — independent from the shop API above.')
+                Section::make(__('admin.bridge_form.shop_stripe.stripe_section'))
+                    ->description(__('admin.bridge_form.shop_stripe.stripe_section_description'))
                     ->icon('heroicon-o-credit-card')
                     ->compact()
                     ->schema([
                         TextInput::make('bridge_stripe_webhook_secret')
-                            ->label('Stripe webhook signing secret')
+                            ->label(__('admin.bridge_form.shop_stripe.stripe_webhook_secret'))
                             ->password()
                             ->revealable()
                             ->placeholder('whsec_…')
-                            ->helperText('Stripe Dashboard → Developers → Webhooks → click your endpoint → "Signing secret". Leave blank to keep the stored value.'),
+                            ->helperText(__('admin.bridge_form.shop_stripe.stripe_webhook_secret_helper')),
                         TextInput::make('bridge_stripe_api_secret')
-                            ->label('Stripe API secret key')
+                            ->label(__('admin.bridge_form.shop_stripe.stripe_api_secret'))
                             ->password()
                             ->revealable()
                             ->placeholder('sk_live_… or sk_test_…')
-                            ->helperText('Stripe Dashboard → Developers → API keys → "Secret key". Required to expand line_items on checkout.session.completed (Stripe never inlines them in the webhook payload). Leave blank to keep the stored value.'),
+                            ->helperText(__('admin.bridge_form.shop_stripe.stripe_api_secret_helper')),
                         TextInput::make('bridge_stripe_billing_portal_url')
-                            ->label('Stripe Customer Portal — fallback login link')
+                            ->label(__('admin.bridge_form.shop_stripe.stripe_portal'))
                             ->url()
                             ->placeholder('https://billing.stripe.com/p/login/…')
-                            ->helperText('Stripe Dashboard → Billing → Customer portal → "Login link". Shown as a SECONDARY link in suspended-server emails (manage payment methods, view invoices). Leave blank to omit. Note: cancelled subscriptions cannot be re-activated from the Customer Portal — that is what `bridge_resubscribe_url` is for.'),
+                            ->helperText(__('admin.bridge_form.shop_stripe.stripe_portal_helper')),
                         TextInput::make('bridge_resubscribe_url')
-                            ->label('Re-subscribe URL (resurrection link)')
+                            ->label(__('admin.bridge_form.shop_stripe.resubscribe_url'))
                             ->placeholder('https://shop.biomebounty.com/checkout/{plan_slug}')
-                            ->helperText('Where the customer is sent from the suspended-server email PRIMARY button. Stripe forbids re-activating a `canceled` subscription from the Customer Portal, so this must point to a fresh checkout flow on your shop. Use {plan_slug} or {plan_id} as placeholders — they are interpolated with the suspended server\'s plan. Example: https://shop.example.com/checkout/{plan_slug}'),
+                            ->helperText(__('admin.bridge_form.shop_stripe.resubscribe_url_helper')),
                         TextInput::make('bridge_grace_period_days')
-                            ->label('Grace period before hard delete')
-                            ->suffix('days')
+                            ->label(__('admin.bridge_form.shop_stripe.grace_period'))
+                            ->suffix(__('admin.bridge_form.shop_stripe.grace_period_suffix'))
                             ->numeric()
                             ->minValue(0)
                             ->maxValue(90)
                             ->required()
                             ->default(14)
-                            ->helperText('On subscription cancellation: server is suspended immediately and scheduled for deletion after this many days. Admin can cancel the deletion during the window. 0 = delete immediately. Max 90.'),
+                            ->helperText(__('admin.bridge_form.shop_stripe.grace_period_helper')),
                         Placeholder::make('bridge_stripe_endpoint_display')
-                            ->label('Endpoint URL to add in Stripe Dashboard')
-                            ->content(BridgeSettingsHtmlHelpers::renderUrlBox($baseUrl.'/api/stripe/webhook', 'Stripe Dashboard → Developers → Webhooks → Add endpoint.')),
+                            ->label(__('admin.bridge_form.shop_stripe.stripe_endpoint_url'))
+                            ->content(BridgeSettingsHtmlHelpers::renderUrlBox($baseUrl.'/api/stripe/webhook', __('admin.bridge_form.shop_stripe.stripe_endpoint_hint'))),
                         Placeholder::make('bridge_stripe_events_display')
-                            ->label('Events to enable on that endpoint')
+                            ->label(__('admin.bridge_form.shop_stripe.stripe_events'))
                             ->content(BridgeSettingsHtmlHelpers::renderTagList([
                                 'checkout.session.completed',
                                 'customer.subscription.updated',
@@ -156,28 +156,28 @@ final class BridgeSettingsFormSchema
 
     public static function paymenterSection(string $baseUrl, string $paymenterDocsUrl, string $pelicanWebhookSettingsUrl): Section
     {
-        return Section::make('Bridge Paymenter')
-            ->description('Paymenter handles billing, plans, emails, and orchestrates Pelican directly. Peregrine just mirrors server state from Pelican. No plans page and no Bridge emails are sent in this mode.')
+        return Section::make(__('admin.bridge_form.paymenter.section'))
+            ->description(__('admin.bridge_form.paymenter.description'))
             ->icon('heroicon-o-bolt')
             ->visible(fn (Get $get): bool => $get('bridge_mode') === BridgeMode::Paymenter->value)
             ->schema([
 
-                Section::make('Pelican webhook receiver — moved')
-                    ->description('The Pelican webhook configuration (token + endpoint setup) lives on its own page now. It works in every Bridge mode, not just Paymenter.')
+                Section::make(__('admin.bridge_form.paymenter.webhook_section'))
+                    ->description(__('admin.bridge_form.paymenter.webhook_section_description'))
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->compact()
                     ->schema([
                         Placeholder::make('paymenter_pelican_webhook_link')
-                            ->label('Open Pelican webhook settings')
+                            ->label(__('admin.bridge_form.paymenter.webhook_link'))
                             ->content(new HtmlString(
                                 '<a href="'.e($pelicanWebhookSettingsUrl).'" '
                                 .'class="text-primary-600 underline hover:text-primary-500">'
-                                .'/admin/pelican-webhook-settings ↗</a>'
-                                .'<p class="mt-1 text-xs text-gray-500">Generate the token, see the Pelican-side setup steps, browse the audit log.</p>'
+                                .e(__('admin.bridge_form.paymenter.webhook_link_html')).'</a>'
+                                .'<p class="mt-1 text-xs text-gray-500">'.e(__('admin.bridge_form.paymenter.webhook_link_hint')).'</p>'
                             )),
                         Placeholder::make('paymenter_docs_link')
-                            ->label('Step-by-step Paymenter walkthrough')
-                            ->content(BridgeSettingsHtmlHelpers::renderDocLink($paymenterDocsUrl, 'How Peregrine + Paymenter + Pelican fit together, troubleshooting, known limits, and the matching Pelican-Paymenter extension setup.')),
+                            ->label(__('admin.bridge_form.paymenter.docs'))
+                            ->content(BridgeSettingsHtmlHelpers::renderDocLink($paymenterDocsUrl, __('admin.bridge_form.paymenter.docs_hint'))),
                     ]),
             ]);
     }

@@ -5,145 +5,144 @@ namespace App\Filament\Pages\BridgeSettings;
 use Illuminate\Support\HtmlString;
 
 /**
- * Pure HTML rendering helpers for the BridgeSettings admin page.
+ * Pure HTML rendering helpers for the BridgeSettings + PelicanWebhookSettings
+ * admin pages. Inline styles only — Filament's default theme does not compile
+ * arbitrary Tailwind utility classes from custom blade output, so all visual
+ * styling lives directly in the HTML.
  *
  * Each method returns an `HtmlString` so it can be slotted directly into
  * Filament `Placeholder::make(...)->content(...)` calls. No state, no
- * service dependencies — extracted from BridgeSettings.php to honour the
- * 300-line file budget.
- *
- * Pattern mirrors `Filament\Pages\Settings\SettingsFormSchema` (sibling
- * class next to the page that owns it).
+ * service dependencies.
  */
 final class BridgeSettingsHtmlHelpers
 {
-    /**
-     * Renders the "URL to copy" card — large mono URL on a contrast surface
-     * with a one-line instruction underneath. Used everywhere we want the
-     * admin to grab a value and paste it elsewhere.
-     */
+    private const CARD_STYLE = 'border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25); padding: 0.25rem 0.75rem; overflow: hidden;';
+
+    private const ROW_STYLE = 'display: flex; align-items: flex-start; gap: 0.875rem; padding: 0.625rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);';
+
+    private const ROW_LAST_STYLE = 'display: flex; align-items: flex-start; gap: 0.875rem; padding: 0.625rem 0;';
+
+    private const KEY_STYLE = 'flex-shrink: 0; min-width: 8rem; font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.65);';
+
+    private const VALUE_STYLE = 'flex: 1 1 auto; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8125rem; color: rgba(255,255,255,0.95); word-break: break-all;';
+
+    private const NOTE_STYLE = 'display: block; margin-top: 0.25rem; font-family: system-ui, -apple-system, sans-serif; font-size: 0.75rem; color: rgba(255,255,255,0.55); word-break: normal;';
+
+    private const HINT_STYLE = 'margin: 0.5rem 0 0 0; font-size: 0.75rem; color: rgba(255,255,255,0.55);';
+
     public static function renderUrlBox(string $url, string $hint): HtmlString
     {
         return new HtmlString(
-            '<div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3">'
-            .'<code class="block text-sm font-mono break-all text-gray-900 dark:text-gray-100">'
-            .e($url).'</code>'
-            .'</div>'
-            .'<p class="mt-2 text-xs text-gray-500">'.e($hint).'</p>'
+            '<div style="' . self::CARD_STYLE . ' padding: 0.75rem 1rem;">'
+            . '<code style="display: block; font-family: ui-monospace, monospace; font-size: 0.8125rem; color: rgba(255,255,255,0.95); word-break: break-all;">'
+            . e($url)
+            . '</code>'
+            . '</div>'
+            . '<p style="' . self::HINT_STYLE . '">' . e($hint) . '</p>'
         );
     }
 
     /**
-     * Renders an HTTP endpoint list with colored verb badges (POST=primary,
-     * DELETE=danger). Each entry is verb + URL + description.
-     *
      * @param  array<int, array{0: string, 1: string, 2: string}>  $endpoints
      */
     public static function renderEndpointList(array $endpoints): HtmlString
     {
         $rows = '';
-        foreach ($endpoints as [$verb, $url, $description]) {
-            $verbClasses = match ($verb) {
-                'POST'   => 'bg-primary-500/15 text-primary-700 dark:text-primary-300',
-                'DELETE' => 'bg-danger-500/15 text-danger-700 dark:text-danger-300',
-                'GET'    => 'bg-success-500/15 text-success-700 dark:text-success-300',
-                default  => 'bg-gray-500/15 text-gray-700 dark:text-gray-300',
+        $last = count($endpoints) - 1;
+
+        foreach ($endpoints as $i => [$verb, $url, $description]) {
+            $verbStyle = match ($verb) {
+                'POST' => 'background: rgba(var(--primary-500), 0.18); color: rgb(var(--primary-300));',
+                'DELETE' => 'background: rgba(239,68,68,0.15); color: rgb(252,165,165);',
+                'GET' => 'background: rgba(34,197,94,0.15); color: rgb(134,239,172);',
+                default => 'background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85);',
             };
-            $rows .= '<div class="flex items-start gap-3 py-1.5">'
-                .'<span class="inline-block min-w-[58px] text-center rounded-md px-2 py-0.5 text-xs font-semibold '.$verbClasses.'">'.e($verb).'</span>'
-                .'<div class="flex-1 min-w-0">'
-                .'<code class="block text-xs font-mono break-all text-gray-900 dark:text-gray-100">'.e($url).'</code>'
-                .'<span class="text-xs text-gray-500">'.e($description).'</span>'
-                .'</div>'
-                .'</div>';
+
+            $rows .= '<div style="' . ($i === $last ? self::ROW_LAST_STYLE : self::ROW_STYLE) . '">'
+                . '<span style="flex-shrink: 0; display: inline-block; min-width: 4rem; text-align: center; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.05em; ' . $verbStyle . '">'
+                . e($verb)
+                . '</span>'
+                . '<div style="flex: 1 1 auto; min-width: 0;">'
+                . '<code style="display: block; font-family: ui-monospace, monospace; font-size: 0.75rem; color: rgba(255,255,255,0.95); word-break: break-all;">'
+                . e($url)
+                . '</code>'
+                . '<span style="' . self::NOTE_STYLE . '">' . e($description) . '</span>'
+                . '</div>'
+                . '</div>';
         }
 
-        return new HtmlString(
-            '<div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 px-3 py-1 divide-y divide-gray-200 dark:divide-gray-800">'
-            .$rows
-            .'</div>'
-        );
+        return new HtmlString('<div style="' . self::CARD_STYLE . '">' . $rows . '</div>');
     }
 
     /**
-     * Renders a list of "tags" (short event identifiers) as styled pills.
-     *
      * @param  array<int, string>  $items
      */
     public static function renderTagList(array $items, ?string $note = null): HtmlString
     {
-        $pills = '';
+        $pills = '<div style="display: flex; flex-wrap: wrap; gap: 0.375rem;">';
         foreach ($items as $item) {
-            $pills .= '<span class="inline-block rounded-md bg-primary-500/10 text-primary-700 dark:text-primary-300 px-2 py-0.5 text-xs font-mono mr-1.5 mb-1.5">'
-                .e($item).'</span>';
+            $pills .= '<span style="display: inline-block; padding: 0.25rem 0.5rem; border-radius: 0.25rem; background: rgba(var(--primary-500), 0.15); color: rgb(var(--primary-300)); font-family: ui-monospace, monospace; font-size: 0.75rem; line-height: 1;">'
+                . e($item)
+                . '</span>';
         }
+        $pills .= '</div>';
 
         $noteHtml = $note !== null
-            ? '<p class="mt-2 text-xs text-gray-500">'.e($note).'</p>'
+            ? '<p style="' . self::HINT_STYLE . '">' . e($note) . '</p>'
             : '';
 
-        return new HtmlString('<div>'.$pills.'</div>'.$noteHtml);
+        return new HtmlString('<div>' . $pills . $noteHtml . '</div>');
     }
 
     /**
-     * Renders a 2-column key/value table inside a contrast-surface card.
-     *
      * @param  array<int, array{0: string, 1: string}>  $rows
      */
     public static function renderKeyValueList(array $rows): HtmlString
     {
         $body = '';
-        foreach ($rows as [$key, $value]) {
-            $body .= '<div class="flex items-start gap-3 py-1.5">'
-                .'<span class="min-w-[110px] text-xs font-medium text-gray-600 dark:text-gray-400">'.e($key).'</span>'
-                .'<code class="flex-1 text-xs font-mono break-all text-gray-900 dark:text-gray-100">'.e($value).'</code>'
-                .'</div>';
+        $last = count($rows) - 1;
+
+        foreach ($rows as $i => [$key, $value]) {
+            $body .= '<div style="' . ($i === $last ? self::ROW_LAST_STYLE : self::ROW_STYLE) . '">'
+                . '<span style="' . self::KEY_STYLE . '">' . e($key) . '</span>'
+                . '<code style="' . self::VALUE_STYLE . '">' . e($value) . '</code>'
+                . '</div>';
         }
 
-        return new HtmlString(
-            '<div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 px-3 py-1 divide-y divide-gray-200 dark:divide-gray-800">'
-            .$body
-            .'</div>'
-        );
+        return new HtmlString('<div style="' . self::CARD_STYLE . '">' . $body . '</div>');
     }
 
     /**
-     * Renders a header table (key / value / note) — the value is allowed to
-     * contain pre-escaped HTML entities (e.g. &lt;token&gt;) so we don't
-     * escape it again here.
-     *
      * @param  array<int, array{0: string, 1: string, 2: string}>  $rows
      */
     public static function renderHeadersList(array $rows): HtmlString
     {
         $body = '';
-        foreach ($rows as [$key, $value, $note]) {
-            $body .= '<div class="flex items-start gap-3 py-1.5">'
-                .'<span class="min-w-[140px] text-xs font-semibold text-gray-700 dark:text-gray-300">'.e($key).'</span>'
-                .'<div class="flex-1 min-w-0">'
-                .'<code class="block text-xs font-mono break-all text-gray-900 dark:text-gray-100">'.$value.'</code>'
-                .'<span class="text-xs text-gray-500">'.e($note).'</span>'
-                .'</div>'
-                .'</div>';
+        $last = count($rows) - 1;
+
+        foreach ($rows as $i => [$key, $value, $note]) {
+            $body .= '<div style="' . ($i === $last ? self::ROW_LAST_STYLE : self::ROW_STYLE) . '">'
+                . '<span style="' . self::KEY_STYLE . ' min-width: 9rem;">' . e($key) . '</span>'
+                . '<div style="flex: 1 1 auto; min-width: 0;">'
+                // $value is allowed to contain pre-escaped entities (&lt;…&gt;)
+                . '<code style="display: block; font-family: ui-monospace, monospace; font-size: 0.8125rem; color: rgba(255,255,255,0.95); word-break: break-all;">'
+                . $value
+                . '</code>'
+                . '<span style="' . self::NOTE_STYLE . '">' . e($note) . '</span>'
+                . '</div>'
+                . '</div>';
         }
 
-        return new HtmlString(
-            '<div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 px-3 py-1 divide-y divide-gray-200 dark:divide-gray-800">'
-            .$body
-            .'</div>'
-        );
+        return new HtmlString('<div style="' . self::CARD_STYLE . '">' . $body . '</div>');
     }
 
-    /**
-     * Renders a documentation link with arrow + a short description below.
-     */
     public static function renderDocLink(string $url, string $description): HtmlString
     {
         return new HtmlString(
-            '<a href="'.e($url).'" target="_blank" rel="noopener" '
-            .'class="inline-flex items-center gap-1 text-primary-600 underline hover:text-primary-500 break-all">'
-            .e($url).' <span aria-hidden="true">↗</span></a>'
-            .'<p class="mt-1 text-xs text-gray-500">'.e($description).'</p>'
+            '<a href="' . e($url) . '" target="_blank" rel="noopener" '
+            . 'style="display: inline-flex; align-items: center; gap: 0.25rem; color: rgb(var(--primary-400)); text-decoration: underline; text-underline-offset: 2px; word-break: break-all;">'
+            . e($url) . ' <span aria-hidden="true">↗</span></a>'
+            . '<p style="' . self::HINT_STYLE . '">' . e($description) . '</p>'
         );
     }
 }

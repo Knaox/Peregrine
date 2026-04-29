@@ -22,7 +22,7 @@ class ListNodes extends ListRecords
     {
         return [
             Actions\Action::make('syncNodes')
-                ->label('Sync Nodes')
+                ->label(__('admin.resource_pages.sync_nodes.label'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
                 ->action(function (): void {

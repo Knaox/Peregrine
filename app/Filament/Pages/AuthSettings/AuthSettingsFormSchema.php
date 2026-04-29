@@ -33,23 +33,23 @@ final class AuthSettingsFormSchema
         return [
             Tabs::make('auth_settings_tabs')
                 ->tabs([
-                    Tab::make('General')
+                    Tab::make(__('admin.auth_form.tabs.general'))
                         ->icon('heroicon-o-home')
                         ->schema([self::general(), self::twoFactor()]),
-                    Tab::make('Shop')
+                    Tab::make(__('admin.auth_form.tabs.shop'))
                         ->icon('heroicon-o-shopping-bag')
                         ->schema([self::shop($shopRedirect)]),
-                    Tab::make('Paymenter')
+                    Tab::make(__('admin.auth_form.tabs.paymenter'))
                         ->icon('heroicon-o-credit-card')
                         ->schema([self::paymenter($paymenterRedirect)]),
-                    Tab::make('Social')
+                    Tab::make(__('admin.auth_form.tabs.social'))
                         ->icon('heroicon-o-user-group')
                         ->schema([
                             self::socialProvider('google', 'Google', 'heroicon-o-globe-alt', $googleRedirect),
                             self::socialProvider('discord', 'Discord', 'heroicon-o-chat-bubble-left-right', $discordRedirect),
                             self::socialProvider('linkedin', 'LinkedIn', 'heroicon-o-briefcase', $linkedinRedirect),
                         ]),
-                    Tab::make('Safety')
+                    Tab::make(__('admin.auth_form.tabs.safety'))
                         ->icon('heroicon-o-exclamation-triangle')
                         ->schema([self::safety()]),
                 ])
@@ -59,31 +59,31 @@ final class AuthSettingsFormSchema
 
     public static function general(): Section
     {
-        return Section::make('Local sign-in')
-            ->description('Email/password and self-registration. These can stay on alongside an OAuth provider if you want both paths available, or be turned off entirely to force OAuth-only access.')
+        return Section::make(__('admin.auth_form.local.section'))
+            ->description(__('admin.auth_form.local.description'))
             ->icon('heroicon-o-key')
             ->schema([
                 Toggle::make('auth_local_enabled')
-                    ->label('Allow local email/password login')
-                    ->helperText('Users created locally (or via OAuth with a password set) can sign in with email + password.'),
+                    ->label(__('admin.auth_form.local.enabled'))
+                    ->helperText(__('admin.auth_form.local.enabled_helper')),
                 Toggle::make('auth_local_registration_enabled')
-                    ->label('Allow local registration')
-                    ->helperText('When off, /register is closed — users must come in via a Shop callback or a linked provider. Forced off automatically when a canonical IdP (Shop or Paymenter) is enabled.'),
+                    ->label(__('admin.auth_form.local.registration'))
+                    ->helperText(__('admin.auth_form.local.registration_helper')),
             ]);
     }
 
     public static function twoFactor(): Section
     {
-        return Section::make('Two-Factor Authentication')
-            ->description('TOTP (Google Authenticator / Authy / 1Password) availability across the panel.')
+        return Section::make(__('admin.auth_form.two_factor.section'))
+            ->description(__('admin.auth_form.two_factor.description'))
             ->icon('heroicon-o-shield-check')
             ->schema([
                 Toggle::make('auth_2fa_enabled')
-                    ->label('Enable 2FA for all users')
-                    ->helperText('Users can set up TOTP from their profile. Disabling this hides the setup UI but does NOT remove existing 2FA secrets — re-enabling it later restores access without recovery codes.'),
+                    ->label(__('admin.auth_form.two_factor.enabled'))
+                    ->helperText(__('admin.auth_form.two_factor.enabled_helper')),
                 Toggle::make('auth_2fa_required_admins')
-                    ->label('Require 2FA for admins')
-                    ->helperText('⚠ Admins without 2FA will be blocked from /admin and admin API routes (403 → setup page). Turn this on AFTER you have set up 2FA on your own admin account, otherwise you lock yourself out.'),
+                    ->label(__('admin.auth_form.two_factor.required_admins'))
+                    ->helperText(__('admin.auth_form.two_factor.required_admins_helper')),
             ]);
     }
 
@@ -103,30 +103,30 @@ final class AuthSettingsFormSchema
             ->collapsible()
             ->collapsed()
             ->schema([
-                Toggle::make("auth_providers_{$providerId}_enabled")->label("Enable {$label}"),
+                Toggle::make("auth_providers_{$providerId}_enabled")->label(__('admin.auth_form.social.enable', ['provider' => $label])),
 
                 TextInput::make("auth_providers_{$providerId}_client_id")
-                    ->label('Client ID')
+                    ->label(__('admin.auth_form.social.client_id'))
                     ->maxLength(255)
-                    ->helperText("Created in the {$label} developer console (OAuth 2.0 Client / Application)."),
+                    ->helperText(__('admin.auth_form.social.client_id_helper', ['provider' => $label])),
 
                 TextInput::make("auth_providers_{$providerId}_client_secret")
-                    ->label('Client secret')
+                    ->label(__('admin.auth_form.social.client_secret'))
                     ->password()
                     ->revealable()
                     ->maxLength(255)
-                    ->helperText('Leave blank to keep the stored value.'),
+                    ->helperText(__('admin.auth_form.social.client_secret_helper')),
 
                 TextInput::make("auth_providers_{$providerId}_redirect_uri")
-                    ->label('Redirect URI')
+                    ->label(__('admin.auth_form.social.redirect'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder($redirectUri)
-                    ->helperText("Paste this URL into the {$label} app's authorized redirect list. Must match EXACTLY (scheme, host, path).")
+                    ->helperText(__('admin.auth_form.social.redirect_helper', ['provider' => $label]))
                     ->suffixAction(
                         Action::make("reset{$providerId}Redirect")
                             ->icon('heroicon-o-arrow-path')
-                            ->tooltip('Reset to APP_URL default')
+                            ->tooltip(__('admin.auth_form.social.reset_tooltip'))
                             ->color('gray')
                             ->action(function (Set $set) use ($providerId, $redirectUri): void {
                                 $set("auth_providers_{$providerId}_redirect_uri", $redirectUri);
@@ -142,13 +142,13 @@ final class AuthSettingsFormSchema
 
     public static function safety(): Section
     {
-        return Section::make('Lock-out safety')
-            ->description('Required acknowledgement when disabling a provider that has exclusive users (no password, no other linked identity). Prevents silent account lock-outs.')
+        return Section::make(__('admin.auth_form.safety.section'))
+            ->description(__('admin.auth_form.safety.description'))
             ->icon('heroicon-o-exclamation-triangle')
             ->schema([
                 Toggle::make('acknowledge_disable_risk')
-                    ->label('I understand that disabling a provider may lock out users who have no other sign-in method')
-                    ->helperText('Required to save when you are turning OFF a provider that currently has exclusive users.'),
+                    ->label(__('admin.auth_form.safety.ack'))
+                    ->helperText(__('admin.auth_form.safety.ack_helper')),
             ]);
     }
 }

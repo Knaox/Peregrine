@@ -26,14 +26,14 @@ class ListServers extends ListRecords
         return [
             Actions\CreateAction::make(),
             Actions\Action::make('syncServers')
-                ->label('Sync Servers')
+                ->label(__('admin.resource_pages.sync_servers.label'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
                 ->disabled($blockReason !== null)
                 ->tooltip($blockReason)
                 ->requiresConfirmation()
-                ->modalHeading('Sync Servers from Pelican')
-                ->modalDescription('This will fetch all servers from Pelican and import any new ones into Peregrine.')
+                ->modalHeading(__('admin.resource_pages.sync_servers.modal_heading'))
+                ->modalDescription(__('admin.resource_pages.sync_servers.modal_description'))
                 ->action(function (): void {
                     $syncService = app(SyncService::class);
                     $comparison = $syncService->compareServers();
@@ -41,7 +41,7 @@ class ListServers extends ListRecords
 
                     if ($newCount === 0) {
                         Notification::make()
-                            ->title('No new servers found')
+                            ->title(__('admin.resource_pages.sync_servers.no_new'))
                             ->info()
                             ->send();
 

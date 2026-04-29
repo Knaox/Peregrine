@@ -24,7 +24,7 @@ class ListEggs extends ListRecords
 
         return [
             Actions\Action::make('syncEggs')
-                ->label('Sync Eggs')
+                ->label(__('admin.resource_pages.sync_eggs.label'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
                 ->disabled($blockReason !== null)

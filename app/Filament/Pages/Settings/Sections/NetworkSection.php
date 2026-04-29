@@ -13,24 +13,18 @@ final class NetworkSection
 {
     public static function make(): Section
     {
-        return Section::make('Trusted Proxies')
-            ->description(
-                'IPs or CIDR ranges allowed to set X-Forwarded-* headers. Set this when '
-                . 'Peregrine sits behind a reverse proxy (Nginx Proxy Manager, Traefik, '
-                . 'Cloudflare, …). Leave empty to trust no proxy. Stored in DB (table '
-                . '`settings`) so a Docker stack rebuild does not reset it ; applies on '
-                . 'the next request, no container restart needed.'
-            )
+        return Section::make(__('admin.settings_form.network.section'))
+            ->description(__('admin.settings_form.network.description'))
             ->icon('heroicon-o-shield-check')
             ->headerActions([
                 Action::make('clearTrustedProxies')
-                    ->label('Clear')
+                    ->label(__('admin.settings_form.network.clear'))
                     ->icon('heroicon-o-trash')
                     ->color('danger')
                     ->link()
                     ->action(fn (Set $set) => $set('trusted_proxies', [])),
                 Action::make('setCloudflareIps')
-                    ->label('Set to Cloudflare IPs')
+                    ->label(__('admin.settings_form.network.cloudflare'))
                     ->icon('heroicon-o-cloud')
                     ->color('primary')
                     ->link()
@@ -49,14 +43,9 @@ final class NetworkSection
             ->schema([
                 TagsInput::make('trusted_proxies')
                     ->label('')
-                    ->placeholder('New IP or IP Range')
+                    ->placeholder(__('admin.settings_form.network.placeholder'))
                     ->reorderable()
-                    ->helperText(
-                        'Examples: 192.168.80.1 (single host), 172.16.0.0/12 (CIDR range), '
-                        . '2400:cb00::/32 (IPv6 CIDR). Tip: click "Set to Cloudflare IPs" '
-                        . 'to seed the list with all of Cloudflare\'s edge IPs, then add '
-                        . 'your own private proxy IP.'
-                    ),
+                    ->helperText(__('admin.settings_form.network.helper')),
             ])->columns(1);
     }
 }

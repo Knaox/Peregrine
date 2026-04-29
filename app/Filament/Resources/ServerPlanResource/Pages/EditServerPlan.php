@@ -25,22 +25,22 @@ class EditServerPlan extends EditRecord
         // /admin/servers within seconds with status='provisioning' → 'active'.
         if (config('app.debug')) {
             $actions[] = Action::make('createTestServer')
-                ->label('Create test server')
+                ->label(__('admin.resource_pages.test_server.label'))
                 ->icon('heroicon-o-beaker')
                 ->color('warning')
                 ->visible(fn (): bool => (bool) config('app.debug'))
                 ->disabled(fn (ServerPlan $record): bool => ! $record->isReadyToProvision())
                 ->tooltip(fn (ServerPlan $record): ?string => $record->isReadyToProvision()
-                    ? 'Queue a real Pelican server creation from this plan (debug mode only).'
-                    : 'Configure egg + node first.')
+                    ? __('admin.resource_pages.test_server.tooltip')
+                    : __('admin.resource_pages.test_server.tooltip_disabled'))
                 ->requiresConfirmation()
-                ->modalHeading('Provision a test server?')
+                ->modalHeading(__('admin.resource_pages.test_server.modal_heading'))
                 ->modalDescription(fn (ServerPlan $record): string => sprintf(
                     'A real Pelican server will be created on node #%s using egg #%s, attached to your admin account. The job runs in the background — check /admin/servers in a few seconds.',
                     $record->node_id ?? $record->default_node_id ?? ($record->allowed_node_ids[0] ?? '?'),
                     $record->egg_id,
                 ))
-                ->modalSubmitActionLabel('Yes, queue now')
+                ->modalSubmitActionLabel(__('admin.resource_pages.test_server.modal_submit'))
                 ->action(function (ServerPlan $record): void {
                     $key = 'manual-test-'.now()->getTimestampMs().'-'.Str::random(8);
 
@@ -51,8 +51,8 @@ class EditServerPlan extends EditRecord
                     );
 
                     Notification::make()
-                        ->title('Test server queued')
-                        ->body('The provisioning job has been dispatched. Check /admin/servers — the row will appear immediately with status "provisioning" and flip to "active" once Pelican confirms (a few seconds). If Pelican is unreachable, the job retries automatically with backoff [60s, 5min, 15min].')
+                        ->title(__('admin.resource_pages.test_server.notification_title'))
+                        ->body(__('admin.resource_pages.test_server.notification_body'))
                         ->success()
                         ->persistent()
                         ->send();

@@ -26,7 +26,16 @@ use App\Models\User;
  */
 class SyncOrderGuard
 {
+    /**
+     * Kept for any caller that still references the constant directly. New
+     * code should use `orderHint()` so the locale follows the request.
+     */
     public const ORDER_HINT = 'Required order: 1. Nodes → 2. Users → 3. Eggs → 4. Servers. Each step depends on the previous one.';
+
+    public static function orderHint(): string
+    {
+        return __('admin.sync_order.order_hint');
+    }
 
     public function nodesSynced(): bool
     {
@@ -50,7 +59,7 @@ class SyncOrderGuard
     public function blockSyncUsers(): ?string
     {
         if (! $this->nodesSynced()) {
-            return 'Sync Nodes first (step 1/4).';
+            return __('admin.sync_order.block_nodes_first');
         }
         return null;
     }
@@ -58,10 +67,10 @@ class SyncOrderGuard
     public function blockSyncEggs(): ?string
     {
         if (! $this->nodesSynced()) {
-            return 'Sync Nodes first (step 1/4).';
+            return __('admin.sync_order.block_nodes_first');
         }
         if (! $this->usersSynced()) {
-            return 'Sync Users first (step 2/4).';
+            return __('admin.sync_order.block_users_first');
         }
         return null;
     }
@@ -69,13 +78,13 @@ class SyncOrderGuard
     public function blockSyncServers(): ?string
     {
         if (! $this->nodesSynced()) {
-            return 'Sync Nodes first (step 1/4).';
+            return __('admin.sync_order.block_nodes_first');
         }
         if (! $this->usersSynced()) {
-            return 'Sync Users first (step 2/4).';
+            return __('admin.sync_order.block_users_first');
         }
         if (! $this->eggsSynced()) {
-            return 'Sync Eggs first (step 3/4).';
+            return __('admin.sync_order.block_eggs_first');
         }
         return null;
     }
@@ -90,10 +99,10 @@ class SyncOrderGuard
             ($done ? '✅' : '⚠️').' '.$label;
 
         return implode(' → ', [
-            $tag($this->nodesSynced(), '1. Nodes'),
-            $tag($this->usersSynced(), '2. Users'),
-            $tag($this->eggsSynced(), '3. Eggs'),
-            '4. Servers',
+            $tag($this->nodesSynced(), __('admin.sync_order.step_nodes')),
+            $tag($this->usersSynced(), __('admin.sync_order.step_users')),
+            $tag($this->eggsSynced(), __('admin.sync_order.step_eggs')),
+            __('admin.sync_order.step_servers'),
         ]);
     }
 }

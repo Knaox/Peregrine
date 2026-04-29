@@ -25,14 +25,14 @@ class ListUsers extends ListRecords
         return [
             Actions\CreateAction::make(),
             Actions\Action::make('syncUsers')
-                ->label('Sync Users')
+                ->label(__('admin.resource_pages.sync_users.label'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
                 ->disabled($blockReason !== null)
                 ->tooltip($blockReason)
                 ->requiresConfirmation()
-                ->modalHeading('Sync Users from Pelican')
-                ->modalDescription('This will fetch all users from Pelican and import any new ones into Peregrine.')
+                ->modalHeading(__('admin.resource_pages.sync_users.modal_heading'))
+                ->modalDescription(__('admin.resource_pages.sync_users.modal_description'))
                 ->action(function (): void {
                     $syncService = app(SyncService::class);
                     $comparison = $syncService->compareUsers();
@@ -40,7 +40,7 @@ class ListUsers extends ListRecords
 
                     if ($newCount === 0) {
                         Notification::make()
-                            ->title('No new users found')
+                            ->title(__('admin.resource_pages.sync_users.no_new'))
                             ->info()
                             ->send();
 
