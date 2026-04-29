@@ -194,6 +194,8 @@ class PluginLifecycle
 
             if ($this->files->isDirectory($distPath)) {
                 symlink($distPath, $publicPath);
+            } else {
+                Log::warning("Plugin '{$pluginId}' has no frontend/dist directory at {$distPath} — JS bundle will be served via the controller fallback (slower path). Reinstall or rebuild the plugin's frontend.");
             }
         } catch (\Throwable $e) {
             Log::warning("Plugin symlink skipped for '{$pluginId}': " . $e->getMessage() . '. Ensure public/plugins/ is writable by the web server user (www-data).');

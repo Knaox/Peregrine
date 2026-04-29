@@ -7,6 +7,7 @@ use App\Models\Plugin;
 use App\Services\PluginManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PluginController extends Controller
 {
@@ -105,6 +106,37 @@ class PluginController extends Controller
         $plugin->update(['settings' => $request->input('settings', [])]);
 
         return response()->json(['message' => 'Settings saved.']);
+    }
+
+    /**
+     * Serve a plugin's compiled JS bundle (public).
+     *
+     * Healthy installs hit the static symlink at `public/plugins/{id}` →
+     * `plugins/{id}/frontend/dist`, which nginx serves directly with the
+     * correct `Content-Type: application/javascript`. This controller is
+     * the fallback when the symlink is missing — fresh Docker installs
+     * (named volume timing) and CDN/proxy edge cases would otherwise let
+     * the request fall through to the SPA catch-all, return HTML, and trip
+     * Cloudflare's `nosniff` so the browser refuses to execute it. Routing
+     * the same URL through a controller guarantees the right Content-Type
+     * regardless of symlink state, so the plugin's page never goes blank.
+     */
+    public function bundle(string $pluginId): BinaryFileResponse
+    {
+        $pluginPath = $this->pluginManager->getPluginPath($pluginId);
+        if (! $pluginPath) {
+            abort(404);
+        }
+
+        $bundlePath = $pluginPath . '/frontend/dist/bundle.js';
+        if (! is_file($bundlePath)) {
+            abort(404);
+        }
+
+        return response()->file($bundlePath, [
+            'Content-Type' => 'application/javascript; charset=utf-8',
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
     }
 
     /**

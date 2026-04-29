@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\SocialAuthController;
+use App\Http\Controllers\Api\PluginController;
 use Illuminate\Support\Facades\Route;
 use League\CommonMark\GithubFlavoredMarkdownConverter;
 
@@ -71,5 +72,17 @@ Route::prefix('api/auth')->group(function () {
         ->where('provider', 'shop|google|discord|linkedin|paymenter');
 });
 
-// Main SPA (catch-all for React Router — excludes admin, api, docs, livewire, sanctum, filament)
-Route::view('/{any?}', 'app')->where('any', '^(?!admin|api|docs|livewire|filament|sanctum|storage|up).*$');
+// Plugin JS bundle — controller fallback for the static symlink at
+// public/plugins/{id} → plugins/{id}/frontend/dist. Nginx serves the symlink
+// directly when it exists (fast path); when it's missing (fresh Docker
+// installs with a named plugins volume, broken activation, etc.) the request
+// falls through here so the browser still gets `application/javascript`
+// instead of the SPA HTML — otherwise Cloudflare's `nosniff` makes the
+// browser refuse to execute it and the plugin page renders blank.
+Route::get('/plugins/{pluginId}/bundle.js', [PluginController::class, 'bundle'])
+    ->where('pluginId', '[a-z0-9][a-z0-9-]*');
+
+// Main SPA (catch-all for React Router — excludes admin, api, docs, livewire,
+// sanctum, filament, storage, up, plugins). `plugins` is excluded so a missing
+// plugin asset returns a clean 404 instead of HTML masquerading as JS/CSS.
+Route::view('/{any?}', 'app')->where('any', '^(?!admin|api|docs|livewire|filament|sanctum|storage|up|plugins).*$');
