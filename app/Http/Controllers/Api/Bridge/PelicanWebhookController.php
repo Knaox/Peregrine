@@ -128,6 +128,14 @@ class PelicanWebhookController extends Controller
             return $data;
         }
 
+        // Custom Pelican events (e.g. App\Events\Server\Installed) ship the
+        // model nested under its kind key instead of `data`/`model`.
+        foreach (['server', 'user', 'node'] as $key) {
+            if (isset($payload[$key]) && is_array($payload[$key])) {
+                return $payload[$key];
+            }
+        }
+
         if (isset($payload['id'])) {
             return $payload;
         }

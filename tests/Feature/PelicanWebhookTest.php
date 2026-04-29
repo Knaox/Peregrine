@@ -293,6 +293,30 @@ class PelicanWebhookTest extends TestCase
         Bus::assertDispatched(SyncServerFromPelicanWebhookJob::class, fn ($job) => $job->pelicanServerId === 33);
     }
 
+    public function test_server_installed_event_with_nested_server_payload_dispatches_sync_job(): void
+    {
+        // Real Pelican payload for App\Events\Server\Installed nests the model
+        // under `server` (not `payload`/`data`/`model`).
+        Bus::fake();
+
+        $response = $this->postJson(
+            '/api/pelican/webhook',
+            [
+                'server' => ['id' => 266, 'name' => 'srv', 'identifier' => 'iden', 'updated_at' => '2026-04-29 02:51:24'],
+                'successful' => true,
+                'initialInstall' => false,
+                'event' => 'event: Server\\Installed',
+            ],
+            [
+                'Authorization' => 'Bearer '.self::TOKEN,
+                'X-Webhook-Event' => 'App\\Events\\Server\\Installed',
+            ],
+        );
+
+        $response->assertStatus(200);
+        Bus::assertDispatched(SyncServerFromPelicanWebhookJob::class, fn ($job) => $job->pelicanServerId === 266);
+    }
+
     public function test_legacy_bridge_token_setting_still_works_as_fallback(): void
     {
         // Installs that haven't run the extract migration yet have only the
