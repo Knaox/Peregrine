@@ -2,7 +2,10 @@ import { useState, useCallback } from 'react';
 import i18n from '@/i18n/config';
 import type { SetupState } from '../types';
 
-const TOTAL_STEPS = 6;
+// Wizard sequence: Langue → Database → Admin → Pelican → Backfill → Webhook → Auth → Summary
+// Keep in sync with STEP_COMPONENTS in SetupWizard.tsx — adding a step here without
+// the matching component (or vice versa) leaves the wizard with a blank panel.
+const TOTAL_STEPS = 8;
 
 const detectedLocale = (i18n.language ?? 'en').startsWith('fr') ? 'fr' : 'en';
 
