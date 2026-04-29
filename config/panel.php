@@ -19,7 +19,7 @@ return [
     // Shipped version of the Peregrine panel. The admin "Updates" page compares
     // this against the latest GitHub release to tell the admin if they need to
     // upgrade.
-    'version' => env('APP_VERSION', '1.0.0-alpha.1'),
+    'version' => env('APP_VERSION', '1.0.0-alpha.2'),
 
     // Repository used by the update checker (Knaox/Peregrine by default).
     'update_repo' => env('UPDATE_REPO', 'Knaox/Peregrine'),
