@@ -3,6 +3,7 @@
 namespace App\Services\Plugin;
 
 use App\Models\Plugin;
+use Illuminate\Database\QueryException;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -77,6 +78,18 @@ class PluginLifecycle
         Cache::forget(self::CACHE_KEY);
     }
 
+    /**
+     * Run a plugin's migrations one file at a time so a single "table already
+     * exists" failure (SQLSTATE[42S01] / MySQL 1050) doesn't abort the whole
+     * batch. When that error fires we treat the existing table as authoritative
+     * — typically the plugin was reinstalled after an uninstall that didn't
+     * drop tables, or an upgrade ships a `create` migration whose target was
+     * already created by a previous version under a different filename. We
+     * record the migration as completed so subsequent activations are clean.
+     *
+     * Non-creation errors (column already exists, FK violation, syntax error,
+     * etc.) still propagate — only 42S01 is silenced.
+     */
     public function runMigrations(string $pluginId): void
     {
         $path = $this->discovery->getPluginPath($pluginId);
@@ -87,12 +100,58 @@ class PluginLifecycle
 
         $migrationsPath = $path . '/src/Migrations';
 
-        if ($this->files->isDirectory($migrationsPath)) {
-            Artisan::call('migrate', [
-                '--path' => str_replace(base_path() . '/', '', $migrationsPath),
-                '--force' => true,
-            ]);
+        if (! $this->files->isDirectory($migrationsPath)) {
+            return;
         }
+
+        $files = collect($this->files->files($migrationsPath))
+            ->filter(fn ($file) => str_ends_with($file->getFilename(), '.php'))
+            ->sortBy(fn ($file) => $file->getFilename())
+            ->values();
+
+        foreach ($files as $file) {
+            $migrationName = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+            $relativePath = ltrim(str_replace(base_path(), '', $file->getPathname()), DIRECTORY_SEPARATOR);
+
+            try {
+                Artisan::call('migrate', [
+                    '--path' => $relativePath,
+                    '--force' => true,
+                ]);
+            } catch (QueryException $e) {
+                if (! $this->isTableAlreadyExistsError($e)) {
+                    throw $e;
+                }
+
+                $this->recordMigrationAsCompleted($migrationName);
+                Log::warning("Plugin '{$pluginId}' migration '{$migrationName}' skipped — table already exists. Recorded as completed.");
+            }
+        }
+    }
+
+    private function isTableAlreadyExistsError(QueryException $e): bool
+    {
+        // SQLSTATE[42S01] = MySQL 1050 = base table or view already exists.
+        return ($e->errorInfo[0] ?? null) === '42S01'
+            || ($e->errorInfo[1] ?? null) === 1050;
+    }
+
+    private function recordMigrationAsCompleted(string $migrationName): void
+    {
+        if (! Schema::hasTable('migrations')) {
+            return;
+        }
+
+        if (DB::table('migrations')->where('migration', $migrationName)->exists()) {
+            return;
+        }
+
+        $batch = ((int) DB::table('migrations')->max('batch')) + 1;
+
+        DB::table('migrations')->insert([
+            'migration' => $migrationName,
+            'batch' => $batch,
+        ]);
     }
 
     /**
