@@ -165,14 +165,12 @@ case. Les **cinq** events à activer :
 | `created: User` | L'orchestrateur a créé un nouveau client Pelican | Ligne `User` mirror locale créée (sans password) |
 | `event: Server\Installed` | Signal de fin d'installation | Status bascule de `provisioning` à `active` instantanément |
 
-> ℹ️ **Bug Pelican connu** — sur certaines releases Pelican, cocher
-> `event: Server\Installed` fait crasher le worker queue de Pelican avec
-> `Cannot use object of type App\Events\Server\Installed as array` (dans
-> `app/Jobs/ProcessWebhook.php`). Si vous voyez cette exception dans les
-> `failed_jobs` de Pelican, décochez uniquement cet event — `updated:
-> Server` couvre déjà la fin d'installation car Pelican passe `status` de
-> `"installing"` à `null` une fois l'installation terminée, ce qui
-> déclenche un event `updated: Server` que Peregrine gère correctement.
+> ℹ️ **Cochez bien `event: Server\Installed` ET `updated: Server`.**
+> `event: Server\Installed` est le signal canonique de fin d'installation
+> que Pelican déclenche dès que le script d'installation termine ;
+> `updated: Server` est un signal secondaire (Pelican passe la colonne
+> `status` de `"installing"` à `null` au même moment) et sert de filet
+> de sécurité si le premier event est perdu pour une raison quelconque.
 
 Cliquez sur **Save**. Pelican commencera à délivrer les events au
 prochain changement d'état éligible.

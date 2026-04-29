@@ -78,17 +78,19 @@ Authorization: Bearer <the token from /admin/pelican-webhook-settings>
 
 ## 3. Liste complète des events supportés (par priorité)
 
-### Required — Shop+Stripe install completion
+### Required — install completion + lifecycle
 
-These are mandatory in Shop+Stripe mode. Without `updated: Server`, freshly-
-provisioned servers never transition to `active`.
+All five are mandatory. `event: Server\Installed` is the canonical
+end-of-install signal — without it, freshly-provisioned servers never
+transition to `active`.
 
-| Event              | Effect locally                                                                            | If unticked                                                |
-|--------------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------|
-| `created: Server`  | Mirrors a new Pelican server into the local DB (or fills in `identifier` / `egg_id` for Shop-owned rows). | Servers visible in Pelican but not in `/admin/servers`.    |
-| `updated: Server`  | Detects install completion (`installing` → `null`), flips `provisioning` → `active`, fires "server is playable" email. **Also covers** suspend/unsuspend/rename/build update. | Stripe-paid servers stuck in `provisioning` forever (badge "stuck" in `/admin/servers` after 30 min). |
-| `deleted: Server`  | Removes the local row when Pelican deletes a server (Paymenter-mode only — Shop-owned rows stay for admin review). | Deleted-on-Pelican servers linger in `/admin/servers`.     |
-| `created: User`    | Mirrors a new Pelican user into `users` (skipped in `shop_stripe` mode — Shop owns user creation). | New Paymenter users not visible in `/admin/users`.         |
+| Event                    | Effect locally                                                                            | If unticked                                                |
+|--------------------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------|
+| `created: Server`        | Mirrors a new Pelican server into the local DB (or fills in `identifier` / `egg_id` for Shop-owned rows). | Servers visible in Pelican but not in `/admin/servers`.    |
+| `updated: Server`        | Detects install completion (`installing` → `null`), flips `provisioning` → `active`. **Also covers** suspend/unsuspend/rename/build update. Acts as a safety-net signal for `Server\Installed`. | Status drifts (rename / suspend / unsuspend not mirrored). |
+| `deleted: Server`        | Removes the local row when Pelican deletes a server (orchestrator-mode only — Shop-owned rows stay for admin review). | Deleted-on-Pelican servers linger in `/admin/servers`.     |
+| `created: User`          | Mirrors a new Pelican user into `users` (skipped in `shop_stripe` mode — Shop owns user creation). | New orchestrator-created users not visible in `/admin/users`. |
+| `event: Server\Installed`| Canonical end-of-install signal — fires the "server is playable" email and flips `provisioning` → `active` instantly. | Stripe-paid servers stuck in `provisioning` until `updated: Server` fires (badge "stuck" in `/admin/servers` after 30 min). |
 
 ### Recommended — Phase 1 (cuts manual sync)
 
@@ -125,7 +127,6 @@ receiver will record them as `ignored` until Phase 2 ships, no harm.
 
 | Event                                  | Why                                                                              |
 |----------------------------------------|----------------------------------------------------------------------------------|
-| `event: Server\Installed`              | Crashes Pelican's own queue on some releases (`Cannot use object as array` in `ProcessWebhook.php`). `updated: Server` already covers install-finished. |
 | `event: ActivityLogged`                | Fires on every user action (power.start, command, file.download, etc.). Volume too high — would flood the rate limiter. |
 | `created/updated/deleted: ActivityLog` | Same as above.                                                                   |
 | `created/updated: Schedule`            | Fires on every cron tick (each schedule run = 2 webhooks). Flood guaranteed.     |
@@ -201,13 +202,12 @@ so a short retention window suffices).
   `pelican-webhook` rate limiter allows in the time window. Investigate
   Pelican-side — usually a flood-prone event ticked by mistake (Schedule,
   ActivityLog, ApiKey).
-- **Pelican queue crash on `Cannot use object as array`** : you ticked
-  `event: Server\Installed`. Untick it. `updated: Server` covers the case.
-- **Server stuck in `provisioning` (Shop+Stripe)** : check
-  `/admin/pelican-webhook-logs` for the matching `updated: Server` event.
-  If it's missing, the webhook didn't reach Peregrine (most likely the
-  event isn't ticked in Pelican). Tick `updated: Server` in Pelican's
-  webhook events tab — the next install will flip correctly.
+- **Server stuck in `provisioning`** : check `/admin/pelican-webhook-logs`
+  for the matching `event: Server\Installed` event. If it's missing, the
+  webhook didn't reach Peregrine (most likely the event isn't ticked in
+  Pelican). Tick **both** `event: Server\Installed` (primary install signal)
+  and `updated: Server` (safety net) in Pelican's webhook events tab — the
+  next install will flip correctly.
 - **`/admin/users` doesn't reflect a recent email change** : tick
   `updated: User` in Pelican. Until then, run `php artisan sync:users` to
   catch up manually.

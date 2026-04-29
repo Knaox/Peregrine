@@ -210,7 +210,7 @@ return [
 
     'servers' => [
         'tooltips' => [
-            'stuck' => "This server has been awaiting the Pelican install-completion webhook for over 30 minutes. Most likely the events `updated: Server` and `event: Server\\Installed` are not ticked in your Pelican /admin/webhooks. Check /admin/pelican-webhook-logs for incoming events and /docs/pelican-webhook for the configuration guide.",
+            'stuck' => "This server has been awaiting the Pelican install-completion webhook for over 30 minutes. Most likely the events `event: Server\\Installed` and `updated: Server` are not ticked in your Pelican /admin/webhooks. Check /admin/pelican-webhook-logs for incoming events and /docs/pelican-webhook for the configuration guide.",
             'scheduled_deletion' => 'This server will be hard-deleted at the date shown. Use the action menu → Cancel scheduled deletion to keep it.',
         ],
         'helpers' => [
@@ -511,14 +511,14 @@ return [
             'mirror_reads_helper' => 'When off, controllers keep calling Pelican with a 2–10 min cache (Phase 1 behaviour). When on, pages read from the local mirror tables pelican_backups / pelican_databases / pelican_allocations — instant pages, and Peregrine keeps working even if Pelican is briefly down.',
             'top_fields' => 'Top fields',
             'headers' => 'Headers (keep the default row, add the second)',
-            'events_required' => 'Required (Shop+Stripe install completion)',
-            'events_required_note' => 'These four are mandatory in Shop+Stripe mode — `updated: Server` is the canonical install-completion signal (Pelican flips status from "installing" to null). Without it, servers created via Stripe stay in "provisioning" forever and a "stuck" badge shows in /admin/servers.',
+            'events_required' => 'Required (install completion + lifecycle)',
+            'events_required_note' => 'These five events are mandatory. `event: Server\\Installed` is the canonical end-of-install signal (Pelican fires it as soon as the install script finishes); `updated: Server` is the secondary signal (Pelican flips status from "installing" to null at the same moment) and acts as a safety net. Without these two, servers stay in "provisioning" forever and a "stuck" badge shows in /admin/servers. `created: Server` / `deleted: Server` / `created: User` are the standard lifecycle events.',
             'events_recommended' => 'Recommended — Phase 1 (cuts manual sync)',
             'events_recommended_note' => 'Mirrors user email/name changes, node infrastructure, and egg/variable definitions in real time. With these ticked, the manual `sync:users / sync:nodes / sync:eggs` commands become safety nets you rarely need.',
             'events_phase2' => 'Phase 2 preview — local DB mirrors (not active yet)',
             'events_phase2_note' => 'Reserved for the upcoming Phase 2 (local DB mirrors that make /backups, /databases, /network pages instant). Ticking them now is harmless — the receiver will record them as ignored until Phase 2 ships.',
             'events_blocklist' => 'DO NOT tick',
-            'events_blocklist_note' => '`event: Server\\Installed` crashes Pelican\'s own queue on some releases (`Cannot use object as array`) — `updated: Server` already covers install-finished. `Schedule` and `Task` fire on every cron tick (flood). `ActivityLog` fires on every user action (flood). `ApiKey` updates `last_used_at` on every API call (noise). `Webhook` / `WebhookConfiguration` create infinite loops.',
+            'events_blocklist_note' => '`Schedule` and `Task` fire on every cron tick (flood). `ActivityLog` fires on every user action (flood). `ApiKey` updates `last_used_at` on every API call (noise). `Webhook` / `WebhookConfiguration` create infinite loops.',
             'docs' => 'Step-by-step walkthrough',
             'docs_note' => 'Full setup guide, troubleshooting, known limits, and how the install-status sync interacts with Bridge modes.',
             'audit' => 'Live audit of received webhooks',

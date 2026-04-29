@@ -81,17 +81,19 @@ Authorization: Bearer <the token from /admin/pelican-webhook-settings>
 
 ## 3. Liste complète des events supportés (par priorité)
 
-### Required — Shop+Stripe install completion
+### Requis — fin d'installation + cycle de vie
 
-Ceux-ci sont obligatoires en mode Shop+Stripe. Sans `updated: Server`, les
-serveurs fraîchement provisionnés ne passeront jamais à `active`.
+Les cinq sont obligatoires. `event: Server\Installed` est le signal canonique
+de fin d'installation — sans lui, les serveurs fraîchement provisionnés ne
+passeront jamais à `active`.
 
-| Événement          | Effet en local                                                                            | Si non coché                                                |
-|--------------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------|
-| `created: Server`  | Miroir un nouveau serveur Pelican vers la DB locale (ou remplit `identifier` / `egg_id` pour les lignes appartenant au Shop). | Serveurs visibles dans Pelican mais pas dans `/admin/servers`. |
-| `updated: Server`  | Détecte la fin d'installation (`installing` → `null`), bascule `provisioning` → `active`, déclenche l'email "serveur jouable". **Couvre aussi** suspend/unsuspend/rename/build update. | Serveurs payés via Stripe bloqués en `provisioning` indéfiniment (badge "stuck" dans `/admin/servers` après 30 min). |
-| `deleted: Server`  | Supprime la ligne locale quand Pelican supprime un serveur (mode Paymenter uniquement — les lignes appartenant au Shop sont conservées pour revue admin). | Les serveurs supprimés côté Pelican subsistent dans `/admin/servers`. |
-| `created: User`    | Miroir un nouvel utilisateur Pelican dans `users` (ignoré en mode `shop_stripe` — le Shop possède la création utilisateur). | Nouveaux utilisateurs Paymenter non visibles dans `/admin/users`. |
+| Événement                | Effet en local                                                                            | Si non coché                                                |
+|--------------------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------|
+| `created: Server`        | Miroir un nouveau serveur Pelican vers la DB locale (ou remplit `identifier` / `egg_id` pour les lignes appartenant au Shop). | Serveurs visibles dans Pelican mais pas dans `/admin/servers`. |
+| `updated: Server`        | Détecte la fin d'installation (`installing` → `null`), bascule `provisioning` → `active`. **Couvre aussi** suspend/unsuspend/rename/build update. Sert de filet de sécurité au signal `Server\Installed`. | Drift de statut (rename / suspend / unsuspend non miroirés). |
+| `deleted: Server`        | Supprime la ligne locale quand Pelican supprime un serveur (mode orchestrateur uniquement — les lignes appartenant au Shop sont conservées pour revue admin). | Les serveurs supprimés côté Pelican subsistent dans `/admin/servers`. |
+| `created: User`          | Miroir un nouvel utilisateur Pelican dans `users` (ignoré en mode `shop_stripe` — le Shop possède la création utilisateur). | Nouveaux utilisateurs créés par l'orchestrateur non visibles dans `/admin/users`. |
+| `event: Server\Installed`| Signal canonique de fin d'installation — déclenche l'email « serveur jouable » et bascule `provisioning` → `active` instantanément. | Serveurs payés via Stripe bloqués en `provisioning` jusqu'à ce que `updated: Server` se déclenche (badge « stuck » dans `/admin/servers` après 30 min). |
 
 ### Recommended — Phase 1 (réduit la sync manuelle)
 
@@ -129,7 +131,6 @@ la Phase 2 soit livrée, sans impact.
 
 | Événement                              | Pourquoi                                                                         |
 |----------------------------------------|----------------------------------------------------------------------------------|
-| `event: Server\Installed`              | Crashe la propre queue de Pelican sur certaines releases (`Cannot use object as array` dans `ProcessWebhook.php`). `updated: Server` couvre déjà la fin d'installation. |
 | `event: ActivityLogged`                | Se déclenche à chaque action utilisateur (power.start, command, file.download, etc.). Volume trop élevé — saturerait le rate limiter. |
 | `created/updated/deleted: ActivityLog` | Identique ci-dessus.                                                             |
 | `created/updated: Schedule`            | Se déclenche à chaque tick cron (chaque exécution de schedule = 2 webhooks). Flood garanti. |
@@ -209,15 +210,13 @@ de rétention courte suffit).
   d'événements que le rate limiter `pelican-webhook` n'en autorise dans la
   fenêtre temporelle. Investiguer côté Pelican — généralement un événement
   flood-prone coché par erreur (Schedule, ActivityLog, ApiKey).
-- **Crash de queue Pelican avec `Cannot use object as array`** : vous avez
-  coché `event: Server\Installed`. Décochez-le. `updated: Server` couvre le
-  cas.
-- **Serveur bloqué en `provisioning` (Shop+Stripe)** : vérifiez
-  `/admin/pelican-webhook-logs` pour l'événement `updated: Server`
-  correspondant. S'il manque, le webhook n'a pas atteint Peregrine (le
-  plus probablement, l'événement n'est pas coché dans Pelican). Cocher
-  `updated: Server` dans l'onglet events du webhook Pelican — la
-  prochaine installation basculera correctement.
+- **Serveur bloqué en `provisioning`** : vérifiez
+  `/admin/pelican-webhook-logs` pour l'événement `event: Server\Installed`
+  correspondant. S'il manque, le webhook n'a pas atteint Peregrine (très
+  probablement l'event n'est pas coché dans Pelican). Cochez **les deux**
+  `event: Server\Installed` (signal principal) et `updated: Server` (filet
+  de sécurité) dans l'onglet events du webhook Pelican — la prochaine
+  installation basculera correctement.
 - **`/admin/users` ne reflète pas un changement d'email récent** : cocher
   `updated: User` dans Pelican. En attendant, lancer `php artisan
   sync:users` pour rattraper manuellement.

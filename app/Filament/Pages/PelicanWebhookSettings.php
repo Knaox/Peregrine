@@ -153,6 +153,7 @@ class PelicanWebhookSettings extends Page implements HasForms
                             'updated: Server',
                             'deleted: Server',
                             'created: User',
+                            'event: Server\\Installed',
                         ], note: __('admin.webhook_settings.fields.events_required_note'))),
 
                     Placeholder::make('pelican_events_recommended')
@@ -194,7 +195,6 @@ class PelicanWebhookSettings extends Page implements HasForms
                     Placeholder::make('pelican_events_blocklist')
                         ->label(__('admin.webhook_settings.fields.events_blocklist'))
                         ->content(BridgeSettingsHtmlHelpers::renderTagList([
-                            'event: Server\\Installed',
                             'event: ActivityLogged',
                             'created: Schedule',
                             'updated: Schedule',

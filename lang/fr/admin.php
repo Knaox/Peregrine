@@ -210,7 +210,7 @@ return [
 
     'servers' => [
         'tooltips' => [
-            'stuck' => "Ce serveur attend le webhook d'install Pelican depuis plus de 30 minutes. Très probablement les events `updated: Server` et `event: Server\\Installed` ne sont pas cochés dans /admin/webhooks côté Pelican. Vérifiez /admin/pelican-webhook-logs pour les events entrants et /docs/pelican-webhook pour le guide de configuration.",
+            'stuck' => "Ce serveur attend le webhook d'install Pelican depuis plus de 30 minutes. Très probablement les events `event: Server\\Installed` et `updated: Server` ne sont pas cochés dans /admin/webhooks côté Pelican. Vérifiez /admin/pelican-webhook-logs pour les events entrants et /docs/pelican-webhook pour le guide de configuration.",
             'scheduled_deletion' => 'Ce serveur sera supprimé définitivement à la date affichée. Utilisez le menu d\'actions → Annuler la suppression planifiée pour le conserver.',
         ],
         'helpers' => [
@@ -511,14 +511,14 @@ return [
             'mirror_reads_helper' => "Si désactivé, les controllers continuent d'appeler l'API Pelican avec un cache de 2-10 min (comportement Phase 1). Si activé, les pages lisent les tables miroir pelican_backups / pelican_databases / pelican_allocations — pages instantanées + Peregrine continue de fonctionner même si Pelican est temporairement indisponible.",
             'top_fields' => 'Champs du haut',
             'headers' => "Headers (gardez la ligne par défaut, ajoutez la seconde)",
-            'events_required' => "Requis (provisioning Shop+Stripe)",
-            'events_required_note' => "Ces quatre events sont obligatoires en mode Shop+Stripe — `updated: Server` est le signal canonique de fin d'installation (Pelican passe le statut de \"installing\" à null). Sans ça, les serveurs créés via Stripe restent en \"provisioning\" indéfiniment et un badge \"bloqué\" apparaît dans /admin/servers.",
+            'events_required' => "Requis (fin d'installation + cycle de vie)",
+            'events_required_note' => "Ces cinq events sont obligatoires. `event: Server\\Installed` est le signal canonique de fin d'installation (Pelican le déclenche dès que le script d'installation termine) ; `updated: Server` est le signal secondaire (Pelican passe le statut de \"installing\" à null au même moment) et sert de filet de sécurité. Sans ces deux events, les serveurs restent en \"provisioning\" indéfiniment et un badge \"bloqué\" apparaît dans /admin/servers. `created: Server` / `deleted: Server` / `created: User` sont les events standards du cycle de vie.",
             'events_recommended' => "Recommandé — Phase 1 (réduit la sync manuelle)",
             'events_recommended_note' => "Mirror les changements d'email/nom utilisateur, l'infrastructure des nodes, et les définitions egg/variable en temps réel. Avec ces events cochés, les commandes manuelles `sync:users / sync:nodes / sync:eggs` deviennent des filets de sécurité rarement nécessaires.",
             'events_phase2' => 'Aperçu Phase 2 — miroirs DB locale (pas encore actif)',
             'events_phase2_note' => 'Réservé à la future Phase 2 (miroirs DB locale qui rendent les pages /backups, /databases, /network instantanées). Les cocher maintenant est sans risque — le récepteur les enregistrera comme ignorés jusqu\'à ce que la Phase 2 soit livrée.',
             'events_blocklist' => 'À NE PAS cocher',
-            'events_blocklist_note' => '`event: Server\\Installed` plante la queue Pelican sur certaines releases (`Cannot use object as array`) — `updated: Server` couvre déjà la fin d\'installation. `Schedule` et `Task` se déclenchent à chaque tick cron (flood). `ActivityLog` se déclenche à chaque action user (flood). `ApiKey` met à jour `last_used_at` à chaque appel API (bruit). `Webhook` / `WebhookConfiguration` créent des boucles infinies.',
+            'events_blocklist_note' => "`Schedule` et `Task` se déclenchent à chaque tick cron (flood). `ActivityLog` se déclenche à chaque action user (flood). `ApiKey` met à jour `last_used_at` à chaque appel API (bruit). `Webhook` / `WebhookConfiguration` créent des boucles infinies.",
             'docs' => 'Guide pas-à-pas',
             'docs_note' => "Guide complet de configuration, dépannage, limites connues, et fonctionnement de la sync de statut d'installation selon les modes Bridge.",
             'audit' => 'Audit en direct des webhooks reçus',

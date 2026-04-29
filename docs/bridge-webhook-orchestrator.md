@@ -157,14 +157,12 @@ events to enable :
 | `created: User` | The orchestrator created a new Pelican customer | Local `User` mirror row created (no password) |
 | `event: Server\Installed` | End-of-install signal | Status flips from `provisioning` to `active` instantly |
 
-> ℹ️ **Known Pelican bug** — in some Pelican releases, ticking
-> `event: Server\Installed` makes Pelican's own queue worker crash with
-> `Cannot use object of type App\Events\Server\Installed as array` (in
-> `app/Jobs/ProcessWebhook.php`). If you see that exception in Pelican's
-> `failed_jobs`, untick that event only — `updated: Server` already covers
-> install-finished because Pelican flips `status` from `"installing"` to
-> `null` once the install completes, and that fires an `updated: Server`
-> event Peregrine handles correctly.
+> ℹ️ **Both `event: Server\Installed` AND `updated: Server` should be
+> ticked.** `event: Server\Installed` is the canonical end-of-install
+> signal Pelican fires the moment the install script finishes ;
+> `updated: Server` is a secondary signal (Pelican flips the
+> `status` column from `"installing"` to `null` at the same time) and
+> acts as a safety net if the first one is dropped for any reason.
 
 Click **Save**. Pelican will start delivering events on the next eligible
 state change.
