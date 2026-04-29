@@ -15,7 +15,7 @@ class ListUsers extends ListRecords
 
     public function getSubheading(): ?string
     {
-        return SyncOrderGuard::ORDER_HINT.' — '.app(SyncOrderGuard::class)->statusLine();
+        return SyncOrderGuard::orderHint().' — '.app(SyncOrderGuard::class)->statusLine();
     }
 
     protected function getHeaderActions(): array
@@ -51,7 +51,7 @@ class ListUsers extends ListRecords
                     $imported = $syncService->importUsers($ids);
 
                     Notification::make()
-                        ->title("Imported {$imported} users from Pelican")
+                        ->title(__('admin.resource_pages.sync_users_imported', ['count' => $imported]))
                         ->success()
                         ->send();
                 }),

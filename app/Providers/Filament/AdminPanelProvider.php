@@ -48,6 +48,16 @@ class AdminPanelProvider extends PanelProvider
                     ->label(fn () => __('admin.navigation.player_panel'))
                     ->url('/')
                     ->icon('heroicon-o-arrow-left'),
+                MenuItem::make('switch-to-fr')
+                    ->label(fn () => 'Français')
+                    ->url(fn () => route('admin.locale.switch', 'fr'))
+                    ->icon('heroicon-o-language')
+                    ->visible(fn () => (auth()->user()?->locale ?? 'en') !== 'fr'),
+                MenuItem::make('switch-to-en')
+                    ->label(fn () => 'English')
+                    ->url(fn () => route('admin.locale.switch', 'en'))
+                    ->icon('heroicon-o-language')
+                    ->visible(fn () => (auth()->user()?->locale ?? 'en') !== 'en'),
             ])
             ->sidebarCollapsibleOnDesktop()
             ->navigationItems([

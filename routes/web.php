@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\LocaleController;
 use App\Http\Controllers\Api\Auth\SocialAuthController;
 use App\Http\Controllers\Api\PluginController;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,14 @@ Route::view('/login', 'app')->name('frontend.login');
 // no longer exposes a login page (admins use /login like everyone else),
 // but a 404 on a deep bookmark is a worse experience than a clean redirect.
 Route::redirect('/admin/login', '/login', 302);
+
+// Locale switcher wired into the Filament user menu (top-right). The link
+// is admin-only by virtue of being inside /admin/* + auth middleware on
+// the panel — a Filament MenuItem just emits a regular GET link.
+Route::get('/admin/locale/{locale}', [LocaleController::class, 'switch'])
+    ->middleware(['web', 'auth'])
+    ->where('locale', 'en|fr')
+    ->name('admin.locale.switch');
 
 // Bridge developer documentation — public HTML render of docs/bridge-api.md.
 // Targeted at shop developers writing the client side of the Bridge contract.

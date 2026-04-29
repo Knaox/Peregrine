@@ -15,7 +15,7 @@ class ListEggs extends ListRecords
 
     public function getSubheading(): ?string
     {
-        return SyncOrderGuard::ORDER_HINT.' — '.app(SyncOrderGuard::class)->statusLine();
+        return SyncOrderGuard::orderHint().' — '.app(SyncOrderGuard::class)->statusLine();
     }
 
     protected function getHeaderActions(): array
@@ -34,7 +34,7 @@ class ListEggs extends ListRecords
                     $count = $syncService->syncEggs();
 
                     Notification::make()
-                        ->title("Synced {$count} eggs from Pelican")
+                        ->title(__('admin.resource_pages.sync_eggs.success', ['count' => $count]))
                         ->success()
                         ->send();
                 }),

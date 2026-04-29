@@ -16,7 +16,7 @@ class ListServers extends ListRecords
 
     public function getSubheading(): ?string
     {
-        return SyncOrderGuard::ORDER_HINT.' — '.app(SyncOrderGuard::class)->statusLine();
+        return SyncOrderGuard::orderHint().' — '.app(SyncOrderGuard::class)->statusLine();
     }
 
     protected function getHeaderActions(): array
@@ -64,7 +64,7 @@ class ListServers extends ListRecords
                     $imported = $syncService->importServers($imports);
 
                     Notification::make()
-                        ->title("Imported {$imported} servers from Pelican")
+                        ->title(__('admin.resource_pages.sync_servers_imported', ['count' => $imported]))
                         ->success()
                         ->send();
                 }),

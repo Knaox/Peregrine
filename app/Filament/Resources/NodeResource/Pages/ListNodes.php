@@ -15,7 +15,7 @@ class ListNodes extends ListRecords
 
     public function getSubheading(): ?string
     {
-        return SyncOrderGuard::ORDER_HINT.' — '.app(SyncOrderGuard::class)->statusLine();
+        return SyncOrderGuard::orderHint().' — '.app(SyncOrderGuard::class)->statusLine();
     }
 
     protected function getHeaderActions(): array
@@ -30,7 +30,7 @@ class ListNodes extends ListRecords
                     $count = $syncService->syncNodes();
 
                     Notification::make()
-                        ->title("Synced {$count} nodes from Pelican")
+                        ->title(__('admin.resource_pages.sync_nodes.success', ['count' => $count]))
                         ->success()
                         ->send();
                 }),

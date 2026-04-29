@@ -1066,10 +1066,14 @@ return [
         ],
         'sync_eggs' => [
             'label' => 'Synchroniser les eggs',
+            'success' => ':count eggs synchronisés depuis Pelican',
         ],
         'sync_nodes' => [
             'label' => 'Synchroniser les nodes',
+            'success' => ':count nodes synchronisés depuis Pelican',
         ],
+        'sync_users_imported' => ':count utilisateurs importés depuis Pelican',
+        'sync_servers_imported' => ':count serveurs importés depuis Pelican',
         'back_to_list' => 'Retour à la liste',
         'test_server' => [
             'label' => 'Créer un serveur de test',
@@ -1091,6 +1095,10 @@ return [
             'aria' => 'Certifié par Peregrine Team',
             'label' => 'Certifié',
         ],
+    ],
+
+    'profile' => [
+        'language_switched' => 'Langue changée en :locale',
     ],
 
     'sync_order' => [
