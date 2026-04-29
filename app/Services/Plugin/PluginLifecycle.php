@@ -67,15 +67,101 @@ class PluginLifecycle
             throw new \RuntimeException("Cannot uninstall active plugin '{$pluginId}'. Deactivate it first.");
         }
 
+        // Bundled plugins ship with the panel source — they're tracked in
+        // the Peregrine git repo and brought back on every `git pull`.
+        // Removing the directory + DB row would just leave an inconsistent
+        // state until the next pull restores the files. Refuse upfront.
+        $manifest = $this->discovery->getManifest($pluginId);
+        if (is_array($manifest) && ! empty($manifest['bundled'])) {
+            throw new \RuntimeException(
+                "Plugin '{$pluginId}' is bundled with Peregrine and cannot be uninstalled. "
+                ."To stop using it, deactivate it (`plugin:deactivate {$pluginId}`) — that's enough "
+                ."to unmount its routes and Filament resources without fighting the next git pull."
+            );
+        }
+
+        // Best-effort symlink cleanup before touching the dir, mirroring
+        // deactivate(). Failure here is non-fatal — symlinks may already
+        // be gone from a previous attempt.
         $this->removePublicSymlink($pluginId);
 
+        // Atomic delete : verify the directory is actually gone before we
+        // wipe the DB row. The previous version just called
+        // `deleteDirectory()` without checking the boolean return — so a
+        // permission-denied delete left files on disk while the DB record
+        // got removed, leaving the panel stuck (re-install fails because
+        // dir exists, can't uninstall again because no DB row to find).
         $path = $this->discovery->getPluginPath($pluginId);
         if ($path && $this->files->isDirectory($path)) {
-            $this->files->deleteDirectory($path);
+            $deleted = $this->files->deleteDirectory($path);
+            if (! $deleted || $this->files->isDirectory($path)) {
+                throw new \RuntimeException(
+                    "Failed to remove plugin directory at {$path}. "
+                    ."The DB record was preserved so the plugin still appears in the admin list — retry once "
+                    ."the underlying issue is fixed (typically file ownership : "
+                    ."`chown -R \$(id -un):\$(id -gn) {$path}`)."
+                );
+            }
         }
 
         Plugin::where('plugin_id', $pluginId)->delete();
         Cache::forget(self::CACHE_KEY);
+    }
+
+    /**
+     * Sync the DB row to whatever's on disk and run any new migrations.
+     * Designed for stuck states :
+     *
+     *   - Bundled plugin has been git-pulled to a newer version, but the
+     *     `plugins` DB row still says the old version. This method bumps
+     *     the row + runs the new migrations so the panel reads the new
+     *     `version` value and the schema matches the new code.
+     *
+     *   - A previous install/update partially failed (dir copied OK but
+     *     DB row never written). This method writes the row from the
+     *     manifest on disk.
+     *
+     * Does NOT change `is_active` — the admin keeps full control of that
+     * via activate/deactivate. Does NOT touch the disk content — for
+     * marketplace plugins the operator should re-download via the normal
+     * update path; this method is for resyncing metadata only.
+     */
+    public function forceResync(string $pluginId): void
+    {
+        $manifest = $this->discovery->getManifest($pluginId);
+        if (! $manifest) {
+            throw new \RuntimeException(
+                "Plugin '{$pluginId}' not found on disk — nothing to resync. "
+                ."If this is a marketplace plugin, install it via the marketplace; "
+                ."if it's bundled, ensure your panel source is up-to-date (`git pull`)."
+            );
+        }
+
+        $version = (string) ($manifest['version'] ?? '0.0.0');
+
+        // Run migrations FIRST so the schema is ready before any code that
+        // boots from this row hits new columns. Idempotent — runMigrations
+        // skips already-recorded migrations.
+        $this->runMigrations($pluginId);
+
+        // Recreate the public symlink — it's harmless if it already
+        // points at the right target, and fixes the case where a Docker
+        // redeploy wiped /public/plugins/.
+        $this->createPublicSymlink($pluginId);
+
+        Plugin::updateOrCreate(
+            ['plugin_id' => $pluginId],
+            [
+                // Preserve the existing is_active flag (createOrUpdate fills
+                // it with the default `false` on first insert which is the
+                // safe choice for a never-activated plugin).
+                'version' => $version,
+                'installed_at' => Plugin::where('plugin_id', $pluginId)->value('installed_at') ?? now(),
+            ],
+        );
+
+        Cache::forget(self::CACHE_KEY);
+        $this->refreshRuntime();
     }
 
     /**
@@ -224,6 +310,14 @@ class PluginLifecycle
      */
     private function refreshRuntime(): void
     {
+        // No-op in the test environment : `config:clear` would nuke any
+        // overrides the test set via `config(['key' => 'value'])` and
+        // break unrelated tests later in the same process. Production
+        // boot flows still get the full cache flush.
+        if (app()->environment('testing')) {
+            return;
+        }
+
         $commands = [
             'queue:restart',
             'cache:clear',

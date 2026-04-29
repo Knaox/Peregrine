@@ -110,6 +110,14 @@ class MarketplaceService
      * version of this method silently swallowed errors (e.g. moveDirectory
      * returning false on a permission denial), so the controller showed
      * "Plugin installed" while the files never actually landed on disk.
+     *
+     * Bundled plugins (`"bundled": true` in plugin.json) cannot be installed
+     * via this path — they ship with the panel itself, are tracked in the
+     * Peregrine git repo, and should be (re)synced via `plugin:force-resync`
+     * after a `git pull`. Trying to download + extract a bundled plugin would
+     * either clash with the existing on-disk files (throw "already installed")
+     * or, if the dir was first nuked, hand back a copy that git pull would
+     * immediately overwrite again — pointless and confusing.
      */
     public function install(string $pluginId): void
     {
@@ -137,8 +145,26 @@ class MarketplaceService
         $pluginsRoot = base_path('plugins');
         $pluginPath = base_path("plugins/{$pluginId}");
 
+        // If the directory already exists, distinguish two cases :
+        //   1. Bundled plugin (manifest says `bundled: true`) — managed by
+        //      git, never re-installed via the marketplace. Direct the
+        //      admin to the resync path.
+        //   2. Random leftover dir from a half-rolled-back install. Tell
+        //      the admin to clean up manually rather than silently nuking.
         if ($this->files->isDirectory($pluginPath)) {
-            throw new \RuntimeException("Plugin '{$pluginId}' is already installed on disk.");
+            if ($this->isBundled($pluginPath)) {
+                throw new \RuntimeException(
+                    "Plugin '{$pluginId}' is bundled with Peregrine and cannot be reinstalled via the marketplace. "
+                    ."Pull the latest panel source (`git pull`) then run `php artisan plugin:force-resync {$pluginId}` "
+                    ."to sync the DB row + run any new migrations."
+                );
+            }
+            throw new \RuntimeException(
+                "Plugin '{$pluginId}' is already installed on disk at {$pluginPath}. "
+                ."If you meant to update, use the 'Update' action. If the directory is a stale leftover, "
+                ."remove it manually before retrying the install (the marketplace refuses to overwrite "
+                ."unknown content as a safety measure)."
+            );
         }
 
         // Sanity check : the plugins/ directory must exist and be writable
@@ -244,18 +270,67 @@ class MarketplaceService
 
     /**
      * Update a plugin to the latest version from the registry.
+     *
+     * Two paths :
+     *
+     *   1. Bundled plugin — source is tracked in the Peregrine git repo.
+     *      The on-disk version moves with `git pull`, not with a download.
+     *      "Update" here just bumps the DB version row to whatever's on
+     *      disk and runs any new migrations (delegates to
+     *      `PluginManager::forceResync()`).
+     *
+     *   2. Standard marketplace plugin — wipe the dir, re-download and
+     *      re-extract from the registry. Each step is verified : if the
+     *      delete fails (typical Docker permission mismatch), we throw
+     *      with an actionable message instead of falling through to
+     *      `install()` which would just say "already installed" again.
      */
     public function update(string $pluginId): void
     {
         $pluginPath = base_path("plugins/{$pluginId}");
 
-        // Remove old version
-        if ($this->files->isDirectory($pluginPath)) {
-            $this->files->deleteDirectory($pluginPath);
+        // Bundled plugin → resync DB to disk, no download/extract.
+        if ($this->files->isDirectory($pluginPath) && $this->isBundled($pluginPath)) {
+            $this->pluginManager->forceResync($pluginId);
+            return;
         }
 
-        // Re-install
+        if ($this->files->isDirectory($pluginPath)) {
+            $deleted = $this->files->deleteDirectory($pluginPath);
+            if (! $deleted || $this->files->isDirectory($pluginPath)) {
+                throw new \RuntimeException(
+                    "Failed to remove the existing plugin directory at {$pluginPath} before updating. "
+                    ."Likely cause : the directory contains files owned by a different user "
+                    ."(e.g. a previous install ran as root or www-data, the current PHP process can't delete them). "
+                    ."Fix : `chown -R \$(id -un):\$(id -gn) {$pluginPath}` then retry, "
+                    ."or remove the directory manually before clicking Update again."
+                );
+            }
+        }
+
+        // Re-install (will re-throw if anything goes wrong).
         $this->install($pluginId);
+    }
+
+    /**
+     * Read the manifest's `bundled` flag. Bundled plugins ship with the
+     * panel source and must never be touched by the marketplace install /
+     * update flow. Returns false defensively if the manifest is missing or
+     * malformed (treat unknown plugins as "regular marketplace" so the
+     * existing flow applies).
+     */
+    private function isBundled(string $pluginPath): bool
+    {
+        $manifestPath = $pluginPath . '/plugin.json';
+        if (! $this->files->exists($manifestPath)) {
+            return false;
+        }
+        try {
+            $manifest = json_decode($this->files->get($manifestPath), true);
+        } catch (\Throwable) {
+            return false;
+        }
+        return is_array($manifest) && ! empty($manifest['bundled']);
     }
 
     /**

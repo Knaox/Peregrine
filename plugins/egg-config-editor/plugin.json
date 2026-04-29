@@ -6,6 +6,7 @@
     "author": "Peregrine Team",
     "license": "MIT",
     "min_peregrine_version": "1.0.0",
+    "bundled": true,
     "service_provider": "EggConfigEditorServiceProvider",
     "manage_url": "/admin/egg-config-files",
     "frontend": {

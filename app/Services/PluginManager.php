@@ -72,6 +72,11 @@ class PluginManager
         $this->lifecycle->runMigrations($pluginId);
     }
 
+    public function forceResync(string $pluginId): void
+    {
+        $this->lifecycle->forceResync($pluginId);
+    }
+
     // Bootstrap -----------------------------------------------------------
 
     /** @return Collection<int, Plugin> */
