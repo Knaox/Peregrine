@@ -214,7 +214,7 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
                 The `server-sidebar` class is a stable hook for app.css overrides
                 (e.g. `data-sidebar-floating="true"` flips margin + radius + shadow). */}
             <aside
-                className="server-sidebar relative flex-shrink-0 h-full hidden md:flex md:flex-col transition-[width] duration-200"
+                className="server-sidebar themed-border-x relative flex-shrink-0 h-full hidden md:flex md:flex-col transition-[width] duration-200"
                 style={{
                     width: isRail ? 'var(--sidebar-width-rail, 64px)' : 'var(--sidebar-width-classic, 224px)',
                     background: 'var(--color-glass)',

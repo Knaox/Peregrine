@@ -73,6 +73,13 @@ class SaveThemeRequest extends FormRequest
             'theme_login_background_image' => ['nullable', 'string', 'max:500'],
             'theme_login_background_blur' => ['nullable', 'integer', 'min:0', 'max:24'],
             'theme_login_background_pattern' => ['nullable', 'in:none,gradient,mesh,dots,grid,aurora,orbs,noise'],
+            // Carousel — optional multi-image rotation behind the form.
+            'theme_login_background_images' => ['nullable', 'array', 'max:8'],
+            'theme_login_background_images.*' => ['string', 'max:500'],
+            'theme_login_carousel_enabled' => ['nullable', 'boolean'],
+            'theme_login_carousel_interval' => ['nullable', 'integer', 'min:2000', 'max:30000'],
+            'theme_login_carousel_random' => ['nullable', 'boolean'],
+            'theme_login_background_opacity' => ['nullable', 'integer', 'min:0', 'max:100'],
 
             // Per-page overrides (Vague 3 complète).
             'theme_page_console_fullwidth' => ['nullable', 'boolean'],

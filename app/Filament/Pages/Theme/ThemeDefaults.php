@@ -49,6 +49,13 @@ final class ThemeDefaults
         'theme_login_background_image' => '',
         'theme_login_background_blur' => '0',
         'theme_login_background_pattern' => 'gradient',
+        // Carousel (multi-image background, opt-in). Stored as JSON string of
+        // paths. Defaults preserve single-image behaviour for existing installs.
+        'theme_login_background_images' => '[]',
+        'theme_login_carousel_enabled' => '0',
+        'theme_login_carousel_interval' => '6000',
+        'theme_login_carousel_random' => '1',
+        'theme_login_background_opacity' => '100',
         // Per-page layout overrides (Vague 3 complète).
         'theme_page_console_fullwidth' => '0',
         'theme_page_files_fullwidth' => '0',
@@ -85,6 +92,14 @@ final class ThemeDefaults
         'card_style' => 'glass',
         'sort_default' => 'name',
         'group_by' => 'none',
+        // Extensions perso — defaults preserve current rendering exactly.
+        'card_density' => 'comfortable',
+        'card_header_style' => 'banner',
+        'card_status_position' => 'top-right',
+        'card_accent_strength' => 'subtle',
+        'card_border_style' => 'full',
+        'card_quick_actions_layout' => 'full',
+        'card_hover_effect' => 'scale',
     ];
 
     public const SIDEBAR_CONFIG = [

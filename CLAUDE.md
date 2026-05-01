@@ -456,8 +456,6 @@ Contracts : `Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication` + `Ha
 
 Aucune dette critique.
 
-- Bridge P3 (Stripe webhook + lifecycle + emails) **livré 2026-04-23**.
-- Bridge Paymenter (Pelican webhook → mirror, no emails / no plans) **livré 2026-04-23** (mode mutuellement exclusif avec Shop+Stripe via enum `bridge_mode`).
 - **Theme Studio v1 + Vague 3 complète + Refinements** **livré 2026-04-29** (Vagues 1, 3 démarrage, 3 complète, parité Filament, plus de perso, bug fixes — voir `## Theme Studio` ci-dessous).
 
 Backlog optionnel (à faire seulement si besoin produit explicite) :

@@ -2,38 +2,61 @@ import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useBranding } from '@/hooks/useBranding';
 import { LoginFormCard } from '@/components/auth/LoginFormCard';
+import { LoginBackgroundCarousel } from '@/components/auth/LoginBackgroundCarousel';
 
 interface LoginOverlayTemplateProps {
     backgroundImage: string;
     backgroundBlur: number;
+    backgroundImages?: string[];
+    carouselEnabled?: boolean;
+    carouselInterval?: number;
+    carouselRandom?: boolean;
+    backgroundOpacity?: number;
 }
 
 /**
- * Fullscreen image template — background image fills the viewport, the form
- * floats over it as a glass card. Falls back to a brand gradient if no
- * image is set.
+ * Fullscreen image template — background image (or carousel) fills the
+ * viewport, the form floats over it as a glass card. Falls back to a brand
+ * gradient if neither single image nor carousel is set.
  */
 export function LoginOverlayTemplate({
     backgroundImage,
     backgroundBlur,
+    backgroundImages = [],
+    carouselEnabled = false,
+    carouselInterval = 6000,
+    carouselRandom = true,
+    backgroundOpacity = 100,
 }: LoginOverlayTemplateProps) {
     const { t } = useTranslation();
     const branding = useBranding();
     const blur = Math.max(0, Math.min(24, backgroundBlur));
+    const useCarousel = carouselEnabled && backgroundImages.length > 0;
 
     return (
         <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
-            <div
-                className="absolute inset-0"
-                style={{
-                    background: backgroundImage
-                        ? `url("${backgroundImage}") center/cover no-repeat, linear-gradient(135deg, var(--color-primary), var(--color-secondary))`
-                        : 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
-                    filter: blur > 0 ? `blur(${blur}px)` : undefined,
-                    transform: blur > 0 ? 'scale(1.05)' : undefined,
-                }}
-                aria-hidden
-            />
+            {useCarousel ? (
+                <LoginBackgroundCarousel
+                    images={backgroundImages}
+                    interval={carouselInterval}
+                    random={carouselRandom}
+                    blur={blur}
+                    opacity={backgroundOpacity}
+                />
+            ) : (
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        background: backgroundImage
+                            ? `url("${backgroundImage}") center/cover no-repeat, linear-gradient(135deg, var(--color-primary), var(--color-secondary))`
+                            : 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+                        filter: blur > 0 ? `blur(${blur}px)` : undefined,
+                        transform: blur > 0 ? 'scale(1.05)' : undefined,
+                        opacity: backgroundImage ? backgroundOpacity / 100 : 1,
+                    }}
+                    aria-hidden
+                />
+            )}
             {/* Strong scrim so the form stays legible on any image */}
             <div
                 className="absolute inset-0"

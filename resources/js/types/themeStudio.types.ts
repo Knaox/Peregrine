@@ -59,6 +59,11 @@ export interface ThemeDraft {
         | 'aurora'
         | 'orbs'
         | 'noise';
+    theme_login_background_images: string[];
+    theme_login_carousel_enabled: boolean;
+    theme_login_carousel_interval: number;
+    theme_login_carousel_random: boolean;
+    theme_login_background_opacity: number;
     // Per-page overrides (Vague 3 complète).
     theme_page_console_fullwidth: boolean;
     theme_page_files_fullwidth: boolean;

@@ -47,7 +47,11 @@ export function ThemeSidebarNavSection({ sidebar, onField }: ThemeSidebarNavSect
         const target = index + direction;
         if (target < 0 || target >= sidebar.entries.length) return;
         const next = [...sidebar.entries];
-        [next[index], next[target]] = [next[target], next[index]];
+        const a = next[index];
+        const b = next[target];
+        if (!a || !b) return;
+        next[index] = b;
+        next[target] = a;
         onField('entries', next.map((e, i) => ({ ...e, order: i })));
     };
 

@@ -151,7 +151,11 @@ export function ThemeEditorPanel({
             </Section>
 
             <Section title={t('theme_studio.section_sidebar', 'Server sidebar')}>
-                <ThemeSidebarSection draft={draft} onField={onField} />
+                <ThemeSidebarSection
+                    draft={draft}
+                    sidebar={sidebarDraft}
+                    onField={onField}
+                />
             </Section>
 
             {sidebarDraft && (

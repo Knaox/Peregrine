@@ -96,7 +96,7 @@
 :root[data-sidebar-floating="true"] .server-sidebar-collapse-toggle {
     right: 0.5rem !important;
     background: var(--color-glass) !important;
-    backdrop-filter: blur(12px) saturate(180%);
+    backdrop-filter: var(--glass-blur);
     border-color: var(--color-glass-border) !important;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
 }
@@ -134,3 +134,20 @@
         grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     }
 }
+
+/* Themed border width — opt-in via `.themed-border` (Refinements / Theme
+   Studio). Drives the global border-width slider. `!important` is required
+   to overpower Tailwind's `border` utility (border-width: 1px) when both
+   apply to the same element. The directional variants (`-x` / `-y` / `-l`)
+   only override the relevant axes, so they compose with Tailwind's
+   `border-l` / `border-r` / `border-y` for accent strips. */
+.themed-border { border-width: var(--border-width, 1px) !important; }
+.themed-border-x {
+    border-left-width: var(--border-width, 1px) !important;
+    border-right-width: var(--border-width, 1px) !important;
+}
+.themed-border-y {
+    border-top-width: var(--border-width, 1px) !important;
+    border-bottom-width: var(--border-width, 1px) !important;
+}
+.themed-border-l { border-left-width: var(--border-width, 1px) !important; }

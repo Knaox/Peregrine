@@ -739,17 +739,26 @@
             "theme_layout_page_padding": "Marges intérieures",
             "theme_sidebar_classic_width": "Largeur classique",
             "theme_sidebar_rail_width": "Largeur du rail",
+            "theme_sidebar_rail_help": "Visible uniquement quand le style de la sidebar est sur \"Compact (rail)\" avec position Gauche.",
             "theme_sidebar_mobile_width": "Largeur drawer mobile",
             "theme_sidebar_blur_intensity": "Intensité du flou glass",
             "theme_sidebar_blur_help": "S'applique à la sidebar, au dock et aux tabs.",
             "theme_sidebar_floating": "Carte glass flottante",
             "theme_sidebar_floating_help": "Décolle la sidebar du bord avec une marge et une ombre.",
+            "theme_sidebar_floating_unavailable": "La carte glass flottante n'est disponible qu'avec la position Gauche. Le Dock et les onglets en haut sont déjà flottants par design.",
             "theme_login_template": "Modèle",
             "theme_login_background_image": "Image de fond",
             "theme_login_background_image_help": "JPG / PNG / WEBP, 5 Mo max. Masquée sur mobile pour le modèle split.",
             "theme_login_background_blur": "Flou du fond",
             "theme_login_background_pattern": "Motif de fond",
             "theme_login_background_pattern_help": "Motif décoratif. Ignoré par le modèle plein écran.",
+            "theme_login_carousel_enabled": "Carrousel d'images",
+            "theme_login_carousel_help": "Faire défiler plusieurs images de fond. Quand désactivé, l'image unique ci-dessous est utilisée.",
+            "theme_login_background_images": "Images du carrousel",
+            "theme_login_background_images_help": "Jusqu'à 8 images. JPG / PNG / WEBP, 5 Mo max chacune.",
+            "theme_login_carousel_interval": "Intervalle",
+            "theme_login_carousel_random": "Ordre aléatoire",
+            "theme_login_background_opacity": "Opacité du fond",
             "theme_page_console_fullwidth": "Console — pleine largeur",
             "theme_page_console_fullwidth_help": "Retire les marges latérales autour du terminal.",
             "theme_page_files_fullwidth": "Fichiers — pleine largeur",
@@ -764,6 +773,13 @@
             "theme_footer_link_label": "Libellé",
             "theme_footer_link_add": "Ajouter un lien",
             "card_style": "Style de carte",
+            "card_density": "Densité",
+            "card_header_style": "Style d'en-tête",
+            "card_status_position": "Position de l'indicateur de statut",
+            "card_accent_strength": "Accent / glow",
+            "card_border_style": "Bordure",
+            "card_quick_actions_layout": "Disposition des actions rapides",
+            "card_hover_effect": "Effet au survol",
             "cols_desktop": "Bureau",
             "cols_tablet": "Tablette",
             "cols_mobile": "Mobile",
@@ -823,6 +839,44 @@
             "glass": "Glass",
             "minimal": "Minimaliste"
         },
+        "card_density": {
+            "compact": "Compacte",
+            "comfortable": "Confortable",
+            "spacious": "Spacieuse"
+        },
+        "card_header_style": {
+            "banner": "Image bannière (egg)",
+            "gradient": "Dégradé brand",
+            "solid": "Surface unie",
+            "minimal": "Minimal (sans en-tête)"
+        },
+        "card_status_position": {
+            "inline": "Inline (à côté du nom)",
+            "top-right": "Coin haut-droite",
+            "top-left": "Coin haut-gauche",
+            "corner-ribbon": "Ruban d'angle"
+        },
+        "card_accent_strength": {
+            "none": "Aucun (plat)",
+            "subtle": "Subtil (défaut)",
+            "bold": "Marqué (glow fort)"
+        },
+        "card_border_style": {
+            "full": "Bordure complète",
+            "accent-left": "Barre d'accent (gauche)",
+            "none": "Sans bordure"
+        },
+        "card_quick_actions_layout": {
+            "full": "Complet (libellés + icônes)",
+            "compact": "Compact",
+            "icon-only": "Icônes seules"
+        },
+        "card_hover_effect": {
+            "lift": "Lift (translation vers le haut)",
+            "scale": "Zoom",
+            "glow": "Glow (halo)",
+            "none": "Aucun"
+        },
         "card_sort": {
             "name": "Nom",
             "status": "Statut",
@@ -870,6 +924,9 @@
         "image_upload": "Téléverser une image",
         "image_clear": "Retirer",
         "image_error": "Échec de l'envoi :",
+        "image_add": "Ajouter",
+        "image_move_left": "Déplacer à gauche",
+        "image_move_right": "Déplacer à droite",
         "layout_align": {
             "default": "Logo à gauche",
             "centered": "Centré",

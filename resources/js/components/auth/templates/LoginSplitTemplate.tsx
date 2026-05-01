@@ -3,27 +3,39 @@ import { m } from 'motion/react';
 import { useBranding } from '@/hooks/useBranding';
 import { LoginFormCard } from '@/components/auth/LoginFormCard';
 import { LoginBackgroundLayer } from '@/components/auth/LoginBackgroundLayer';
+import { LoginBackgroundCarousel } from '@/components/auth/LoginBackgroundCarousel';
 import type { LoginBackgroundPattern } from '@/components/ThemeProvider';
 
 interface LoginSplitTemplateProps {
     backgroundImage: string;
     backgroundBlur: number;
     pattern: LoginBackgroundPattern;
+    backgroundImages?: string[];
+    carouselEnabled?: boolean;
+    carouselInterval?: number;
+    carouselRandom?: boolean;
+    backgroundOpacity?: number;
 }
 
 /**
  * Split-screen template — form on the left half (with optional pattern),
- * image on the right. Mobile collapses to the centered form (image
- * hidden) so it stays usable.
+ * image (or carousel) on the right. Mobile collapses to the centered form
+ * (image hidden) so it stays usable.
  */
 export function LoginSplitTemplate({
     backgroundImage,
     backgroundBlur,
     pattern,
+    backgroundImages = [],
+    carouselEnabled = false,
+    carouselInterval = 6000,
+    carouselRandom = true,
+    backgroundOpacity = 100,
 }: LoginSplitTemplateProps) {
     const { t } = useTranslation();
     const branding = useBranding();
     const blur = Math.max(0, Math.min(24, backgroundBlur));
+    const useCarousel = carouselEnabled && backgroundImages.length > 0;
 
     return (
         <div
@@ -66,19 +78,31 @@ export function LoginSplitTemplate({
                 </m.div>
             </div>
 
-            {/* Right — image (hidden on mobile). The brand gradient is layered
-                BEHIND the image url() so a broken / 404 image gracefully falls
-                back to the gradient instead of showing as solid black. */}
-            <div
-                className="relative hidden flex-1 overflow-hidden md:block"
-                style={{
-                    background: backgroundImage
-                        ? `url("${backgroundImage}") center/cover no-repeat, linear-gradient(135deg, var(--color-primary), var(--color-secondary))`
-                        : 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
-                    filter: blur > 0 ? `blur(${blur}px)` : undefined,
-                }}
-                aria-hidden
-            >
+            {/* Right — image / carousel (hidden on mobile). The brand gradient
+                is layered BEHIND the image so a broken / 404 image gracefully
+                falls back to the gradient instead of showing as solid black. */}
+            <div className="relative hidden flex-1 overflow-hidden md:block">
+                {useCarousel ? (
+                    <LoginBackgroundCarousel
+                        images={backgroundImages}
+                        interval={carouselInterval}
+                        random={carouselRandom}
+                        blur={blur}
+                        opacity={backgroundOpacity}
+                    />
+                ) : (
+                    <div
+                        className="absolute inset-0"
+                        style={{
+                            background: backgroundImage
+                                ? `url("${backgroundImage}") center/cover no-repeat, linear-gradient(135deg, var(--color-primary), var(--color-secondary))`
+                                : 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
+                            filter: blur > 0 ? `blur(${blur}px)` : undefined,
+                            opacity: backgroundImage ? backgroundOpacity / 100 : 1,
+                        }}
+                        aria-hidden
+                    />
+                )}
                 <div
                     className="absolute inset-0"
                     style={{

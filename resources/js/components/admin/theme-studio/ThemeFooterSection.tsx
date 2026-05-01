@@ -19,7 +19,8 @@ export function ThemeFooterSection({ draft, onField }: ThemeFooterSectionProps) 
 
     const updateLink = (index: number, patch: Partial<{ label: string; url: string }>) => {
         const next = [...draft.theme_footer_links];
-        next[index] = { ...next[index], ...patch };
+        const current = next[index] ?? { label: '', url: '' };
+        next[index] = { label: current.label, url: current.url, ...patch };
         onField('theme_footer_links', next);
     };
     const addLink = () => {

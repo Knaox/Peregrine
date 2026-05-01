@@ -150,6 +150,11 @@ export function useThemeStudio(): UseThemeStudioReturn {
                         background_image: next.theme_login_background_image,
                         background_blur: next.theme_login_background_blur,
                         background_pattern: next.theme_login_background_pattern,
+                        background_images: next.theme_login_background_images,
+                        carousel_enabled: next.theme_login_carousel_enabled,
+                        carousel_interval: next.theme_login_carousel_interval,
+                        carousel_random: next.theme_login_carousel_random,
+                        background_opacity: next.theme_login_background_opacity,
                     },
                     page_overrides: {
                         console_fullwidth: next.theme_page_console_fullwidth,

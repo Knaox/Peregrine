@@ -739,17 +739,26 @@
             "theme_layout_page_padding": "Page padding",
             "theme_sidebar_classic_width": "Classic width",
             "theme_sidebar_rail_width": "Rail width",
+            "theme_sidebar_rail_help": "Only visible when the Server sidebar nav style is set to \"Compact (rail)\" with Left position.",
             "theme_sidebar_mobile_width": "Mobile drawer width",
             "theme_sidebar_blur_intensity": "Glass blur intensity",
             "theme_sidebar_blur_help": "Affects the desktop sidebar, dock and top tabs.",
             "theme_sidebar_floating": "Floating glass card",
             "theme_sidebar_floating_help": "Detach the sidebar from the viewport edge with a margin and shadow.",
+            "theme_sidebar_floating_unavailable": "Floating glass card is only available with Left sidebar position. Dock and Top navigation are already floating by design.",
             "theme_login_template": "Template",
             "theme_login_background_image": "Background image",
             "theme_login_background_image_help": "JPG / PNG / WEBP, max 5 MB. Hidden on mobile for the split layout.",
             "theme_login_background_blur": "Background blur",
             "theme_login_background_pattern": "Background pattern",
             "theme_login_background_pattern_help": "Decorative pattern. Ignored by the Fullscreen overlay template.",
+            "theme_login_carousel_enabled": "Image carousel",
+            "theme_login_carousel_help": "Cycle through multiple background images. When off, the single Background image below is used.",
+            "theme_login_background_images": "Carousel images",
+            "theme_login_background_images_help": "Up to 8 images. JPG / PNG / WEBP, max 5 MB each.",
+            "theme_login_carousel_interval": "Interval",
+            "theme_login_carousel_random": "Random order",
+            "theme_login_background_opacity": "Background opacity",
             "theme_page_console_fullwidth": "Console — full-width",
             "theme_page_console_fullwidth_help": "Removes side padding around the terminal.",
             "theme_page_files_fullwidth": "Files — full-width",
@@ -764,6 +773,13 @@
             "theme_footer_link_label": "Label",
             "theme_footer_link_add": "Add link",
             "card_style": "Card style",
+            "card_density": "Density",
+            "card_header_style": "Header style",
+            "card_status_position": "Status indicator position",
+            "card_accent_strength": "Accent / glow",
+            "card_border_style": "Border",
+            "card_quick_actions_layout": "Quick actions layout",
+            "card_hover_effect": "Hover effect",
             "cols_desktop": "Desktop",
             "cols_tablet": "Tablet",
             "cols_mobile": "Mobile",
@@ -823,6 +839,44 @@
             "glass": "Glass",
             "minimal": "Minimal"
         },
+        "card_density": {
+            "compact": "Compact",
+            "comfortable": "Comfortable",
+            "spacious": "Spacious"
+        },
+        "card_header_style": {
+            "banner": "Banner image (egg)",
+            "gradient": "Brand gradient",
+            "solid": "Solid surface",
+            "minimal": "Minimal (no header)"
+        },
+        "card_status_position": {
+            "inline": "Inline (next to name)",
+            "top-right": "Top-right corner",
+            "top-left": "Top-left corner",
+            "corner-ribbon": "Corner ribbon"
+        },
+        "card_accent_strength": {
+            "none": "None (flat)",
+            "subtle": "Subtle (default)",
+            "bold": "Bold (strong glow)"
+        },
+        "card_border_style": {
+            "full": "Full border",
+            "accent-left": "Accent bar (left)",
+            "none": "No border"
+        },
+        "card_quick_actions_layout": {
+            "full": "Full (labels + icons)",
+            "compact": "Compact",
+            "icon-only": "Icon only"
+        },
+        "card_hover_effect": {
+            "lift": "Lift (translate up)",
+            "scale": "Scale (zoom)",
+            "glow": "Glow (ring)",
+            "none": "None"
+        },
         "card_sort": {
             "name": "Name",
             "status": "Status",
@@ -870,6 +924,9 @@
         "image_upload": "Upload image",
         "image_clear": "Remove",
         "image_error": "Upload failed:",
+        "image_add": "Add",
+        "image_move_left": "Move left",
+        "image_move_right": "Move right",
         "layout_align": {
             "default": "Logo left",
             "centered": "Centered",

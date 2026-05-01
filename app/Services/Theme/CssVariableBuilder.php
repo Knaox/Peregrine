@@ -146,11 +146,20 @@ class CssVariableBuilder
             default => '16px',
         };
 
+        // `--glass-blur` is emitted as a *composite* `backdrop-filter` value so
+        // consumers can plug it directly: `backdrop-filter: var(--glass-blur)`.
+        // Older code that wrote `blur(var(--glass-blur)) saturate(180%)` would
+        // double-wrap when the var resolved to its `:root` fallback (also a
+        // composite), producing invalid CSS — see `--glass-blur-px` for the
+        // raw integer if you need to compose your own filter.
+        $blurPx = (int) ($r['glass_blur_global'] ?? 16);
+
         return [
             '--transition-base' => $animation,
             '--hover-scale'     => $hover,
             '--border-width'    => ((int) ($r['border_width'] ?? 1)) . 'px',
-            '--glass-blur'      => ((int) ($r['glass_blur_global'] ?? 16)) . 'px',
+            '--glass-blur-px'   => $blurPx . 'px',
+            '--glass-blur'      => "blur({$blurPx}px) saturate(180%)",
             '--font-size-base'  => $fontBase,
         ];
     }

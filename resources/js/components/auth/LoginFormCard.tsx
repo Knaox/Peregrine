@@ -76,15 +76,15 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
 
     const cardClasses = clsx(
         'rounded-[var(--radius-xl)] p-6 sm:p-8',
-        variant === 'glass' && 'border border-[var(--color-glass-border)]',
-        variant === 'solid' && 'border border-[var(--color-border)] bg-[var(--color-surface)]',
+        variant === 'glass' && 'themed-border border border-[var(--color-glass-border)]',
+        variant === 'solid' && 'themed-border border border-[var(--color-border)] bg-[var(--color-surface)]',
         className,
     );
     const cardStyle =
         variant === 'glass'
             ? {
                   background: 'var(--color-glass)',
-                  backdropFilter: 'blur(var(--glass-blur, 24px)) saturate(180%)',
+                  backdropFilter: 'var(--glass-blur)',
                   boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.05)',
               }
             : undefined;

@@ -19,7 +19,7 @@ export function ServerContextPill({ server, showStatus = true, showName = true }
             style={{
                 borderRadius: '9999px',
                 background: 'var(--color-glass)',
-                backdropFilter: 'blur(14px) saturate(180%)',
+                backdropFilter: 'var(--glass-blur)',
                 border: '1px solid var(--color-glass-border)',
             }}
             role="status"

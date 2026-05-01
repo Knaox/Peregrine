@@ -127,10 +127,16 @@ export function buildPreviewVariables(
                 : draft.theme_font_size_scale === 'xl'
                     ? '20px'
                     : '16px';
+    // `--glass-blur` is emitted as a *composite* `backdrop-filter` value —
+    // mirrors CssVariableBuilder.php. Consumers do `backdrop-filter:
+    // var(--glass-blur)` directly. `--glass-blur-px` exposes just the raw
+    // integer for callers that need to compose their own filter.
+    const blurPx = draft.theme_glass_blur_global;
     vars['--transition-base'] = animation;
     vars['--hover-scale'] = hover;
     vars['--border-width'] = `${draft.theme_border_width}px`;
-    vars['--glass-blur'] = `${draft.theme_glass_blur_global}px`;
+    vars['--glass-blur-px'] = `${blurPx}px`;
+    vars['--glass-blur'] = `blur(${blurPx}px) saturate(180%)`;
     vars['--font-size-base'] = fontBase;
 
     return vars;

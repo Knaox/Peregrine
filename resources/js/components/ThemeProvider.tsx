@@ -37,6 +37,11 @@ export interface ThemeLoginData {
     background_image: string;
     background_blur: number;
     background_pattern: LoginBackgroundPattern;
+    background_images: string[];
+    carousel_enabled: boolean;
+    carousel_interval: number;
+    carousel_random: boolean;
+    background_opacity: number;
 }
 
 export interface ThemePageOverridesData {

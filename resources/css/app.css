@@ -5,12 +5,16 @@
 @import "./theme-studio.css";
 @import "tailwindcss";
 
+/* `font-size` is set on <html> (not <body>) so that every rem-based child
+   — Tailwind's text-sm/text-base/p-4/m-2 etc. — scales with the
+   `theme_font_size_scale` Refinement. Putting it on body alone only
+   affected em-based descendants of body, which Tailwind sizes don't use. */
+html {
+    font-size: var(--font-size-base, 16px);
+}
+
 body {
     font-family: var(--font-sans);
-    /* Base size driven by `theme_font_size_scale` (Refinements). Applies
-       to all em/rem-based child sizing — switching to "Large" / "XL"
-       scales up the entire UI uniformly. */
-    font-size: var(--font-size-base, 16px);
     background: var(--color-background);
     background-image:
         radial-gradient(ellipse at 20% 50%, rgba(249, 115, 22, 0.03) 0%, transparent 50%),

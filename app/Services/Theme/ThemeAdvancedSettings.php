@@ -49,11 +49,24 @@ final class ThemeAdvancedSettings
     /** @return array<string, mixed> */
     public function login(): array
     {
+        $imagesRaw = (string) $this->settings->get('theme_login_background_images', '[]');
+        $images = json_decode($imagesRaw, true);
+        if (! is_array($images)) {
+            $images = [];
+        }
+        $carouselEnabled = (string) $this->settings->get('theme_login_carousel_enabled', '0');
+        $carouselRandom = (string) $this->settings->get('theme_login_carousel_random', '1');
+
         return [
             'template' => (string) $this->settings->get('theme_login_template', 'centered'),
             'background_image' => (string) $this->settings->get('theme_login_background_image', ''),
             'background_blur' => (int) $this->settings->get('theme_login_background_blur', '0'),
             'background_pattern' => (string) $this->settings->get('theme_login_background_pattern', 'gradient'),
+            'background_images' => array_values(array_filter($images, 'is_string')),
+            'carousel_enabled' => $carouselEnabled === '1' || $carouselEnabled === 'true',
+            'carousel_interval' => (int) $this->settings->get('theme_login_carousel_interval', '6000'),
+            'carousel_random' => $carouselRandom === '1' || $carouselRandom === 'true',
+            'background_opacity' => (int) $this->settings->get('theme_login_background_opacity', '100'),
         ];
     }
 

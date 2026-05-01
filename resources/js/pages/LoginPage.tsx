@@ -4,25 +4,27 @@ import { LoginSplitTemplate } from '@/components/auth/templates/LoginSplitTempla
 import { LoginOverlayTemplate } from '@/components/auth/templates/LoginOverlayTemplate';
 import { LoginMinimalTemplate } from '@/components/auth/templates/LoginMinimalTemplate';
 
+const LOGIN_DEFAULTS = {
+    template: 'centered' as const,
+    background_image: '',
+    background_blur: 0,
+    background_pattern: 'gradient' as const,
+    background_images: [] as string[],
+    carousel_enabled: false,
+    carousel_interval: 6000,
+    carousel_random: true,
+    background_opacity: 100,
+};
+
 /**
  * Login dispatcher — picks one of 4 visual templates based on the
  * `theme.data.login.template` admin setting. The default `centered`
  * template matches the original LoginPage so installs without the new
  * setting see no change.
- *
- * Uses `useResolvedTheme()` so the studio's live preview (postMessage
- * payload) takes effect immediately while the iframe re-renders, with
- * the regular API as the fallback for the live app.
  */
 export function LoginPage() {
     const theme = useResolvedTheme();
-
-    const login = theme?.data.login ?? {
-        template: 'centered' as const,
-        background_image: '',
-        background_blur: 0,
-        background_pattern: 'gradient' as const,
-    };
+    const login = theme?.data.login ?? LOGIN_DEFAULTS;
 
     switch (login.template) {
         case 'split':
@@ -31,6 +33,11 @@ export function LoginPage() {
                     backgroundImage={login.background_image}
                     backgroundBlur={login.background_blur}
                     pattern={login.background_pattern}
+                    backgroundImages={login.background_images}
+                    carouselEnabled={login.carousel_enabled}
+                    carouselInterval={login.carousel_interval}
+                    carouselRandom={login.carousel_random}
+                    backgroundOpacity={login.background_opacity}
                 />
             );
         case 'overlay':
@@ -38,6 +45,11 @@ export function LoginPage() {
                 <LoginOverlayTemplate
                     backgroundImage={login.background_image}
                     backgroundBlur={login.background_blur}
+                    backgroundImages={login.background_images}
+                    carouselEnabled={login.carousel_enabled}
+                    carouselInterval={login.carousel_interval}
+                    carouselRandom={login.carousel_random}
+                    backgroundOpacity={login.background_opacity}
                 />
             );
         case 'minimal':

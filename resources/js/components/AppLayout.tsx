@@ -35,10 +35,10 @@ export function AppLayout() {
         <div className="flex min-h-screen flex-col bg-[var(--color-background)] text-[var(--color-text-primary)]">
             {/* Enhanced navbar with glass effect.
                 `app-nav` lets the data-header-sticky CSS rule toggle position. */}
-            <nav className="app-nav sticky top-0 z-50 border-b border-[var(--color-border)]"
+            <nav className="app-nav themed-border-y sticky top-0 z-50 border-b border-[var(--color-border)]"
                 style={{
                     background: 'var(--color-glass)',
-                    backdropFilter: 'blur(var(--glass-blur, 20px)) saturate(180%)',
+                    backdropFilter: 'var(--glass-blur)',
                     boxShadow: 'var(--glass-highlight), var(--shadow-sm)',
                 }}
             >

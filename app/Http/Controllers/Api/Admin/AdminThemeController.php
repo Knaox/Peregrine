@@ -54,17 +54,23 @@ class AdminThemeController extends Controller
             'theme_sidebar_mobile_width',
             'theme_sidebar_blur_intensity',
             'theme_login_background_blur',
+            'theme_login_carousel_interval',
+            'theme_login_background_opacity',
             'theme_border_width',
             'theme_glass_blur_global',
         ];
         $boolKeys = [
             'theme_layout_header_sticky',
             'theme_sidebar_floating',
+            'theme_login_carousel_enabled',
+            'theme_login_carousel_random',
             'theme_page_console_fullwidth',
             'theme_page_files_fullwidth',
             'theme_page_dashboard_expanded',
             'theme_footer_enabled',
         ];
+        // JSON-encoded settings — surfaced to the studio as native arrays.
+        $jsonArrayKeys = ['theme_login_background_images'];
 
         $draft = [];
         foreach (ThemeDefaults::COLORS as $key => $default) {
@@ -75,6 +81,11 @@ class AdminThemeController extends Controller
             }
             if (in_array($key, $boolKeys, true)) {
                 $draft[$key] = $value === '1' || $value === 'true' || $value === true;
+                continue;
+            }
+            if (in_array($key, $jsonArrayKeys, true)) {
+                $decoded = json_decode((string) $value, true);
+                $draft[$key] = is_array($decoded) ? array_values(array_filter($decoded, 'is_string')) : [];
                 continue;
             }
             $draft[$key] = $value;
@@ -98,11 +109,14 @@ class AdminThemeController extends Controller
         $boolKeys = [
             'theme_layout_header_sticky',
             'theme_sidebar_floating',
+            'theme_login_carousel_enabled',
+            'theme_login_carousel_random',
             'theme_page_console_fullwidth',
             'theme_page_files_fullwidth',
             'theme_page_dashboard_expanded',
             'theme_footer_enabled',
         ];
+        $jsonArrayKeys = ['theme_login_background_images'];
 
         foreach (array_keys(ThemeDefaults::COLORS) as $key) {
             if (! array_key_exists($key, $data)) {
@@ -117,6 +131,13 @@ class AdminThemeController extends Controller
             // (which always returns string) round-trip cleanly.
             if (in_array($key, $boolKeys, true)) {
                 $this->settings->set($key, $value ? '1' : '0');
+                continue;
+            }
+            // Array values land as JSON strings — same pattern as
+            // theme_footer_links / card_server_config.
+            if (in_array($key, $jsonArrayKeys, true)) {
+                $arr = is_array($value) ? array_values(array_filter($value, 'is_string')) : [];
+                $this->settings->set($key, json_encode($arr));
                 continue;
             }
             $this->settings->set($key, (string) $value);
