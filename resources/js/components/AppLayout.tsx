@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { AnimatePresence, m } from 'motion/react';
 import { useAuthStore } from '@/stores/authStore';
 import { useBranding } from '@/hooks/useBranding';
+import { useResolvedTheme } from '@/hooks/useResolvedTheme';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
 import { NavHeaderLinks } from '@/components/layout/NavHeaderLinks';
 import { UserMenu } from '@/components/layout/UserMenu';
+import { AppFooter } from '@/components/AppFooter';
 
 export function AppLayout() {
     const { t } = useTranslation();
@@ -15,6 +17,12 @@ export function AppLayout() {
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    // Reads via the centralised ThemeContext so the studio's preview iframe
+    // sees postMessage-driven changes (the previous useQuery here pulled the
+    // live API and ignored the postMessage payload entirely).
+    const theme = useResolvedTheme();
+    const footer = theme?.data.footer;
+    const appPattern = theme?.data.app?.background_pattern ?? 'none';
 
     const handleLogout = async () => {
         await logout();
@@ -24,17 +32,24 @@ export function AppLayout() {
     const links = branding.header_links ?? [];
 
     return (
-        <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-primary)]">
-            {/* Enhanced navbar with glass effect */}
-            <nav className="sticky top-0 z-50 border-b border-[var(--color-border)]"
+        <div className="flex min-h-screen flex-col bg-[var(--color-background)] text-[var(--color-text-primary)]">
+            {/* Enhanced navbar with glass effect.
+                `app-nav` lets the data-header-sticky CSS rule toggle position. */}
+            <nav className="app-nav themed-border-y sticky top-0 z-50 border-b border-[var(--color-border)]"
                 style={{
                     background: 'var(--color-glass)',
-                    backdropFilter: 'blur(20px) saturate(180%)',
+                    backdropFilter: 'var(--glass-blur)',
                     boxShadow: 'var(--glass-highlight), var(--shadow-sm)',
                 }}
             >
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 items-center justify-between">
+                <div
+                    className="app-container app-header"
+                    style={{ maxWidth: 'var(--layout-container-max)' }}
+                >
+                    <div
+                        className="app-header-row flex items-center justify-between"
+                        style={{ height: 'var(--layout-header-height)' }}
+                    >
                         {/* Left: Logo + Nav */}
                         <div className="flex items-center gap-3 sm:gap-8">
                             <Link
@@ -45,7 +60,11 @@ export function AppLayout() {
                                     src={branding.logo_url}
                                     alt={branding.app_name}
                                     className="w-auto"
-                                    style={{ height: branding.logo_height, maxWidth: 200 }}
+                                    style={{
+                                        height: branding.logo_height,
+                                        maxHeight: 'calc(var(--layout-header-height) - 16px)',
+                                        maxWidth: 200,
+                                    }}
                                     whileHover={{ scale: 1.05 }}
                                     transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                                 />
@@ -110,18 +129,32 @@ export function AppLayout() {
                 </AnimatePresence>
             </nav>
 
-            <AnimatedBackground />
+            {/* When the admin picks a custom background pattern, swap the
+                animated constellation for it — they conflict visually. */}
+            {appPattern === 'none' ? (
+                <AnimatedBackground />
+            ) : (
+                <div
+                    aria-hidden
+                    className={`pointer-events-none fixed inset-0 z-0 overflow-hidden bg-pattern-${appPattern}`}
+                />
+            )}
 
-            {/* Page transition wrapper */}
+            {/* Page transition wrapper. `app-page` carries the responsive
+                padding driven by --layout-page-* CSS vars. flex-1 pushes
+                the optional footer to the bottom of the viewport. */}
             <m.main
                 key={location.pathname}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="relative z-10 px-3 py-5 sm:px-6 sm:py-8 lg:px-10"
+                className="relative z-10 app-container app-page flex-1"
+                style={{ maxWidth: 'var(--layout-container-max)' }}
             >
                 <Outlet />
             </m.main>
+
+            {footer && <AppFooter footer={footer} />}
         </div>
     );
 }

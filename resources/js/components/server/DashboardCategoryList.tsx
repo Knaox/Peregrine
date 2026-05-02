@@ -115,7 +115,7 @@ function ServerGrid({
     return (
         <div
             ref={drag.getDropZoneRef(zoneId)}
-            className="grid gap-2 sm:gap-3 grid-cols-1 min-h-[48px]"
+            className="dashboard-cards-grid grid gap-2 sm:gap-3 grid-cols-1 min-h-[48px]"
             style={{
                 '--cols-tablet': cardConfig.columns.tablet,
                 '--cols-desktop': cardConfig.columns.desktop,

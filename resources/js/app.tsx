@@ -1,5 +1,5 @@
 import '@/plugins/shared';
-import { StrictMode } from 'react';
+import { lazy, StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import { MotionProvider } from '@/components/MotionProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { PluginLoader } from '@/plugins/PluginLoader';
 import { PluginPageRenderer } from '@/plugins/PluginPageRenderer';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import '@/i18n/config';
 import '../css/app.css';
 import { LoginPage } from '@/pages/LoginPage';
@@ -25,6 +26,14 @@ import { TwoFactorChallengePage } from '@/pages/TwoFactorChallengePage';
 import { TwoFactorSetupPage } from '@/pages/TwoFactorSetupPage';
 import { SecurityPage } from '@/pages/settings/SecurityPage';
 import { AdminServersPage } from '@/pages/AdminServersPage';
+
+// Lazy: ThemeStudioPage is admin-only, full-screen, and pulls in 11
+// editor sections + the preview plumbing. Keeping it out of the initial
+// bundle saves ~kB for every regular user. Convention for future
+// admin-only / power-tool pages: prefer `lazy()` over a static import.
+const ThemeStudioPage = lazy(() =>
+    import('@/pages/admin/ThemeStudioPage').then((m) => ({ default: m.ThemeStudioPage })),
+);
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -50,6 +59,17 @@ function App() {
                             <Route element={<ProtectedRoute />}>
                                 {/* Standalone full-screen setup page — no sidebar. */}
                                 <Route path="/2fa/setup" element={<TwoFactorSetupPage />} />
+                                {/* Theme Studio — full-screen split editor (admin-only,
+                                    guard enforced inside the page). Lazy-loaded so the
+                                    studio bundle only ships when an admin opens it. */}
+                                <Route
+                                    path="/theme-studio"
+                                    element={
+                                        <Suspense fallback={<LoadingScreen />}>
+                                            <ThemeStudioPage />
+                                        </Suspense>
+                                    }
+                                />
                                 <Route element={<AppLayout />}>
                                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                     <Route path="/dashboard" element={<DashboardPage />} />

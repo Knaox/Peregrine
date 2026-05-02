@@ -1,5 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
-import { request } from '@/services/http';
+import { useResolvedTheme } from '@/hooks/useResolvedTheme';
 
 export interface SidebarEntry {
     id: string;
@@ -16,10 +15,6 @@ export interface SidebarConfig {
     show_server_status: boolean;
     show_server_name: boolean;
     entries: SidebarEntry[];
-}
-
-interface ThemeResponse {
-    sidebar_config: SidebarConfig;
 }
 
 const DEFAULTS: SidebarConfig = {
@@ -39,16 +34,17 @@ const DEFAULTS: SidebarConfig = {
     ],
 };
 
+/**
+ * Sidebar config consumer. Goes through `useResolvedTheme()` so the
+ * Theme Studio's preview iframe reflects postMessage-driven changes
+ * (entry reorder, on/off toggles, position/style swaps) — not just the
+ * cached API response (which was stale in preview mode).
+ */
 export function useSidebarConfig(): SidebarConfig {
-    const { data } = useQuery({
-        queryKey: ['theme'],
-        queryFn: () => request<ThemeResponse>('/api/settings/theme'),
-        staleTime: 60 * 60 * 1000,
-    });
+    const theme = useResolvedTheme();
+    if (!theme?.sidebar_config) return DEFAULTS;
 
-    if (!data?.sidebar_config) return DEFAULTS;
-
-    const config = data.sidebar_config;
+    const config = theme.sidebar_config;
     const sortedEntries = [...config.entries]
         .filter((e) => e.enabled)
         // Normalize: old rows or hand-edited JSON may have route_suffix=null

@@ -216,6 +216,7 @@ Route::middleware('auth')->group(function () {
         Route::get('presets', [AdminThemeController::class, 'presets']);
         Route::post('save', [AdminThemeController::class, 'save']);
         Route::post('reset', [AdminThemeController::class, 'reset']);
+        Route::post('upload-asset', [AdminThemeController::class, 'uploadAsset']);
     });
 
     // Admin: plugins management

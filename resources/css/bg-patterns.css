@@ -1,0 +1,113 @@
+/* -------------------------------------------------------------------------
+ * Login background patterns (Vague 3 complète)
+ * -------------------------------------------------------------------------
+ * Pure-CSS decorative backgrounds for the login page. Each class is
+ * applied by `<LoginBackgroundLayer>` based on the
+ * `theme_login_background_pattern` admin setting. Colours derive from
+ * theme tokens so brand changes reflow automatically.
+ *
+ * All animations respect `prefers-reduced-motion`.
+ */
+
+.bg-pattern-gradient {
+    background: linear-gradient(
+        -45deg,
+        var(--color-background),
+        var(--color-surface),
+        var(--color-background),
+        var(--color-surface-elevated)
+    );
+    background-size: 400% 400%;
+    animation: gradient-shift 20s ease infinite;
+}
+
+.bg-pattern-mesh {
+    background-color: var(--color-background);
+    background-image:
+        radial-gradient(at 20% 30%, rgba(var(--color-primary-rgb), 0.28) 0%, transparent 50%),
+        radial-gradient(at 80% 60%, rgba(var(--color-secondary-rgb), 0.22) 0%, transparent 50%),
+        radial-gradient(at 50% 90%, rgba(var(--color-info-rgb), 0.16) 0%, transparent 60%);
+}
+
+.bg-pattern-dots {
+    background-color: var(--color-background);
+    background-image: radial-gradient(
+        circle,
+        rgba(var(--color-text-secondary-rgb), 0.12) 1px,
+        transparent 1px
+    );
+    background-size: 18px 18px;
+}
+
+.bg-pattern-grid {
+    background-color: var(--color-background);
+    background-image:
+        linear-gradient(rgba(var(--color-text-secondary-rgb), 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--color-text-secondary-rgb), 0.08) 1px, transparent 1px);
+    background-size: 36px 36px;
+}
+
+.bg-pattern-aurora {
+    background-color: var(--color-background);
+    background-image: linear-gradient(
+        135deg,
+        var(--color-primary),
+        var(--color-secondary),
+        var(--color-info)
+    );
+    background-size: 220% 220%;
+    animation: aurora-flow 18s ease infinite;
+}
+@keyframes aurora-flow {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+
+.bg-pattern-orbs {
+    background-color: var(--color-background);
+    overflow: hidden;
+}
+.bg-pattern-orbs::before,
+.bg-pattern-orbs::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    animation: orb-float 24s ease-in-out infinite;
+}
+.bg-pattern-orbs::before {
+    width: 540px;
+    height: 540px;
+    background: rgba(var(--color-primary-rgb), 0.45);
+    top: -120px;
+    left: -120px;
+}
+.bg-pattern-orbs::after {
+    width: 460px;
+    height: 460px;
+    background: rgba(var(--color-secondary-rgb), 0.4);
+    bottom: -120px;
+    right: -120px;
+    animation-delay: -8s;
+}
+@keyframes orb-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(20%, -20%) scale(1.1); }
+    66%      { transform: translate(-20%, 20%) scale(0.9); }
+}
+
+.bg-pattern-noise {
+    background-color: var(--color-background);
+    background-image:
+        radial-gradient(at 20% 30%, rgba(var(--color-primary-rgb), 0.15) 0%, transparent 60%),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/></svg>");
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bg-pattern-gradient,
+    .bg-pattern-aurora,
+    .bg-pattern-orbs::before,
+    .bg-pattern-orbs::after {
+        animation: none;
+    }
+}

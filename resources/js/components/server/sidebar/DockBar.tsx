@@ -100,7 +100,7 @@ export function DockBar({ server, config }: DockBarProps) {
                     style={{
                         borderRadius: '9999px',
                         background: 'var(--color-glass)',
-                        backdropFilter: 'blur(18px) saturate(180%)',
+                        backdropFilter: 'blur(calc(var(--sidebar-blur-intensity, 12px) + 6px)) saturate(180%)',
                         border: '1px solid var(--color-glass-border)',
                         boxShadow: 'var(--shadow-lg), var(--glass-highlight)',
                     }}
@@ -127,7 +127,7 @@ export function DockBar({ server, config }: DockBarProps) {
                                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]',
                                     showInlineLabel
                                         ? 'gap-2 px-3.5 py-2 text-sm font-medium whitespace-nowrap'
-                                        : 'justify-center p-3 min-w-[44px] hover:scale-110 active:scale-95',
+                                        : 'scale-on-hover justify-center p-3 min-w-[44px]',
                                     isActive && !withLabels && 'scale-[1.04]',
                                 )}
                                 style={({ isActive }) => getDockItemStyle(style, isActive)}

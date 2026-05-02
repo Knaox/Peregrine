@@ -99,7 +99,7 @@ export function TwoFactorChallengePage() {
                     className="rounded-[var(--radius-xl)] p-6 sm:p-8"
                     style={{
                         background: 'var(--color-glass)',
-                        backdropFilter: 'blur(24px) saturate(180%)',
+                        backdropFilter: 'var(--glass-blur)',
                         border: '1px solid var(--color-glass-border)',
                     }}
                 >

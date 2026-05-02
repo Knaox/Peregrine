@@ -205,10 +205,25 @@ export function ServerDetailPage() {
     // hidden behind the floating dock + top-left context pill.
     const hasMobileHamburger = !isTopLayout && !isDockLayout;
     const contentPaddingClass = [
-        'relative z-10 flex flex-col min-h-full p-3 sm:p-4 md:p-6',
+        'server-page-content relative z-10 flex flex-col min-h-full p-3 sm:p-4 md:p-6',
         hasMobileHamburger && 'pt-14 sm:pt-14 md:pt-6',
         isDockLayout && 'pt-20 sm:pt-20 md:pt-20 pb-28 sm:pb-28 md:pb-32',
     ].filter(Boolean).join(' ');
+
+    // Tag the wrapper with the current sub-route so per-page CSS overrides
+    // (data-page-console-fullwidth etc.) can target it without each page
+    // having to wire useLayoutIntent itself.
+    const subRoute = (() => {
+        const path = location.pathname;
+        if (path.includes('/console')) return 'console';
+        if (path.includes('/files')) return 'files';
+        if (path.includes('/databases')) return 'databases';
+        if (path.includes('/backups')) return 'backups';
+        if (path.includes('/network')) return 'network';
+        if (path.includes('/schedules')) return 'schedules';
+        if (path.includes('/sftp')) return 'sftp';
+        return 'overview';
+    })();
 
     return (
         <div className={wrapperClass}>
@@ -224,7 +239,7 @@ export function ServerDetailPage() {
                 transition={{ duration: 0.3 }}
                 className="relative flex-1 overflow-y-auto z-10"
             >
-                <div className={contentPaddingClass}>
+                <div className={contentPaddingClass} data-route={subRoute}>
                     <Routes>
                         {dynamicRoutes.map((route) =>
                             route.index

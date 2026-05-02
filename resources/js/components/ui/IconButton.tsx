@@ -37,10 +37,10 @@ export function IconButton({
             onClick={onClick}
             title={title}
             className={clsx(
+                'scale-on-hover',
                 'inline-flex items-center justify-center rounded-[var(--radius)]',
                 'transition-all duration-[var(--transition-fast)]',
-                'hover:scale-110 active:scale-95',
-                'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100',
+                'disabled:opacity-40 disabled:cursor-not-allowed',
                 variantClasses[variant],
                 sizeClasses[size],
                 className,

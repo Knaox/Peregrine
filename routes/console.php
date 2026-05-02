@@ -35,3 +35,10 @@ Schedule::command('pelican:clean-processed-events')->dailyAt('03:45');
 // Pelican was down — once Pelican comes back, the next 04:00 sweep
 // catches up. The action is idempotent so re-dispatch is harmless.
 Schedule::command('pelican:link-orphans')->dailyAt('04:00');
+
+// Sweep theme upload slots and delete files no longer referenced by any
+// setting. The Theme Studio upload endpoint intentionally keeps the prior
+// file in place so an admin can revert during a single editing session;
+// without this weekly cleanup, every login-background experiment would
+// leave a permanent file behind.
+Schedule::command('theme:cleanup-orphan-assets')->weeklyOn(0, '04:30');

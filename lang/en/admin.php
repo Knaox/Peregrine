@@ -542,6 +542,7 @@ return [
         'save_theme' => 'Save Theme',
         'save_templates' => 'Save Templates',
         'reset_defaults' => 'Reset to Defaults',
+        'open_theme_studio' => 'Open Theme Studio',
         'test_smtp' => 'Test SMTP',
         'test_smtp_modal_heading' => 'Send test email',
         'test_smtp_modal_description' => 'A test email will be sent to your admin email address.',

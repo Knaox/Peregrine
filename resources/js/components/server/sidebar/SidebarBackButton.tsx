@@ -34,7 +34,7 @@ export function SidebarBackButton({ compact = false, variant = 'glass' }: Sideba
             style={isGlass
                 ? {
                     background: 'var(--color-glass)',
-                    backdropFilter: 'blur(14px) saturate(180%)',
+                    backdropFilter: 'var(--glass-blur)',
                     border: '1px solid var(--color-glass-border)',
                     color: 'var(--color-text-secondary)',
                 }

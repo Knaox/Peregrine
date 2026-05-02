@@ -76,7 +76,8 @@ export function SidebarUserMenu({ align = 'bottom' }: SidebarUserMenuProps) {
                 aria-expanded={open}
                 aria-haspopup="menu"
                 className={clsx(
-                    'flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold text-white cursor-pointer transition-all duration-150 hover:scale-105',
+                    'scale-on-hover',
+                    'flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold text-white cursor-pointer transition-all duration-150',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]',
                 )}
                 style={{ background: 'var(--color-primary)', boxShadow: '0 0 16px var(--color-primary-glow)' }}

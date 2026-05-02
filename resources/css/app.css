@@ -1,6 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "./theme.css";
+@import "./theme-layout.css";
+@import "./bg-patterns.css";
+@import "./theme-studio.css";
 @import "tailwindcss";
+
+/* `font-size` is set on <html> (not <body>) so that every rem-based child
+   — Tailwind's text-sm/text-base/p-4/m-2 etc. — scales with the
+   `theme_font_size_scale` Refinement. Putting it on body alone only
+   affected em-based descendants of body, which Tailwind sizes don't use. */
+html {
+    font-size: var(--font-size-base, 16px);
+}
 
 body {
     font-family: var(--font-sans);
@@ -10,6 +21,19 @@ body {
         radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.02) 0%, transparent 50%);
     background-attachment: fixed;
     color: var(--color-text-primary);
+}
+
+/* Hover scale for interactive elements that opt in via `.scale-on-hover`.
+   Driven by --hover-scale (Refinements) so admins can tune subtle / default
+   / pronounced from /theme-studio. */
+.scale-on-hover:hover:not(:disabled):not([aria-disabled="true"]) {
+    transform: scale(var(--hover-scale, 1.02));
+}
+.scale-on-hover {
+    transition: transform var(--transition-base, 250ms) ease;
+}
+.scale-on-hover:active:not(:disabled) {
+    transform: scale(0.97);
 }
 
 ::selection {
@@ -26,6 +50,22 @@ body {
 ::-webkit-scrollbar-thumb {
     background: var(--color-surface-hover);
     border-radius: var(--radius-full);
+}
+
+/* Terminal-scoped scrollbar — the console body is hardcoded dark regardless
+   of the app theme, so its scrollbar gets a matching dark scheme to stay
+   visible on light themes. */
+.terminal-scrollbar {
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+.terminal-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.terminal-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+}
+.terminal-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 ::-webkit-scrollbar-thumb:hover {
     background: var(--color-text-muted);

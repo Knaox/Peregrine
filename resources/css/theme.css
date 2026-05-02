@@ -66,7 +66,13 @@
     --font-sans: 'Inter', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-    /* Glassmorphism enhanced */
+    /* Glassmorphism enhanced.
+       `--glass-blur` is the *composite* backdrop-filter value (blur + saturate)
+       — plug directly via `backdrop-filter: var(--glass-blur)`. The dynamic
+       value is emitted by CssVariableBuilder::refinementVariables() driven
+       by the `theme_glass_blur_global` slider in the Theme Studio.
+       `--glass-blur-px` exposes the integer alone for filter composition. */
+    --glass-blur-px: 16px;
     --glass-blur: blur(16px) saturate(180%);
     --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     --glass-highlight-strong: inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -294,7 +300,7 @@ body {
 /* Enhanced glass card with inner highlight */
 .glass-card-enhanced {
     background: var(--color-glass);
-    backdrop-filter: blur(16px) saturate(180%);
+    backdrop-filter: var(--glass-blur);
     border: 1px solid var(--color-glass-border);
     box-shadow: var(--glass-highlight), var(--shadow-md);
 }

@@ -140,18 +140,51 @@ class ThemeSettings extends Page implements HasForms
         ]);
     }
 
+    /**
+     * Header action — opens the React Theme Studio (live preview, scenes,
+     * breakpoint switcher) in a new tab. The Filament page stays available
+     * as a simple fallback for admins who only want to flip a preset.
+     */
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('open_studio')
+                ->label(__('admin.actions.open_theme_studio'))
+                ->icon('heroicon-o-paint-brush')
+                ->color('primary')
+                ->url('/theme-studio', shouldOpenInNewTab: true),
+        ];
+    }
+
     public function save(): void
     {
         $data = $this->form->getState();
         $settings = app(SettingsService::class);
 
+        // CRITICAL: only persist keys actually present in $data. The Filament
+        // form schema only declares ~26 of the 53 ThemeDefaults::COLORS keys
+        // (Vague 3 layout / sidebar / login / per-page / footer / refinements
+        // are studio-only). A naive `$data[$key] ?? null` writes null for
+        // every absent key — silently wiping a Vague 3 config the admin set
+        // up via /theme-studio. Same defensive pattern as
+        // AdminThemeController::save().
         foreach (array_keys(ThemeDefaults::COLORS) as $key) {
-            $settings->set($key, $data[$key] ?? null);
+            if (! array_key_exists($key, $data)) {
+                continue;
+            }
+            $settings->set($key, $data[$key]);
         }
 
         $settings->set('sidebar_preset', $data['sidebar_preset'] ?? 'classic');
         $settings->set('card_server_config', json_encode($this->buildCardConfig($data)));
         $settings->set('sidebar_server_config', json_encode($this->buildSidebarConfig($data)));
+
+        // Bump theme_revision so any studio tab open elsewhere detects the
+        // divergence on its next save and surfaces the conflict UI rather
+        // than overwriting the Filament admin's fresh changes.
+        $next = (int) $settings->get('theme_revision', '0') + 1;
+        $settings->set('theme_revision', (string) $next);
+
         $settings->clearCache();
         app(\App\Services\ThemeService::class)->clearCache();
 

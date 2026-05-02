@@ -78,7 +78,7 @@
             "url": "URL de Pelican",
             "url_placeholder": "https://pelican.exemple.com",
             "api_key": "Clé API Admin (Application API)",
-            "api_key_placeholder": "ptlc_...",
+            "api_key_placeholder": "papp_...",
             "api_key_help": "Générez une clé Application API (papp_...) dans votre panel admin Pelican, section Clés API.",
             "client_api_key": "Clé API Client",
             "client_api_key_placeholder": "pacc_...",
@@ -674,6 +674,318 @@
             "count_plural": "{{count}} serveurs",
             "empty": "Aucun serveur ne correspond à ces filtres.",
             "owner_label": "Propriétaire"
+        }
+    },
+    "theme_studio": {
+        "title": "Studio de thème",
+        "back": "Retour au tableau de bord",
+        "saved": "À jour",
+        "unsaved": "Modifications non enregistrées",
+        "saving": "Enregistrement…",
+        "discard": "Annuler",
+        "reset": "Réinitialiser",
+        "publish": "Publier",
+        "save_error": "Échec de l'enregistrement :",
+        "reset_confirm": "Réinitialiser entièrement le thème ? Cette action est irréversible.",
+        "unsaved_leave_confirm": "Des modifications de thème ne sont pas publiées. Quitter quand même ?",
+        "reset_dialog": {
+            "title": "Réinitialiser tout le thème ?",
+            "body": "Tous les paramètres de thème reviennent aux valeurs d'usine. Action irréversible — exporte une sauvegarde avant si tu veux garder cette version (php artisan theme:export).",
+            "warning_custom_css": "Tu as {{length}} caractères de CSS personnalisé qui seront supprimés.",
+            "warning_uploads": "Les images de fond de login seront déliées. Les fichiers restent sur le disque jusqu'au prochain nettoyage hebdomadaire.",
+            "type_to_confirm": "Tape RESET pour confirmer",
+            "confirm_button": "Réinitialiser aux valeurs par défaut"
+        },
+        "error": {
+            "title": "Le Theme Studio n'a pas pu charger",
+            "body": "Le serveur a renvoyé une erreur lors du chargement des paramètres de thème. Vérifie que tu es toujours connecté en tant qu'admin et réessaie.",
+            "back": "Retour au tableau de bord",
+            "retry": "Réessayer"
+        },
+        "conflict": {
+            "stale": "Un autre admin a publié une modification du thème pendant que tu éditais. Le studio a été rafraîchi — vérifie tes changements et publie à nouveau."
+        },
+        "preset_active": "Actif",
+        "section_preset": "Préréglage de marque",
+        "section_brand": "Couleurs de marque",
+        "section_status": "Couleurs de statut",
+        "section_surfaces": "Surfaces & bordures",
+        "section_text": "Texte",
+        "section_layout": "Mise en page",
+        "section_sidebar": "Sidebar serveur",
+        "section_sidebar_nav": "Navigation sidebar serveur",
+        "section_cards": "Cartes serveur",
+        "section_login": "Page de connexion",
+        "section_pages": "Surcharges par page",
+        "section_footer": "Pied de page",
+        "section_refinements": "Raffinements",
+        "section_typography": "Typographie",
+        "section_custom_css": "CSS personnalisé",
+        "custom_css_placeholder": "body { background: var(--color-background); }",
+        "custom_css_help": "Injecté tel quel dans une balise <style> sur toutes les pages.",
+        "fields": {
+            "theme_mode": "Mode couleur par défaut",
+            "theme_mode_help": "Défaut pour les utilisateurs qui n'ont pas choisi explicitement dans leur profil.",
+            "theme_primary": "Primaire",
+            "theme_primary_hover": "Primaire (survol)",
+            "theme_secondary": "Secondaire",
+            "theme_ring": "Anneau de focus",
+            "theme_danger": "Danger",
+            "theme_warning": "Avertissement",
+            "theme_success": "Succès",
+            "theme_info": "Info",
+            "theme_suspended": "Suspendu",
+            "theme_installing": "Installation",
+            "theme_background": "Arrière-plan",
+            "theme_surface": "Surface",
+            "theme_surface_hover": "Surface (survol)",
+            "theme_surface_elevated": "Surface (élevée)",
+            "theme_border": "Bordure",
+            "theme_border_hover": "Bordure (survol)",
+            "theme_text_primary": "Texte principal",
+            "theme_text_secondary": "Texte secondaire",
+            "theme_text_muted": "Texte atténué",
+            "theme_font": "Police",
+            "theme_radius": "Rayon des bordures",
+            "theme_density": "Densité",
+            "theme_shadow_intensity": "Intensité des ombres",
+            "theme_custom_css": "CSS additionnel",
+            "theme_layout_header_height": "Hauteur du header",
+            "theme_layout_header_sticky": "Header collant",
+            "theme_layout_header_align": "Disposition du header",
+            "theme_layout_container_max": "Largeur du conteneur",
+            "theme_layout_page_padding": "Marges intérieures",
+            "theme_sidebar_classic_width": "Largeur classique",
+            "theme_sidebar_rail_width": "Largeur du rail",
+            "theme_sidebar_rail_help": "Visible uniquement quand le style de la sidebar est sur \"Compact (rail)\" avec position Gauche.",
+            "theme_sidebar_mobile_width": "Largeur drawer mobile",
+            "theme_sidebar_blur_intensity": "Intensité du flou glass",
+            "theme_sidebar_blur_help": "S'applique à la sidebar, au dock et aux tabs.",
+            "theme_sidebar_floating": "Carte glass flottante",
+            "theme_sidebar_floating_help": "Décolle la sidebar du bord avec une marge et une ombre.",
+            "theme_sidebar_floating_unavailable": "La carte glass flottante n'est disponible qu'avec la position Gauche. Le Dock et les onglets en haut sont déjà flottants par design.",
+            "theme_login_template": "Modèle",
+            "theme_login_background_image": "Image de fond",
+            "theme_login_background_image_help": "JPG / PNG / WEBP, 5 Mo max. Masquée sur mobile pour le modèle split.",
+            "theme_login_background_blur": "Flou du fond",
+            "theme_login_background_pattern": "Motif de fond",
+            "theme_login_background_pattern_help": "Motif décoratif. Ignoré par le modèle plein écran.",
+            "theme_login_carousel_enabled": "Carrousel d'images",
+            "theme_login_carousel_help": "Faire défiler plusieurs images de fond. Quand désactivé, l'image unique ci-dessous est utilisée.",
+            "theme_login_background_images": "Images du carrousel",
+            "theme_login_background_images_help": "Jusqu'à 8 images. JPG / PNG / WEBP, 5 Mo max chacune.",
+            "theme_login_carousel_interval": "Intervalle",
+            "theme_login_carousel_random": "Ordre aléatoire",
+            "theme_login_background_opacity": "Opacité du fond",
+            "theme_page_console_fullwidth": "Console — pleine largeur",
+            "theme_page_console_fullwidth_help": "Retire les marges latérales autour du terminal.",
+            "theme_page_files_fullwidth": "Fichiers — pleine largeur",
+            "theme_page_files_fullwidth_help": "Retire les marges latérales autour du file browser.",
+            "theme_page_dashboard_expanded": "Dashboard — 4 colonnes",
+            "theme_page_dashboard_expanded_help": "Ajoute une 4e colonne à la grille au-dessus de 1280 px.",
+            "theme_footer_enabled": "Afficher le footer",
+            "theme_footer_text": "Texte du footer",
+            "theme_footer_text_placeholder": "© 2026 Acme Corp. Tous droits réservés.",
+            "theme_footer_links": "Liens du footer",
+            "theme_footer_links_empty": "Aucun lien pour l'instant.",
+            "theme_footer_link_label": "Libellé",
+            "theme_footer_link_add": "Ajouter un lien",
+            "card_style": "Style de carte",
+            "card_density": "Densité",
+            "card_header_style": "Style d'en-tête",
+            "card_status_position": "Position de l'indicateur de statut",
+            "card_accent_strength": "Accent / glow",
+            "card_border_style": "Bordure",
+            "card_quick_actions_layout": "Disposition des actions rapides",
+            "card_hover_effect": "Effet au survol",
+            "cols_desktop": "Bureau",
+            "cols_tablet": "Tablette",
+            "cols_mobile": "Mobile",
+            "sort_default": "Tri par défaut",
+            "group_by": "Regrouper par",
+            "card_visibility": "Afficher sur les cartes",
+            "show_egg_icon": "Icône egg",
+            "show_egg_name": "Nom egg",
+            "show_plan_name": "Nom du plan",
+            "show_status_badge": "Badge de statut",
+            "show_stats_bars": "Barres de stats",
+            "show_quick_actions": "Actions rapides",
+            "show_ip_port": "IP / port",
+            "show_uptime": "Uptime",
+            "sidebar_position": "Position",
+            "sidebar_style_legacy": "Style",
+            "show_server_status": "Afficher le statut du serveur",
+            "show_server_name": "Afficher le nom du serveur",
+            "sidebar_entries": "Entrées de navigation",
+            "theme_animation_speed": "Vitesse d'animation",
+            "theme_hover_scale": "Scale au survol",
+            "theme_border_width": "Largeur des bordures",
+            "theme_glass_blur_global": "Flou glass (global)",
+            "theme_font_size_scale": "Taille de police de base",
+            "theme_app_background_pattern": "Fond de l'app",
+            "theme_app_background_pattern_help": "Remplace la constellation animée derrière dashboard / profil / etc."
+        },
+        "app_pattern": {
+            "none": "Aucun (constellation animée)",
+            "gradient": "Dégradé animé",
+            "mesh": "Mesh gradient",
+            "orbs": "Orbes flottantes",
+            "aurora": "Aurore animée",
+            "dots": "Pois",
+            "grid": "Lignes (grille)",
+            "noise": "Texture bruit"
+        },
+        "login_templates": {
+            "centered": "Centré (défaut)",
+            "split": "Écran scindé avec image",
+            "overlay": "Image plein écran",
+            "minimal": "Minimal"
+        },
+        "login_patterns": {
+            "none": "Aucun (uni)",
+            "gradient": "Dégradé animé",
+            "mesh": "Mesh gradient",
+            "dots": "Pois",
+            "grid": "Lignes (grille)",
+            "aurora": "Aurore animée",
+            "orbs": "Orbes flottantes",
+            "noise": "Texture bruit"
+        },
+        "card_style": {
+            "default": "Standard",
+            "elevated": "Surélevée",
+            "glass": "Glass",
+            "minimal": "Minimaliste"
+        },
+        "card_density": {
+            "compact": "Compacte",
+            "comfortable": "Confortable",
+            "spacious": "Spacieuse"
+        },
+        "card_header_style": {
+            "banner": "Image bannière (egg)",
+            "gradient": "Dégradé brand",
+            "solid": "Surface unie",
+            "minimal": "Minimal (sans en-tête)"
+        },
+        "card_status_position": {
+            "inline": "Inline (à côté du nom)",
+            "top-right": "Coin haut-droite",
+            "top-left": "Coin haut-gauche",
+            "corner-ribbon": "Ruban d'angle"
+        },
+        "card_accent_strength": {
+            "none": "Aucun (plat)",
+            "subtle": "Subtil (défaut)",
+            "bold": "Marqué (glow fort)"
+        },
+        "card_border_style": {
+            "full": "Bordure complète",
+            "accent-left": "Barre d'accent (gauche)",
+            "none": "Sans bordure"
+        },
+        "card_quick_actions_layout": {
+            "full": "Complet (libellés + icônes)",
+            "compact": "Compact",
+            "icon-only": "Icônes seules"
+        },
+        "card_hover_effect": {
+            "lift": "Lift (translation vers le haut)",
+            "scale": "Zoom",
+            "glow": "Glow (halo)",
+            "none": "Aucun"
+        },
+        "card_sort": {
+            "name": "Nom",
+            "status": "Statut",
+            "created_at": "Plus récent",
+            "egg": "Egg"
+        },
+        "card_group": {
+            "none": "Sans regroupement",
+            "egg": "Par egg",
+            "status": "Par statut",
+            "plan": "Par plan"
+        },
+        "sidebar_position": {
+            "left": "Sidebar gauche",
+            "top": "Onglets en haut",
+            "dock": "Dock flottant"
+        },
+        "sidebar_style_legacy": {
+            "default": "Standard",
+            "compact": "Compact (rail)",
+            "pills": "Pilules"
+        },
+        "entry_on": "On",
+        "entry_off": "Off",
+        "animation_speed": {
+            "instant": "Instantané (0 ms)",
+            "faster": "Rapide (150 ms)",
+            "default": "Défaut (250 ms)",
+            "slower": "Lent (450 ms)"
+        },
+        "hover_scale": {
+            "subtle": "Subtil (1.01×)",
+            "default": "Défaut (1.02×)",
+            "pronounced": "Prononcé (1.05×)"
+        },
+        "font_size_scale": {
+            "small": "Petite (14 px)",
+            "default": "Défaut (16 px)",
+            "large": "Grande (18 px)",
+            "xl": "XL (20 px)"
+        },
+        "image_empty": "Aucune image",
+        "image_uploading": "Envoi…",
+        "image_replace": "Remplacer",
+        "image_upload": "Téléverser une image",
+        "image_clear": "Retirer",
+        "image_error": "Échec de l'envoi :",
+        "image_add": "Ajouter",
+        "image_move_left": "Déplacer à gauche",
+        "image_move_right": "Déplacer à droite",
+        "layout_align": {
+            "default": "Logo à gauche",
+            "centered": "Centré",
+            "split": "Réparti"
+        },
+        "container_max": {
+            "1280": "1280 px",
+            "1440": "1440 px",
+            "1536": "1536 px",
+            "full": "Pleine largeur"
+        },
+        "page_padding": {
+            "compact": "Compact",
+            "comfortable": "Confortable",
+            "spacious": "Spacieux"
+        },
+        "scenes": {
+            "dashboard": "Tableau de bord",
+            "login": "Connexion",
+            "profile": "Profil",
+            "security": "Sécurité",
+            "server_overview": "Aperçu serveur",
+            "server_console": "Console serveur",
+            "server_files": "Fichiers serveur",
+            "server_databases": "Bases de données"
+        },
+        "server_scenes_disabled": "Créez d'abord un serveur pour prévisualiser ces écrans.",
+        "modes": {
+            "dark": "Sombre",
+            "light": "Clair",
+            "auto": "Auto (suit le système)"
+        },
+        "breakpoints": {
+            "mobile": "Mobile",
+            "tablet": "Tablette",
+            "desktop": "Bureau"
+        },
+        "toolbar": {
+            "scene": "Scène",
+            "mode": "Mode",
+            "breakpoint": "Point de rupture"
         }
     }
 }

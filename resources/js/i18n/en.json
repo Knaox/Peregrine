@@ -78,7 +78,7 @@
             "url": "Pelican URL",
             "url_placeholder": "https://pelican.example.com",
             "api_key": "Admin API Key (Application API)",
-            "api_key_placeholder": "ptlc_...",
+            "api_key_placeholder": "papp_...",
             "api_key_help": "Generate an Application API key (papp_...) in your Pelican admin panel under API Keys.",
             "client_api_key": "Client API Key",
             "client_api_key_placeholder": "pacc_...",
@@ -674,6 +674,318 @@
             "count_plural": "{{count}} servers",
             "empty": "No server matches these filters.",
             "owner_label": "Owner"
+        }
+    },
+    "theme_studio": {
+        "title": "Theme Studio",
+        "back": "Back to dashboard",
+        "saved": "Up to date",
+        "unsaved": "Unsaved changes",
+        "saving": "Saving…",
+        "discard": "Discard",
+        "reset": "Reset to defaults",
+        "publish": "Publish",
+        "save_error": "Save failed:",
+        "reset_confirm": "Reset the entire theme to its defaults? This cannot be undone.",
+        "unsaved_leave_confirm": "You have unpublished theme changes. Leave anyway and lose them?",
+        "reset_dialog": {
+            "title": "Reset the entire theme?",
+            "body": "Every theme setting goes back to factory defaults. This cannot be undone — export a backup first if you want to keep this version (php artisan theme:export).",
+            "warning_custom_css": "You have {{length}} characters of custom CSS that will be discarded.",
+            "warning_uploads": "Login background uploads will be unlinked. Files stay on disk until the weekly cleanup runs.",
+            "type_to_confirm": "Type RESET to confirm",
+            "confirm_button": "Reset to defaults"
+        },
+        "error": {
+            "title": "Theme Studio could not load",
+            "body": "The server returned an error fetching your theme settings. Check that you are still signed in as an admin and try again.",
+            "back": "Back to dashboard",
+            "retry": "Retry"
+        },
+        "conflict": {
+            "stale": "Another admin published a theme change while you were editing. The studio refreshed — review your changes and publish again."
+        },
+        "preset_active": "Active",
+        "section_preset": "Brand preset",
+        "section_brand": "Brand colors",
+        "section_status": "Status colors",
+        "section_surfaces": "Surfaces & borders",
+        "section_text": "Text",
+        "section_layout": "Layout",
+        "section_sidebar": "Server sidebar",
+        "section_sidebar_nav": "Server sidebar nav",
+        "section_cards": "Server cards",
+        "section_login": "Login page",
+        "section_pages": "Page overrides",
+        "section_footer": "Footer",
+        "section_refinements": "Refinements",
+        "section_typography": "Typography",
+        "section_custom_css": "Custom CSS",
+        "custom_css_placeholder": "body { background: var(--color-background); }",
+        "custom_css_help": "Injected as-is into a <style> tag on every page.",
+        "fields": {
+            "theme_mode": "Default colour mode",
+            "theme_mode_help": "Default for users who haven't explicitly picked one in their profile.",
+            "theme_primary": "Primary",
+            "theme_primary_hover": "Primary hover",
+            "theme_secondary": "Secondary",
+            "theme_ring": "Focus ring",
+            "theme_danger": "Danger",
+            "theme_warning": "Warning",
+            "theme_success": "Success",
+            "theme_info": "Info",
+            "theme_suspended": "Suspended",
+            "theme_installing": "Installing",
+            "theme_background": "Background",
+            "theme_surface": "Surface",
+            "theme_surface_hover": "Surface hover",
+            "theme_surface_elevated": "Surface elevated",
+            "theme_border": "Border",
+            "theme_border_hover": "Border hover",
+            "theme_text_primary": "Text primary",
+            "theme_text_secondary": "Text secondary",
+            "theme_text_muted": "Text muted",
+            "theme_font": "Font family",
+            "theme_radius": "Border radius",
+            "theme_density": "Density",
+            "theme_shadow_intensity": "Shadow intensity",
+            "theme_custom_css": "Inline CSS overrides",
+            "theme_layout_header_height": "Header height",
+            "theme_layout_header_sticky": "Sticky header",
+            "theme_layout_header_align": "Header layout",
+            "theme_layout_container_max": "Container width",
+            "theme_layout_page_padding": "Page padding",
+            "theme_sidebar_classic_width": "Classic width",
+            "theme_sidebar_rail_width": "Rail width",
+            "theme_sidebar_rail_help": "Only visible when the Server sidebar nav style is set to \"Compact (rail)\" with Left position.",
+            "theme_sidebar_mobile_width": "Mobile drawer width",
+            "theme_sidebar_blur_intensity": "Glass blur intensity",
+            "theme_sidebar_blur_help": "Affects the desktop sidebar, dock and top tabs.",
+            "theme_sidebar_floating": "Floating glass card",
+            "theme_sidebar_floating_help": "Detach the sidebar from the viewport edge with a margin and shadow.",
+            "theme_sidebar_floating_unavailable": "Floating glass card is only available with Left sidebar position. Dock and Top navigation are already floating by design.",
+            "theme_login_template": "Template",
+            "theme_login_background_image": "Background image",
+            "theme_login_background_image_help": "JPG / PNG / WEBP, max 5 MB. Hidden on mobile for the split layout.",
+            "theme_login_background_blur": "Background blur",
+            "theme_login_background_pattern": "Background pattern",
+            "theme_login_background_pattern_help": "Decorative pattern. Ignored by the Fullscreen overlay template.",
+            "theme_login_carousel_enabled": "Image carousel",
+            "theme_login_carousel_help": "Cycle through multiple background images. When off, the single Background image below is used.",
+            "theme_login_background_images": "Carousel images",
+            "theme_login_background_images_help": "Up to 8 images. JPG / PNG / WEBP, max 5 MB each.",
+            "theme_login_carousel_interval": "Interval",
+            "theme_login_carousel_random": "Random order",
+            "theme_login_background_opacity": "Background opacity",
+            "theme_page_console_fullwidth": "Console — full-width",
+            "theme_page_console_fullwidth_help": "Removes side padding around the terminal.",
+            "theme_page_files_fullwidth": "Files — full-width",
+            "theme_page_files_fullwidth_help": "Removes side padding around the file browser.",
+            "theme_page_dashboard_expanded": "Dashboard — 4 columns",
+            "theme_page_dashboard_expanded_help": "Adds a 4th column to the server card grid above 1280 px.",
+            "theme_footer_enabled": "Show footer",
+            "theme_footer_text": "Footer text",
+            "theme_footer_text_placeholder": "© 2026 Acme Corp. All rights reserved.",
+            "theme_footer_links": "Footer links",
+            "theme_footer_links_empty": "No links yet.",
+            "theme_footer_link_label": "Label",
+            "theme_footer_link_add": "Add link",
+            "card_style": "Card style",
+            "card_density": "Density",
+            "card_header_style": "Header style",
+            "card_status_position": "Status indicator position",
+            "card_accent_strength": "Accent / glow",
+            "card_border_style": "Border",
+            "card_quick_actions_layout": "Quick actions layout",
+            "card_hover_effect": "Hover effect",
+            "cols_desktop": "Desktop",
+            "cols_tablet": "Tablet",
+            "cols_mobile": "Mobile",
+            "sort_default": "Default sort",
+            "group_by": "Group by",
+            "card_visibility": "Show on cards",
+            "show_egg_icon": "Egg icon",
+            "show_egg_name": "Egg name",
+            "show_plan_name": "Plan name",
+            "show_status_badge": "Status badge",
+            "show_stats_bars": "Stats bars",
+            "show_quick_actions": "Quick actions",
+            "show_ip_port": "IP / port",
+            "show_uptime": "Uptime",
+            "sidebar_position": "Position",
+            "sidebar_style_legacy": "Style",
+            "show_server_status": "Show server status",
+            "show_server_name": "Show server name",
+            "sidebar_entries": "Navigation entries",
+            "theme_animation_speed": "Animation speed",
+            "theme_hover_scale": "Hover scale",
+            "theme_border_width": "Border width",
+            "theme_glass_blur_global": "Glass blur (global)",
+            "theme_font_size_scale": "Base font size",
+            "theme_app_background_pattern": "App background",
+            "theme_app_background_pattern_help": "Replaces the default animated constellation behind dashboard / profile / etc."
+        },
+        "app_pattern": {
+            "none": "None (animated constellation)",
+            "gradient": "Animated gradient",
+            "mesh": "Mesh gradient",
+            "orbs": "Floating orbs",
+            "aurora": "Aurora flow",
+            "dots": "Dots pattern",
+            "grid": "Grid lines",
+            "noise": "Noise texture"
+        },
+        "login_templates": {
+            "centered": "Centered (default)",
+            "split": "Split-screen with image",
+            "overlay": "Fullscreen image overlay",
+            "minimal": "Minimal"
+        },
+        "login_patterns": {
+            "none": "None (solid)",
+            "gradient": "Animated gradient",
+            "mesh": "Mesh gradient",
+            "dots": "Dots pattern",
+            "grid": "Grid lines",
+            "aurora": "Aurora flow",
+            "orbs": "Floating orbs",
+            "noise": "Noise texture"
+        },
+        "card_style": {
+            "default": "Default",
+            "elevated": "Elevated",
+            "glass": "Glass",
+            "minimal": "Minimal"
+        },
+        "card_density": {
+            "compact": "Compact",
+            "comfortable": "Comfortable",
+            "spacious": "Spacious"
+        },
+        "card_header_style": {
+            "banner": "Banner image (egg)",
+            "gradient": "Brand gradient",
+            "solid": "Solid surface",
+            "minimal": "Minimal (no header)"
+        },
+        "card_status_position": {
+            "inline": "Inline (next to name)",
+            "top-right": "Top-right corner",
+            "top-left": "Top-left corner",
+            "corner-ribbon": "Corner ribbon"
+        },
+        "card_accent_strength": {
+            "none": "None (flat)",
+            "subtle": "Subtle (default)",
+            "bold": "Bold (strong glow)"
+        },
+        "card_border_style": {
+            "full": "Full border",
+            "accent-left": "Accent bar (left)",
+            "none": "No border"
+        },
+        "card_quick_actions_layout": {
+            "full": "Full (labels + icons)",
+            "compact": "Compact",
+            "icon-only": "Icon only"
+        },
+        "card_hover_effect": {
+            "lift": "Lift (translate up)",
+            "scale": "Scale (zoom)",
+            "glow": "Glow (ring)",
+            "none": "None"
+        },
+        "card_sort": {
+            "name": "Name",
+            "status": "Status",
+            "created_at": "Most recent",
+            "egg": "Egg"
+        },
+        "card_group": {
+            "none": "No grouping",
+            "egg": "By egg",
+            "status": "By status",
+            "plan": "By plan"
+        },
+        "sidebar_position": {
+            "left": "Left sidebar",
+            "top": "Top tabs",
+            "dock": "Floating dock"
+        },
+        "sidebar_style_legacy": {
+            "default": "Default",
+            "compact": "Compact (rail)",
+            "pills": "Pills"
+        },
+        "entry_on": "On",
+        "entry_off": "Off",
+        "animation_speed": {
+            "instant": "Instant (0 ms)",
+            "faster": "Faster (150 ms)",
+            "default": "Default (250 ms)",
+            "slower": "Slower (450 ms)"
+        },
+        "hover_scale": {
+            "subtle": "Subtle (1.01×)",
+            "default": "Default (1.02×)",
+            "pronounced": "Pronounced (1.05×)"
+        },
+        "font_size_scale": {
+            "small": "Small (14 px)",
+            "default": "Default (16 px)",
+            "large": "Large (18 px)",
+            "xl": "XL (20 px)"
+        },
+        "image_empty": "No image",
+        "image_uploading": "Uploading…",
+        "image_replace": "Replace",
+        "image_upload": "Upload image",
+        "image_clear": "Remove",
+        "image_error": "Upload failed:",
+        "image_add": "Add",
+        "image_move_left": "Move left",
+        "image_move_right": "Move right",
+        "layout_align": {
+            "default": "Logo left",
+            "centered": "Centered",
+            "split": "Split"
+        },
+        "container_max": {
+            "1280": "1280 px",
+            "1440": "1440 px",
+            "1536": "1536 px",
+            "full": "Full width"
+        },
+        "page_padding": {
+            "compact": "Compact",
+            "comfortable": "Comfortable",
+            "spacious": "Spacious"
+        },
+        "scenes": {
+            "dashboard": "Dashboard",
+            "login": "Login",
+            "profile": "Profile",
+            "security": "Security",
+            "server_overview": "Server overview",
+            "server_console": "Server console",
+            "server_files": "Server files",
+            "server_databases": "Server databases"
+        },
+        "server_scenes_disabled": "Create a server first to preview these screens.",
+        "modes": {
+            "dark": "Dark",
+            "light": "Light",
+            "auto": "Auto (follow system)"
+        },
+        "breakpoints": {
+            "mobile": "Mobile",
+            "tablet": "Tablet",
+            "desktop": "Desktop"
+        },
+        "toolbar": {
+            "scene": "Scene",
+            "mode": "Mode",
+            "breakpoint": "Breakpoint"
         }
     }
 }

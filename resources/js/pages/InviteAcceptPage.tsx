@@ -75,7 +75,7 @@ export function InviteAcceptPage() {
 
                 {/* Card */}
                 <div className="rounded-[var(--radius-xl)] p-6 sm:p-8"
-                    style={{ background: 'rgba(22, 19, 30, 0.85)', backdropFilter: 'blur(24px) saturate(180%)',
+                    style={{ background: 'rgba(22, 19, 30, 0.85)', backdropFilter: 'var(--glass-blur)',
                         border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
 
                     <h1 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">{t('invitations.accept.title')}</h1>
