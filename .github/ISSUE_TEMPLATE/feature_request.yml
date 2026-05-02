@@ -1,0 +1,61 @@
+name: Feature request
+description: Suggest a new feature, a UX improvement, or a missing integration.
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest something.
+
+        Before opening a feature request, check the [Roadmap](https://github.com/Knaox/Peregrine#-roadmap) and the [open issues](https://github.com/Knaox/Peregrine/issues) — your idea may already be planned.
+
+        If you're proposing **a new plugin**, you don't need to open it here — anyone can publish a plugin on [Knaox/peregrine-plugins](https://github.com/Knaox/peregrine-plugins).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that is hard or impossible today?
+      placeholder: "I host 50 servers and need to bulk-update the start command across all of them, currently I have to click into each one."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you solve it? Sketch the UX, the API, or the workflow.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Existing workarounds, third-party tools, or other approaches you've thought about.
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Where would this live?
+      options:
+        - Player panel (React SPA)
+        - Admin panel (Filament)
+        - Theme Studio
+        - Plugin Marketplace
+        - API / Backend
+        - Docker / deployment
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: search
+    attributes:
+      label: Pre-flight check
+      options:
+        - label: I checked the roadmap and existing issues for duplicates.
+          required: true

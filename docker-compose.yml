@@ -1,28 +1,23 @@
 # ------------------------------------------------------------------
-# Peregrine — standard compose (app only)
+# Peregrine — all-in-one compose (app + MySQL + Redis) — DEFAULT
 #
 # Turnkey file for Portainer: paste, deploy, open port 8080.
-# Runs the official ghcr.io/knaox/peregrine image.
-#
-# By default: SQLite bundled inside a named volume — zero extra services.
-#
-# Want an external MySQL? Set these env vars at deploy time (Portainer
-# "Environment variables", or a .env next to this file) and Peregrine
-# will use them instead of SQLite:
-#
-#   DB_CONNECTION=mysql
-#   DB_HOST=mydb.example.com
-#   DB_PORT=3306
-#   DB_DATABASE=peregrine
-#   DB_USERNAME=peregrine
-#   DB_PASSWORD=super-secret
+# Everything needed for a production-grade install is bundled here:
+#   - ghcr.io/knaox/peregrine:latest  (official image)
+#   - mysql:8.4                       (database)
+#   - redis:7-alpine                  (cache + queue + sessions)
 #
 #   docker compose up -d
-#   open http://localhost:8080   (run the Setup Wizard)
+#   open http://localhost:8080        (run the Setup Wizard)
 #
-# Other variants:
-#   docker-compose.redis.yml → external DB + bundled Redis
-#   docker-compose.full.yml  → bundled MySQL + Redis (all-in-one)
+# During the Setup Wizard, fill the Database step with:
+#   Host:     mysql       Port: 3306
+#   Database: peregrine   User: peregrine   Password: <the one set below>
+# The wizard pre-fills these when DOCKER=true is detected.
+#
+# Already running a managed MySQL / MariaDB / PostgreSQL ?
+#   Use docker-compose.external-db.yml instead — same image,
+#   bundled Redis, but you point at your own database host.
 # ------------------------------------------------------------------
 
 services:
@@ -30,10 +25,15 @@ services:
     image: ghcr.io/knaox/peregrine:latest
     container_name: peregrine
     restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
     ports:
       - "${PEREGRINE_PORT:-8080}:8080"
     environment:
-      APP_NAME: ${APP_NAME:-Peregrine}
+      APP_NAME: Peregrine
       APP_ENV: production
       APP_DEBUG: "false"
       APP_URL: ${APP_URL:-http://localhost:8080}
@@ -46,19 +46,20 @@ services:
       #   TRUSTED_PROXIES=192.168.80.1                 (single proxy on the Docker host)
       #   TRUSTED_PROXIES=172.16.0.0/12,192.168.0.0/16 (private LAN ranges)
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
-      # Database — SQLite is the default, override any of these to point at
-      # an external MySQL / MariaDB / PostgreSQL host.
-      DB_CONNECTION: ${DB_CONNECTION:-sqlite}
-      DB_HOST: ${DB_HOST:-}
-      DB_PORT: ${DB_PORT:-3306}
-      DB_DATABASE: ${DB_DATABASE:-/var/www/html/storage/database/database.sqlite}
-      DB_USERNAME: ${DB_USERNAME:-}
-      DB_PASSWORD: ${DB_PASSWORD:-}
-      # Cache + queue + sessions
-      CACHE_STORE: ${CACHE_STORE:-file}
-      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
-      SESSION_DRIVER: ${SESSION_DRIVER:-file}
-      # Optional mailer — fill at deploy time, otherwise emails go to the log.
+      # Database — points at the bundled MySQL service below.
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-peregrine}
+      DB_USERNAME: ${DB_USERNAME:-peregrine}
+      DB_PASSWORD: ${DB_PASSWORD:-peregrine}
+      # Cache + queue — Redis.
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # Optional mailer.
       MAIL_MAILER: ${MAIL_MAILER:-log}
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-587}
@@ -67,17 +68,47 @@ services:
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@peregrine.local}
       MAIL_FROM_NAME: "${MAIL_FROM_NAME:-Peregrine}"
     volumes:
-      # Persistent storage (SQLite file, uploaded branding, session files, logs).
       - peregrine_storage:/var/www/html/storage
-      # Marketplace-installed plugins survive container restarts.
       - peregrine_plugins:/var/www/html/plugins
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/up"]
       interval: 30s
       timeout: 5s
       retries: 5
-      start_period: 45s
+      start_period: 60s
+
+  mysql:
+    image: mysql:8.4
+    container_name: peregrine-mysql
+    restart: unless-stopped
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-peregrine}
+      MYSQL_USER: ${DB_USERNAME:-peregrine}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-peregrine}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-peregrine-root}
+    volumes:
+      - peregrine_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: peregrine-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - peregrine_redis:/data
 
 volumes:
   peregrine_storage:
   peregrine_plugins:
+  peregrine_mysql:
+  peregrine_redis:
