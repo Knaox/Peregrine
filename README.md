@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/Knaox/Peregrine/main/public/images/logo.webp" width="360" alt="Peregrine" />
+  <img src="https://raw.githubusercontent.com/Knaox/Peregrine/main/public/images/logo.webp" width="320" alt="Peregrine" />
 
-  <h3>Open-source game-server management panel powered by <a href="https://pelican.dev">Pelican</a>.</h3>
-  <p>Beautiful player interface · full admin panel · granular permissions · plugin marketplace · Docker-first.</p>
+  <h1>Peregrine</h1>
+  <p><strong>The open-source game-server panel that gives <a href="https://pelican.dev">Pelican</a> the player UX, admin tooling, and customisation it deserves.</strong></p>
 
   <p>
     <a href="https://github.com/Knaox/Peregrine/releases"><img alt="Version" src="https://img.shields.io/github/v/release/Knaox/Peregrine?include_prereleases&label=version&color=e11d48"></a>
@@ -11,243 +11,130 @@
     <a href="https://github.com/Knaox/Peregrine/pkgs/container/peregrine"><img alt="Image" src="https://img.shields.io/badge/image-ghcr.io%2Fknaox%2Fperegrine-2496ED?logo=docker&logoColor=white"></a>
     <img alt="PHP 8.3" src="https://img.shields.io/badge/PHP-8.3-777BB4?logo=php&logoColor=white">
     <img alt="Laravel 13" src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white">
-    <img alt="Filament 5" src="https://img.shields.io/badge/Filament-5-F59E0B?logo=livewire&logoColor=white">
     <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black">
   </p>
 
   <p>
-    <a href="#-install-in-60-seconds">Install in 60 s</a> ·
+    <a href="#-screenshots">Screenshots</a> ·
+    <a href="#-why-peregrine">Why Peregrine?</a> ·
+    <a href="#-quick-start-docker">Quick start</a> ·
     <a href="#-features">Features</a> ·
-    <a href="#-install-in-60-seconds">Compose files</a> ·
-    <a href="#-updates">Updates</a> ·
-    <a href="#-plugins">Plugins</a> ·
-    <a href="#-developing-locally">Developing</a> ·
-    <a href="#license">License</a>
+    <a href="#-theme-studio">Theme Studio</a> ·
+    <a href="#-plugin-marketplace">Plugins</a> ·
+    <a href="#-roadmap">Roadmap</a>
   </p>
+
+  <p><a href="README.fr.md">🇫🇷 Lire en français</a></p>
 </div>
 
 ---
 
-## 🦅 What is Peregrine?
+## What is Peregrine?
 
-**Peregrine** is a modern, open-source control panel for game servers. It speaks to [Pelican](https://pelican.dev) (the fork of Pterodactyl) over its Application and Client APIs, and wraps it in everything a production hoster actually needs:
+**Peregrine is a modern control panel for game servers.** It speaks to [Pelican](https://pelican.dev) (the actively-maintained fork of Pterodactyl) over its API and wraps it in:
 
-- a slick React SPA for players (overview, WebSocket console, file manager, SFTP, databases, backups, schedules, network, invitations),
-- a full Filament 5 admin panel (users, servers, plans, eggs, nests, nodes, theme editor, plugin marketplace, email templates, about/updates),
-- a strict permission system wired end-to-end (if you don't have the right, the button isn't there — and the backend 403s anyway),
-- a plugin architecture with a GitHub-hosted marketplace registry,
-- a Docker-first deployment (published to `ghcr.io/knaox/peregrine` on every push to `main`),
-- bilingual French / English UI.
+- a **React 19 player SPA** with WebSocket console, full file manager, SFTP, databases, backups, schedules, network and subuser invitations,
+- a **Filament 5 admin panel** for users / servers / plans / eggs / nodes — with one-click Pelican sync,
+- a **Theme Studio** with live split-screen preview to fully rebrand the panel without touching code,
+- a **Plugin Marketplace** backed by a public GitHub registry — install / update / uninstall in one click,
+- **Docker-first**, multi-arch image published to GHCR on every push to `main`,
+- bilingual **EN / FR** UI, every string translated.
 
-It runs **standalone** (local auth) or as part of a larger **SaaS stack** (OAuth2 SSO + Stripe webhook bridge).
+It runs **standalone** for a single hoster, or wired to a SaaS shop via OAuth2 SSO + Stripe webhook bridge for full subscription-driven provisioning.
 
 ---
 
-## ⚡ Install in 60 seconds
+## 📸 Screenshots
 
-> **The heavy lifting is done in your browser.** After you start the container, open port 8080 and a 7-step **Setup Wizard** walks you through language, database, admin account, Pelican credentials, auth mode, optional Bridge, and summary. You never touch `.env` manually.
+<table>
+  <tr>
+    <td colspan="2" align="center">
+      <a href="docs/screenshots/server-overview.png"><img src="docs/screenshots/server-overview.png" alt="Server overview" /></a>
+      <br/><sub><strong>Server overview</strong> — live CPU / RAM / disk / network via Wings WebSocket, quick power controls, banner image.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <a href="docs/screenshots/theme-studio.png"><img src="docs/screenshots/theme-studio.png" alt="Theme Studio" /></a>
+      <br/><sub><strong>Theme Studio</strong> — split-screen live preview, 7 brand presets, ~60 tokens, login templates, per-page overrides.</sub>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <a href="docs/screenshots/plugins-marketplace.png"><img src="docs/screenshots/plugins-marketplace.png" alt="Plugin Marketplace" /></a>
+      <br/><sub><strong>Plugin Marketplace</strong> — browse, install, activate, update, uninstall — backed by a public GitHub registry.</sub>
+    </td>
+  </tr>
+</table>
 
-### Option A — one container, SQLite bundled (recommended for first try)
+---
 
-```bash
-docker run -d --name peregrine \
-  -p 8080:8080 \
-  -v peregrine_storage:/var/www/html/storage \
-  -v peregrine_plugins:/var/www/html/plugins \
-  ghcr.io/knaox/peregrine:latest
-```
+## 🦅 Why Peregrine?
 
-Open `http://localhost:8080` and run the Setup Wizard.
+Pelican already does the heavy lifting on the daemon side. Peregrine is what sits **on top** of it, for the people who actually use the panel every day.
 
-> **What's running inside the container** — supervised by `supervisord`, all auto-restarted on crash:
-> - `nginx` (HTTP server, port 8080)
-> - `php-fpm` (PHP 8.3 worker pool)
-> - **`php artisan queue:work`** — processes Bridge / Stripe / Pelican-mirror webhooks, plugin mails, sync jobs. **No separate worker container needed**, no supervisor / systemd setup on your host.
->
-> Cache + queue + sessions default to `file` / `database` (no Redis required). For higher throughput, switch to bundled Redis via [Option C](#option-c--app--redis-external-database) or [Option D](#option-d--all-in-one-stack-app--mysql--redis) below — the in-image worker picks up `QUEUE_CONNECTION=redis` automatically.
+| | Pelican panel (default) | **Peregrine** |
+|---|---|---|
+| Player UX | Functional, classic | Modern React SPA, dark/light, mobile-friendly |
+| File manager | Basic | Full parity (chmod, pull, drag-drop, bulk, archives) |
+| Customisation | CSS overrides | **Theme Studio** with live preview — no code |
+| Plugins | None first-party | **Marketplace** backed by a public GitHub registry |
+| Subuser invitations | Manual | First-class plugin, granular permissions, email |
+| SSO / Billing bridge | None | OAuth2 + Stripe + Pelican webhook bridge |
+| i18n | EN | EN + FR (every string), pluggable |
+| Deploy | Multi-step | `docker compose up -d` → 7-step browser wizard |
 
-### Option B — the official `docker-compose.yml` (SQLite or external DB)
+If you run a hosting business or want to give your community a panel that doesn't feel like a 2014 admin form, Peregrine is for you.
 
-Save this as `docker-compose.yml`, run `docker compose up -d`. Also works as a **Portainer Stack** — paste and Deploy.
+---
 
-By default this runs Peregrine alone with a bundled **SQLite** file in a named volume. To point at an **external MySQL / MariaDB / PostgreSQL** instead, set the `DB_*` env vars at deploy time (Portainer → Environment variables, or a `.env` next to the compose) — no file edit needed, the compose already references `${DB_HOST}` etc.
+## ⚡ Quick start (Docker)
 
-```yaml
-services:
-  peregrine:
-    image: ghcr.io/knaox/peregrine:latest
-    container_name: peregrine
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    environment:
-      APP_URL: http://localhost:8080
-      DOCKER: "true"
-      # Default = SQLite. Override these to use an external DB.
-      DB_CONNECTION: ${DB_CONNECTION:-sqlite}
-      DB_HOST: ${DB_HOST:-}
-      DB_PORT: ${DB_PORT:-3306}
-      DB_DATABASE: ${DB_DATABASE:-/var/www/html/storage/database/database.sqlite}
-      DB_USERNAME: ${DB_USERNAME:-}
-      DB_PASSWORD: ${DB_PASSWORD:-}
-    volumes:
-      - peregrine_storage:/var/www/html/storage
-      - peregrine_plugins:/var/www/html/plugins
+> The heavy lifting happens in your browser. After the container starts, open port 8080 and a **7-step Setup Wizard** walks you through language, database, admin account, Pelican credentials, auth mode, optional Bridge, and summary. You never touch `.env` manually.
 
-volumes:
-  peregrine_storage:
-  peregrine_plugins:
-```
+Two compose files ship in the repo, and that's it:
 
-Example Portainer stack env vars for an external MySQL:
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=mydb.example.com
-DB_PORT=3306
-DB_DATABASE=peregrine
-DB_USERNAME=peregrine
-DB_PASSWORD=super-secret
-```
-
-### Option C — app + Redis (external database)
-
-You already run a managed MySQL / MariaDB and just want **Redis** (cache + queue + sessions) bundled with Peregrine. Shipped as [`docker-compose.redis.yml`](docker-compose.redis.yml).
-
-```yaml
-services:
-  peregrine:
-    image: ghcr.io/knaox/peregrine:latest
-    container_name: peregrine
-    restart: unless-stopped
-    depends_on:
-      redis: { condition: service_started }
-    ports:
-      - "8080:8080"
-    environment:
-      APP_URL: http://localhost:8080
-      DOCKER: "true"
-      DB_CONNECTION: mysql
-      DB_HOST: ${DB_HOST}           # ← set me (managed DB hostname)
-      DB_PORT: ${DB_PORT:-3306}
-      DB_DATABASE: ${DB_DATABASE:-peregrine}
-      DB_USERNAME: ${DB_USERNAME:-peregrine}
-      DB_PASSWORD: ${DB_PASSWORD}    # ← set me
-      CACHE_STORE: redis
-      QUEUE_CONNECTION: redis
-      SESSION_DRIVER: redis
-      REDIS_HOST: redis
-    volumes:
-      - peregrine_storage:/var/www/html/storage
-      - peregrine_plugins:/var/www/html/plugins
-
-  redis:
-    image: redis:7-alpine
-    container_name: peregrine-redis
-    restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - peregrine_redis:/data
-
-volumes:
-  peregrine_storage:
-  peregrine_plugins:
-  peregrine_redis:
-```
-
-### Option D — all-in-one stack (app + MySQL + Redis)
-
-Production-grade bundle. Turnkey — Portainer-paste-ready. Redis for cache/queue/session, MySQL 8.4 for durability.
-
-```yaml
-services:
-  peregrine:
-    image: ghcr.io/knaox/peregrine:latest
-    container_name: peregrine
-    restart: unless-stopped
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    ports:
-      - "8080:8080"
-    environment:
-      APP_URL: http://localhost:8080
-      DOCKER: "true"
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_DATABASE: peregrine
-      DB_USERNAME: peregrine
-      DB_PASSWORD: change-me
-      CACHE_STORE: redis
-      QUEUE_CONNECTION: redis
-      SESSION_DRIVER: redis
-      REDIS_HOST: redis
-    volumes:
-      - peregrine_storage:/var/www/html/storage
-      - peregrine_plugins:/var/www/html/plugins
-
-  mysql:
-    image: mysql:8.4
-    container_name: peregrine-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: peregrine
-      MYSQL_USER: peregrine
-      MYSQL_PASSWORD: change-me
-      MYSQL_ROOT_PASSWORD: change-me-too
-    volumes:
-      - peregrine_mysql:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 15s
-      retries: 8
-
-  redis:
-    image: redis:7-alpine
-    container_name: peregrine-redis
-    restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - peregrine_redis:/data
-
-volumes:
-  peregrine_storage:
-  peregrine_plugins:
-  peregrine_mysql:
-  peregrine_redis:
-```
-
-In the Setup Wizard, fill the **Database** step with:
-
-| Field | Value |
+| File | When to use it |
 |---|---|
-| Host | `mysql` |
-| Port | `3306` |
-| Database | `peregrine` |
-| User | `peregrine` |
-| Password | *the one from `DB_PASSWORD`* |
+| **[`docker-compose.yml`](docker-compose.yml)** *(default)* | All-in-one — bundled MySQL 8.4 + Redis. Turnkey production install. |
+| **[`docker-compose.external-db.yml`](docker-compose.external-db.yml)** | You already run a managed MySQL / MariaDB / PostgreSQL elsewhere — keep it, get bundled Redis. |
 
-All three compose files are shipped in the repo: [`docker-compose.yml`](docker-compose.yml) (simple), [`docker-compose.redis.yml`](docker-compose.redis.yml) (app + Redis, external DB), [`docker-compose.full.yml`](docker-compose.full.yml) (all-in-one).
-
-### Option E — bare metal (no Docker)
+### Option A — all-in-one (recommended)
 
 ```bash
-git clone https://github.com/Knaox/Peregrine.git
-cd Peregrine
+curl -fsSLO https://raw.githubusercontent.com/Knaox/Peregrine/main/docker-compose.yml
+docker compose up -d
+open http://localhost:8080
+```
 
+Works as a Portainer Stack — paste the compose, click Deploy. The Setup Wizard pre-fills the database step with `mysql` / `peregrine` / `peregrine` (override `DB_PASSWORD` at deploy time).
+
+### Option B — bring your own database
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/Knaox/Peregrine/main/docker-compose.external-db.yml
+# Set DB_HOST / DB_DATABASE / DB_USERNAME / DB_PASSWORD via .env or Portainer env vars
+docker compose -f docker-compose.external-db.yml up -d
+open http://localhost:8080
+```
+
+### What runs inside the container
+
+A single image, supervised by `supervisord` and auto-restarted on crash:
+
+- **`nginx`** — HTTP server on port 8080
+- **`php-fpm`** — PHP 8.3 worker pool
+- **`php artisan queue:work`** — processes Bridge / Stripe / Pelican-mirror webhooks, plugin emails, sync jobs
+
+**No separate worker container, no host-level supervisor / systemd setup needed.**
+
+### Option C — bare metal (no Docker)
+
+```bash
+git clone https://github.com/Knaox/Peregrine.git && cd Peregrine
 composer install --no-dev --optimize-autoloader
-pnpm install
-pnpm run build
-
-cp .env.example .env
-php artisan key:generate
-php artisan storage:link
-
-php artisan serve &                    # HTTP on :8000
-php artisan queue:work --daemon &      # mail + sync jobs
+pnpm install && pnpm run build
+cp .env.example .env && php artisan key:generate && php artisan storage:link
+php artisan serve &                   # HTTP on :8000
+php artisan queue:work --daemon &     # mail + sync jobs
 ```
 
 Reverse-proxy with nginx / Caddy / Traefik as you normally would.
@@ -258,92 +145,99 @@ Reverse-proxy with nginx / Caddy / Traefik as you normally would.
 
 ### Player panel (React 19 SPA)
 - **Overview** — live CPU / RAM / disk / network via Wings WebSocket, uptime, banner image, quick actions gated by permissions.
-- **Console** — xterm.js terminal, per-user persistent command history, Start / Stop / Restart / Kill with granular `control.*` gating.
-- **File manager** — **full Pelican parity**: list, read, edit, write, rename, delete, copy, compress, decompress, `chmod` (octal), remote URL `pull`, drag-and-drop upload, folder creation, bulk actions. Read-only mode for users without `file.update`.
-- **SFTP** — credentials panel, clipboard copy, separate SFTP password reset — gated by `file.sftp`.
-- **Databases** — create, rotate password, delete, view credentials (each action gated individually).
+- **Console** — xterm.js terminal, persistent command history, Start / Stop / Restart / Kill with granular `control.*` gating.
+- **File manager** — full Pelican parity: list, read, edit, write, rename, delete, copy, compress, decompress, `chmod` (octal), remote URL `pull`, drag-and-drop upload, folder creation, bulk actions. Read-only mode for users without `file.update`.
+- **SFTP** — credentials panel, clipboard copy, separate SFTP password reset.
+- **Databases** — create, rotate password, delete, view credentials.
 - **Backups** — create, download, lock, restore, delete.
-- **Schedules** — create, edit, run-now, cron presets + advanced editor, task management.
+- **Schedules** — cron presets + advanced editor, run-now, task management.
 - **Network** — allocations list, notes, primary, bulk delete, add.
-- **Invitations** (shipped plugin) — invite users by email with granular permissions, edit permissions of active subusers and pending invitations, self-protection, queue-safe email dispatch.
+- **Invitations** (shipped plugin) — invite users by email with granular permissions, edit pending and active subusers.
 
 ### Admin panel (Filament 5)
-- Resources: Users, Servers, Plans, Eggs, Nests, Nodes — with one-click Pelican sync.
-- **Appearance** — theme editor with 15+ color tokens, border radius, font, header customization, custom CSS injection. The admin panel respects your theme too.
+- Resources: Users, Servers, Plans, Eggs, Nests, Nodes — one-click Pelican sync.
 - **Settings** — app name, logo, favicon, custom header links, Pelican credentials, auth mode, bridge.
-- **Plugins** — installed + marketplace tabs; install / activate / deactivate / update / uninstall; per-plugin settings schema.
-- **Email templates** — per-locale subject + HTML body with variable placeholders (`{server_name}`, `{accept_url}`, `{app_name}`, …). Emails automatically use your uploaded favicon as the logo.
-- **About & Updates** — live GitHub release check; Docker-aware update commands with one-click clipboard copy.
+- **Email templates** — per-locale subject + HTML body, variable placeholders, automatic favicon-as-logo.
+- **About & Updates** — live GitHub release check, Docker-aware update commands with one-click clipboard copy.
 
 ### Platform
-- **Strict permissions** — every Pelican subuser permission key maps to a dedicated policy ability. Frontend hides controls users can't use; backend returns 403 if they try the API directly.
+- **Strict permissions** — every Pelican subuser permission key maps to a dedicated policy ability. UI hides what users can't do; API returns 403 if they try anyway.
+- **Multi-provider auth** — local, OAuth2 (SaaSykit-compatible Shop, Paymenter), Google, Discord, LinkedIn — coexist, configurable from `/admin/auth-settings`. Native 2FA TOTP with admin enforcement option.
 - **Redis caching** — branding, theme, allocations, SFTP credentials, backup/database/schedule lists, settings.
-- **Queue-safe** — plugin-defined Mailables never get serialised into the queue (see `app/Jobs/SendPluginMail.php`).
-- **Bilingual EN + FR** — every new string lands in both i18n files.
-- **Docker-first** — multi-arch image (`linux/amd64` + `linux/arm64`) auto-built on every push to `main`.
-- **Auto-update checker** — Admin → About tells you when a new GitHub release is out and gives you the exact commands.
+- **Queue-safe** — plugin Mailables never get serialised into the queue.
+- **Bilingual EN + FR** — every new string lands in both i18n files, same commit.
+- **Multi-arch image** — `linux/amd64` + `linux/arm64`, auto-built on every push to `main`.
+
+---
+
+## 🎨 Theme Studio
+
+A full-screen, admin-only React studio at `/theme-studio` with **live split-screen preview** — edit on the left, see your panel update in real time on the right. Reachable from Filament → **Settings → Appearance → Open Theme Studio**.
+
+<div align="center">
+  <a href="docs/screenshots/theme-studio.png"><img src="docs/screenshots/theme-studio.png" alt="Theme Studio screenshot" width="900" /></a>
+</div>
+
+What you can do without touching a single line of code:
+
+- **7 brand presets** (Orange / Amber / Crimson / Emerald / Indigo / Violet / Slate), each with full dark + light variants.
+- **~60 design tokens** — colors, radii, fonts, shadows, density, layout widths, sidebar styles, border widths, hover scale, glass blur, transition speed, font scale.
+- **4 login templates** (Centered / Split / Overlay / Minimal) with image upload and 8 background patterns.
+- **Per-page overrides** — fullwidth console, fullwidth file manager, 4-column dashboard.
+- **Sidebar configurator** — widths, blur, floating, classic/rail/mobile, custom nav entries with reordering.
+- **Footer builder** — toggle, free text, list of links.
+- **Live preview toolbar** — switch between 8 scenes (4 user pages, 4 server pages), toggle dark/light, change breakpoint (mobile / tablet / desktop).
+- **Asset uploads** — drag-drop your login background straight into the studio.
+- **Custom CSS escape hatch** — for the 1% the tokens don't cover.
+
+Settings are stored in the `settings` table (cached in Redis 1 h) and rendered as CSS variables on every page. Reset to factory defaults in one click.
+
+---
+
+## 🧩 Plugin Marketplace
+
+Peregrine has a real plugin system — not theme overrides or hooks. Plugins are mini React + Laravel apps that can register routes, navigation entries, permissions, settings schemas and Filament resources.
+
+<div align="center">
+  <a href="docs/screenshots/plugins-marketplace.png"><img src="docs/screenshots/plugins-marketplace.png" alt="Plugin Marketplace screenshot" width="900" /></a>
+</div>
+
+### Marketplace registry
+
+Public, GitHub-hosted registry at **[`Knaox/peregrine-plugins`](https://github.com/Knaox/peregrine-plugins)**. Peregrine fetches the latest `registry.json` from `raw.githubusercontent.com`, lists available plugins in **Admin → Plugins → Marketplace**, and handles **install / activate / deactivate / update / uninstall** in one click.
+
+### Shipped by default
+
+- **Server Invitations** — invite players to your servers by email with granular Pelican permissions, edit pending invites and active subusers, self-protection against locking yourself out, queue-safe email dispatch.
+
+### Bring your own
+
+```bash
+php artisan make:plugin my-plugin
+```
+
+Scaffolds `plugins/my-plugin/` with a service provider, manifest, migrations folder, and a React entry point. See [`plugins/invitations/`](plugins/invitations/) for the reference implementation, and [`docs/plugins.md`](docs/plugins.md) for the full plugin developer guide.
+
+Run a private registry by setting `MARKETPLACE_REGISTRY_URL` in your `.env`.
 
 ---
 
 ## 🧾 Configuration
 
-Peregrine is configured **through the browser**, not through `.env`. The first time you open the panel, an `EnsureInstalled` middleware redirects you to `/setup` as long as `PANEL_INSTALLED` is not `true`. The 7-step wizard then writes all the database, Pelican, auth, and Bridge variables for you, and flips `PANEL_INSTALLED=true` at the end.
+Everything is configured **through the browser** during the 7-step Setup Wizard. The only `.env` value you set manually before the first boot is `APP_URL` (it's the absolute base URL for emails, OAuth callbacks and the update checker).
 
-### What you set manually (before the first boot)
-
-Only `APP_URL` is practically required — it's the absolute base URL used by email links, OAuth callbacks, and the update checker.
-
-```env
-APP_NAME=Peregrine                  # optional, default "Peregrine"
-APP_URL=https://games.example.com   # absolute URL of your install
-APP_ENV=production                  # optional
-APP_DEBUG=false                     # optional
-
-# Leave PANEL_INSTALLED unset (or =false) on first boot so the wizard kicks in.
-# PANEL_INSTALLED=false
-
-# Mailer — not covered by the wizard. Set these so invitations can be sent.
-MAIL_MAILER=smtp
-MAIL_HOST=
-MAIL_PORT=587
-MAIL_USERNAME=
-MAIL_PASSWORD=
-MAIL_FROM_ADDRESS=no-reply@games.example.com
-MAIL_FROM_NAME=Peregrine
-```
-
-### What the Setup Wizard writes for you
-
-At the end of the 7 steps, Peregrine writes these to `.env` and sets `PANEL_INSTALLED=true`:
+The wizard writes:
 
 | Step | Writes |
 |---|---|
-| Database (step 2, live-tests the connection) | `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` |
-| Admin account (step 3) | Creates the initial admin user directly in the DB |
-| Pelican (step 4, live-tests the API key) | `PELICAN_URL`, `PELICAN_ADMIN_API_KEY`, `PELICAN_CLIENT_API_KEY` |
-| Auth mode (step 5) | `AUTH_MODE` + `OAUTH_*` if you pick OAuth |
-| Bridge (step 6, optional) | `BRIDGE_ENABLED`, `STRIPE_WEBHOOK_SECRET` |
-| Summary (step 7) | Flips `PANEL_INSTALLED=true` and runs migrations |
+| Database (live-tested) | `DB_*` vars |
+| Admin account | First admin user |
+| Pelican (live-tested) | `PELICAN_URL`, `PELICAN_ADMIN_API_KEY`, `PELICAN_CLIENT_API_KEY` |
+| Auth mode | Local / OAuth2 / Social providers, all configurable post-install too |
+| Bridge (optional) | `BRIDGE_ENABLED`, `STRIPE_WEBHOOK_SECRET` |
+| Summary | Flips `PANEL_INSTALLED=true`, runs migrations |
 
-No need to write any of those yourself — if you do, the wizard uses your values as defaults in the form.
-
-### Optional env vars (after install)
-
-```env
-# Marketplace + self-update check
-MARKETPLACE_REGISTRY_URL=https://raw.githubusercontent.com/Knaox/peregrine-plugins/main/registry.json
-UPDATE_REPO=Knaox/Peregrine
-
-# Queue / cache / session drivers (override compose defaults)
-QUEUE_CONNECTION=redis
-CACHE_STORE=redis
-SESSION_DRIVER=redis
-REDIS_HOST=redis
-```
-
-### Re-running the Setup Wizard
-
-Flip `PANEL_INSTALLED=false` (or unset it) in `.env`, reload the panel — you'll be redirected to `/setup` again. Existing data is preserved.
+Re-run the wizard at any time by setting `PANEL_INSTALLED=false`. Existing data is preserved.
 
 See [`.env.example`](.env.example) for the full list of recognised variables.
 
@@ -351,53 +245,41 @@ See [`.env.example`](.env.example) for the full list of recognised variables.
 
 ## 🔄 Updates
 
-Admin → **About & Updates** shows the installed version, checks GitHub for the latest panel release (plugin releases are filtered out), and hands you the exact commands with clipboard buttons — Docker-aware.
-
-### Docker
+Admin → **About & Updates** shows the installed version, checks GitHub for the latest panel release (plugin releases are filtered out), and gives you the exact command with a clipboard button.
 
 ```bash
 docker compose pull && docker compose up -d
 ```
 
-Migrations run automatically on container start (the entrypoint handles it when `PANEL_INSTALLED=true`).
-
-### Bare metal
-
-```bash
-git pull
-composer install --no-dev --optimize-autoloader && pnpm install
-pnpm run build
-php artisan migrate --force && php artisan config:cache && php artisan queue:restart
-```
+Migrations run automatically on container start when `PANEL_INSTALLED=true`.
 
 ---
 
-## 🧩 Plugins
+## 🗺️ Roadmap
 
-Peregrine ships with **Server Invitations** activated by default (subuser management with granular permissions, self-protection, queue-safe email dispatch).
+Shipped (latest: `v1.0.0-alpha.1`):
 
-Browse more from **Admin → Plugins → Marketplace**, or install from the CLI:
+- ✅ Player React SPA — full Pelican file-manager parity, console, SFTP, databases, backups, schedules, network
+- ✅ Filament 5 admin panel with Pelican sync
+- ✅ Theme Studio (Vagues 1 + 3 + parity + refinements)
+- ✅ Plugin Marketplace + Server Invitations plugin
+- ✅ Multi-provider auth (local / Shop / Paymenter / Google / Discord / LinkedIn) + 2FA TOTP
+- ✅ Stripe + Pelican webhook bridge for subscription-driven provisioning
+- ✅ Docker multi-arch image published to GHCR on every push
 
-```bash
-php artisan plugin:install <plugin-id>
-php artisan plugin:activate <plugin-id>
-```
+Up next:
 
-The marketplace registry lives at `Knaox/peregrine-plugins` on GitHub. Override with `MARKETPLACE_REGISTRY_URL` to run a private registry.
+- 🛠️ **Theme marketplace** (Theme Studio Vague 4) — share / import / export themes as JSON, fork a preset, public registry mirroring the plugin marketplace pattern
+- 🛠️ **Token system v2** (Theme Studio Vague 2) — color scales 50→950, Material-style type roles, 5 shadow levels, named gradients, per-section background patterns
+- 🛠️ **Polish & accessibility** (Theme Studio Vague 5) — live WCAG contrast checker, color-blindness simulator, Monaco editor for custom CSS, per-user appearance overrides
 
-### Build your own plugin
-
-```bash
-php artisan make:plugin my-plugin
-```
-
-Scaffolds `plugins/my-plugin/` with a service provider, manifest, migrations folder, and a React frontend entry point. See `plugins/invitations/` for the reference implementation.
+Track progress in [GitHub issues](https://github.com/Knaox/Peregrine/issues) and [milestones](https://github.com/Knaox/Peregrine/milestones).
 
 ---
 
 ## 🐳 Docker image tags
 
-Published on every push to `main` and on every panel version tag. Multi-arch (`linux/amd64` + `linux/arm64`).
+Multi-arch (`linux/amd64` + `linux/arm64`), published on every push to `main` and on every panel version tag.
 
 | Tag | Produced by |
 |---|---|
@@ -432,18 +314,13 @@ php artisan serve       # PHP on :8000
 php artisan queue:work  # emails + sync jobs
 ```
 
-Conventions (enforced by code review):
-
-- **TypeScript strict**, no `any`, files ≤ 300 lines.
-- **i18n**: every user-facing string goes through i18n keys. Update `en.json` and `fr.json` in the same commit.
-- **Thin controllers**: logic in Services, validation in Form Requests, responses via API Resources, auth via Policies.
-- **Commits**: conventional (`feat:`, `fix:`, `refactor:` …).
+Full contributor guide in [`CONTRIBUTING.md`](CONTRIBUTING.md). Internal architecture notes in [`docs/`](docs/) (auth, bridge, plugins, Pelican webhooks, queue worker setup).
 
 ---
 
 ## 🔒 Security
 
-If you find a vulnerability, please **do not open a public issue**. Email the maintainer at `damienrouge@hotmail.com` and allow reasonable time for a fix before disclosure.
+If you find a vulnerability, **do not open a public issue**. See [`SECURITY.md`](SECURITY.md) for the responsible disclosure process.
 
 ---
 
