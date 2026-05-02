@@ -47,3 +47,7 @@ public/fonts/filament/
 
 # Release artifacts zipped at the repo root during marketplace publish steps.
 /*.zip
+
+# Claude Code workspace files (kept local only — never committed)
+CLAUDE.md
+.claude/
