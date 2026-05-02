@@ -21,6 +21,7 @@
     <a href="#-features">Features</a> ·
     <a href="#-theme-studio">Theme Studio</a> ·
     <a href="#-plugin-marketplace">Plugins</a> ·
+    <a href="#-shop-integrations">Shop bridge</a> ·
     <a href="#-roadmap">Roadmap</a>
   </p>
 
@@ -40,7 +41,7 @@
 - **Docker-first**, multi-arch image published to GHCR on every push to `main`,
 - bilingual **EN / FR** UI, every string translated.
 
-It runs **standalone** for a single hoster, or wired to a SaaS shop via OAuth2 SSO + Stripe webhook bridge for full subscription-driven provisioning.
+It runs **standalone** for a single hoster, or plugs into **Paymenter**, **WHMCS** (via the Pelican-WHMCS module) or **your own custom shop** (Stripe webhooks) through the built-in [Bridge](#-shop-integrations) for subscription-driven provisioning.
 
 ---
 
@@ -219,6 +220,24 @@ php artisan make:plugin my-plugin
 Scaffolds `plugins/my-plugin/` with a service provider, manifest, migrations folder, and a React entry point. See [`plugins/invitations/`](plugins/invitations/) for the reference implementation, and [`docs/plugins.md`](docs/plugins.md) for the full plugin developer guide.
 
 Run a private registry by setting `MARKETPLACE_REGISTRY_URL` in your `.env`.
+
+---
+
+## 🔌 Shop integrations
+
+Peregrine ships with a **Bridge** that connects it to your billing platform for automatic server provisioning, upgrades, suspensions and deletions — driven by subscription lifecycle events. Three modes, mutually exclusive, picked in **Admin → Bridge Settings**:
+
+| Mode | Use it for | How it works |
+|---|---|---|
+| **Paymenter mode** *(Pelican webhook channel)* | [**Paymenter**](https://paymenter.org) **and WHMCS** (via the [Pelican-WHMCS module](https://github.com/pelican-dev/whmcs-pelican)) — any shop that provisions through Pelican's API | Pelican forwards its native webhook events (`/api/pelican/webhook`) to Peregrine, which mirrors the server state. Your shop owns plans, billing and emails. **No shop-specific code needed** — if Pelican fires the events, Peregrine catches them. |
+| **Custom shop (Stripe)** | Your own billing (SaaSykit, homemade, …) | Your shop pushes plans to Peregrine via signed HMAC requests (`/api/bridge/plans/upsert`). Stripe sends payment events directly to Peregrine (`/api/stripe/webhook`). Full grace-period suspension + scheduled deletion handled. |
+| **Disabled** | Standalone install, no shop | Provision servers manually from the admin panel. |
+
+Setup steps for each mode are wizard-driven in `/admin/bridge-settings`. Audit trails are visible in `/admin/pelican-webhook-logs` (Paymenter / WHMCS mode) or `/admin/bridge-sync-logs` (Custom shop mode). Public docs:
+
+- [`docs/bridge-paymenter.md`](docs/bridge-paymenter.md) — Paymenter / WHMCS setup (Pelican ≥ 0.46 required)
+- [`docs/bridge-api.md`](docs/bridge-api.md) — HMAC plan-sync API for custom shops
+- [`docs/whmcs-oauth-setup.md`](docs/whmcs-oauth-setup.md) — optional: WHMCS as OAuth2 identity provider for Peregrine login
 
 ---
 
