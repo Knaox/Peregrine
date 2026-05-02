@@ -46,32 +46,34 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
         <div className="relative flex flex-col rounded-[var(--radius-lg)] overflow-hidden h-[78dvh] min-h-[400px] max-h-[1100px]"
             style={{ border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-inset)' }}>
 
-            {/* Terminal header bar */}
-            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-[var(--color-border)] flex-shrink-0"
-                style={{ background: 'var(--color-surface)' }}>
+            {/* Terminal header bar — hardcoded dark so the terminal stays
+                readable in light theme (same convention as iTerm / VSCode
+                terminal which keep a dark scheme regardless of app theme). */}
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b flex-shrink-0"
+                style={{ background: '#161b22', borderColor: 'rgba(255,255,255,0.08)' }}>
                 <div className="hidden sm:flex items-center gap-1.5">
-                    <div className="h-3 w-3 rounded-full" style={{ background: 'var(--color-danger)', opacity: 0.8 }} />
-                    <div className="h-3 w-3 rounded-full" style={{ background: 'var(--color-warning)', opacity: 0.8 }} />
-                    <div className="h-3 w-3 rounded-full" style={{ background: 'var(--color-success)', opacity: 0.8 }} />
+                    <div className="h-3 w-3 rounded-full" style={{ background: '#ef4444', opacity: 0.8 }} />
+                    <div className="h-3 w-3 rounded-full" style={{ background: '#f59e0b', opacity: 0.8 }} />
+                    <div className="h-3 w-3 rounded-full" style={{ background: '#10b981', opacity: 0.8 }} />
                 </div>
-                <span className="flex-1 text-center text-[10px] font-mono text-[var(--color-text-muted)]">
+                <span className="flex-1 text-center text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.5)' }}>
                     {t('servers.console.title')}
                 </span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-                    style={{ background: 'rgba(var(--color-success-rgb), 0.1)', color: 'var(--color-success)' }}>
+                    style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
                     {messages.length}
                 </span>
             </div>
 
-            {/* Terminal body — scroll-region. flex-1 + min-h-0 lets it claim
-                the remaining height inside the fixed-height parent and
-                triggers the inner overflow-y-auto. */}
+            {/* Terminal body — scroll-region. Background hardcoded dark so the
+                semantic log colours (success / warning / danger / info)
+                stay legible regardless of app theme. */}
             <div
                 ref={containerRef}
                 onScroll={handleScroll}
-                className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-4"
+                className="terminal-scrollbar flex-1 min-h-0 overflow-y-auto p-2 sm:p-4"
                 style={{
-                    background: 'var(--color-background)',
+                    background: '#0d1117',
                     fontFamily: 'var(--font-mono)',
                     fontSize: 'clamp(11px, 2.5vw, 13px)',
                     lineHeight: 1.7,

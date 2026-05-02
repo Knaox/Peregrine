@@ -37,10 +37,52 @@ export function LoginBackgroundCarousel({
     opacity,
     fallbackGradient = true,
 }: LoginBackgroundCarouselProps) {
-    const safeImages = useMemo(() => images.filter((s) => s.length > 0), [images]);
+    const candidateImages = useMemo(() => images.filter((s) => s.length > 0), [images]);
+    // `validImages` is the subset that actually loaded. We pre-flight each
+    // path with a hidden `Image()` and silently drop any 404/decode error
+    // — without this, a stale path in `theme_login_background_images`
+    // (file deleted manually on disk) would render a solid-black panel
+    // since `background-image: url("missing.png")` has no `onerror` event
+    // path. Starts as the candidate list so the first paint is not
+    // gradient-only when the paths are valid.
+    const [validImages, setValidImages] = useState<string[]>(candidateImages);
+
+    useEffect(() => {
+        let cancelled = false;
+        if (candidateImages.length === 0) {
+            setValidImages([]);
+            return () => {
+                cancelled = true;
+            };
+        }
+        const checks = candidateImages.map(
+            (src) =>
+                new Promise<string | null>((resolve) => {
+                    const probe = new Image();
+                    probe.onload = () => resolve(src);
+                    probe.onerror = () => resolve(null);
+                    probe.src = src;
+                }),
+        );
+        void Promise.all(checks).then((results) => {
+            if (cancelled) return;
+            setValidImages(results.filter((s): s is string => s !== null));
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [candidateImages]);
+
+    const safeImages = validImages;
     const [index, setIndex] = useState(0);
     const indexRef = useRef(index);
     indexRef.current = index;
+
+    // Keep the index in range when valid images shrink (e.g. all paths
+    // turned out to be broken).
+    useEffect(() => {
+        setIndex((prev) => (safeImages.length > 0 ? prev % safeImages.length : 0));
+    }, [safeImages.length]);
 
     useEffect(() => {
         if (safeImages.length < 2) return;

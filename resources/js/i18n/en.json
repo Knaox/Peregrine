@@ -78,7 +78,7 @@
             "url": "Pelican URL",
             "url_placeholder": "https://pelican.example.com",
             "api_key": "Admin API Key (Application API)",
-            "api_key_placeholder": "ptlc_...",
+            "api_key_placeholder": "papp_...",
             "api_key_help": "Generate an Application API key (papp_...) in your Pelican admin panel under API Keys.",
             "client_api_key": "Client API Key",
             "client_api_key_placeholder": "pacc_...",
@@ -687,6 +687,24 @@
         "publish": "Publish",
         "save_error": "Save failed:",
         "reset_confirm": "Reset the entire theme to its defaults? This cannot be undone.",
+        "unsaved_leave_confirm": "You have unpublished theme changes. Leave anyway and lose them?",
+        "reset_dialog": {
+            "title": "Reset the entire theme?",
+            "body": "Every theme setting goes back to factory defaults. This cannot be undone — export a backup first if you want to keep this version (php artisan theme:export).",
+            "warning_custom_css": "You have {{length}} characters of custom CSS that will be discarded.",
+            "warning_uploads": "Login background uploads will be unlinked. Files stay on disk until the weekly cleanup runs.",
+            "type_to_confirm": "Type RESET to confirm",
+            "confirm_button": "Reset to defaults"
+        },
+        "error": {
+            "title": "Theme Studio could not load",
+            "body": "The server returned an error fetching your theme settings. Check that you are still signed in as an admin and try again.",
+            "back": "Back to dashboard",
+            "retry": "Retry"
+        },
+        "conflict": {
+            "stale": "Another admin published a theme change while you were editing. The studio refreshed — review your changes and publish again."
+        },
         "preset_active": "Active",
         "section_preset": "Brand preset",
         "section_brand": "Brand colors",
@@ -908,9 +926,9 @@
             "slower": "Slower (450 ms)"
         },
         "hover_scale": {
-            "subtle": "Subtle (1.02×)",
-            "default": "Default (1.05×)",
-            "pronounced": "Pronounced (1.1×)"
+            "subtle": "Subtle (1.01×)",
+            "default": "Default (1.02×)",
+            "pronounced": "Pronounced (1.05×)"
         },
         "font_size_scale": {
             "small": "Small (14 px)",

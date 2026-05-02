@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { request } from '@/services/http';
+import { request, ApiError } from '@/services/http';
 import { fetchServers } from '@/services/api';
 import { buildModeVariants } from '@/lib/themeStudio/buildModeVariants';
 import type {
@@ -16,6 +16,11 @@ interface ThemeStudioStateResponse {
     draft: ThemeDraft;
     card_config: CardConfig;
     sidebar_config: SidebarConfig;
+    revision?: number;
+}
+
+interface SaveResponse {
+    revision?: number;
 }
 
 interface PresetEntry {
@@ -40,6 +45,12 @@ interface UseThemeStudioReturn {
     isDirty: boolean;
     isSaving: boolean;
     saveError: string | null;
+    /** True if the initial /state load failed. The page should render an error fallback. */
+    isError: boolean;
+    /** Last load error message (or null when there was no error). */
+    loadError: string | null;
+    /** Re-fires the /state query — used by the error fallback "Retry" button. */
+    refetch: () => void;
     scene: PreviewScene;
     previewMode: PreviewMode;
     breakpoint: PreviewBreakpoint;
@@ -57,10 +68,11 @@ interface UseThemeStudioReturn {
 
 export function useThemeStudio(): UseThemeStudioReturn {
     const queryClient = useQueryClient();
-    const { data, isLoading } = useQuery({
+    const { data, isLoading, isError, error, refetch } = useQuery({
         queryKey: ['admin', 'theme', 'state'],
         queryFn: () => request<ThemeStudioStateResponse>('/api/admin/theme/state'),
         staleTime: Infinity,
+        retry: 1,
     });
     // Presets feed the inverse-mode variant when the admin toggles the
     // preview mode toggle in the toolbar. Same query key as ThemePresetSelector
@@ -95,6 +107,7 @@ export function useThemeStudio(): UseThemeStudioReturn {
     const [breakpoint, setBreakpoint] = useState<PreviewBreakpoint>('desktop');
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
+    const [revision, setRevision] = useState<number | null>(null);
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
     const iframeReadyRef = useRef(false);
 
@@ -106,6 +119,9 @@ export function useThemeStudio(): UseThemeStudioReturn {
         setCardBaseline(data.card_config);
         setSidebarDraft(data.sidebar_config);
         setSidebarBaseline(data.sidebar_config);
+        if (typeof data.revision === 'number') {
+            setRevision(data.revision);
+        }
     }, [data]);
 
     const isDirty = useMemo(
@@ -218,22 +234,35 @@ export function useThemeStudio(): UseThemeStudioReturn {
                 ...draft,
                 card_config: cardDraft,
                 sidebar_config: sidebarDraft,
+                expected_revision: revision,
             };
-            await request('/api/admin/theme/save', {
+            const response = await request<SaveResponse>('/api/admin/theme/save', {
                 method: 'POST',
                 body: JSON.stringify(body),
             });
+            if (typeof response.revision === 'number') {
+                setRevision(response.revision);
+            }
             setBaseline(draft);
             if (cardDraft) setCardBaseline(cardDraft);
             if (sidebarDraft) setSidebarBaseline(sidebarDraft);
             await queryClient.invalidateQueries({ queryKey: ['theme'] });
             await queryClient.invalidateQueries({ queryKey: ['branding'] });
         } catch (err) {
-            setSaveError(err instanceof Error ? err.message : 'save_failed');
+            // 409 = another writer (admin tab, Filament, CLI) bumped the
+            // revision since /state. Surface a stable error code so the
+            // page can render a "reload" CTA, and refetch /state so the
+            // next save attempt carries a fresh revision.
+            if (err instanceof ApiError && err.status === 409) {
+                setSaveError('theme.stale_revision');
+                await queryClient.invalidateQueries({ queryKey: ['admin', 'theme', 'state'] });
+            } else {
+                setSaveError(err instanceof Error ? err.message : 'save_failed');
+            }
         } finally {
             setIsSaving(false);
         }
-    }, [draft, cardDraft, sidebarDraft, queryClient]);
+    }, [draft, cardDraft, sidebarDraft, revision, queryClient]);
 
     const reset = useCallback(async () => {
         setIsSaving(true);
@@ -247,6 +276,9 @@ export function useThemeStudio(): UseThemeStudioReturn {
             setCardBaseline(fresh.card_config);
             setSidebarDraft(fresh.sidebar_config);
             setSidebarBaseline(fresh.sidebar_config);
+            if (typeof fresh.revision === 'number') {
+                setRevision(fresh.revision);
+            }
             await queryClient.invalidateQueries({ queryKey: ['theme'] });
             await queryClient.invalidateQueries({ queryKey: ['admin', 'theme', 'state'] });
         } catch (err) {
@@ -271,6 +303,11 @@ export function useThemeStudio(): UseThemeStudioReturn {
         isDirty,
         isSaving,
         saveError,
+        isError,
+        loadError: error instanceof Error ? error.message : null,
+        refetch: () => {
+            void refetch();
+        },
         scene,
         previewMode,
         breakpoint,

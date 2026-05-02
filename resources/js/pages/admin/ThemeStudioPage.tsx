@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeStudio } from '@/hooks/useThemeStudio';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { ThemeEditorPanel } from '@/components/admin/theme-studio/ThemeEditorPanel';
 import { ThemePreviewToolbar } from '@/components/admin/theme-studio/ThemePreviewToolbar';
 import { ThemePreviewFrame } from '@/components/admin/theme-studio/ThemePreviewFrame';
+import { ThemeResetDialog } from '@/components/admin/theme-studio/ThemeResetDialog';
 import type { ThemeDraft } from '@/types/themeStudio.types';
 
 const Icon = ({ d, size = 14 }: { d: string; size?: number }) => (
@@ -54,13 +55,20 @@ const PRESET_KEYS: ReadonlyArray<keyof ThemeDraft> = [
 
 export function ThemeStudioPage() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const { user, isLoading: authLoading, loadUser } = useAuthStore();
     const studio = useThemeStudio();
+    const [resetOpen, setResetOpen] = useState(false);
 
     useEffect(() => {
         loadUser();
     }, [loadUser]);
 
+    // `beforeunload` covers tab close and hard refresh — the most common
+    // ways an admin loses unpublished work. We can't use `useBlocker`
+    // here because the app is wired with `<BrowserRouter>` (not the
+    // data-router stack), so the only in-app navigation we explicitly
+    // intercept is the studio's own back-chevron button below.
     useEffect(() => {
         const onBeforeUnload = (e: BeforeUnloadEvent): void => {
             if (studio.isDirty) {
@@ -72,6 +80,18 @@ export function ThemeStudioPage() {
         return () => window.removeEventListener('beforeunload', onBeforeUnload);
     }, [studio.isDirty]);
 
+    const handleBack = (e: React.MouseEvent<HTMLAnchorElement>): void => {
+        if (!studio.isDirty || studio.isSaving) return;
+        e.preventDefault();
+        const ok = window.confirm(
+            t(
+                'theme_studio.unsaved_leave_confirm',
+                'You have unpublished theme changes. Leave anyway and lose them?',
+            ),
+        );
+        if (ok) navigate('/dashboard');
+    };
+
     if (authLoading || studio.isLoading) {
         return <LoadingScreen />;
     }
@@ -80,6 +100,39 @@ export function ThemeStudioPage() {
     }
     if (!user.is_admin) {
         return <Navigate to="/dashboard" replace />;
+    }
+    if (studio.isError) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-[var(--color-background)] px-4 text-[var(--color-text-primary)]">
+                <div className="max-w-md text-center space-y-3">
+                    <h1 className="text-lg font-semibold">
+                        {t('theme_studio.error.title', 'Theme Studio could not load')}
+                    </h1>
+                    <p className="text-sm text-[var(--color-text-muted)]">
+                        {t(
+                            'theme_studio.error.body',
+                            'The server returned an error fetching your theme settings. Check that you are still signed in as an admin and try again.',
+                        )}
+                    </p>
+                    {studio.loadError && (
+                        <p className="text-xs font-mono text-[var(--color-text-muted)]/70">
+                            {studio.loadError}
+                        </p>
+                    )}
+                    <div className="flex justify-center gap-2 pt-2">
+                        <Link
+                            to="/dashboard"
+                            className="inline-flex items-center rounded-[var(--radius)] border border-[var(--color-border-hover)] bg-[var(--color-surface)] px-4 py-2 text-sm hover:bg-[var(--color-surface-hover)]"
+                        >
+                            {t('theme_studio.error.back', 'Back to dashboard')}
+                        </Link>
+                        <Button variant="primary" size="sm" onClick={studio.refetch}>
+                            {t('theme_studio.error.retry', 'Retry')}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
     }
     if (!studio.draft) {
         return <LoadingScreen />;
@@ -126,6 +179,7 @@ export function ThemeStudioPage() {
                 <div className="flex items-center gap-4">
                     <Link
                         to="/dashboard"
+                        onClick={handleBack}
                         className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
                         aria-label={t('theme_studio.back', 'Back to dashboard')}
                     >
@@ -169,18 +223,7 @@ export function ThemeStudioPage() {
                         variant="ghost"
                         size="sm"
                         disabled={studio.isSaving}
-                        onClick={() => {
-                            if (
-                                window.confirm(
-                                    t(
-                                        'theme_studio.reset_confirm',
-                                        'Reset the entire theme to its defaults? This cannot be undone.',
-                                    ),
-                                )
-                            ) {
-                                void studio.reset();
-                            }
-                        }}
+                        onClick={() => setResetOpen(true)}
                     >
                         <Icon d={RESET_ICON} />
                         {t('theme_studio.reset', 'Reset to defaults')}
@@ -201,7 +244,12 @@ export function ThemeStudioPage() {
 
             {studio.saveError && (
                 <div className="border-b border-[var(--color-danger)] bg-[var(--color-danger-glow)] px-5 py-2 text-xs text-[var(--color-danger)]">
-                    {t('theme_studio.save_error', 'Save failed:')} {studio.saveError}
+                    {studio.saveError === 'theme.stale_revision'
+                        ? t(
+                              'theme_studio.conflict.stale',
+                              'Another admin published a theme change while you were editing. The studio refreshed — review your changes and publish again.',
+                          )
+                        : `${t('theme_studio.save_error', 'Save failed:')} ${studio.saveError}`}
                 </div>
             )}
 
@@ -236,6 +284,20 @@ export function ThemeStudioPage() {
                     />
                 </main>
             </div>
+
+            <ThemeResetDialog
+                open={resetOpen}
+                isResetting={studio.isSaving}
+                customCssLength={(studio.draft.theme_custom_css ?? '').length}
+                hasCustomUploads={
+                    (studio.draft.theme_login_background_image ?? '') !== '' ||
+                    (studio.draft.theme_login_background_images ?? []).length > 0
+                }
+                onCancel={() => setResetOpen(false)}
+                onConfirm={() => {
+                    void studio.reset().finally(() => setResetOpen(false));
+                }}
+            />
         </div>
     );
 }

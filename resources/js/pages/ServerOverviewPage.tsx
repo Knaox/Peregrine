@@ -183,8 +183,8 @@ export function ServerOverviewPage() {
                                 {statusLabel}
                             </span>
                             {isRunningState && uptime != null && uptime > 0 && (
-                                <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-mono"
-                                    style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', color: 'var(--color-text-secondary)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-mono text-white"
+                                    style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
                                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     {formatUptime(uptime)}
                                 </span>
@@ -202,16 +202,16 @@ export function ServerOverviewPage() {
                                 {address && (
                                     <button type="button" onClick={handleCopy}
                                         className="inline-flex items-center gap-2 rounded-full text-sm text-white cursor-pointer transition-all duration-200 hover:scale-[1.03]"
-                                        style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 14px' }}
-                                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}>
-                                        <svg className="h-3.5 w-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></svg>
+                                        style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 14px', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.6)'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; }}>
+                                        <svg className="h-3.5 w-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></svg>
                                         <span>{copied ? t('servers.list.copied') : address}</span>
                                     </button>
                                 )}
                                 {server.egg && (
                                     <span className="inline-flex items-center gap-1.5 rounded-full text-sm text-white"
-                                        style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', padding: '4px 14px' }}>
+                                        style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', padding: '4px 14px', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
                                         {server.egg.banner_image && <img src={server.egg.banner_image} alt="" className="h-4 w-4 rounded object-cover" />}
                                         {server.egg.name}
                                     </span>

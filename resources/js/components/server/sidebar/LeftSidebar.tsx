@@ -105,7 +105,7 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
             <nav
                 role="navigation"
                 aria-label={t('servers.sidebar.principal')}
-                className={clsx('flex-1 overflow-y-auto space-y-1', isRail ? 'px-2 mt-3' : 'px-3')}
+                className={clsx('flex-1 overflow-y-auto overflow-x-hidden space-y-1', isRail ? 'px-2 mt-3' : 'px-3')}
             >
                 <NavLinks
                     entries={config.entries}
@@ -231,7 +231,7 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
                         onClick={toggleCollapsed}
                         title={collapsed ? t('servers.sidebar.expand', { defaultValue: 'Expand sidebar' }) : t('servers.sidebar.collapse', { defaultValue: 'Collapse sidebar' })}
                         aria-label={collapsed ? t('servers.sidebar.expand', { defaultValue: 'Expand sidebar' }) : t('servers.sidebar.collapse', { defaultValue: 'Collapse sidebar' })}
-                        className="server-sidebar-collapse-toggle absolute -right-3 top-4 z-10 h-7 w-7 items-center justify-center rounded-full cursor-pointer transition-all duration-150 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] hidden md:flex"
+                        className="server-sidebar-collapse-toggle scale-on-hover absolute -right-3 top-4 z-10 h-7 w-7 items-center justify-center rounded-full cursor-pointer transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] hidden md:flex"
                         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border-hover)', boxShadow: 'var(--shadow-sm)', color: 'var(--color-text-secondary)' }}
                     >
                         <svg className={clsx('h-3.5 w-3.5 transition-transform duration-200', collapsed && 'rotate-180')} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

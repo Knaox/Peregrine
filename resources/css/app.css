@@ -27,7 +27,7 @@ body {
    Driven by --hover-scale (Refinements) so admins can tune subtle / default
    / pronounced from /theme-studio. */
 .scale-on-hover:hover:not(:disabled):not([aria-disabled="true"]) {
-    transform: scale(var(--hover-scale, 1.05));
+    transform: scale(var(--hover-scale, 1.02));
 }
 .scale-on-hover {
     transition: transform var(--transition-base, 250ms) ease;
@@ -50,6 +50,22 @@ body {
 ::-webkit-scrollbar-thumb {
     background: var(--color-surface-hover);
     border-radius: var(--radius-full);
+}
+
+/* Terminal-scoped scrollbar — the console body is hardcoded dark regardless
+   of the app theme, so its scrollbar gets a matching dark scheme to stay
+   visible on light themes. */
+.terminal-scrollbar {
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+.terminal-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.terminal-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+}
+.terminal-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 ::-webkit-scrollbar-thumb:hover {
     background: var(--color-text-muted);

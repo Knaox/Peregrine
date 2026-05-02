@@ -100,12 +100,28 @@ class AdminThemeController extends Controller
             'draft' => $draft,
             'card_config' => $this->theme->getCardConfig(),
             'sidebar_config' => $this->theme->getSidebarConfig(),
+            'revision' => (int) $this->settings->get('theme_revision', '0'),
         ]);
     }
 
     public function save(SaveThemeRequest $request): JsonResponse
     {
         $data = $request->validated();
+
+        // Optimistic lock: when the studio sends `expected_revision`, refuse
+        // the save if another writer (another admin tab, Filament page, CLI
+        // import) bumped `theme_revision` since the studio's last /state.
+        // The studio surfaces the 409 with a "reload" CTA so the admin
+        // doesn't blindly overwrite a sibling's work.
+        $expectedRevision = $request->input('expected_revision');
+        $currentRevision = (int) $this->settings->get('theme_revision', '0');
+        if ($expectedRevision !== null && (int) $expectedRevision !== $currentRevision) {
+            return response()->json([
+                'error' => 'theme.stale_revision',
+                'current_revision' => $currentRevision,
+                'your_revision' => (int) $expectedRevision,
+            ], 409);
+        }
         $boolKeys = [
             'theme_layout_header_sticky',
             'theme_sidebar_floating',
@@ -163,6 +179,10 @@ class AdminThemeController extends Controller
             $this->settings->set('sidebar_server_config', json_encode($merged));
         }
 
+        // Bump the revision AFTER successful writes so the next /state read
+        // gives the studio a fresh expected_revision baseline.
+        $this->settings->set('theme_revision', (string) ($currentRevision + 1));
+
         $this->settings->clearCache();
         $this->theme->clearCache();
 
@@ -172,6 +192,7 @@ class AdminThemeController extends Controller
             'mode_variants' => $this->theme->getModeVariants(),
             'card_config' => $this->theme->getCardConfig(),
             'sidebar_config' => $this->theme->getSidebarConfig(),
+            'revision' => $currentRevision + 1,
         ]);
     }
 
@@ -181,8 +202,10 @@ class AdminThemeController extends Controller
      * /storage/branding/{slot}/{hash}.{ext} via the existing public symlink.
      *
      * The studio reads the returned URL and persists it in the matching
-     * `theme_*` setting as a path string. Old uploads are left in place so
-     * a quick "undo" via setting revert keeps the file accessible.
+     * `theme_*` setting as a path string. Old uploads are intentionally
+     * left in place during a single editing session so a quick "undo"
+     * via setting revert keeps the file accessible. Orphan files are
+     * pruned weekly by `theme:cleanup-orphan-assets` (see routes/console.php).
      */
     public function uploadAsset(UploadThemeAssetRequest $request): JsonResponse
     {
@@ -214,6 +237,12 @@ class AdminThemeController extends Controller
         $this->settings->set('card_server_config', json_encode(ThemeDefaults::CARD_CONFIG));
         $this->settings->set('sidebar_server_config', json_encode(ThemeDefaults::SIDEBAR_CONFIG));
 
+        // Bump revision so any studio tab open elsewhere detects the
+        // divergence on its next save attempt instead of overwriting the
+        // freshly-reset state.
+        $next = (int) $this->settings->get('theme_revision', '0') + 1;
+        $this->settings->set('theme_revision', (string) $next);
+
         $this->settings->clearCache();
         $this->theme->clearCache();
 
@@ -223,6 +252,7 @@ class AdminThemeController extends Controller
             'mode_variants' => $this->theme->getModeVariants(),
             'card_config' => $this->theme->getCardConfig(),
             'sidebar_config' => $this->theme->getSidebarConfig(),
+            'revision' => $next,
         ]);
     }
 }

@@ -506,6 +506,8 @@ Backlog optionnel (à faire seulement si besoin produit explicite) :
 
 Page admin React full-screen à `/theme-studio` (entrée via Filament `/admin/theme-settings` → bouton "Open Theme Studio"). Live preview en split-screen : panneau d'édition à gauche, iframe preview à droite synchronisée par `postMessage`.
 
+> **Doc opérateur** : `docs/theme-studio.md` (EN) et `docs/theme-studio.fr.md` (FR) — pour un hébergeur tiers qui veut customiser sans toucher au code.
+
 ### Vue d'ensemble
 
 **Entry point** : `app/Filament/Pages/ThemeSettings.php` (header action `open_studio` qui ouvre `/theme-studio`).

@@ -35,13 +35,14 @@ function PowerBtn({ icon, title, disabled, onClick, layout }: {
             type="button" title={title} disabled={disabled} onClick={onClick}
             aria-label={title}
             className={clsx(
+                'scale-on-hover',
                 'flex items-center justify-center rounded-full cursor-pointer',
                 SIZES[layout],
                 layout === 'icon-only'
                     ? 'border-0 bg-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-primary)]'
                     : 'border border-[var(--color-border-hover)] bg-transparent text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:shadow-[0_0_16px_var(--color-primary-glow)]',
-                'transition-all duration-200 hover:scale-110 active:scale-95',
-                'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none',
+                'transition-all duration-200',
+                'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none',
             )}
         >
             {icon}

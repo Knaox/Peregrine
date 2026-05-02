@@ -76,12 +76,8 @@ export function buildPreviewVariables(
         draft.theme_density === 'compact' ? '0.75' : draft.theme_density === 'spacious' ? '1.25' : '1';
 
     const isLight = mode === 'light';
-    vars['--banner-overlay'] = isLight
-        ? 'rgba(248, 250, 252, 0.92)'
-        : 'rgba(12, 10, 20, 0.92)';
-    vars['--banner-overlay-soft'] = isLight
-        ? 'rgba(248, 250, 252, 0.55)'
-        : 'rgba(12, 10, 20, 0.55)';
+    vars['--banner-overlay'] = 'rgba(12, 10, 20, 0.92)';
+    vars['--banner-overlay-soft'] = 'rgba(12, 10, 20, 0.55)';
     vars['--surface-overlay-soft'] = isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.08)';
     vars['--surface-overlay-strong'] = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.15)';
     vars['--surface-overlay-hover'] = isLight ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)';
@@ -89,7 +85,7 @@ export function buildPreviewVariables(
         ? 'inset 0 2px 8px rgba(0, 0, 0, 0.05)'
         : 'inset 0 2px 8px rgba(0, 0, 0, 0.3)';
     vars['--modal-scrim'] = isLight ? 'rgba(15, 23, 42, 0.35)' : 'rgba(0, 0, 0, 0.7)';
-    vars['--text-on-banner'] = isLight ? draft.theme_text_primary : '#ffffff';
+    vars['--text-on-banner'] = '#ffffff';
     vars['--scrollbar-thumb'] = isLight ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.15)';
     vars['--ambient-overlay'] = isLight ? 'transparent' : 'rgba(12, 10, 20, 0.75)';
     vars['--egg-bg-opacity'] = isLight ? '0.15' : '0.25';
@@ -115,10 +111,10 @@ export function buildPreviewVariables(
                     : '250ms';
     const hover =
         draft.theme_hover_scale === 'subtle'
-            ? '1.02'
+            ? '1.01'
             : draft.theme_hover_scale === 'pronounced'
-                ? '1.1'
-                : '1.05';
+                ? '1.05'
+                : '1.02';
     const fontBase =
         draft.theme_font_size_scale === 'small'
             ? '14px'
