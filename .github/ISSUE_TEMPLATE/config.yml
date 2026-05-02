@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Security vulnerability
+    url: https://github.com/Knaox/Peregrine/blob/main/SECURITY.md
+    about: Report security issues privately by email — do NOT open a public issue.
+  - name: 🧩 Submit a plugin
+    url: https://github.com/Knaox/peregrine-plugins
+    about: Plugins live in their own repo. Open a PR there to add yours to the marketplace.
+  - name: 📚 Documentation
+    url: https://github.com/Knaox/Peregrine/tree/main/docs
+    about: Internal docs (auth, bridge, plugins, Pelican webhooks, queue worker setup).

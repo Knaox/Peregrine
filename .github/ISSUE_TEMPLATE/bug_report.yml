@@ -1,0 +1,88 @@
+name: Bug report
+description: Something is broken in the panel, the admin, the API, the docker image, or a first-party plugin.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug.
+        **Security issues** must be reported privately — see [SECURITY.md](https://github.com/Knaox/Peregrine/blob/main/SECURITY.md). Do not file them here.
+
+  - type: input
+    id: version
+    attributes:
+      label: Peregrine version
+      description: GHCR image tag, or `git rev-parse HEAD` if running from source.
+      placeholder: "ghcr.io/knaox/peregrine:latest (sha: abc123)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: Install method
+      options:
+        - Docker — docker-compose.yml (all-in-one)
+        - Docker — docker-compose.external-db.yml
+        - Docker — plain `docker run`
+        - Bare metal
+        - Other (precise in the description)
+    validations:
+      required: true
+
+  - type: input
+    id: pelican
+    attributes:
+      label: Pelican version
+      description: Visible in the Pelican admin → About page.
+      placeholder: "0.46.x"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the actual behaviour you observed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: Describe the behaviour you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal numbered steps. The shorter the repro, the faster the fix.
+      placeholder: |
+        1. Go to /admin/servers
+        2. Click "Sync"
+        3. Observe the error toast
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: |
+        Paste output from `storage/logs/laravel.log` (Laravel) or `docker compose logs peregrine | tail -200`.
+        **Redact API keys, passwords and any user PII before pasting.**
+      render: shell
+
+  - type: checkboxes
+    id: search
+    attributes:
+      label: Pre-flight check
+      options:
+        - label: I searched the existing issues and didn't find a duplicate.
+          required: true
+        - label: This is not a security issue (those go to SECURITY.md).
+          required: true
