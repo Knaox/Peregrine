@@ -43,7 +43,7 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
         // max-h-[1100px] prevents it from dominating ultra-wide monitors.
         // 78dvh keeps a comfortable strip for the input + tab dock + the
         // status header above without making the page feel cramped.
-        <div className="relative flex flex-col rounded-[var(--radius-lg)] overflow-hidden h-[78dvh] min-h-[400px] max-h-[1100px]"
+        <div className="relative flex flex-col rounded-[var(--radius-lg)] overflow-hidden h-[78dvh] min-h-[250px] sm:min-h-[400px] max-h-[1100px]"
             style={{ border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-inset)' }}>
 
             {/* Terminal header bar — hardcoded dark so the terminal stays
@@ -79,6 +79,7 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
                     lineHeight: 1.7,
                     WebkitOverflowScrolling: 'touch',
                     overscrollBehavior: 'contain',
+                    paddingBottom: 'calc(var(--bottom-safe-area, 0px) + 1rem)',
                 }}
             >
                 {messages.map((msg, i) => {

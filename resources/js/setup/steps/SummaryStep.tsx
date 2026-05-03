@@ -120,12 +120,12 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
                 </div>
             )}
 
-            <div className="flex justify-between pt-4">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 pt-4">
                 <button
                     type="button"
                     onClick={onPrevious}
                     disabled={status === 'installing' || status === 'success'}
-                    className="px-6 py-2 bg-[var(--color-surface-hover)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] ring-1 ring-[var(--color-border)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-3 sm:py-2 bg-[var(--color-surface-hover)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] ring-1 ring-[var(--color-border)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {t('common.previous')}
                 </button>
@@ -133,7 +133,7 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
                     type="button"
                     onClick={status === 'success' ? onNext : handleInstall}
                     disabled={status === 'installing'}
-                    className="px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-3 sm:py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {status === 'installing' ? (
                         <span className="flex items-center gap-2">

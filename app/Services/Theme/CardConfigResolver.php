@@ -2,6 +2,8 @@
 
 namespace App\Services\Theme;
 
+use App\Filament\Pages\Theme\ThemeDefaults;
+
 /**
  * Default values + merge logic for the dashboard card layout config and
  * the per-server sidebar config. Stored as JSON in two settings rows
@@ -14,25 +16,18 @@ namespace App\Services\Theme;
 class CardConfigResolver
 {
     /**
+     * Single source of truth: pulled from ThemeDefaults so every Vague 3+
+     * field (card_header_style, card_density, card_layout_variant…) is
+     * present in the merged result even when card_server_config JSON in
+     * DB still lacks that key (fresh install, pre-upgrade install, or a
+     * partial save). Without this, the SPA gets `card_header_style:
+     * undefined` and ServerCard silently skips the egg banner.
+     *
      * @return array<string, mixed>
      */
     public static function cardDefaults(): array
     {
-        return [
-            'layout' => 'grid',
-            'columns' => ['desktop' => 3, 'tablet' => 2, 'mobile' => 1],
-            'show_egg_icon' => true,
-            'show_egg_name' => true,
-            'show_plan_name' => true,
-            'show_status_badge' => true,
-            'show_stats_bars' => true,
-            'show_quick_actions' => true,
-            'show_ip_port' => false,
-            'show_uptime' => false,
-            'card_style' => 'glass',
-            'sort_default' => 'name',
-            'group_by' => 'none',
-        ];
+        return ThemeDefaults::CARD_CONFIG;
     }
 
     /**

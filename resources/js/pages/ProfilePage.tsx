@@ -68,7 +68,7 @@ export function ProfilePage() {
                         </div>
                         <Link
                             to="/settings/security"
-                            className="shrink-0 rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white cursor-pointer hover:bg-[var(--color-primary-hover)] whitespace-nowrap"
+                            className="shrink-0 rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-3 sm:py-2 text-sm font-semibold text-white cursor-pointer hover:bg-[var(--color-primary-hover)] whitespace-nowrap"
                         >
                             {has2fa
                                 ? t('profile.security_card.manage_cta')

@@ -128,11 +128,11 @@ export function AnimatedBackground() {
         <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
             {/* Blurred gradient orbs */}
             <div className="absolute inset-0" style={{ filter: 'blur(80px)' }}>
-                <div className="absolute h-[500px] w-[500px] rounded-full"
+                <div className="absolute h-[200px] w-[200px] sm:h-[300px] sm:w-[300px] md:h-[500px] md:w-[500px] rounded-full"
                     style={{ top: '-10%', left: '-5%', background: 'radial-gradient(circle, rgba(var(--color-primary-rgb), 0.3) 0%, transparent 70%)', animation: 'orb-float-1 30s ease-in-out infinite' }} />
-                <div className="absolute h-[450px] w-[450px] rounded-full"
+                <div className="absolute h-[180px] w-[180px] sm:h-[280px] sm:w-[280px] md:h-[450px] md:w-[450px] rounded-full"
                     style={{ top: '10%', right: '-10%', background: 'radial-gradient(circle, rgba(var(--color-info-rgb), 0.18) 0%, transparent 70%)', animation: 'orb-float-2 35s ease-in-out infinite' }} />
-                <div className="absolute h-[400px] w-[400px] rounded-full"
+                <div className="absolute h-[160px] w-[160px] sm:h-[260px] sm:w-[260px] md:h-[400px] md:w-[400px] rounded-full"
                     style={{ top: '50%', left: '30%', background: 'radial-gradient(circle, rgba(var(--color-secondary-rgb), 0.15) 0%, transparent 70%)', animation: 'orb-float-3 25s ease-in-out infinite' }} />
             </div>
 

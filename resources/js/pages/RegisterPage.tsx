@@ -69,7 +69,7 @@ export function RegisterPage() {
                 }} />
                 <LoginParticles />
                 <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }} className="relative z-10 w-full max-w-sm text-center">
+                    transition={{ duration: 0.5 }} className="relative z-10 w-full max-w-sm sm:max-w-md text-center">
                     <img src={branding.logo_url} alt={branding.app_name} className="mx-auto mb-4 object-contain"
                         style={{ height: 48, maxWidth: 200, filter: 'drop-shadow(0 0 24px rgba(var(--color-primary-rgb), 0.4))' }} />
                     <h1 className="text-xl font-semibold text-[var(--color-text-primary)] mb-4">{branding.app_name}</h1>
@@ -129,7 +129,7 @@ export function RegisterPage() {
 
             <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                className="relative z-10 w-full max-w-sm">
+                className="relative z-10 w-full max-w-sm sm:max-w-md">
 
                 <m.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.15 }} className="mb-6 text-center">
@@ -155,7 +155,7 @@ export function RegisterPage() {
                             {generalError && (
                                 <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                                     exit={{ opacity: 0, height: 0 }}
-                                    className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-2.5 text-sm text-[var(--color-danger)]">
+                                    className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-3 sm:py-2.5 text-sm text-[var(--color-danger)]">
                                     {generalError}
                                 </m.div>
                             )}

@@ -80,7 +80,7 @@ export function FileEditor({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.97, y: 20 }}
                 transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-                className="fixed inset-0 sm:inset-4 md:inset-8 lg:inset-12 z-50 flex flex-col sm:rounded-[var(--radius-xl)] overflow-hidden"
+                className="fixed inset-0 sm:inset-2 md:inset-8 lg:inset-12 z-50 flex flex-col sm:rounded-[var(--radius-xl)] overflow-hidden"
                 style={{
                     background: 'var(--color-background)',
                     border: '1px solid var(--color-border)',

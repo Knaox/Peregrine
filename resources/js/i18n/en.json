@@ -7,6 +7,7 @@
         "confirm": "Confirm",
         "delete": "Delete",
         "edit": "Edit",
+        "copy": "Copy",
         "loading": "Loading...",
         "error": "An error occurred",
         "success": "Success",
@@ -237,7 +238,14 @@
             "category_placeholder": "Category name...",
             "delete_category_confirm": "Delete this category? Servers will move to Uncategorized.",
             "drop_here": "Drop servers here",
-            "reset_layout": "Reset layout"
+            "reset_layout": "Reset layout",
+            "address": "Address",
+            "stats": "Live stats",
+            "config": "Configuration",
+            "egg": "Egg",
+            "plan": "Plan",
+            "uptime": "Uptime",
+            "open": "Open server"
         },
         "bulk": {
             "start_all": "Start all",
@@ -688,6 +696,9 @@
         "save_error": "Save failed:",
         "reset_confirm": "Reset the entire theme to its defaults? This cannot be undone.",
         "unsaved_leave_confirm": "You have unpublished theme changes. Leave anyway and lose them?",
+        "mobile_not_supported_title": "Theme Studio requires a larger screen",
+        "mobile_not_supported_body": "Open this page on a tablet landscape, laptop or desktop with at least 1200 px width.",
+        "back_to_dashboard": "Back to Dashboard",
         "reset_dialog": {
             "title": "Reset the entire theme?",
             "body": "Every theme setting goes back to factory defaults. This cannot be undone — export a backup first if you want to keep this version (php artisan theme:export).",
@@ -790,6 +801,8 @@
             "theme_footer_links_empty": "No links yet.",
             "theme_footer_link_label": "Label",
             "theme_footer_link_add": "Add link",
+            "card_layout_variant": "Dashboard layout",
+            "card_layout_variant_help": "Visibility toggles (egg name, IP, stats) and quick actions still apply, but card-specific style fields below (header, accent, border, hover) only affect the Classic variant.",
             "card_style": "Card style",
             "card_density": "Density",
             "card_header_style": "Header style",
@@ -823,7 +836,15 @@
             "theme_glass_blur_global": "Glass blur (global)",
             "theme_font_size_scale": "Base font size",
             "theme_app_background_pattern": "App background",
-            "theme_app_background_pattern_help": "Replaces the default animated constellation behind dashboard / profile / etc."
+            "theme_app_background_pattern_help": "Replaces the default animated constellation behind dashboard / profile / etc.",
+            "theme_app_shell_variant": "App shell",
+            "theme_app_shell_variant_help": "Workspace mode replaces the top navbar with a left rail (logo + nav icons + user menu). Header settings below only affect the Top navbar shell.",
+            "theme_app_shell_variant_help_ws": "Workspace mode shows the rail-specific controls below. Container width and page padding still apply to both shells.",
+            "theme_workspace_rail_width": "Rail width"
+        },
+        "app_shell_variant": {
+            "default": "Top navbar (classic)",
+            "workspace": "Workspace rail (left vertical)"
         },
         "app_pattern": {
             "none": "None (animated constellation)",
@@ -894,6 +915,12 @@
             "scale": "Scale (zoom)",
             "glow": "Glow (ring)",
             "none": "None"
+        },
+        "card_layout_variant": {
+            "classic": "Classic cards (grid)",
+            "command-bar": "Command bar (dense list)",
+            "bento": "Bento mosaic (asymmetric tiles)",
+            "pulse-grid": "Pulse grid (heatmap)"
         },
         "card_sort": {
             "name": "Name",

@@ -39,7 +39,7 @@ export function NavHeaderLinks({ links, mobile = false }: NavHeaderLinksProps) {
                                 'flex items-center gap-1.5 text-sm font-medium transition-all duration-[var(--transition-base)]',
                                 mobile
                                     ? clsx(
-                                        'rounded-[var(--radius)] px-3 py-2',
+                                        'rounded-[var(--radius)] px-3 py-3 sm:py-2',
                                         isActive(hl.url)
                                             ? 'bg-[var(--color-surface-hover)] text-[var(--color-primary)]'
                                             : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]',
@@ -68,7 +68,7 @@ export function NavHeaderLinks({ links, mobile = false }: NavHeaderLinksProps) {
                         rel={hl.new_tab ? 'noopener noreferrer' : undefined}
                         className={clsx(
                             'flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-[var(--transition-base)] hover:text-[var(--color-text-primary)]',
-                            mobile && 'rounded-[var(--radius)] px-3 py-2 hover:bg-[var(--color-surface-hover)]',
+                            mobile && 'rounded-[var(--radius)] px-3 py-3 sm:py-2 hover:bg-[var(--color-surface-hover)]',
                             !mobile && 'px-3 py-2',
                         )}
                     >

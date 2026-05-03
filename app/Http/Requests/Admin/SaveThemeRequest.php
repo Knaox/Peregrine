@@ -105,6 +105,8 @@ class SaveThemeRequest extends FormRequest
             'theme_glass_blur_global' => ['nullable', 'integer', 'min:0', 'max:48'],
             'theme_font_size_scale' => ['nullable', 'in:small,default,large,xl'],
             'theme_app_background_pattern' => ['nullable', 'in:none,gradient,mesh,dots,grid,aurora,orbs,noise'],
+            'theme_app_shell_variant' => ['nullable', 'in:default,workspace'],
+            'theme_workspace_rail_width' => ['nullable', 'integer', 'min:60', 'max:120'],
 
             'sidebar_preset' => ['nullable', 'string', 'max:32'],
             'card_config' => ['nullable', 'array'],

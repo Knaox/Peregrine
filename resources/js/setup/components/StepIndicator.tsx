@@ -24,12 +24,12 @@ export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
 
     return (
         <nav className="mb-8">
-            <ol className="flex items-center gap-2">
+            <ol className="flex items-center gap-1 sm:gap-2">
                 {STEP_KEYS.slice(0, totalSteps).map((key, index) => (
-                    <li key={key} className="flex items-center gap-2 flex-1">
-                        <div className="flex flex-col items-center flex-1">
+                    <li key={key} className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
+                        <div className="flex flex-col items-center flex-1 min-w-0">
                             <div
-                                className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-[var(--transition-smooth)] ${
+                                className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold transition-all duration-[var(--transition-smooth)] ${
                                     index === currentStep
                                         ? 'bg-[var(--color-primary)] text-white shadow-[var(--shadow-glow)] ring-2 ring-[var(--color-primary)]/30'
                                         : index < currentStep
@@ -46,7 +46,7 @@ export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
                                 )}
                             </div>
                             <span
-                                className={`text-[0.65rem] mt-1.5 text-center font-medium transition-colors duration-[var(--transition-smooth)] ${
+                                className={`text-[0.5rem] sm:text-[0.65rem] mt-0.5 sm:mt-1.5 text-center font-medium break-keep transition-colors duration-[var(--transition-smooth)] ${
                                     index === currentStep
                                         ? 'text-[var(--color-primary)]'
                                         : index < currentStep

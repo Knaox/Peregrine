@@ -71,7 +71,7 @@ export function LoginOverlayTemplate({
                 initial={{ opacity: 0, y: 24, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
-                className="relative z-10 w-full max-w-sm"
+                className="relative z-10 w-full max-w-sm sm:max-w-md"
             >
                 <div className="mb-6 text-center">
                     <div className="flex justify-center mb-3">

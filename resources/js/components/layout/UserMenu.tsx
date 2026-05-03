@@ -67,7 +67,7 @@ export function UserMenu() {
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2 rounded-[var(--radius)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-[var(--transition-base)] hover:text-[var(--color-text-primary)]"
             >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)] text-sm font-bold text-white ring-2 ring-[var(--color-primary-glow)]">
+                <div className="flex h-10 w-10 md:h-8 md:w-8 items-center justify-center rounded-full bg-[var(--color-primary)] text-sm font-bold text-white ring-2 ring-[var(--color-primary-glow)]">
                     {user.name.charAt(0).toUpperCase()}
                 </div>
                 <span>{user.name}</span>
@@ -85,11 +85,11 @@ export function UserMenu() {
                         transition={{ duration: 0.15 }}
                         className="absolute right-0 mt-2 w-48 overflow-hidden rounded-[var(--radius)] border border-[var(--color-glass-border)] bg-[var(--color-glass)] py-1 shadow-[var(--shadow-lg)] backdrop-blur-xl"
                     >
-                        <Link to="/profile" onClick={close} className="block px-4 py-2 text-sm text-[var(--color-text-secondary)] transition-all duration-[var(--transition-fast)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
+                        <Link to="/profile" onClick={close} className="block px-4 py-3 sm:py-2 text-sm text-[var(--color-text-secondary)] transition-all duration-[var(--transition-fast)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
                             {t('nav.profile')}
                         </Link>
                         {user.is_admin && (
-                            <a href="/admin" className="block px-4 py-2 text-sm text-[var(--color-text-secondary)] transition-all duration-[var(--transition-fast)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
+                            <a href="/admin" className="block px-4 py-3 sm:py-2 text-sm text-[var(--color-text-secondary)] transition-all duration-[var(--transition-fast)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
                                 {t('nav.settings_admin')}
                             </a>
                         )}

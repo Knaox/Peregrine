@@ -75,7 +75,7 @@ export function ThemeResetDialog({
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="theme-reset-dialog-title"
-                        className="glass-card-enhanced w-full max-w-md rounded-[var(--radius-lg)] p-5 space-y-4"
+                        className="glass-card-enhanced w-full max-w-md max-h-[90vh] overflow-y-auto rounded-[var(--radius-lg)] p-5 space-y-4"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3

@@ -9,6 +9,13 @@ interface ThemeCardsSectionProps {
     onField: <K extends keyof CardConfig>(key: K, value: CardConfig[K]) => void;
 }
 
+const LAYOUT_VARIANT_OPTIONS = [
+    { value: 'classic', label: 'Classic cards (grid)' },
+    { value: 'command-bar', label: 'Command bar (dense list)' },
+    { value: 'bento', label: 'Bento mosaic (asymmetric tiles)' },
+    { value: 'pulse-grid', label: 'Pulse grid (heatmap)' },
+] as const;
+
 const STYLE_OPTIONS = [
     { value: 'default', label: 'Default' },
     { value: 'elevated', label: 'Elevated' },
@@ -102,8 +109,24 @@ export function ThemeCardsSection({ card, onField }: ThemeCardsSectionProps) {
             label: t(`theme_studio.${prefix}.${o.value}`, o.label),
         }));
 
+    const isClassic = card.card_layout_variant === 'classic';
+
     return (
         <div className="flex flex-col gap-4">
+            <SelectField
+                label={t('theme_studio.fields.card_layout_variant', 'Dashboard layout')}
+                value={card.card_layout_variant}
+                options={opt(LAYOUT_VARIANT_OPTIONS, 'card_layout_variant')}
+                onChange={(v) => onField('card_layout_variant', v as CardConfig['card_layout_variant'])}
+            />
+            {!isClassic && (
+                <p className="-mt-2 rounded-[var(--radius-md)] border border-[var(--color-border)]/40 bg-[var(--color-surface)]/60 px-3 py-2 text-[11px] leading-relaxed text-[var(--color-text-muted)]">
+                    {t(
+                        'theme_studio.fields.card_layout_variant_help',
+                        'Visibility toggles (egg name, IP, stats) and quick actions still apply, but card-specific style fields below (header, accent, border, hover) only affect the Classic variant.',
+                    )}
+                </p>
+            )}
             <SelectField
                 label={t('theme_studio.fields.card_style', 'Card style')}
                 value={card.card_style}

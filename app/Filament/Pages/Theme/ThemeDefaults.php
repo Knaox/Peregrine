@@ -73,6 +73,14 @@ final class ThemeDefaults
         // App-wide background pattern (Vague 3 complète). Same enum as
         // login templates — applied behind the AppLayout content.
         'theme_app_background_pattern' => 'none',
+        // Top-level shell variant — `default` is the current top-nav
+        // AppLayout, `workspace` is the left-rail alternative shell.
+        // SPA branches in AppLayout to render either one.
+        'theme_app_shell_variant' => 'default',
+        // Workspace-only — width of the left vertical rail (in px). Only
+        // used when shell_variant === 'workspace'. Default matches the
+        // hardcoded 72px so existing installs see no change.
+        'theme_workspace_rail_width' => '72',
     ];
 
     /** @var array<int, array{label: string, url: string}> */
@@ -100,6 +108,10 @@ final class ThemeDefaults
         'card_border_style' => 'full',
         'card_quick_actions_layout' => 'full',
         'card_hover_effect' => 'scale',
+        // Dashboard layout variant — picks which renderer the SPA uses on
+        // the server list. `classic` keeps the existing card grid; the
+        // three new variants are radically different presentations.
+        'card_layout_variant' => 'classic',
     ];
 
     public const SIDEBAR_CONFIG = [

@@ -9,6 +9,8 @@ import { ThemeEditorPanel } from '@/components/admin/theme-studio/ThemeEditorPan
 import { ThemePreviewToolbar } from '@/components/admin/theme-studio/ThemePreviewToolbar';
 import { ThemePreviewFrame } from '@/components/admin/theme-studio/ThemePreviewFrame';
 import { ThemeResetDialog } from '@/components/admin/theme-studio/ThemeResetDialog';
+import { ThemeStudioMobileGuard } from '@/components/admin/theme-studio/ThemeStudioMobileGuard';
+import { ThemeStudioErrorScreen } from '@/components/admin/theme-studio/ThemeStudioErrorScreen';
 import type { ThemeDraft } from '@/types/themeStudio.types';
 
 const Icon = ({ d, size = 14 }: { d: string; size?: number }) => (
@@ -59,10 +61,19 @@ export function ThemeStudioPage() {
     const { user, isLoading: authLoading, loadUser } = useAuthStore();
     const studio = useThemeStudio();
     const [resetOpen, setResetOpen] = useState(false);
+    const [isWide, setIsWide] = useState(
+        () => typeof window !== 'undefined' && window.innerWidth >= 1200,
+    );
 
     useEffect(() => {
         loadUser();
     }, [loadUser]);
+
+    useEffect(() => {
+        const onResize = () => setIsWide(window.innerWidth >= 1200);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
 
     // `beforeunload` covers tab close and hard refresh — the most common
     // ways an admin loses unpublished work. We can't use `useBlocker`
@@ -101,38 +112,11 @@ export function ThemeStudioPage() {
     if (!user.is_admin) {
         return <Navigate to="/dashboard" replace />;
     }
+    if (!isWide) {
+        return <ThemeStudioMobileGuard />;
+    }
     if (studio.isError) {
-        return (
-            <div className="flex h-screen items-center justify-center bg-[var(--color-background)] px-4 text-[var(--color-text-primary)]">
-                <div className="max-w-md text-center space-y-3">
-                    <h1 className="text-lg font-semibold">
-                        {t('theme_studio.error.title', 'Theme Studio could not load')}
-                    </h1>
-                    <p className="text-sm text-[var(--color-text-muted)]">
-                        {t(
-                            'theme_studio.error.body',
-                            'The server returned an error fetching your theme settings. Check that you are still signed in as an admin and try again.',
-                        )}
-                    </p>
-                    {studio.loadError && (
-                        <p className="text-xs font-mono text-[var(--color-text-muted)]/70">
-                            {studio.loadError}
-                        </p>
-                    )}
-                    <div className="flex justify-center gap-2 pt-2">
-                        <Link
-                            to="/dashboard"
-                            className="inline-flex items-center rounded-[var(--radius)] border border-[var(--color-border-hover)] bg-[var(--color-surface)] px-4 py-2 text-sm hover:bg-[var(--color-surface-hover)]"
-                        >
-                            {t('theme_studio.error.back', 'Back to dashboard')}
-                        </Link>
-                        <Button variant="primary" size="sm" onClick={studio.refetch}>
-                            {t('theme_studio.error.retry', 'Retry')}
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        );
+        return <ThemeStudioErrorScreen loadError={studio.loadError} onRetry={studio.refetch} />;
     }
     if (!studio.draft) {
         return <LoadingScreen />;

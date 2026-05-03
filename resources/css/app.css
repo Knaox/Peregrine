@@ -36,6 +36,40 @@ body {
     transform: scale(0.97);
 }
 
+/* Pulse Grid layout — running tiles "breathe" so the heatmap visually
+   distinguishes alive servers from cold ones at a glance. Respects
+   prefers-reduced-motion (the @media block disables the keyframe). */
+@keyframes pulse-tile-alive {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.025); }
+}
+.pulse-tile.pulse-alive {
+    animation: pulse-tile-alive 2.4s ease-in-out infinite;
+}
+.pulse-tile.pulse-alive:hover {
+    animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    .pulse-tile.pulse-alive {
+        animation: none;
+    }
+}
+
+/* Bento Mosaic — inner status dot inside the CPU ring breathes when the
+   server is alive, mirroring the heatmap's tile pulse so both layouts
+   share the same "alive" cue. */
+@keyframes pulse-ring-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+}
+.pulse-ring-dot {
+    animation: pulse-ring-dot 2.4s ease-in-out infinite;
+    transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+    .pulse-ring-dot { animation: none; }
+}
+
 ::selection {
     background: rgba(249, 115, 22, 0.3);
     color: white;

@@ -25,13 +25,13 @@ export function LanguageStep({ data, onChange, onNext }: StepProps) {
                 </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {LANGUAGES.map((lang) => (
                     <button
                         key={lang.code}
                         type="button"
                         onClick={() => handleSelect(lang.code)}
-                        className={`flex flex-col items-center justify-center p-8 rounded-xl border-2 transition-all ${
+                        className={`flex flex-col items-center justify-center p-6 sm:p-8 rounded-xl border-2 transition-all ${
                             data.locale === lang.code
                                 ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10'
                                 : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-hover)]'
@@ -57,7 +57,7 @@ export function LanguageStep({ data, onChange, onNext }: StepProps) {
                 <button
                     type="button"
                     onClick={onNext}
-                    className="px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)]"
+                    className="px-6 py-3 sm:py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)]"
                 >
                     {t('common.next')}
                 </button>

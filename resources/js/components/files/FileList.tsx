@@ -53,7 +53,8 @@ export function FileList({
     );
 
     return (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-3 sm:mx-0">
+            <div className="inline-block min-w-full px-3 sm:px-0">
             {/* Header row */}
             <div className="flex items-center gap-3 px-3 py-2 text-xs font-medium text-[var(--color-text-muted)] border-b border-[var(--color-border)]/50">
                 <div className="w-6 flex-shrink-0">
@@ -144,6 +145,7 @@ export function FileList({
                     );
                 })}
             </AnimatePresence>
+            </div>
         </div>
     );
 }
