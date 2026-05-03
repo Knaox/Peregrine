@@ -3,6 +3,7 @@
 namespace App\Filament\Pages\Settings\Sections;
 
 use App\Filament\Pages\Settings\CloudflareIps;
+use App\Filament\Pages\Settings\DockerPrivateRanges;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TagsInput;
 use Filament\Schemas\Components\Section;
@@ -36,6 +37,23 @@ final class NetworkSection
                         $merged = array_values(array_unique([
                             ...(is_array($current) ? $current : []),
                             ...CloudflareIps::all(),
+                        ]));
+                        $set('trusted_proxies', $merged);
+                    }),
+                Action::make('setDockerRanges')
+                    ->label(__('admin.settings_form.network.docker'))
+                    ->icon('heroicon-o-cube')
+                    ->color('primary')
+                    ->link()
+                    ->action(function (Get $get, Set $set): void {
+                        // Add the RFC 1918 ranges Docker uses for its bridge
+                        // networks. Without these, isFromTrustedProxy() fails
+                        // because REMOTE_ADDR is the docker gateway IP, not
+                        // the LAN IP of the reverse proxy.
+                        $current = $get('trusted_proxies') ?? [];
+                        $merged = array_values(array_unique([
+                            ...(is_array($current) ? $current : []),
+                            ...DockerPrivateRanges::all(),
                         ]));
                         $set('trusted_proxies', $merged);
                     }),

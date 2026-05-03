@@ -685,8 +685,9 @@ return [
             'description' => 'IPs or CIDR ranges allowed to set X-Forwarded-* headers. Set this when Peregrine sits behind a reverse proxy (Nginx Proxy Manager, Traefik, Cloudflare, …). Leave empty to trust no proxy. Stored in DB (table `settings`) so a Docker stack rebuild does not reset it; applies on the next request, no container restart needed.',
             'clear' => 'Clear',
             'cloudflare' => 'Use Cloudflare IPs',
+            'docker' => 'Add Docker private ranges',
             'placeholder' => 'New IP or IP range',
-            'helper' => 'Examples: 192.168.80.1 (single host), 172.16.0.0/12 (CIDR range), 2400:cb00::/32 (IPv6 CIDR). Tip: click "Use Cloudflare IPs" to seed the list with all of Cloudflare\'s edge IPs, then add your own private proxy IP.',
+            'helper' => 'Examples: 192.168.80.1 (single host), 172.16.0.0/12 (CIDR range), 2400:cb00::/32 (IPv6 CIDR). Tips: click "Use Cloudflare IPs" to seed the list with all of Cloudflare\'s edge IPs. If your reverse proxy talks to Peregrine through a Docker bridge network, also click "Add Docker private ranges" — otherwise REMOTE_ADDR (the Docker gateway IP) is not trusted and X-Forwarded-Proto is silently ignored.',
         ],
         'developer' => [
             'section' => 'Developer',
