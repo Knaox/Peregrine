@@ -243,6 +243,56 @@ Voir [`.env.example`](.env.example) pour la liste complète des variables reconn
 
 ---
 
+## 🌐 Configuration reverse proxy
+
+Si Peregrine est derrière un reverse proxy (Nginx Proxy Manager, Traefik, Caddy, Cloudflare, …), le proxy **doit forwarder les bons headers `X-Forwarded-*`** pour que Laravel sache que la requête est en HTTPS. Sans ça, `Request::isSecure()` retourne `false`, les URLs signées se cassent et les uploads Livewire échouent en 403.
+
+### 1. Ajouter les IPs de proxy de confiance
+
+Allez dans **Admin → Settings → Network → Trusted proxies** et au choix :
+
+- Ajoutez l'IP / CIDR de votre reverse proxy (ex : `192.168.1.10`, `172.16.0.0/12`)
+- **ou** cliquez sur **"Use Cloudflare IPs"** pour pré-remplir toutes les plages officielles Cloudflare, puis ajoutez votre IP de proxy privé par-dessus
+- **ou** mettez `*` pour faire confiance à l'IP entrante (seulement sûr si Peregrine n'est pas directement accessible depuis internet)
+
+Enregistré instantanément, appliqué dès la requête suivante, aucun redémarrage de container nécessaire.
+
+### 2. Configurer le reverse proxy pour forwarder les headers
+
+Voici la **config minimum** pour Nginx / Nginx Proxy Manager (à coller dans l'onglet Advanced du proxy host). Les mêmes headers doivent être forwardés par Traefik / Caddy / HAProxy / etc.
+
+```nginx
+# Headers indispensables pour Laravel derrière reverse proxy
+proxy_set_header Host $host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header X-Forwarded-Host $host;
+proxy_set_header X-Forwarded-Port $server_port;
+
+# Upload sizing — uploads Livewire, assets de thème, uploads plugins
+client_max_body_size 100M;
+client_body_buffer_size 128k;
+proxy_request_buffering off;
+
+# Timeouts pour gros uploads
+proxy_read_timeout 300;
+proxy_send_timeout 300;
+proxy_connect_timeout 60;
+
+# Buffers
+proxy_buffer_size 16k;
+proxy_buffers 4 32k;
+```
+
+> **Cloudflare en amont ?** Mettez le mode SSL/TLS sur **Full** ou **Full (strict)** — jamais **Flexible**. Flexible termine le HTTPS chez Cloudflare et parle HTTP à votre origine sans chaîne de confiance utilisable, ce qui casse les URLs signées même avec les headers ci-dessus.
+
+### 3. Vérifier
+
+Après avoir sauvé les IPs de proxy de confiance et rechargé le reverse proxy, ouvrez n'importe quelle URL HTTPS de votre panel. Les liens générés, mails de reset password, callbacks OAuth et uploads Livewire doivent tous utiliser `https://`.
+
+---
+
 ## 🔄 Mises à jour
 
 Admin → **About & Updates** affiche la version installée, vérifie GitHub pour la dernière release du panel (les releases plugins sont filtrées), et donne la commande exacte avec un bouton clipboard.
