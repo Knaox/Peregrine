@@ -30,7 +30,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // /admin/settings without a container restart. The middleware
         // falls back to env('TRUSTED_PROXIES', '*') when the table isn't
         // ready yet (fresh install).
-        $middleware->prepend(\App\Http\Middleware\DynamicTrustProxies::class);
+        //
+        // Use replace() (not prepend) so DynamicTrustProxies sits in
+        // Laravel's TrustProxies slot. A bare prepend leaves the framework
+        // TrustProxies in the stack — it runs after ours and resets the
+        // trusted-proxies array to [] when $middleware->trustProxies() was
+        // never called, which silently breaks isSecure() / signed URLs
+        // behind reverse proxies (NPM, Cloudflare).
+        $middleware->replace(
+            \Illuminate\Http\Middleware\TrustProxies::class,
+            \App\Http\Middleware\DynamicTrustProxies::class,
+        );
         // The 2FA challenge endpoint is unauthenticated and protected by a
         // single-use opaque challenge_id stored in Redis (5 min TTL) — CSRF
         // would be redundant and causes 419s because the password-login path

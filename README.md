@@ -243,6 +243,56 @@ See [`.env.example`](.env.example) for the full list of recognised variables.
 
 ---
 
+## 🌐 Reverse proxy setup
+
+If Peregrine sits behind a reverse proxy (Nginx Proxy Manager, Traefik, Caddy, Cloudflare, …), the proxy **must forward the right `X-Forwarded-*` headers** so Laravel knows the request is HTTPS. Without them, `Request::isSecure()` returns `false`, signed URLs break and Livewire file uploads fail with a 403.
+
+### 1. Add the trusted proxy IPs
+
+Open **Admin → Settings → Network → Trusted proxies** and either:
+
+- Add the IP / CIDR of your reverse proxy (e.g. `192.168.1.10`, `172.16.0.0/12`)
+- **or** click **"Use Cloudflare IPs"** to seed all official Cloudflare ranges, then add your own private proxy IP on top
+- **or** enter `*` to trust the connecting IP (only safe if Peregrine is not directly reachable from the internet)
+
+Saved instantly, applies on the next request, no container restart needed.
+
+### 2. Configure your reverse proxy to forward the headers
+
+Below is the **minimum config** for Nginx / Nginx Proxy Manager (paste in the Advanced tab of the proxy host). Same headers must be forwarded by Traefik / Caddy / HAProxy / etc.
+
+```nginx
+# Headers Laravel needs behind a reverse proxy
+proxy_set_header Host $host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header X-Forwarded-Host $host;
+proxy_set_header X-Forwarded-Port $server_port;
+
+# Upload sizing — Livewire uploads, theme assets, plugin uploads
+client_max_body_size 100M;
+client_body_buffer_size 128k;
+proxy_request_buffering off;
+
+# Timeouts for large uploads
+proxy_read_timeout 300;
+proxy_send_timeout 300;
+proxy_connect_timeout 60;
+
+# Buffers
+proxy_buffer_size 16k;
+proxy_buffers 4 32k;
+```
+
+> **Cloudflare in front?** Set the SSL/TLS mode to **Full** or **Full (strict)** — never **Flexible**. Flexible terminates HTTPS at Cloudflare and talks HTTP to your origin without a usable trust chain, which breaks signed URLs even with the headers above.
+
+### 3. Verify
+
+After saving the trusted proxy IPs and reloading the reverse proxy, hit any HTTPS endpoint of your panel. Generated links, password-reset emails, OAuth callbacks and Livewire uploads should all use `https://`.
+
+---
+
 ## 🔄 Updates
 
 Admin → **About & Updates** shows the installed version, checks GitHub for the latest panel release (plugin releases are filtered out), and gives you the exact command with a clipboard button.
