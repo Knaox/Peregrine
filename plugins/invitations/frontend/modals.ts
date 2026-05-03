@@ -47,7 +47,7 @@ function renderModalChrome(opts: { title: string; subject: string | null; body: 
 
     return h('div', {
         key: opts.key,
-        style: { ...C.card, display: 'flex', flexDirection: 'column' as const, gap: '1rem' },
+        style: { ...C.card, display: 'flex', flexDirection: 'column' as const, gap: '1rem', maxWidth: 'min(28rem, 95vw)' },
     }, children);
 }
 

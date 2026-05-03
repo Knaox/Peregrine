@@ -40,7 +40,7 @@ export function LoginCenteredTemplate({ pattern }: LoginCenteredTemplateProps) {
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                className="relative z-10 w-full max-w-sm"
+                className="relative z-10 w-full max-w-sm sm:max-w-md"
             >
                 <m.div
                     initial={{ opacity: 0, scale: 0.9 }}

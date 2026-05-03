@@ -121,9 +121,15 @@ function PulseTileImpl({
     const health = resolveHealthColor(state);
 
     const cpuPct = Math.min(100, stats?.cpu ?? 0);
-    // Color intensity bumps with CPU on a running tile — gives a heatmap
-    // feel where high-load servers visibly glow brighter.
-    const intensity = health.isAlive ? 0.45 + (cpuPct / 100) * 0.5 : 0.3;
+    const banner = server.egg?.banner_image ?? null;
+    // When a banner is present, keep it clean — the previous mix-blend
+    // multiply tinted everything green and made the image unreadable.
+    // We only darken inactive tiles so suspended / failed ones still
+    // visibly stand out in the heatmap. State is now signalled by the
+    // ring border + bottom dot instead of an aggressive colour wash.
+    const dimAlpha = banner
+        ? (state === 'suspended' || state === 'provisioning' || state === 'provisioning_failed' || state === 'terminated' ? 0.6 : 0)
+        : 0;
 
     const handlePrefetch = useCallback(() => {
         void queryClient.prefetchQuery({
@@ -151,22 +157,53 @@ function PulseTileImpl({
             className={clsx(
                 'pulse-tile group relative aspect-square overflow-hidden rounded-[var(--radius-md)] cursor-pointer outline-none',
                 'transition-all duration-200',
-                'hover:scale-[1.06] hover:z-10 hover:shadow-[0_0_20px_var(--color-primary-glow)]',
+                'hover:scale-[1.06] hover:z-10 hover:shadow-[0_0_24px_var(--color-primary-glow)]',
                 'focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]',
                 isActive && 'ring-2 ring-[var(--color-primary)] z-10',
                 isSelected && 'ring-2 ring-[var(--color-primary)]',
                 health.isAlive && 'pulse-alive',
             )}
             style={{
-                background: `linear-gradient(135deg, ${health.color} 0%, color-mix(in srgb, ${health.color} 60%, transparent) 100%)`,
-                opacity: intensity,
+                background: '#0a0a0a',
+                // Coloured ring carries the state signal — replaces the old
+                // mix-blend tint that turned every banner green/red.
+                boxShadow: `inset 0 0 0 2px ${health.color}`,
             }}
         >
-            <span className="absolute inset-x-0 bottom-0 px-1.5 py-1 text-[10px] font-medium leading-tight text-white/90 truncate text-left bg-black/30 backdrop-blur-sm">
-                {server.name}
+            {banner ? (
+                <img
+                    src={banner}
+                    alt=""
+                    aria-hidden
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    style={{ filter: dimAlpha > 0 ? `brightness(${1 - dimAlpha})` : undefined }}
+                />
+            ) : (
+                <div
+                    aria-hidden
+                    className="absolute inset-0"
+                    style={{
+                        background: `linear-gradient(135deg, ${health.color} 0%, color-mix(in srgb, ${health.color} 50%, transparent) 100%)`,
+                    }}
+                />
+            )}
+
+            {/* Bottom name pill with subtle status dot — keeps the banner
+                visually clean while still surfacing what state the tile is in. */}
+            <span className="absolute inset-x-0 bottom-0 flex items-center gap-1 px-1.5 py-1 text-[10px] font-medium leading-tight text-white text-left bg-gradient-to-t from-black/85 via-black/55 to-transparent">
+                <span aria-hidden className="h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ background: health.color, boxShadow: `0 0 6px ${health.color}` }} />
+                <span className="truncate">{server.name}</span>
             </span>
+
+            {/* Top-right CPU pill — only shown when stats are streaming */}
+            {stats && health.isAlive && (
+                <span className="absolute top-1 right-1 z-10 rounded-[var(--radius-full)] bg-black/55 px-1.5 py-0.5 font-mono text-[9px] tabular-nums text-white/95 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    {cpuPct.toFixed(0)}%
+                </span>
+            )}
+
             {isSelected && (
-                <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--color-primary)]">
+                <span className="absolute top-1.5 right-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--color-primary)]">
                     <svg className="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                     </svg>

@@ -9,6 +9,7 @@ import { AnimatedBackground } from '@/components/AnimatedBackground';
 import { NavHeaderLinks } from '@/components/layout/NavHeaderLinks';
 import { UserMenu } from '@/components/layout/UserMenu';
 import { AppFooter } from '@/components/AppFooter';
+import { WorkspaceShell } from '@/components/layout/WorkspaceShell';
 
 export function AppLayout() {
     const { t } = useTranslation();
@@ -23,6 +24,14 @@ export function AppLayout() {
     const theme = useResolvedTheme();
     const footer = theme?.data.footer;
     const appPattern = theme?.data.app?.background_pattern ?? 'none';
+    const shellVariant = theme?.data.app?.shell_variant ?? 'default';
+
+    // Mega shell switch — `workspace` swaps the entire layout for a left
+    // vertical rail. We delegate fully so legacy AppLayout code stays
+    // untouched (and the chunk tree stays simple — no nested layouts).
+    if (shellVariant === 'workspace') {
+        return <WorkspaceShell />;
+    }
 
     const handleLogout = async () => {
         await logout();
@@ -40,6 +49,7 @@ export function AppLayout() {
                     background: 'var(--color-glass)',
                     backdropFilter: 'var(--glass-blur)',
                     boxShadow: 'var(--glass-highlight), var(--shadow-sm)',
+                    paddingTop: 'env(safe-area-inset-top, 0px)',
                 }}
             >
                 <div
@@ -86,7 +96,7 @@ export function AppLayout() {
                             <button
                                 type="button"
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                                className="rounded-[var(--radius)] p-2 text-[var(--color-text-secondary)] transition-all duration-200 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] md:hidden cursor-pointer"
+                                className="rounded-[var(--radius)] p-3 sm:p-2 text-[var(--color-text-secondary)] transition-all duration-200 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] md:hidden cursor-pointer"
                             >
                                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     {isMobileMenuOpen

@@ -206,8 +206,8 @@ export function ServerDetailPage() {
     const hasMobileHamburger = !isTopLayout && !isDockLayout;
     const contentPaddingClass = [
         'server-page-content relative z-10 flex flex-col min-h-full p-3 sm:p-4 md:p-6',
-        hasMobileHamburger && 'pt-14 sm:pt-14 md:pt-6',
-        isDockLayout && 'pt-20 sm:pt-20 md:pt-20 pb-28 sm:pb-28 md:pb-32',
+        hasMobileHamburger && 'pt-14 sm:pt-6 md:pt-6',
+        isDockLayout && 'pt-6 sm:pt-6 md:pt-8 pb-24 sm:pb-28 md:pb-32',
     ].filter(Boolean).join(' ');
 
     // Tag the wrapper with the current sub-route so per-page CSS overrides

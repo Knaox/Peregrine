@@ -7,6 +7,7 @@
         "confirm": "Confirmer",
         "delete": "Supprimer",
         "edit": "Modifier",
+        "copy": "Copier",
         "loading": "Chargement...",
         "error": "Une erreur est survenue",
         "success": "Succès",
@@ -237,7 +238,14 @@
             "category_placeholder": "Nom de la catégorie...",
             "delete_category_confirm": "Supprimer cette catégorie ? Les serveurs seront déplacés vers Non classé.",
             "drop_here": "Déposez les serveurs ici",
-            "reset_layout": "Réinitialiser la disposition"
+            "reset_layout": "Réinitialiser la disposition",
+            "address": "Adresse",
+            "stats": "Stats live",
+            "config": "Configuration",
+            "egg": "Egg",
+            "plan": "Plan",
+            "uptime": "Temps en ligne",
+            "open": "Ouvrir le serveur"
         },
         "bulk": {
             "start_all": "Tout démarrer",
@@ -688,6 +696,9 @@
         "save_error": "Échec de l'enregistrement :",
         "reset_confirm": "Réinitialiser entièrement le thème ? Cette action est irréversible.",
         "unsaved_leave_confirm": "Des modifications de thème ne sont pas publiées. Quitter quand même ?",
+        "mobile_not_supported_title": "Le Theme Studio nécessite un plus grand écran",
+        "mobile_not_supported_body": "Ouvre cette page sur une tablette en paysage, un laptop ou un desktop d'au moins 1200 px de large.",
+        "back_to_dashboard": "Retour au tableau de bord",
         "reset_dialog": {
             "title": "Réinitialiser tout le thème ?",
             "body": "Tous les paramètres de thème reviennent aux valeurs d'usine. Action irréversible — exporte une sauvegarde avant si tu veux garder cette version (php artisan theme:export).",
@@ -825,7 +836,15 @@
             "theme_glass_blur_global": "Flou glass (global)",
             "theme_font_size_scale": "Taille de police de base",
             "theme_app_background_pattern": "Fond de l'app",
-            "theme_app_background_pattern_help": "Remplace la constellation animée derrière dashboard / profil / etc."
+            "theme_app_background_pattern_help": "Remplace la constellation animée derrière dashboard / profil / etc.",
+            "theme_app_shell_variant": "Shell de l'application",
+            "theme_app_shell_variant_help": "Le mode Workspace remplace la barre du haut par un rail vertical à gauche (logo + icônes nav + menu utilisateur). Les paramètres d'en-tête ci-dessous ne s'appliquent qu'au shell Top navbar.",
+            "theme_app_shell_variant_help_ws": "Le mode Workspace affiche les contrôles spécifiques au rail ci-dessous. La largeur du conteneur et le padding de page s'appliquent toujours aux deux shells.",
+            "theme_workspace_rail_width": "Largeur du rail"
+        },
+        "app_shell_variant": {
+            "default": "Barre supérieure (classique)",
+            "workspace": "Rail Workspace (vertical à gauche)"
         },
         "app_pattern": {
             "none": "Aucun (constellation animée)",

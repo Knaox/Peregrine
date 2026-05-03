@@ -184,6 +184,8 @@ export function useThemeStudio(): UseThemeStudioReturn {
                     },
                     app: {
                         background_pattern: next.theme_app_background_pattern,
+                        shell_variant: next.theme_app_shell_variant,
+                        rail_width: next.theme_workspace_rail_width,
                     },
                 },
                 card_config: cardDraft ?? data?.card_config ?? null,

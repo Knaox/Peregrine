@@ -250,6 +250,7 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
                         className="server-sidebar-drawer fixed left-0 top-0 z-40 h-[100dvh] overflow-y-auto md:hidden"
                         style={{
                             width: 'min(var(--sidebar-width-mobile, 256px), 80vw)',
+                            maxWidth: '320px',
                             background: 'var(--color-glass)',
                             backdropFilter: 'blur(20px)',
                             borderRight: '1px solid var(--color-glass-border)',

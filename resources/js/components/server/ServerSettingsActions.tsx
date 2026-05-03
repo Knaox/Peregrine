@@ -132,7 +132,7 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
                         <m.div
                             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.2 }}
-                            className="glass-card-enhanced w-full max-w-md rounded-[var(--radius-lg)] p-5 space-y-4"
+                            className="glass-card-enhanced w-full max-w-md max-h-[90vh] overflow-y-auto rounded-[var(--radius-lg)] p-5 space-y-4"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {dialog === 'rename' && (

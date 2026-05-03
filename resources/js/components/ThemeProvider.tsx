@@ -56,8 +56,18 @@ export interface ThemeFooterData {
     links: Array<{ label: string; url: string }>;
 }
 
+export type AppShellVariant = 'default' | 'workspace';
+
 export interface ThemeAppData {
     background_pattern: LoginBackgroundPattern;
+    /** Top-level shell variant. `default` = top-nav AppLayout (legacy);
+     *  `workspace` = left vertical rail with logo + nav icons + UserMenu.
+     *  Backend default is `default` so existing installs are unchanged. */
+    shell_variant?: AppShellVariant;
+    /** Workspace-only — pixel width of the left rail. Range 60..120
+     *  (clamped server-side). Default 72 matches the original hardcoded
+     *  rail width so existing workspace installs see no shift. */
+    rail_width?: number;
 }
 
 export interface ThemeData {
@@ -170,6 +180,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             root.setAttribute('data-page-files-fullwidth', pageOv.files_fullwidth ? 'true' : 'false');
             root.setAttribute('data-page-dashboard-expanded', pageOv.dashboard_expanded ? 'true' : 'false');
         }
+        // Shell variant — drives whether AppLayout renders the top-nav
+        // (default) or the left rail (workspace). Reading via data-attr
+        // lets CSS rules adapt globally (e.g. content padding, nav-pattern
+        // suppression) without each child fetching the variant separately.
+        root.setAttribute('data-shell', theme.data.app?.shell_variant ?? 'default');
 
         // Apply custom CSS
         let styleEl = document.getElementById('theme-custom-css');

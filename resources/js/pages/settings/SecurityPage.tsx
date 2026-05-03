@@ -98,7 +98,7 @@ export function SecurityPage() {
                     <button
                         type="button"
                         onClick={() => setShowSetup(true)}
-                        className="rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white cursor-pointer hover:bg-[var(--color-primary-hover)]"
+                        className="rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-2.5 sm:py-2 text-sm font-semibold text-white cursor-pointer hover:bg-[var(--color-primary-hover)]"
                     >
                         {t('auth.2fa.setup.title')}
                     </button>
@@ -119,7 +119,7 @@ export function SecurityPage() {
                             type="button"
                             onClick={handleRegenerate}
                             disabled={regenerate.isPending}
-                            className="rounded-[var(--radius)] border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] cursor-pointer disabled:opacity-50"
+                            className="rounded-[var(--radius)] border border-[var(--color-border)] px-4 py-2.5 sm:py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] cursor-pointer disabled:opacity-50"
                         >
                             {t('auth.2fa.recovery.regenerate_button')}
                         </button>
@@ -141,13 +141,13 @@ export function SecurityPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder={t('auth.2fa.disable.password_label')}
-                                className="w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:border-[var(--color-primary)]"
+                                className="w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 sm:py-2 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:border-[var(--color-primary)]"
                             />
                             <button
                                 type="button"
                                 onClick={handleDisable}
                                 disabled={disable.isPending || password === ''}
-                                className="rounded-[var(--radius)] bg-[var(--color-danger)] px-4 py-2 text-sm font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="rounded-[var(--radius)] bg-[var(--color-danger)] px-4 py-2.5 sm:py-2 text-sm font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {t('auth.2fa.disable.confirm_button')}
                             </button>

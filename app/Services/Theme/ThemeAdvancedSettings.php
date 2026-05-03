@@ -117,11 +117,21 @@ final class ThemeAdvancedSettings
         ];
     }
 
-    /** @return array<string, string> */
+    /** @return array<string, mixed> */
     public function app(): array
     {
         return [
             'background_pattern' => (string) $this->settings->get('theme_app_background_pattern', 'none'),
+            // App-wide shell variant. `default` keeps the existing top-nav
+            // AppLayout; `workspace` swaps to a left vertical rail with the
+            // logo, nav icons and the user menu stacked along the side.
+            // SPA reads it via theme.data.app.shell_variant.
+            'shell_variant' => (string) $this->settings->get('theme_app_shell_variant', 'default'),
+            // Workspace-only — rail width in pixels. SPA applies this as an
+            // inline width on `<aside.workspace-rail>` and as the matching
+            // left padding on the main content. Range 60..120 (clamped via
+            // SaveThemeRequest) — 60 is icon-only, 120 fits short labels.
+            'rail_width' => (int) $this->settings->get('theme_workspace_rail_width', '72'),
         ];
     }
 }

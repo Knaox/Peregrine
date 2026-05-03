@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, m } from 'motion/react';
@@ -39,6 +40,20 @@ export function PulseDetailDrawer({
     const navigate = useNavigate();
     const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
+    // Track sm+ breakpoint to switch between bottom-sheet (mobile) and
+    // side-slide (sm+). SSR-safe initial value. Listener kept lightweight —
+    // the drawer is mounted only when a server is selected so re-subscribing
+    // on each open isn't a perf concern.
+    const [isDesktop, setIsDesktop] = useState<boolean>(
+        () => typeof window !== 'undefined' && window.matchMedia('(min-width: 640px)').matches,
+    );
+    useEffect(() => {
+        if (typeof window === 'undefined' || !window.matchMedia) return;
+        const mq = window.matchMedia('(min-width: 640px)');
+        const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
 
     const isOpen = server !== null;
 
@@ -69,7 +84,11 @@ export function PulseDetailDrawer({
         });
     };
 
-    return (
+    // Portal to <body> so the drawer escapes any stacking context built
+    // by ancestors (`<motion.main relative z-10>` in AppLayout, transforms
+    // on parents, etc.). Without this the drawer ends up trapped under
+    // the sticky navbar regardless of z-index value.
+    const drawer = (
         <AnimatePresence>
             {isOpen && server && (
                 <>
@@ -80,16 +99,20 @@ export function PulseDetailDrawer({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
                         onClick={onClose}
-                        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+                        className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm"
                         aria-hidden
                     />
                     <m.aside
                         key="pulse-drawer"
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
+                        initial={isDesktop ? { x: '100%' } : { y: '100%' }}
+                        animate={isDesktop ? { x: 0 } : { y: 0 }}
+                        exit={isDesktop ? { x: '100%' } : { y: '100%' }}
                         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-                        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col overflow-hidden border-l border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl"
+                        className={
+                            isDesktop
+                                ? 'fixed right-0 top-0 z-[1001] flex h-full w-full max-w-md flex-col overflow-hidden border-l border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl'
+                                : 'fixed inset-x-0 bottom-0 z-[1001] flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-[var(--radius-xl)] border-t border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl'
+                        }
                         role="dialog"
                         aria-label={server.name}
                     >
@@ -172,6 +195,9 @@ export function PulseDetailDrawer({
             )}
         </AnimatePresence>
     );
+
+    if (typeof document === 'undefined') return null;
+    return createPortal(drawer, document.body);
 }
 
 function DrawerHeader({

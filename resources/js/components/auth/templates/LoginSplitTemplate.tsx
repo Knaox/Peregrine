@@ -50,7 +50,7 @@ export function LoginSplitTemplate({
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                    className="relative z-10 w-full max-w-sm"
+                    className="relative z-10 w-full max-w-sm sm:max-w-md"
                 >
                     <div className="mb-6">
                         <div className="mb-3 flex items-center gap-3">

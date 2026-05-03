@@ -73,18 +73,18 @@ export function AuthStep({ data, onChange, onNext, onPrevious }: StepProps) {
                 <span>{t('setup.auth.post_install_note')}</span>
             </div>
 
-            <div className="flex justify-between pt-4">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 pt-4">
                 <button
                     type="button"
                     onClick={onPrevious}
-                    className="px-6 py-2 bg-[var(--color-surface-hover)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] ring-1 ring-[var(--color-border)]"
+                    className="px-6 py-3 sm:py-2 bg-[var(--color-surface-hover)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] ring-1 ring-[var(--color-border)]"
                 >
                     {t('common.previous')}
                 </button>
                 <button
                     type="button"
                     onClick={onNext}
-                    className="px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)]"
+                    className="px-6 py-3 sm:py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)]"
                 >
                     {t('common.next')}
                 </button>

@@ -74,11 +74,11 @@ export function TwoFactorSetup({ onComplete }: TwoFactorSetupProps) {
 
             <div className="flex justify-center rounded-[var(--radius)] border border-[var(--color-border)] bg-white p-4">
                 {/* QR image — backend sends a data:image/svg+xml base64 URI. */}
-                <img src={qrSvg} alt="2FA QR code" className="h-48 w-48" />
+                <img src={qrSvg} alt="2FA QR code" className="h-40 w-40 sm:h-48 sm:w-48" />
             </div>
 
             <details className="rounded-[var(--radius)] border border-[var(--color-border)] p-3 text-sm">
-                <summary className="cursor-pointer text-[var(--color-text-muted)]">
+                <summary className="cursor-pointer text-[var(--color-text-muted)] py-1">
                     {t('auth.2fa.setup.manual_entry_label')}
                 </summary>
                 <code className="mt-2 block break-all text-xs text-[var(--color-text-primary)]">{secret}</code>

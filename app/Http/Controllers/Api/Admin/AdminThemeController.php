@@ -58,6 +58,7 @@ class AdminThemeController extends Controller
             'theme_login_background_opacity',
             'theme_border_width',
             'theme_glass_blur_global',
+            'theme_workspace_rail_width',
         ];
         $boolKeys = [
             'theme_layout_header_sticky',

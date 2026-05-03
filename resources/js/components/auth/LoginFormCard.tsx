@@ -75,7 +75,7 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
     };
 
     const cardClasses = clsx(
-        'rounded-[var(--radius-xl)] p-6 sm:p-8',
+        'rounded-[var(--radius-xl)] p-4 sm:p-6 md:p-8',
         variant === 'glass' && 'themed-border border border-[var(--color-glass-border)]',
         variant === 'solid' && 'themed-border border border-[var(--color-border)] bg-[var(--color-surface)]',
         className,
@@ -172,7 +172,7 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
                                 type="checkbox"
                                 checked={remember}
                                 onChange={(e) => setRemember(e.target.checked)}
-                                className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-primary)] cursor-pointer"
+                                className="h-5 w-5 sm:h-4 sm:w-4 rounded border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-primary)] cursor-pointer"
                             />
                             <span className="text-sm text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors">
                                 {t('auth.login.remember')}

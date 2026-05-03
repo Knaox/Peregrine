@@ -15,9 +15,9 @@ interface ServerCardPowerButtonsProps {
 }
 
 const SIZES: Record<NonNullable<ServerCardPowerButtonsProps['layout']>, string> = {
-    full: 'h-10 w-10',
-    compact: 'h-8 w-8',
-    'icon-only': 'h-7 w-7',
+    full: 'h-11 w-11',
+    compact: 'h-10 w-10',
+    'icon-only': 'h-9 w-9',
 };
 
 const ICON_SIZES: Record<NonNullable<ServerCardPowerButtonsProps['layout']>, string> = {

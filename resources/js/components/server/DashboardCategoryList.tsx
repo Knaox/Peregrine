@@ -142,7 +142,7 @@ function ServerGrid({
                         >
                             <div className="relative">
                                 <div
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-2 z-20"
+                                    className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-2 z-20"
                                     {...drag.getDragHandleProps(String(server.id), zoneId)}
                                 >
                                     <GripIcon />

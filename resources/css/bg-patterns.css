@@ -111,3 +111,32 @@
         animation: none;
     }
 }
+
+/* -------------------------------------------------------------------------
+ * Mobile scale-down (<=640px)
+ * Hardcoded orb dimensions and aurora background-size shrink so they don't
+ * dominate small screens or trigger overflow on very narrow viewports.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+    .bg-pattern-orbs::before {
+        width: 220px;
+        height: 220px;
+        top: -60px;
+        left: -60px;
+    }
+    .bg-pattern-orbs::after {
+        width: 200px;
+        height: 200px;
+        bottom: -60px;
+        right: -60px;
+    }
+    .bg-pattern-aurora {
+        background-size: 150% 150%;
+    }
+    .bg-pattern-dots {
+        background-size: 14px 14px;
+    }
+    .bg-pattern-grid {
+        background-size: 28px 28px;
+    }
+}

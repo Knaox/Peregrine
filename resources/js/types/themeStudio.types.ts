@@ -87,6 +87,11 @@ export interface ThemeDraft {
         | 'aurora'
         | 'orbs'
         | 'noise';
+    /** Mega shell switch — `default` = top-nav AppLayout (legacy);
+     *  `workspace` = left vertical rail with logo + nav icons + UserMenu. */
+    theme_app_shell_variant: 'default' | 'workspace';
+    /** Workspace-only — pixel width of the left rail. Range 60..120. */
+    theme_workspace_rail_width: number;
 }
 
 export type PreviewScene =

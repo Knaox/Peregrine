@@ -162,7 +162,7 @@ function CommandBarRowImpl({
                     onClick={handleSelect}
                     aria-label={isSelected ? 'Deselect' : 'Select'}
                     className={clsx(
-                        'flex h-5 w-5 items-center justify-center rounded border cursor-pointer flex-shrink-0',
+                        'flex h-6 w-6 sm:h-5 sm:w-5 items-center justify-center rounded border cursor-pointer flex-shrink-0',
                         isSelected
                             ? 'border-[var(--color-primary)] bg-[var(--color-primary)]'
                             : 'border-[var(--color-border-hover)] bg-transparent',
@@ -177,6 +177,10 @@ function CommandBarRowImpl({
             )}
 
             <div className="flex min-w-0 flex-1 items-center gap-3">
+                {cardConfig.show_egg_icon && (
+                    <EggThumb banner={server.egg?.banner_image ?? null} fallbackColor={health.color} />
+                )}
+
                 <div className="flex min-w-0 flex-col gap-0.5 sm:flex-1 sm:max-w-[28%]">
                     <span className="truncate text-sm font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-primary)] transition-colors">
                         {server.name}
@@ -227,7 +231,7 @@ function CommandBarRowImpl({
 
                 {cardConfig.show_quick_actions && !isSuspended && !isProvisioning && (
                     <div
-                        className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+                        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity"
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => e.stopPropagation()}
                         role="presentation"
@@ -243,6 +247,23 @@ function CommandBarRowImpl({
                     </div>
                 )}
             </div>
+        </div>
+    );
+}
+
+function EggThumb({ banner, fallbackColor }: { banner: string | null; fallbackColor: string }) {
+    return (
+        <div
+            className="hidden sm:block h-9 w-9 flex-shrink-0 overflow-hidden rounded-[var(--radius-md)] ring-1 ring-[var(--color-border)]/40"
+            style={{
+                background: banner
+                    ? '#0a0a0a'
+                    : `linear-gradient(135deg, ${fallbackColor} 0%, color-mix(in srgb, ${fallbackColor} 30%, var(--color-surface)) 100%)`,
+            }}
+        >
+            {banner && (
+                <img src={banner} alt="" aria-hidden className="h-full w-full object-cover opacity-80" />
+            )}
         </div>
     );
 }

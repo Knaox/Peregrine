@@ -25,6 +25,14 @@ export function TwoFactorChallengeForm({ onSubmit, error }: TwoFactorChallengeFo
         }
     };
 
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        if (pasted) {
+            setCode(pasted);
+            e.preventDefault();
+        }
+    };
+
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             {error !== undefined && error !== '' && (
@@ -45,13 +53,14 @@ export function TwoFactorChallengeForm({ onSubmit, error }: TwoFactorChallengeFo
                     type="text"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
+                    onPaste={handlePaste}
                     inputMode={useRecovery ? 'text' : 'numeric'}
                     autoComplete="one-time-code"
                     maxLength={useRecovery ? 25 : 6}
                     required
                     autoFocus
                     className={clsx(
-                        'w-full rounded-[var(--radius)] border px-4 py-2.5 text-sm text-[var(--color-text-primary)]',
+                        'w-full rounded-[var(--radius)] border px-4 py-3 sm:py-2.5 text-sm text-[var(--color-text-primary)]',
                         'bg-[var(--color-background)] transition-all duration-200',
                         'focus:outline-none focus:ring-1 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary-glow)]',
                         'border-[var(--color-border)] ring-transparent hover:border-[var(--color-border-hover)]',

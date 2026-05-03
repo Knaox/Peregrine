@@ -85,11 +85,11 @@ export function PelicanStep({ data, onChange, onNext, onPrevious }: StepProps) {
                 }
             />
 
-            <div className="flex justify-between pt-4">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 pt-4">
                 <button
                     type="button"
                     onClick={onPrevious}
-                    className="px-6 py-2 bg-[var(--color-surface-hover)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] ring-1 ring-[var(--color-border)]"
+                    className="px-6 py-3 sm:py-2 bg-[var(--color-surface-hover)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] ring-1 ring-[var(--color-border)]"
                 >
                     {t('common.previous')}
                 </button>
@@ -97,7 +97,7 @@ export function PelicanStep({ data, onChange, onNext, onPrevious }: StepProps) {
                     type="button"
                     onClick={onNext}
                     disabled={!data.pelican.url || !data.pelican.api_key || !data.pelican.client_api_key}
-                    className="px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-3 sm:py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {t('common.next')}
                 </button>
