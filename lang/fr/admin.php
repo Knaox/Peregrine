@@ -685,8 +685,9 @@ return [
             'description' => "IPs ou plages CIDR autorisées à définir les headers X-Forwarded-*. À configurer quand Peregrine est derrière un reverse proxy (Nginx Proxy Manager, Traefik, Cloudflare, …). Laisser vide pour ne faire confiance à aucun proxy. Stocké en DB (table `settings`) — un rebuild Docker ne le remet pas à zéro ; appliqué à la prochaine requête, pas de redémarrage nécessaire.",
             'clear' => 'Vider',
             'cloudflare' => 'Utiliser les IPs Cloudflare',
+            'docker' => 'Ajouter les plages Docker privées',
             'placeholder' => 'Nouvelle IP ou plage IP',
-            'helper' => "Exemples : 192.168.80.1 (host unique), 172.16.0.0/12 (plage CIDR), 2400:cb00::/32 (CIDR IPv6). Astuce : cliquez « Utiliser les IPs Cloudflare » pour pré-remplir avec toutes les IPs edge de Cloudflare, puis ajoutez votre IP de proxy privée.",
+            'helper' => "Exemples : 192.168.80.1 (host unique), 172.16.0.0/12 (plage CIDR), 2400:cb00::/32 (CIDR IPv6). Astuces : cliquez « Utiliser les IPs Cloudflare » pour pré-remplir avec toutes les IPs edge de Cloudflare. Si votre reverse proxy parle à Peregrine via un réseau bridge Docker, cliquez aussi « Ajouter les plages Docker privées » — sinon REMOTE_ADDR (l'IP de la gateway Docker) n'est pas dans la liste et X-Forwarded-Proto est silencieusement ignoré.",
         ],
         'developer' => [
             'section' => 'Développeur',
