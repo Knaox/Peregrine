@@ -790,6 +790,8 @@
             "theme_footer_links_empty": "No links yet.",
             "theme_footer_link_label": "Label",
             "theme_footer_link_add": "Add link",
+            "card_layout_variant": "Dashboard layout",
+            "card_layout_variant_help": "Visibility toggles (egg name, IP, stats) and quick actions still apply, but card-specific style fields below (header, accent, border, hover) only affect the Classic variant.",
             "card_style": "Card style",
             "card_density": "Density",
             "card_header_style": "Header style",
@@ -894,6 +896,12 @@
             "scale": "Scale (zoom)",
             "glow": "Glow (ring)",
             "none": "None"
+        },
+        "card_layout_variant": {
+            "classic": "Classic cards (grid)",
+            "command-bar": "Command bar (dense list)",
+            "bento": "Bento mosaic (asymmetric tiles)",
+            "pulse-grid": "Pulse grid (heatmap)"
         },
         "card_sort": {
             "name": "Name",

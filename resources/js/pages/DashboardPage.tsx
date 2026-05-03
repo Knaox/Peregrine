@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useAuthStore } from '@/stores/authStore';
@@ -10,13 +10,15 @@ import { usePointerDrag } from '@/hooks/usePointerDrag';
 import { useServerSelection } from '@/hooks/useServerSelection';
 import { useCardConfig } from '@/hooks/useCardConfig';
 import type { PowerSignal } from '@/types/PowerSignal';
-import type { Server } from '@/types/Server';
 import { ServerCardSkeleton } from '@/components/server/ServerCardSkeleton';
 import { ServerEmptyState } from '@/components/server/ServerEmptyState';
 import { ServerBulkBar } from '@/components/server/ServerBulkBar';
 import { DashboardHeader } from '@/components/server/DashboardHeader';
 import { DashboardToolbar } from '@/components/server/DashboardToolbar';
 import { DashboardCategoryList } from '@/components/server/DashboardCategoryList';
+import { CommandBarLayout } from '@/components/server/layouts/CommandBarLayout';
+import { BentoMosaicLayout } from '@/components/server/layouts/BentoMosaicLayout';
+import { PulseGridLayout } from '@/components/server/layouts/PulseGridLayout';
 
 export function DashboardPage() {
     const { t } = useTranslation();
@@ -62,6 +64,16 @@ export function DashboardPage() {
     cardIndexRef.current = 0;
 
     const hasSearch = search.trim().length > 0;
+    const variant = cardConfig.card_layout_variant;
+    const isAlternativeVariant = variant !== 'classic';
+
+    const filteredServers = useMemo(() => {
+        const term = search.trim().toLowerCase();
+        if (term.length === 0) return servers;
+        return servers.filter(
+            (s) => s.name.toLowerCase().includes(term) || (s.egg?.name ?? '').toLowerCase().includes(term),
+        );
+    }, [servers, search]);
 
     const gridProps = {
         search, statsMap, drag, selection, handlePower, isPowerPending, cardConfig,
@@ -89,9 +101,48 @@ export function DashboardPage() {
                             onToggleSelection={selection.toggleSelectionMode}
                         />
 
-                        {hasSearch && filteredCount(servers, search) === 0 ? (
+                        {hasSearch && filteredServers.length === 0 ? (
                             <div className="rounded-[var(--radius-lg)] p-6 sm:p-12 text-center glass-card-enhanced">
                                 <p className="text-[var(--color-text-muted)]">{t('servers.list.search_empty')}</p>
+                            </div>
+                        ) : isAlternativeVariant ? (
+                            <div className="pl-0 sm:pl-6">
+                                {variant === 'command-bar' && (
+                                    <CommandBarLayout
+                                        servers={filteredServers}
+                                        statsMap={statsMap}
+                                        cardConfig={cardConfig}
+                                        isSelectionMode={selection.isSelectionMode}
+                                        isSelected={selection.isSelected}
+                                        onSelect={selection.toggleSelect}
+                                        onPower={handlePower}
+                                        isPowerPending={isPowerPending}
+                                    />
+                                )}
+                                {variant === 'bento' && (
+                                    <BentoMosaicLayout
+                                        servers={filteredServers}
+                                        statsMap={statsMap}
+                                        cardConfig={cardConfig}
+                                        isSelectionMode={selection.isSelectionMode}
+                                        isSelected={selection.isSelected}
+                                        onSelect={selection.toggleSelect}
+                                        onPower={handlePower}
+                                        isPowerPending={isPowerPending}
+                                    />
+                                )}
+                                {variant === 'pulse-grid' && (
+                                    <PulseGridLayout
+                                        servers={filteredServers}
+                                        statsMap={statsMap}
+                                        cardConfig={cardConfig}
+                                        isSelectionMode={selection.isSelectionMode}
+                                        isSelected={selection.isSelected}
+                                        onSelect={selection.toggleSelect}
+                                        onPower={handlePower}
+                                        isPowerPending={isPowerPending}
+                                    />
+                                )}
                             </div>
                         ) : (
                             <DashboardCategoryList layout={layout} {...gridProps} />
@@ -108,10 +159,4 @@ export function DashboardPage() {
             />
         </div>
     );
-}
-
-function filteredCount(servers: Server[], search: string): number {
-    const term = search.trim().toLowerCase();
-    if (term.length === 0) return servers.length;
-    return servers.filter((s) => s.name.toLowerCase().includes(term) || (s.egg?.name ?? '').toLowerCase().includes(term)).length;
 }

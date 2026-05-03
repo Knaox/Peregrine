@@ -100,6 +100,10 @@ final class ThemeDefaults
         'card_border_style' => 'full',
         'card_quick_actions_layout' => 'full',
         'card_hover_effect' => 'scale',
+        // Dashboard layout variant — picks which renderer the SPA uses on
+        // the server list. `classic` keeps the existing card grid; the
+        // three new variants are radically different presentations.
+        'card_layout_variant' => 'classic',
     ];
 
     public const SIDEBAR_CONFIG = [

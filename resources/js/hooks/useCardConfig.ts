@@ -7,6 +7,7 @@ export type CardAccentStrength = 'none' | 'subtle' | 'bold';
 export type CardBorderStyle = 'full' | 'accent-left' | 'none';
 export type CardQuickActionsLayout = 'full' | 'compact' | 'icon-only';
 export type CardHoverEffect = 'lift' | 'scale' | 'glow' | 'none';
+export type CardLayoutVariant = 'classic' | 'command-bar' | 'bento' | 'pulse-grid';
 
 export interface CardConfig {
     layout: string;
@@ -30,6 +31,10 @@ export interface CardConfig {
     card_border_style: CardBorderStyle;
     card_quick_actions_layout: CardQuickActionsLayout;
     card_hover_effect: CardHoverEffect;
+    /** Dashboard renderer pick — `classic` is the existing card grid; the
+     *  three other values switch to one of the dramatically-different
+     *  layouts (CommandBar / Bento / PulseGrid). */
+    card_layout_variant: CardLayoutVariant;
 }
 
 const DEFAULTS: CardConfig = {
@@ -53,6 +58,7 @@ const DEFAULTS: CardConfig = {
     card_border_style: 'full',
     card_quick_actions_layout: 'full',
     card_hover_effect: 'scale',
+    card_layout_variant: 'classic',
 };
 
 /**

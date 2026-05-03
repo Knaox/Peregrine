@@ -790,6 +790,8 @@
             "theme_footer_links_empty": "Aucun lien pour l'instant.",
             "theme_footer_link_label": "Libellé",
             "theme_footer_link_add": "Ajouter un lien",
+            "card_layout_variant": "Mise en page du dashboard",
+            "card_layout_variant_help": "Les bascules d'affichage (nom egg, IP, stats) et les actions rapides s'appliquent toujours, mais les styles de carte ci-dessous (en-tête, accent, bordure, hover) ne concernent que la variante Classique.",
             "card_style": "Style de carte",
             "card_density": "Densité",
             "card_header_style": "Style d'en-tête",
@@ -894,6 +896,12 @@
             "scale": "Zoom",
             "glow": "Glow (halo)",
             "none": "Aucun"
+        },
+        "card_layout_variant": {
+            "classic": "Cartes classiques (grille)",
+            "command-bar": "Command bar (liste dense)",
+            "bento": "Bento mosaïque (tuiles asymétriques)",
+            "pulse-grid": "Pulse grid (heatmap)"
         },
         "card_sort": {
             "name": "Nom",
