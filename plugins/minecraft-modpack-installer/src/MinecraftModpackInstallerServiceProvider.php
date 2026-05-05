@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Plugins\MinecraftModpackInstaller;
 
 use App\Models\Server;
+use App\Services\Plugin\ManifestEnricherRegistry;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Plugins\MinecraftModpackInstaller\Console\ReconcileStaleInstallations;
@@ -79,6 +81,7 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/Migrations');
         $this->loadViewsFrom(__DIR__.'/../views', 'plugins.minecraft-modpack-installer');
+        $this->loadTranslationsFrom(__DIR__.'/../lang', 'minecraft-modpack-installer');
 
         Route::prefix('api/plugins/'.self::PLUGIN_ID)
             ->middleware('api')
@@ -87,6 +90,40 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
         $this->registerSubuserPermissions();
         $this->registerSchedule();
         $this->registerFilamentFallback();
+        $this->registerManifestEnricher();
+    }
+
+    /**
+     * Inject `requires_egg_ids` into the `modpacks` server_sidebar_entry so
+     * the React shell hides the tab on servers whose egg isn't in the
+     * admin whitelist. Cached 60s and busted by the settings save flow.
+     *
+     * Spec §4.1 : tab visible only when (a) server's egg type is whitelisted
+     * AND (b) user has at least the read permission. (a) is enforced here ;
+     * (b) is enforced by the manifest's `required_permission` field.
+     */
+    private function registerManifestEnricher(): void
+    {
+        ManifestEnricherRegistry::getInstance()->register(self::PLUGIN_ID, function (array $manifest): array {
+            $eggIds = Cache::remember('modpack_settings.whitelisted_egg_ids', 60, function (): array {
+                try {
+                    return $this->app->make(\Plugins\MinecraftModpackInstaller\Services\ModpackSettingsService::class)
+                        ->whitelistedEggIds();
+                } catch (\Throwable) {
+                    return [];
+                }
+            });
+
+            $entries = $manifest['server_sidebar_entries'] ?? [];
+            foreach ($entries as $idx => $entry) {
+                if (($entry['id'] ?? null) === 'modpacks') {
+                    $entries[$idx]['requires_egg_ids'] = $eggIds;
+                }
+            }
+            $manifest['server_sidebar_entries'] = $entries;
+
+            return $manifest;
+        });
     }
 
     /**

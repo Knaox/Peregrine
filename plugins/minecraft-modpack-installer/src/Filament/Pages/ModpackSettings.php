@@ -23,11 +23,15 @@ use Plugins\MinecraftModpackInstaller\Services\ModpackSettingsService;
  *
  *  - CurseForge API key (encrypted at rest via ModpackSettingsService).
  *  - Whitelist of egg IDs allowed to install modpacks (until at least one
- *    egg is selected, the "Modpacks" tab stays hidden on every server).
+ *    egg is selected, the "Modpacks" tab stays hidden on every server —
+ *    enforced by the manifest enricher in the service provider).
  *  - Install timeout (minutes) + default provider.
  *
  * Route slug `/admin/modpack-settings` matches the plugin manifest's
  * `manage_url` field so the Plugins page links here on click.
+ *
+ * Access is gated by Filament's panel-level admin check
+ * (User::canAccessPanel) plus a defensive canAccess() override here.
  */
 class ModpackSettings extends Page implements HasForms
 {
@@ -50,6 +54,12 @@ class ModpackSettings extends Page implements HasForms
 
     public string $modpack_default_provider = 'modrinth';
 
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        return $user !== null && (bool) $user->is_admin;
+    }
+
     public static function getNavigationGroup(): ?string
     {
         return 'Settings';
@@ -57,14 +67,12 @@ class ModpackSettings extends Page implements HasForms
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.pages.modpack_settings.navigation', [], app()->getLocale())
-            ?: 'Modpack Installer';
+        return __('minecraft-modpack-installer::admin.navigation');
     }
 
     public function getTitle(): string
     {
-        return __('admin.pages.modpack_settings.title', [], app()->getLocale())
-            ?: 'Modpack Installer';
+        return __('minecraft-modpack-installer::admin.title');
     }
 
     public function mount(): void
@@ -88,49 +96,49 @@ class ModpackSettings extends Page implements HasForms
     public function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Section::make('CurseForge')
-                ->description('Required to enable the CurseForge provider. Get a key at console.curseforge.com.')
+            Section::make(__('minecraft-modpack-installer::admin.curseforge.section'))
+                ->description(__('minecraft-modpack-installer::admin.curseforge.description'))
                 ->schema([
                     TextInput::make('modpack_curseforge_api_key')
-                        ->label('CurseForge API key')
+                        ->label(__('minecraft-modpack-installer::admin.curseforge.api_key.label'))
                         ->password()
                         ->revealable()
                         ->autocomplete('new-password')
-                        ->placeholder('Leave blank to keep the existing key'),
+                        ->placeholder(__('minecraft-modpack-installer::admin.curseforge.api_key.placeholder')),
                 ]),
 
-            Section::make('Eligible servers')
-                ->description('Pick the eggs allowed to install modpacks. Until at least one is selected, the Modpacks tab stays hidden on every server.')
+            Section::make(__('minecraft-modpack-installer::admin.eligibility.section'))
+                ->description(__('minecraft-modpack-installer::admin.eligibility.description'))
                 ->schema([
                     Select::make('modpack_whitelisted_egg_ids')
-                        ->label('Allowed eggs')
+                        ->label(__('minecraft-modpack-installer::admin.eligibility.eggs.label'))
                         ->multiple()
                         ->searchable()
                         ->options(fn (): array => $this->eggOptions())
-                        ->helperText('The list shows eggs tagged "minecraft" first, then everything else when no Minecraft-tagged egg exists.'),
+                        ->helperText(__('minecraft-modpack-installer::admin.eligibility.eggs.helper')),
                 ]),
 
-            Section::make('Behavior')
+            Section::make(__('minecraft-modpack-installer::admin.behavior.section'))
                 ->schema([
                     TextInput::make('modpack_install_timeout_minutes')
-                        ->label('Install timeout (minutes)')
+                        ->label(__('minecraft-modpack-installer::admin.behavior.timeout.label'))
                         ->numeric()
                         ->minValue(5)
                         ->maxValue(180)
                         ->default(30)
                         ->required()
-                        ->helperText('Beyond this duration without progress, the install is auto-marked failed by the reconciler cron.'),
+                        ->helperText(__('minecraft-modpack-installer::admin.behavior.timeout.helper')),
 
                     Select::make('modpack_default_provider')
-                        ->label('Default provider')
+                        ->label(__('minecraft-modpack-installer::admin.behavior.provider.label'))
                         ->required()
                         ->options([
-                            'modrinth' => 'Modrinth',
-                            'curseforge' => 'CurseForge',
-                            'atlauncher' => 'ATLauncher',
-                            'ftb' => 'Feed The Beast',
-                            'technic' => 'Technic',
-                            'voidswrath' => 'VoidsWrath',
+                            'modrinth' => __('minecraft-modpack-installer::admin.providers.modrinth'),
+                            'curseforge' => __('minecraft-modpack-installer::admin.providers.curseforge'),
+                            'atlauncher' => __('minecraft-modpack-installer::admin.providers.atlauncher'),
+                            'ftb' => __('minecraft-modpack-installer::admin.providers.ftb'),
+                            'technic' => __('minecraft-modpack-installer::admin.providers.technic'),
+                            'voidswrath' => __('minecraft-modpack-installer::admin.providers.voidswrath'),
                         ])
                         ->default('modrinth'),
                 ])
@@ -143,7 +151,7 @@ class ModpackSettings extends Page implements HasForms
     {
         return [
             Action::make('save')
-                ->label('Save')
+                ->label(__('minecraft-modpack-installer::admin.actions.save'))
                 ->submit('save'),
         ];
     }
@@ -179,30 +187,24 @@ class ModpackSettings extends Page implements HasForms
             'modpack_default_provider' => $settings->defaultProvider()->value,
         ]);
 
-        Notification::make()->title('Settings saved')->success()->send();
+        Notification::make()
+            ->title(__('minecraft-modpack-installer::admin.notifications.saved'))
+            ->success()
+            ->send();
     }
 
     /**
-     * Build the egg picker options. Filter to Minecraft-tagged eggs first;
-     * if none have the tag, fall back to the full list so the admin still
-     * has something to choose from on a fresh install where eggs haven't
-     * been re-tagged yet.
+     * Build the egg picker options from the local Peregrine DB. No tag
+     * filtering : the admin sees every egg synced from Pelican and decides
+     * which ones are eligible. The list groups eggs by their nest name when
+     * multiple nests are present, so visually similar names from different
+     * nests don't collide.
      *
      * @return array<int, string>
      */
     private function eggOptions(): array
     {
         try {
-            $minecraftEggs = Egg::query()
-                ->whereJsonContains('tags', 'minecraft')
-                ->orderBy('name')
-                ->pluck('name', 'id')
-                ->toArray();
-
-            if (! empty($minecraftEggs)) {
-                return $minecraftEggs;
-            }
-
             return Egg::query()
                 ->orderBy('name')
                 ->pluck('name', 'id')

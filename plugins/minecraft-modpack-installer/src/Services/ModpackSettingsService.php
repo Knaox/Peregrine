@@ -6,6 +6,7 @@ namespace Plugins\MinecraftModpackInstaller\Services;
 
 use App\Services\SettingsService;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Plugins\MinecraftModpackInstaller\Enums\ModpackProvider;
 
@@ -64,6 +65,10 @@ class ModpackSettingsService
     {
         $clean = array_values(array_unique(array_filter(array_map('intval', $ids), static fn (int $id) => $id > 0)));
         $this->settings->set(self::KEY_WHITELIST, json_encode(array_values($clean)) ?: '[]');
+        // Bust the manifest enricher cache so the sidebar tab visibility
+        // reflects the new whitelist on the very next page load — without
+        // this the React shell would lag up to 60s before the tab toggles.
+        Cache::forget('modpack_settings.whitelisted_egg_ids');
     }
 
     public function installTimeoutMinutes(): int
