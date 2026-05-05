@@ -8,6 +8,12 @@ const { useState } = S.React;
 
 export interface InstallModalProps {
     open: boolean;
+    /**
+     * `t` is provided by the parent that calls useTranslation unconditionally.
+     * Calling useTranslation in this conditional render path would change the
+     * parent's hook count when `open` toggles → React #310.
+     */
+    t: (k: string, o?: Record<string, unknown>) => string;
     modpackName: string;
     versions: ModpackVersion[] | null;
     isLoadingVersions: boolean;
@@ -21,9 +27,7 @@ export interface InstallModalProps {
 
 export function renderInstallModal(p: InstallModalProps): ReturnType<typeof h> | null {
     if (!p.open) return null;
-    const { t } = S.useTranslation('minecraft-modpack-installer');
-
-    return h(InstallModalInner, p as InstallModalProps & { t: typeof t });
+    return h(InstallModalInner, p);
 }
 
 function InstallModalInner(p: InstallModalProps & { t: (k: string, o?: Record<string, unknown>) => string }) {
@@ -110,6 +114,8 @@ function InstallModalInner(p: InstallModalProps & { t: (k: string, o?: Record<st
 
 export interface UninstallModalProps {
     open: boolean;
+    /** Same hook-safety contract as InstallModalProps.t. */
+    t: (k: string, o?: Record<string, unknown>) => string;
     modpackName: string;
     isSubmitting: boolean;
     onCancel: () => void;
@@ -119,7 +125,7 @@ export interface UninstallModalProps {
 
 export function renderUninstallModal(p: UninstallModalProps): ReturnType<typeof h> | null {
     if (!p.open) return null;
-    const { t } = S.useTranslation('minecraft-modpack-installer');
+    const { t } = p;
 
     return h('div', {
         style: C.modalScrim,

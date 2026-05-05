@@ -65,7 +65,17 @@ class JavaVersionDetectionService
             }
 
             $response->throw();
-            $java = (int) ($response->json('build.java_version') ?? 0);
+
+            // MCJars' Rust backend (mcjars/www) serialises with serde, which
+            // historically rename_all = "camelCase". The field is `javaVersion`
+            // in production responses but the schema has gone back and forth ;
+            // probe both casings to stay forward/backward compatible without
+            // requiring a redeploy of the plugin if MCJars flips again.
+            $java = (int) (
+                $response->json('build.javaVersion')
+                ?? $response->json('build.java_version')
+                ?? 0
+            );
 
             return $java >= 8 ? $java : self::FALLBACK_JAVA;
         } catch (Throwable $e) {

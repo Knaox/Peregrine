@@ -256,6 +256,7 @@ function ModpacksPage() {
 
         installTarget ? renderInstallModal({
             open: true,
+            t,
             modpackName: installTarget.name,
             versions: versionList,
             isLoadingVersions: installVersionsQ.isLoading || installVersionsQ.isFetching,
@@ -276,6 +277,7 @@ function ModpacksPage() {
 
         renderUninstallModal({
             open: uninstallOpen,
+            t,
             modpackName: installation?.modpack_name ?? '',
             isSubmitting: uninstallMut.isPending,
             error: uninstallError,

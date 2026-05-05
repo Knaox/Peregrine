@@ -390,10 +390,25 @@ install_atlauncher() {
     pack_id=$(echo "$resp" | jq -r '.data.packBySafeName.id // empty')
     [ -n "$pack_id" ] || fail "ATLauncher pack '$BB_MODPACK_ID' not found"
 
-    local manifest_url manifest
-    manifest_url="https://download.atlauncher.com/json/packs/$BB_MODPACK_ID/versions/$BB_MODPACK_VERSION_ID.json"
-    log "Fetching version manifest: $manifest_url"
-    manifest=$(http_get "$manifest_url") || fail "ATLauncher version manifest unreachable"
+    # ATLauncher hosts the per-version JSON manifest on a CDN. The launcher's
+    # canonical CDN host is `download.nodecdn.net/containers/atl/...` but the
+    # public V2 docs do not formally pin the per-version path. Try the nodecdn
+    # path first (matches what the official launcher fetches), then fall back
+    # to the legacy `download.atlauncher.com` host. If both fail, surface the
+    # failure clearly — install cannot proceed without the manifest.
+    local manifest=""
+    local manifest_urls=(
+        "https://download.nodecdn.net/containers/atl/launcher/json/packs/$BB_MODPACK_ID/versions/$BB_MODPACK_VERSION_ID.json"
+        "https://download.atlauncher.com/json/packs/$BB_MODPACK_ID/versions/$BB_MODPACK_VERSION_ID.json"
+    )
+    for manifest_url in "${manifest_urls[@]}"; do
+        log "Trying ATLauncher manifest: $manifest_url"
+        if manifest=$(http_get "$manifest_url") && [ -n "$manifest" ]; then
+            break
+        fi
+        manifest=""
+    done
+    [ -n "$manifest" ] || fail "ATLauncher version manifest unreachable on every known CDN"
 
     local mc loader_type loader_version
     mc=$(echo "$manifest" | jq -r '.minecraft // ""')
@@ -458,9 +473,16 @@ install_ftb() {
     esac
 
     log "Server bundle not available, installing files individually."
-    local manifest
+    local manifest manifest_status
     manifest=$(http_get "https://api.modpacks.ch/public/modpack/$BB_MODPACK_ID/$BB_MODPACK_VERSION_ID") \
         || fail "FTB manifest fetch failed"
+
+    # FTB returns 200 OK with `{"status":"error","message":"..."}` on bad
+    # IDs / unknown versions instead of a 4xx — must inspect the envelope.
+    manifest_status=$(echo "$manifest" | jq -r '.status // "ok"')
+    if [ "$manifest_status" = "error" ]; then
+        fail "FTB manifest error: $(echo "$manifest" | jq -r '.message // "unknown"')"
+    fi
 
     local total index
     total=$(echo "$manifest" | jq '.files | length // 0')

@@ -70,6 +70,16 @@ final class FtbProvider implements ModpackProviderInterface
             throw new ProviderRequestException($this->id(), 'search failed: '.$e->getMessage(), $e);
         }
 
+        // FTB returns 200 OK with `{"status":"error","message":"..."}` on
+        // problems instead of a 4xx — treat the error envelope as no results
+        // rather than letting it pass through as a real (empty) catalogue.
+        if (is_array($response) && ($response['status'] ?? null) === 'error') {
+            throw new ProviderRequestException(
+                $this->id(),
+                'FTB error: '.(string) ($response['message'] ?? 'unknown'),
+            );
+        }
+
         $ids = array_values(array_filter(
             $response['packs'] ?? [],
             static fn ($id) => ! in_array((int) $id, self::FILTERED_IDS, true),
@@ -97,6 +107,13 @@ final class FtbProvider implements ModpackProviderInterface
                 ->json();
         } catch (Throwable $e) {
             throw new ProviderRequestException($this->id(), 'listVersions failed: '.$e->getMessage(), $e);
+        }
+
+        if (is_array($response) && ($response['status'] ?? null) === 'error') {
+            throw new ProviderRequestException(
+                $this->id(),
+                'FTB error: '.(string) ($response['message'] ?? 'unknown'),
+            );
         }
 
         $versions = $response['versions'] ?? [];
@@ -150,6 +167,10 @@ final class FtbProvider implements ModpackProviderInterface
                     return null;
                 }
 
+                if (is_array($response) && ($response['status'] ?? null) === 'error') {
+                    return null;
+                }
+
                 $art = null;
                 foreach ($response['art'] ?? [] as $entry) {
                     if (($entry['type'] ?? '') === 'square') {
@@ -181,13 +202,19 @@ final class FtbProvider implements ModpackProviderInterface
         }
 
         try {
-            return $this->client()
+            $response = $this->client()
                 ->get(self::BASE_URL."/public/modpack/{$modpackId}/{$versionId}")
                 ->throw()
                 ->json();
         } catch (Throwable) {
             return null;
         }
+
+        if (is_array($response) && ($response['status'] ?? null) === 'error') {
+            return null;
+        }
+
+        return is_array($response) ? $response : null;
     }
 
     private function client()

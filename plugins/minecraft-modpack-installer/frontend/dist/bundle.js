@@ -167,13 +167,17 @@
 
     function renderInstallModal(p) {
         if (!p.open) return null;
-        var t = S.useTranslation("minecraft-modpack-installer").t;
-        return h(InstallModalInner, Object.assign({}, p, { t: t }));
+        // `t` is passed in by ModpacksPage (which calls useTranslation
+        // unconditionally at the top). Calling useTranslation here would
+        // be a conditional hook call — toggling p.open would change the
+        // parent's hook count between renders → React #310.
+        return h(InstallModalInner, p);
     }
 
     function renderUninstallModal(p) {
         if (!p.open) return null;
-        var t = S.useTranslation("minecraft-modpack-installer").t;
+        // Same rule as renderInstallModal — t comes from the parent.
+        var t = p.t;
 
         return h("div", { style: C.modalScrim, onClick: p.onCancel, className: "mp-modal-scrim" },
             h("div", { style: C.modalCard, onClick: function (e) { e.stopPropagation(); }, className: "mp-modal-card" }, [
@@ -631,6 +635,7 @@
 
             installTarget ? renderInstallModal({
                 open: true,
+                t: t,
                 modpackName: installTarget.name,
                 versions: versionList,
                 isLoadingVersions: installVersionsQ.isLoading || installVersionsQ.isFetching,
@@ -651,6 +656,7 @@
 
             renderUninstallModal({
                 open: uninstallOpen,
+                t: t,
                 modpackName: (installation && installation.modpack_name) || "",
                 isSubmitting: uninstallMut.isPending,
                 error: uninstallError,
