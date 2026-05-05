@@ -12,6 +12,7 @@ use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Plugins\MinecraftModpackInstaller\Console\ImportEgg;
 use Plugins\MinecraftModpackInstaller\Console\ReconcileStaleInstallations;
 use Plugins\MinecraftModpackInstaller\Pelican\PelicanClient;
 use Plugins\MinecraftModpackInstaller\Services\EligibilityService;
@@ -74,6 +75,7 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
 
         $this->commands([
             ReconcileStaleInstallations::class,
+            ImportEgg::class,
         ]);
     }
 

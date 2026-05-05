@@ -16,6 +16,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Plugins\MinecraftModpackInstaller\Enums\ModpackProvider;
+use Plugins\MinecraftModpackInstaller\Services\EggImporter;
 use Plugins\MinecraftModpackInstaller\Services\ModpackSettingsService;
 
 /**
@@ -153,6 +154,33 @@ class ModpackSettings extends Page implements HasForms
             Action::make('save')
                 ->label(__('minecraft-modpack-installer::admin.actions.save'))
                 ->submit('save'),
+        ];
+    }
+
+    /** @return array<int, Action> */
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('importEgg')
+                ->label(__('minecraft-modpack-installer::admin.actions.import_egg.label'))
+                ->tooltip(__('minecraft-modpack-installer::admin.actions.import_egg.tooltip'))
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('primary')
+                ->requiresConfirmation()
+                ->action(function (): void {
+                    try {
+                        $eggId = app(EggImporter::class)->ensureImported(force: true);
+                        Notification::make()
+                            ->title(__('minecraft-modpack-installer::admin.notifications.egg_imported', ['id' => $eggId]))
+                            ->success()
+                            ->send();
+                    } catch (\Throwable $e) {
+                        Notification::make()
+                            ->title(__('minecraft-modpack-installer::admin.notifications.egg_import_failed', ['reason' => $e->getMessage()]))
+                            ->danger()
+                            ->send();
+                    }
+                }),
         ];
     }
 

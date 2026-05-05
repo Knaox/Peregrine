@@ -47,9 +47,15 @@ return [
 
     'actions' => [
         'save' => 'Save',
+        'import_egg' => [
+            'label' => 'Import egg into Pelican',
+            'tooltip' => 'Pushes the bundled installer egg to Pelican. Pelican matches on UUID, so re-running is safe and idempotent.',
+        ],
     ],
 
     'notifications' => [
         'saved' => 'Settings saved',
+        'egg_imported' => 'Egg imported into Pelican (id: :id)',
+        'egg_import_failed' => 'Egg import failed: :reason',
     ],
 ];

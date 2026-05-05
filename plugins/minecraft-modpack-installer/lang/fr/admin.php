@@ -47,9 +47,15 @@ return [
 
     'actions' => [
         'save' => 'Enregistrer',
+        'import_egg' => [
+            'label' => 'Importer l\'egg dans Pelican',
+            'tooltip' => 'Pousse l\'egg installateur vers Pelican. Pelican identifie par UUID, le ré-import est idempotent.',
+        ],
     ],
 
     'notifications' => [
         'saved' => 'Paramètres enregistrés',
+        'egg_imported' => 'Egg importé dans Pelican (id: :id)',
+        'egg_import_failed' => 'Échec de l\'import de l\'egg : :reason',
     ],
 ];
