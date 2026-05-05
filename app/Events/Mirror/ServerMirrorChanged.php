@@ -9,11 +9,18 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Broadcast on `private-server.{serverId}` whenever a mirror row tied to
- * the server changes (allocation/database/backup/subuser/server-meta).
- * Subscribers (the React `useServerLiveUpdates(serverId)` hook) react by
- * invalidating the matching TanStack Query key — `['servers', id,
- * payload.resource]` — so the page refetches silently.
+ * Broadcast on three channel families whenever a mirror row tied to the
+ * server changes (allocation/database/backup/subuser/server-meta) :
+ *
+ *  - `private-server.{serverId}` — detail-page subscribers (the React
+ *    `useServerLiveUpdates(serverId)` hook on /server/{x}/network etc.)
+ *  - `private-user.{userId}` — list-page subscribers, one per access
+ *    user. /servers (DashboardPage) listens here to refresh the card
+ *    grid in real-time when any of the user's servers transitions
+ *    (suspended / provisioning / active / deleted).
+ *  - `private-admin-mirror` — admin list-page subscribers. /admin/servers
+ *    needs every change regardless of ownership, so admins join one
+ *    global channel.
  *
  * Why ShouldBroadcastNow (not ShouldBroadcast) : the producers are
  * already queued sync jobs. Re-queuing the broadcast itself adds a
@@ -21,6 +28,9 @@ use Illuminate\Queue\SerializesModels;
  * sub-second budget. `Now` runs the broadcast inline at the end of
  * the worker iteration — Reverb's HTTP API is fire-and-forget so the
  * latency cost is bounded.
+ *
+ * Access-user IDs are captured at dispatch time (NOT in broadcastOn())
+ * so the deletion path still has them when the Server row is gone.
  */
 final class ServerMirrorChanged implements ShouldBroadcastNow
 {
@@ -37,16 +47,31 @@ final class ServerMirrorChanged implements ShouldBroadcastNow
     public const ACTION_UPSERT = 'upsert';
     public const ACTION_DELETE = 'delete';
 
+    /**
+     * @param  array<int, int>  $accessUserIds Local user ids with pivot access to the server
+     */
     public function __construct(
         public readonly int $serverId,
         public readonly string $resource,
         public readonly string $action,
         public readonly ?int $resourceId = null,
+        public readonly array $accessUserIds = [],
     ) {}
 
-    public function broadcastOn(): PrivateChannel
+    /**
+     * @return array<int, PrivateChannel>
+     */
+    public function broadcastOn(): array
     {
-        return new PrivateChannel('server.'.$this->serverId);
+        $channels = [new PrivateChannel('server.'.$this->serverId)];
+
+        foreach (array_unique($this->accessUserIds) as $userId) {
+            $channels[] = new PrivateChannel('user.'.$userId);
+        }
+
+        $channels[] = new PrivateChannel('admin-mirror');
+
+        return $channels;
     }
 
     /**
