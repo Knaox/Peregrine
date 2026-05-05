@@ -1,0 +1,178 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Plugins\MinecraftModpackInstaller;
+
+use App\Models\Server;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
+use Plugins\MinecraftModpackInstaller\Console\ReconcileStaleInstallations;
+use Plugins\MinecraftModpackInstaller\Pelican\PelicanClient;
+use Plugins\MinecraftModpackInstaller\Services\EligibilityService;
+use Plugins\MinecraftModpackInstaller\Services\ModpackProviderRegistry;
+use Plugins\MinecraftModpackInstaller\Services\Providers\AtlauncherProvider;
+use Plugins\MinecraftModpackInstaller\Services\Providers\CurseForgeProvider;
+use Plugins\MinecraftModpackInstaller\Services\Providers\FtbProvider;
+use Plugins\MinecraftModpackInstaller\Services\Providers\ModrinthProvider;
+use Plugins\MinecraftModpackInstaller\Services\Providers\TechnicProvider;
+use Plugins\MinecraftModpackInstaller\Services\Providers\VoidsWrathProvider;
+
+/**
+ * Boots the Modpack Installer plugin. Mirrors the structure of the bundled
+ * invitations / egg-config-editor plugins:
+ *
+ *  - Loads its own migrations
+ *  - Mounts its routes under `/api/plugins/minecraft-modpack-installer`
+ *  - Registers six provider singletons + the registry
+ *  - When the Invitations plugin is present, registers the three modpack
+ *    permissions in its shared PermissionRegistry, gated by the eligibility
+ *    filter so they only show up on whitelisted servers
+ *  - Schedules the `modpacks:reconcile-stale-installations` artisan command
+ *    every five minutes (timeout safety net)
+ *  - Auto-discovers the Filament settings page on modern cores; falls back
+ *    to manual registration on older ones (parallels egg-config-editor)
+ */
+class MinecraftModpackInstallerServiceProvider extends ServiceProvider
+{
+    private const PLUGIN_ID = 'minecraft-modpack-installer';
+
+    public function register(): void
+    {
+        $this->app->singleton(PelicanClient::class);
+
+        $this->app->singleton(ModpackProviderRegistry::class, function (Application $app): ModpackProviderRegistry {
+            $userAgent = sprintf(
+                'PeregrineModpackInstaller/%s (+%s)',
+                (string) ($app['config']->get('app.version', '1.0')),
+                (string) ($app['config']->get('app.url', 'https://games.biomebounty.com')),
+            );
+
+            $registry = new ModpackProviderRegistry();
+            $http = $app->make(HttpFactory::class);
+            $cache = $app->make('cache.store');
+
+            $registry->register(new ModrinthProvider($http, $cache, $userAgent));
+            $registry->register(new CurseForgeProvider(
+                $http,
+                $cache,
+                $userAgent,
+                $app->make(\Plugins\MinecraftModpackInstaller\Services\ModpackSettingsService::class),
+            ));
+            $registry->register(new AtlauncherProvider($http, $cache, $userAgent));
+            $registry->register(new FtbProvider($http, $cache, $userAgent));
+            $registry->register(new TechnicProvider($http, $cache, $userAgent));
+            $registry->register(new VoidsWrathProvider($http, $cache, $userAgent));
+
+            return $registry;
+        });
+
+        $this->commands([
+            ReconcileStaleInstallations::class,
+        ]);
+    }
+
+    public function boot(): void
+    {
+        $this->loadMigrationsFrom(__DIR__.'/Migrations');
+        $this->loadViewsFrom(__DIR__.'/../views', 'plugins.minecraft-modpack-installer');
+
+        Route::prefix('api/plugins/'.self::PLUGIN_ID)
+            ->middleware('api')
+            ->group(__DIR__.'/Routes/api.php');
+
+        $this->registerSubuserPermissions();
+        $this->registerSchedule();
+        $this->registerFilamentFallback();
+    }
+
+    /**
+     * Register the three modpack permissions in the Invitations plugin's
+     * PermissionRegistry. The plugin is optional — the registration is a
+     * silent no-op when Invitations is absent (per the spec).
+     *
+     * Permissions are filtered per-server : the group only surfaces in the
+     * picker for servers whose egg is whitelisted by the admin (see
+     * /admin/modpack-settings).
+     */
+    private function registerSubuserPermissions(): void
+    {
+        $registryClass = '\\Plugins\\Invitations\\Services\\PermissionRegistry';
+
+        if (! class_exists($registryClass)) {
+            return;
+        }
+
+        $eligibility = $this->app->make(EligibilityService::class);
+
+        $registryClass::getInstance()->registerGroup(
+            groupKey: 'modpack',
+            groupLabel: [
+                'en' => 'Modpacks',
+                'fr' => 'Modpacks',
+            ],
+            permissions: [
+                'modpack.read' => [
+                    'en' => 'View modpacks',
+                    'fr' => 'Consulter les modpacks',
+                ],
+                'modpack.install' => [
+                    'en' => 'Install modpacks',
+                    'fr' => 'Installer des modpacks',
+                ],
+                'modpack.uninstall' => [
+                    'en' => 'Uninstall modpacks',
+                    'fr' => 'Désinstaller des modpacks',
+                ],
+            ],
+            availableForServer: function (Server $server) use ($eligibility): bool {
+                try {
+                    return $eligibility->isEligible($server);
+                } catch (\Throwable) {
+                    return false;
+                }
+            },
+        );
+    }
+
+    /**
+     * Schedule the timeout-reconciliation safety net every 5 minutes,
+     * single-server, non-overlapping. This is the only thing standing
+     * between an interrupted install and a server stuck "active forever".
+     */
+    private function registerSchedule(): void
+    {
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            $schedule->command('modpacks:reconcile-stale-installations')
+                ->everyFiveMinutes()
+                ->withoutOverlapping()
+                ->onOneServer();
+        });
+    }
+
+    /**
+     * On modern Peregrine cores, Filament resources/pages declared by the
+     * plugin are auto-discovered (PluginManager::contributeToFilamentPanel).
+     * On older cores, register the settings page manually via a `booted`
+     * callback. Mirrors the pattern in egg-config-editor.
+     */
+    private function registerFilamentFallback(): void
+    {
+        if (! class_exists(\Filament\Facades\Filament::class)) {
+            return;
+        }
+
+        $this->app->booted(function (): void {
+            try {
+                \Filament\Facades\Filament::getDefaultPanel()->pages([
+                    \Plugins\MinecraftModpackInstaller\Filament\Pages\ModpackSettings::class,
+                ]);
+            } catch (\Throwable) {
+                // No default panel registered yet — skip silently.
+            }
+        });
+    }
+}

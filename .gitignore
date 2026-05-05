@@ -36,10 +36,13 @@ public/fonts/filament/
 !/plugins/invitations/**
 !/plugins/egg-config-editor/
 !/plugins/egg-config-editor/**
+!/plugins/minecraft-modpack-installer/
+!/plugins/minecraft-modpack-installer/**
 # The built bundles ARE committed (so fresh clones can activate plugins
 # without a pnpm build), but node_modules stays ignored.
 /plugins/invitations/frontend/node_modules
 /plugins/egg-config-editor/frontend/node_modules
+/plugins/minecraft-modpack-installer/frontend/node_modules
 
 # Plugin asset symlinks — created at activation time by PluginManager,
 # never committed (point to absolute host paths).

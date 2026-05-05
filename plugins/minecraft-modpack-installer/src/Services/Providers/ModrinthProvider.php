@@ -1,0 +1,185 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Plugins\MinecraftModpackInstaller\Services\Providers;
+
+use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Http\Client\Factory;
+use Plugins\MinecraftModpackInstaller\Enums\ModpackProvider;
+use Plugins\MinecraftModpackInstaller\Exceptions\ProviderRequestException;
+use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackProviderCapabilities;
+use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackSummary;
+use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackVersion;
+use Plugins\MinecraftModpackInstaller\Services\DTO\SearchCriteria;
+use Plugins\MinecraftModpackInstaller\Services\DTO\SearchResult;
+use Plugins\MinecraftModpackInstaller\Services\Providers\Contracts\ModpackProviderInterface;
+use Throwable;
+
+final class ModrinthProvider implements ModpackProviderInterface
+{
+    private const BASE_URL = 'https://api.modrinth.com/v2';
+
+    public function __construct(
+        private readonly Factory $http,
+        private readonly Repository $cache,
+        private readonly string $userAgent,
+    ) {}
+
+    public function id(): ModpackProvider
+    {
+        return ModpackProvider::Modrinth;
+    }
+
+    public function isConfigured(): bool
+    {
+        return true;
+    }
+
+    public function capabilities(): ModpackProviderCapabilities
+    {
+        return new ModpackProviderCapabilities(
+            search: true,
+            pagination: true,
+            minecraftVersionFilter: true,
+            loaderFilter: true,
+            serverMarker: true,
+            multipleVersions: true,
+        );
+    }
+
+    /** @return list<string> */
+    public function listMinecraftVersions(): array
+    {
+        return $this->cache->remember(
+            'modpacks:modrinth:mc-versions',
+            6 * 3600,
+            fn (): array => $this->fetchMinecraftVersions(),
+        );
+    }
+
+    public function search(SearchCriteria $criteria): SearchResult
+    {
+        $facets = [['project_type:modpack']];
+        if ($criteria->minecraftVersion !== null) {
+            $facets[] = ["versions:{$criteria->minecraftVersion}"];
+        }
+        if ($criteria->loader !== null) {
+            $facets[] = ["categories:{$criteria->loader->value}"];
+        }
+
+        $offset = max(0, ($criteria->page - 1) * $criteria->pageSize);
+
+        try {
+            $response = $this->client()
+                ->get(self::BASE_URL.'/search', [
+                    'query' => $criteria->query ?? '',
+                    'facets' => json_encode($facets, JSON_THROW_ON_ERROR),
+                    'limit' => $criteria->pageSize,
+                    'offset' => $offset,
+                    'index' => 'relevance',
+                ])
+                ->throw()
+                ->json();
+        } catch (Throwable $e) {
+            throw new ProviderRequestException($this->id(), 'search failed: '.$e->getMessage(), $e);
+        }
+
+        $hits = [];
+        foreach ($response['hits'] ?? [] as $hit) {
+            $hits[] = new ModpackSummary(
+                provider: $this->id(),
+                modpackId: (string) ($hit['project_id'] ?? $hit['slug'] ?? ''),
+                name: (string) ($hit['title'] ?? ''),
+                slug: $hit['slug'] ?? null,
+                description: $hit['description'] ?? null,
+                iconUrl: $hit['icon_url'] ?? null,
+                externalUrl: isset($hit['slug'])
+                    ? 'https://modrinth.com/modpack/'.$hit['slug']
+                    : null,
+                isServerCompatible: $this->isServerCompatible($hit['server_side'] ?? null),
+            );
+        }
+
+        return new SearchResult(
+            hits: $hits,
+            total: (int) ($response['total_hits'] ?? count($hits)),
+            currentPage: $criteria->page,
+            perPage: $criteria->pageSize,
+        );
+    }
+
+    /** @return list<ModpackVersion> */
+    public function listVersions(string $modpackId, ?string $minecraftVersion): array
+    {
+        $params = [];
+        if ($minecraftVersion !== null) {
+            $params['game_versions'] = json_encode([$minecraftVersion], JSON_THROW_ON_ERROR);
+        }
+
+        try {
+            $response = $this->client()
+                ->get(self::BASE_URL."/project/{$modpackId}/version", $params)
+                ->throw()
+                ->json();
+        } catch (Throwable $e) {
+            throw new ProviderRequestException($this->id(), 'listVersions failed: '.$e->getMessage(), $e);
+        }
+
+        $versions = [];
+        foreach ($response ?? [] as $entry) {
+            $loaders = array_values(array_filter(
+                array_map('strtolower', $entry['loaders'] ?? []),
+                static fn ($l) => in_array($l, ['forge', 'fabric', 'quilt', 'neoforge'], true),
+            ));
+            $versions[] = new ModpackVersion(
+                versionId: (string) ($entry['id'] ?? ''),
+                label: (string) ($entry['name'] ?? $entry['version_number'] ?? ''),
+                minecraftVersions: array_values(array_map('strval', $entry['game_versions'] ?? [])),
+                loaders: $loaders,
+                releaseType: (string) ($entry['version_type'] ?? 'unknown'),
+            );
+        }
+
+        return $versions;
+    }
+
+    /** @return list<string> */
+    private function fetchMinecraftVersions(): array
+    {
+        try {
+            $response = $this->client()
+                ->get(self::BASE_URL.'/tag/game_version')
+                ->throw()
+                ->json();
+        } catch (Throwable) {
+            return [];
+        }
+
+        $versions = [];
+        foreach ($response ?? [] as $entry) {
+            if (($entry['version_type'] ?? '') === 'release') {
+                $versions[] = (string) $entry['version'];
+            }
+        }
+
+        return $versions;
+    }
+
+    private function isServerCompatible(?string $serverSide): ?bool
+    {
+        return match ($serverSide) {
+            'required', 'optional' => true,
+            'unsupported' => false,
+            default => null,
+        };
+    }
+
+    private function client()
+    {
+        return $this->http
+            ->withHeaders(['User-Agent' => $this->userAgent])
+            ->timeout(15)
+            ->retry(2, 200);
+    }
+}

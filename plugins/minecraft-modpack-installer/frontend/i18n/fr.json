@@ -1,0 +1,93 @@
+{
+    "plugin_name": "Minecraft : Modpack — Installeur",
+    "modpacks": {
+        "tab": {
+            "label": "Modpacks"
+        },
+        "subtitle": "Installez ou remplacez le modpack qui tourne sur ce serveur.",
+        "providers": {
+            "modrinth": { "label": "Modrinth" },
+            "curseforge": { "label": "CurseForge" },
+            "atlauncher": { "label": "ATLauncher" },
+            "ftb": { "label": "Feed The Beast" },
+            "technic": { "label": "Technic" },
+            "voidswrath": { "label": "VoidsWrath" }
+        },
+        "filters": {
+            "provider": { "label": "Fournisseur" },
+            "minecraft_version": {
+                "label": "Version de Minecraft",
+                "all": "Toutes les versions"
+            },
+            "loader": {
+                "label": "Mod loader",
+                "all": "Tous les loaders",
+                "forge": "Forge",
+                "fabric": "Fabric",
+                "quilt": "Quilt",
+                "neoforge": "NeoForge"
+            },
+            "search_placeholder": "Rechercher un modpack…",
+            "page_size": { "label": "Par page" }
+        },
+        "cards": {
+            "server_compatible_badge": "Compatible serveur",
+            "cta_install": "Installer",
+            "cta_view": "Voir"
+        },
+        "pagination": {
+            "indicator": "Page {{current}} sur {{total}}",
+            "previous": "Précédent",
+            "next": "Suivant"
+        },
+        "install_modal": {
+            "title": "Installer {{name}}",
+            "warning_world": "Mettre à jour un modpack peut corrompre votre monde. Sauvegardez votre serveur d'abord.",
+            "version_label": "Version",
+            "version_placeholder": "Choisir une version…",
+            "loading_versions": "Chargement des versions…",
+            "no_versions": "Aucune version ne correspond à vos filtres.",
+            "purge": {
+                "label": "Supprimer tous les fichiers du serveur avant l'installation",
+                "help": "Action irréversible. Recommandé pour une installation propre."
+            },
+            "confirm": "Installer",
+            "submitting": "Démarrage…",
+            "cancel": "Annuler"
+        },
+        "uninstall_modal": {
+            "title": "Désinstaller {{name}} ?",
+            "warning": "Tous les fichiers du serveur seront supprimés et le serveur réinstallé en vanilla.",
+            "confirm": "Désinstaller",
+            "submitting": "Démarrage…",
+            "cancel": "Annuler"
+        },
+        "current": {
+            "installation_in_progress_badge": "Installation en cours…",
+            "cta_view_external": "Voir sur {{provider}}",
+            "cta_uninstall": "Désinstaller"
+        },
+        "missing_api_key": {
+            "hint": "{{provider}} nécessite une clé d'API gérée par l'administrateur avant de pouvoir être utilisé. Demandez à votre administrateur de la configurer.",
+            "go_register": "Obtenir une clé d'API →"
+        },
+        "empty": {
+            "title": "Aucun modpack ne correspond à vos filtres.",
+            "description": "Essayez un autre fournisseur, élargissez le filtre de version ou changez les termes de recherche."
+        },
+        "eligibility": {
+            "help": "Demandez à l'administrateur du panel d'autoriser le type d'œuf de ce serveur dans les paramètres modpack."
+        },
+        "errors": {
+            "provider_not_configured": "Ce fournisseur n'est pas encore configuré par l'administrateur.",
+            "server_not_eligible": "Ce type de serveur n'est pas autorisé à installer des modpacks.",
+            "installation_in_progress": "Une opération est déjà en cours sur ce serveur.",
+            "permission_denied": "Vous n'avez pas la permission pour cette action.",
+            "modpacks.errors.permission_denied": "Vous n'avez pas la permission pour cette action.",
+            "provider_unreachable": "Le fournisseur est injoignable. Réessayez dans quelques secondes.",
+            "search_failed": "Impossible de charger les modpacks. Réessayez dans quelques secondes.",
+            "unknown_provider": "Fournisseur inconnu.",
+            "unknown": "Une erreur est survenue. Réessayez."
+        }
+    }
+}
