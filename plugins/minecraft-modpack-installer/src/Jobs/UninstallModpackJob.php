@@ -64,7 +64,9 @@ class UninstallModpackJob implements ShouldQueue
         }
 
         try {
-            $pelican->updateServerStartup((int) $server->pelican_server_id, [
+            $serverId = (int) $server->pelican_server_id;
+
+            $pelican->updateServerStartup($serverId, [
                 'egg' => $installation->pelican_egg_snapshot_id,
                 'image' => $installation->pelican_image_snapshot ?? 'ghcr.io/pelican-eggs/yolks:java_17',
                 'startup' => $installation->pelican_startup_snapshot
@@ -78,7 +80,23 @@ class UninstallModpackJob implements ShouldQueue
                 'skip_scripts' => false,
             ]);
 
-            $pelican->reinstallServer((int) $server->pelican_server_id);
+            // Defensive sync — same rationale as PollInstallStatusJob's
+            // post-install branch. Belt-and-suspenders against a stale local
+            // mirror when the Pelican webhook is off.
+            try {
+                $apiSnapshot = $pelican->getServerRaw($serverId);
+                \App\Jobs\Bridge\SyncServerFromPelicanWebhookJob::dispatch(
+                    'modpack: pre-uninstall sync',
+                    $serverId,
+                    $apiSnapshot['attributes'] ?? [],
+                );
+            } catch (Throwable $syncE) {
+                $logger->info('modpack: defensive sync dispatch failed (non-fatal)', [
+                    'installation' => $installation->id, 'error' => $syncE->getMessage(),
+                ]);
+            }
+
+            $pelican->reinstallServer($serverId);
 
             PollInstallStatusJob::dispatch($installation->id)->delay(now()->addSeconds(15));
         } catch (Throwable $e) {

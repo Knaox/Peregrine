@@ -121,6 +121,12 @@ Route::prefix('api/auth')->group(function () {
 Route::get('/plugins/{pluginId}/bundle.js', [PluginController::class, 'bundle'])
     ->where('pluginId', '[a-z0-9][a-z0-9-]*');
 
+// Plugin icon — generic auto-discovery from plugins/{id}/icon.svg. Lets
+// every plugin ship its own logo without manifest changes. Cached but NOT
+// immutable so a plugin can update its icon without forcing a version bump.
+Route::get('/plugins/{pluginId}/icon.svg', [PluginController::class, 'icon'])
+    ->where('pluginId', '[a-z0-9][a-z0-9-]*');
+
 // Main SPA (catch-all for React Router — excludes admin, api, docs, livewire,
 // sanctum, filament, storage, up, plugins). `plugins` is excluded so a missing
 // plugin asset returns a clean 404 instead of HTML masquerading as JS/CSS.

@@ -152,6 +152,25 @@ class PollInstallStatusJob implements ShouldQueue
             return;
         }
 
+        // Defensive belt-and-suspenders : Pelican fires `updated:Server`
+        // automatically and Peregrine's webhook listener will sync the local
+        // mirror on its own — but if the webhook is disabled (or Reverb is
+        // down on a particular host), the local egg_id stays stale and the UI
+        // shows the modpack-installer egg until next reconciler tick. Dispatch
+        // the sync job manually so we own the freshness regardless.
+        try {
+            $apiSnapshot = $pelican->getServerRaw($serverId);
+            \App\Jobs\Bridge\SyncServerFromPelicanWebhookJob::dispatch(
+                'modpack: post-install sync',
+                $serverId,
+                $apiSnapshot['attributes'] ?? [],
+            );
+        } catch (Throwable $e) {
+            $logger->info('modpack: defensive sync dispatch failed (non-fatal)', [
+                'installation' => $installation->id, 'error' => $e->getMessage(),
+            ]);
+        }
+
         $installation->update([
             'status' => ModpackInstallationStatus::Completed->value,
             'java_version' => $java,

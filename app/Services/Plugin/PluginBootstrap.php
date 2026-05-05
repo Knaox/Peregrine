@@ -117,6 +117,14 @@ class PluginBootstrap
                 $bundleUrl = "/plugins/{$plugin->plugin_id}/bundle.js?v={$version}";
             }
 
+            // Optional plugin icon — auto-discovered from plugins/{id}/icon.svg.
+            // Lets every plugin ship its own logo without manifest changes.
+            $iconUrl = null;
+            $pluginPath = $this->discovery->getPluginPath($plugin->plugin_id);
+            if ($pluginPath !== null && is_file($pluginPath.'/icon.svg')) {
+                $iconUrl = "/plugins/{$plugin->plugin_id}/icon.svg";
+            }
+
             $assembled = [
                 'id' => $manifest['id'],
                 'name' => $manifest['name'] ?? $manifest['id'],
@@ -128,6 +136,7 @@ class PluginBootstrap
                 'settings_schema' => $manifest['settings_schema'] ?? [],
                 'settings' => $plugin->settings ?? [],
                 'bundle_url' => $bundleUrl,
+                'icon_url' => $iconUrl,
             ];
 
             // Plugins can register an enricher closure during boot to inject
@@ -228,6 +237,13 @@ class PluginBootstrap
         foreach ($discovered as $id => $manifest) {
             $dbRecord = $dbPlugins->get($id);
 
+            // Auto-discovered plugin icon — same convention as getActiveManifests.
+            $iconUrl = null;
+            $pluginPath = $this->discovery->getPluginPath($id);
+            if ($pluginPath !== null && is_file($pluginPath.'/icon.svg')) {
+                $iconUrl = "/plugins/{$id}/icon.svg";
+            }
+
             $result[] = [
                 'id' => $id,
                 'name' => $manifest['name'] ?? $id,
@@ -245,6 +261,7 @@ class PluginBootstrap
                 // Plugins.blade renders a "Configure" button when set + plugin
                 // is active. URL must already be panel-relative (e.g. /admin/foo).
                 'manage_url' => $manifest['manage_url'] ?? null,
+                'icon_url' => $iconUrl,
             ];
         }
 

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useServer } from '@/hooks/useServer';
 import { useServerLiveUpdates } from '@/hooks/useServerLiveUpdates';
+import { useServerOperationLifecycle } from '@/hooks/useServerOperationLifecycle';
 import { useSidebarConfig } from '@/hooks/useSidebarConfig';
 import { usePluginStore } from '@/plugins/pluginStore';
 import { SIDEBAR_ENTRY_PERMISSIONS } from '@/utils/serverPermissions';
@@ -75,6 +76,12 @@ export function ServerDetailPage() {
     // real time without polling — degrades gracefully (returns 'unavailable')
     // when Reverb isn't configured on the install.
     useServerLiveUpdates(Number.isFinite(serverId) ? serverId : null);
+    // Watch Server::status transitions + plugin-driven completion events,
+    // and redirect the user to /servers/{id} (overview) with a one-shot
+    // success Alert when a long-running operation finishes (server install,
+    // unsuspend, modpack install, …). See useServerOperationLifecycle for
+    // the full contract.
+    useServerOperationLifecycle(Number.isFinite(serverId) ? serverId : 0);
     // Overview already shows the banner in its own hero — disable the shared
     // EggBackground there to avoid painting the same image twice.
     const isOverviewRoute = location.pathname === `/servers/${serverId}`;

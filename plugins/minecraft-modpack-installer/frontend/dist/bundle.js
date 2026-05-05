@@ -6,6 +6,8 @@
     var h = S.React.createElement;
     var useState = S.React.useState;
     var useMemo = S.React.useMemo;
+    var useEffect = S.React.useEffect;
+    var useRef = S.React.useRef;
     var useQuery = S.ReactQuery.useQuery;
     var useMutation = S.ReactQuery.useMutation;
     var useQueryClient = S.ReactQuery.useQueryClient;
@@ -556,16 +558,25 @@
         });
         var versionList = (installVersionsQ.data && installVersionsQ.data.data) || [];
 
+        var navigate = S.ReactRouterDom.useNavigate();
+
         var installMut = useMutation({
             mutationFn: function (d) {
                 return api(BASE + "/servers/" + identifier + "/modpacks/installation", {
                     method: "POST", body: JSON.stringify(d),
                 });
             },
-            onSuccess: function () {
+            onSuccess: function (resp) {
+                var data = resp && resp.data ? resp.data : null;
+                var modpackName = (data && data.modpack_name)
+                    || (installTarget && installTarget.name) || "";
                 setInstallTarget(null);
                 setInstallError(null);
                 qc.invalidateQueries({ queryKey: ["mp", identifier, "installation"] });
+                P.notifyOperationStart("modpack", { serverId: serverId, name: modpackName });
+                navigate("/servers/" + serverId + "/console", {
+                    state: { modpackInstallingBanner: true, modpackName: modpackName },
+                });
             },
             onError: function (e) {
                 var errKey = e && e.error ? String(e.error) : "";
@@ -581,12 +592,50 @@
                 setUninstallOpen(false);
                 setUninstallError(null);
                 qc.invalidateQueries({ queryKey: ["mp", identifier, "installation"] });
+                var modpackName = (installation && installation.modpack_name) || "";
+                P.notifyOperationStart("modpack_uninstall", { serverId: serverId, name: modpackName });
+                navigate("/servers/" + serverId + "/console", {
+                    state: { modpackInstallingBanner: true, modpackName: modpackName },
+                });
             },
             onError: function (e) {
                 var errKey = e && e.error ? String(e.error) : "";
                 setUninstallError(errKey ? t(errKey) : t("modpacks.errors.unknown"));
             },
         });
+
+        // Watch the installation polling state and notify the shell when a
+        // plugin-managed operation completes. Also force-invalidates the
+        // global server query so the rest of the SPA refreshes even when
+        // Reverb is offline.
+        var prevActiveRef = useRef({ active: false, type: null, name: null });
+        useEffect(function () {
+            var prev = prevActiveRef.current;
+            var nextActive = (installation && installation.is_active) || false;
+            var nextType = (installation && installation.status === "uninstalling") ? "modpack_uninstall" : "modpack";
+            var nextName = (installation && installation.modpack_name) || null;
+
+            if (nextActive) {
+                prevActiveRef.current = { active: true, type: nextType, name: nextName };
+                return;
+            }
+
+            if (prev.active && !nextActive) {
+                prevActiveRef.current = { active: false, type: null, name: null };
+                qc.invalidateQueries({ queryKey: ["servers", serverId] });
+                var lastStatus = installation ? installation.status : null;
+                var isCompletion = lastStatus === "completed"
+                    || (lastStatus == null && prev.type === "modpack_uninstall");
+                if (isCompletion) {
+                    P.notifyOperationComplete(prev.type || "modpack", { serverId: serverId, name: prev.name });
+                }
+            }
+        }, [
+            installation && installation.is_active,
+            installation && installation.status,
+            installation && installation.modpack_name,
+            serverId,
+        ]);
 
         if (!eligibilityQ.isLoading && !eligible) {
             return h("div", { style: C.page }, [

@@ -140,6 +140,30 @@ class PluginController extends Controller
     }
 
     /**
+     * Serve a plugin's `icon.svg` (public) — auto-discovered from the plugin
+     * root. Unlike the JS bundle this is NOT marked `immutable` because the
+     * URL has no version query string : an operator updating an icon should
+     * see the change without forcing a plugin version bump.
+     */
+    public function icon(string $pluginId): BinaryFileResponse
+    {
+        $pluginPath = $this->pluginManager->getPluginPath($pluginId);
+        if (! $pluginPath) {
+            abort(404);
+        }
+
+        $iconPath = $pluginPath . '/icon.svg';
+        if (! is_file($iconPath)) {
+            abort(404);
+        }
+
+        return response()->file($iconPath, [
+            'Content-Type' => 'image/svg+xml',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    /**
      * Serve a plugin's i18n bundle for the requested locale (public).
      *
      * Plugins ship their own translations under

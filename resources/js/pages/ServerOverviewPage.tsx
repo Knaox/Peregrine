@@ -1,14 +1,16 @@
-import { useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { copyToClipboard } from '@/utils/clipboard';
 import { useServer } from '@/hooks/useServer';
 import { useWingsWebSocket } from '@/hooks/useWingsWebSocket';
 import { useRefetchServerOnInstallComplete } from '@/hooks/useRefetchServerOnInstallComplete';
+import type { CompletedOperation } from '@/hooks/useServerOperationLifecycle';
 import { useSidebarConfig } from '@/hooks/useSidebarConfig';
 import { usePluginStore } from '@/plugins/pluginStore';
 import { SIDEBAR_ENTRY_PERMISSIONS } from '@/utils/serverPermissions';
+import { Alert } from '@/components/ui/Alert';
 import { Spinner } from '@/components/ui/Spinner';
 import { ServerPowerControls } from '@/components/server/ServerPowerControls';
 import { ServerResourceCards } from '@/components/server/ServerResourceCards';
@@ -27,8 +29,47 @@ export function ServerOverviewPage() {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const serverId = Number(id);
     const { data: server, isLoading: serverLoading } = useServer(serverId);
+
+    // One-shot success Alert when a long-running operation just completed
+    // (server install, unsuspend, modpack install/uninstall, …). The flag is
+    // pushed onto location.state by `useServerOperationLifecycle` at the
+    // ServerDetailPage level, then captured here in component state so a
+    // refresh or re-render doesn't re-trigger the message.
+    const [completedOp] = useState<CompletedOperation | null>(() => {
+        const s = (location.state as Partial<CompletedOperation> | null) ?? null;
+        return s?.operationCompleted ? (s as CompletedOperation) : null;
+    });
+    const [opAlertVisible, setOpAlertVisible] = useState<boolean>(completedOp !== null);
+
+    // Clear the history state on mount so a browser refresh on /servers/{id}
+    // doesn't re-show the toast. The captured `completedOp` keeps the data
+    // alive in component state for the lifetime of this mount.
+    useEffect(() => {
+        if (completedOp) {
+            navigate(location.pathname, { replace: true, state: null });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const completionMessage = useMemo((): string | null => {
+        if (!completedOp) return null;
+        switch (completedOp.operationType) {
+            case 'modpack':
+                return t('servers.operations.completion.modpack', {
+                    name: completedOp.operationName ?? '',
+                });
+            case 'modpack_uninstall':
+                return t('servers.operations.completion.modpack_uninstall');
+            case 'unsuspend':
+                return t('servers.operations.completion.unsuspend');
+            case 'install':
+            default:
+                return t('servers.operations.completion.install');
+        }
+    }, [completedOp, t]);
     // Subscribe to console output too — when the server is installing we
     // show a live tail of `install output` messages on the hero card.
     const { resources, serverState: wsState, messages, installCompleted, isConnected } = useWingsWebSocket(serverId, { stats: true, console: true });
@@ -145,6 +186,22 @@ export function ServerOverviewPage() {
     return (
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }} className="space-y-6">
+
+            {completedOp && opAlertVisible && completionMessage ? (
+                <Alert variant="success">
+                    <div className="flex w-full items-center justify-between gap-3">
+                        <span>{completionMessage}</span>
+                        <button
+                            type="button"
+                            onClick={() => setOpAlertVisible(false)}
+                            className="text-xs opacity-70 transition-opacity hover:opacity-100"
+                            aria-label={t('servers.operations.completion.dismiss')}
+                        >
+                            {t('servers.operations.completion.dismiss')}
+                        </button>
+                    </div>
+                </Alert>
+            ) : null}
 
             {/* Hero banner */}
             <m.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}

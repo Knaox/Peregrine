@@ -24,6 +24,25 @@ declare global {
             register: (pluginId: string, component: React.ComponentType) => void;
             registerServerPage: (pageId: string, component: React.ComponentType) => void;
             registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number }>) => void;
+            /**
+             * Notify the shell that a long-running, plugin-managed operation
+             * has just started on the given server. The shell currently uses
+             * this to suppress its own server-status-driven redirects until
+             * the matching `notifyOperationComplete` (or a 2s cooldown) clears.
+             */
+            notifyOperationStart: (
+                type: 'modpack' | 'modpack_uninstall' | string,
+                opts: { serverId: number; name?: string | null }
+            ) => void;
+            /**
+             * Notify the shell that the operation just finished. The shell
+             * redirects the user to the server overview and renders a one-shot
+             * success Alert with the operation type + optional name.
+             */
+            notifyOperationComplete: (
+                type: 'modpack' | 'modpack_uninstall' | string,
+                opts: { serverId: number; name?: string | null }
+            ) => void;
         };
     }
 }
@@ -43,4 +62,6 @@ window.__PEREGRINE_PLUGINS__ = {
     register: () => {},
     registerServerPage: () => {},
     registerServerHomeSection: () => {},
+    notifyOperationStart: () => {},
+    notifyOperationComplete: () => {},
 };

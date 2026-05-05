@@ -2,16 +2,37 @@
     Plugin logo tile shown at the top-left of every plugin card on the
     `/admin/plugins` page (both Installed + Marketplace tabs).
 
-    For official Peregrine-Team plugins, displays the brand logo with a
-    primary-coloured tinted background to make the trust signal obvious at a
-    glance. For community plugins, falls back to a neutral puzzle-piece glyph.
+    Resolution order :
+      1. Plugin's own icon.svg (auto-discovered from plugins/{id}/icon.svg)
+         — every plugin can ship its own logo without manifest changes.
+      2. Peregrine brand logo with primary-tinted background — trust signal
+         for official Peregrine-Team plugins.
+      3. Neutral puzzle-piece glyph — community plugin fallback.
 
     Variables :
       - $official : bool — true if the plugin is authored by the Peregrine
                     Team (set in registry.json, mirrored on disk for local
                     plugins via Plugins::loadPlugins).
+      - $iconUrl  : ?string — `/plugins/{id}/icon.svg` URL when the plugin
+                    ships its own icon, null otherwise.
 --}}
-@if($official)
+@php($iconUrl = $iconUrl ?? null)
+@if($iconUrl)
+    <div style="
+        flex-shrink: 0;
+        width: 40px; height: 40px;
+        border-radius: 0.5rem;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
+    " aria-label="{{ __('admin.partials.plugin_logo.community') }}">
+        <img src="{{ $iconUrl }}"
+             alt=""
+             style="width: 24px; height: 24px; object-fit: contain;"
+             loading="lazy" decoding="async" />
+    </div>
+@elseif($official)
     <div style="
         flex-shrink: 0;
         width: 40px; height: 40px;

@@ -221,6 +221,11 @@
             }
         }
     },
+    "modpacks": {
+        "tab": {
+            "label": "Modpacks"
+        }
+    },
     "servers": {
         "list": {
             "title": "My Servers",
@@ -550,6 +555,20 @@
             "reinstall_confirm": "Reinstall now",
             "reinstall_name_mismatch": "The server name you typed doesn't match.",
             "reinstall_error": "The reinstall request failed. Try again in a moment."
+        },
+        "operations": {
+            "completion": {
+                "install": "Installation complete. The server is ready.",
+                "unsuspend": "The server has been reactivated.",
+                "modpack": "Modpack {{name}} installed successfully.",
+                "modpack_uninstall": "Modpack uninstalled. The server is back to vanilla.",
+                "dismiss": "Dismiss"
+            },
+            "banner": {
+                "modpack_installing": "Installing modpack {{name}}…",
+                "modpack_uninstalling": "Removing modpack…",
+                "server_installing": "Server installation in progress…"
+            }
         }
     },
     "nav": {

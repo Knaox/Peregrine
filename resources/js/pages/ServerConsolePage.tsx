@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useWingsWebSocket } from '@/hooks/useWingsWebSocket';
@@ -9,6 +9,7 @@ import { useServer } from '@/hooks/useServer';
 import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { Button } from '@/components/ui/Button';
+import { Alert } from '@/components/ui/Alert';
 import { ServerPowerControls } from '@/components/server/ServerPowerControls';
 import { ConsoleOutput } from '@/components/console/ConsoleOutput';
 import { ConsoleInput } from '@/components/console/ConsoleInput';
@@ -22,10 +23,27 @@ const STATE_COLORS: Record<string, string> = {
     stopped: 'var(--color-text-muted)',
 };
 
+interface ModpackBannerState {
+    modpackInstallingBanner?: boolean;
+    modpackName?: string | null;
+}
+
 export function ServerConsolePage() {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
+    const location = useLocation();
     const serverId = Number(id);
+
+    // Captured at mount — `location.state.modpackInstallingBanner` is set by
+    // the modpack plugin when it redirects the user to /console after an
+    // install kicks off. We snapshot it once so subsequent re-renders (and
+    // the lifecycle hook clearing the URL state) don't drop the banner.
+    const [bannerState] = useState<ModpackBannerState>(() => {
+        const s = (location.state as ModpackBannerState | null) ?? {};
+        return s.modpackInstallingBanner
+            ? { modpackInstallingBanner: true, modpackName: s.modpackName ?? null }
+            : {};
+    });
 
     const { data: server } = useServer(serverId);
     const perms = useServerPermissions(server);
@@ -84,6 +102,12 @@ export function ServerConsolePage() {
         return messages;
     }, [messages, isStopped, isStarting, isStopping, isProvisioning, t]);
 
+    // Modpack install banner — shown while the server is in `provisioning`
+    // status AND the user arrived from a modpack-install action (the plugin
+    // pushed `modpackInstallingBanner` onto location.state on redirect).
+    // Falls back to the generic "server installing" message otherwise.
+    const showInstallBanner = isProvisioning;
+
     return (
         <m.div
             initial={{ opacity: 0, y: 12 }}
@@ -91,6 +115,16 @@ export function ServerConsolePage() {
             transition={{ duration: 0.35, ease: 'easeOut' }}
             className="flex flex-1 flex-col gap-2 sm:gap-3 overflow-hidden min-h-0"
         >
+            {showInstallBanner ? (
+                <Alert variant="info">
+                    {bannerState.modpackInstallingBanner
+                        ? t('servers.operations.banner.modpack_installing', {
+                            name: bannerState.modpackName ?? '',
+                        })
+                        : t('servers.operations.banner.server_installing')}
+                </Alert>
+            ) : null}
+
             {/* Header bar */}
             <div className="flex flex-col gap-2 flex-shrink-0">
                 {/* Row 1: status + connection + clear */}

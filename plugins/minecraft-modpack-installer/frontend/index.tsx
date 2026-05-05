@@ -19,7 +19,7 @@ import {
 } from './shared';
 import { renderInstallModal, renderUninstallModal } from './modals';
 
-const { useState, useMemo } = S.React;
+const { useState, useMemo, useEffect, useRef } = S.React;
 const { useQuery, useMutation, useQueryClient } = S.ReactQuery;
 
 const PAGE_SIZES = [6, 12, 24] as const;
@@ -172,15 +172,27 @@ function ModpacksPage() {
     });
     const versionList: ModpackVersion[] = (installVersionsQ.data as { data?: ModpackVersion[] } | undefined)?.data ?? [];
 
+    const navigate = S.ReactRouterDom.useNavigate();
+
     const installMut = useMutation({
         mutationFn: (d: { provider: string; modpack_id: string; version_id: string; purge_files: boolean }) =>
             api<{ data: InstallationState }>(`${BASE}/servers/${identifier}/modpacks/installation`, {
                 method: 'POST', body: JSON.stringify(d),
             }),
-        onSuccess: () => {
+        onSuccess: (resp) => {
+            const data = (resp as { data?: InstallationState } | undefined)?.data ?? null;
+            const modpackName = data?.modpack_name ?? installTarget?.name ?? '';
             setInstallTarget(null);
             setInstallError(null);
             void qc.invalidateQueries({ queryKey: ['mp', identifier, 'installation'] });
+            // Tell the shell a long-running plugin operation just started so
+            // it suppresses its own server-status redirects until we notify
+            // completion (or the cooldown clears).
+            P.notifyOperationStart('modpack', { serverId, name: modpackName });
+            // Redirect to the live console with state for the install banner.
+            navigate(`/servers/${serverId}/console`, {
+                state: { modpackInstallingBanner: true, modpackName },
+            });
         },
         onError: (e: unknown) => {
             const errKey = String((e as Record<string, string>)?.error ?? '');
@@ -194,12 +206,52 @@ function ModpacksPage() {
             setUninstallOpen(false);
             setUninstallError(null);
             void qc.invalidateQueries({ queryKey: ['mp', identifier, 'installation'] });
+            const modpackName = installation?.modpack_name ?? '';
+            P.notifyOperationStart('modpack_uninstall', { serverId, name: modpackName });
+            navigate(`/servers/${serverId}/console`, {
+                state: { modpackInstallingBanner: true, modpackName },
+            });
         },
         onError: (e: unknown) => {
             const errKey = String((e as Record<string, string>)?.error ?? '');
             setUninstallError(errKey ? t(errKey) : t('modpacks.errors.unknown'));
         },
     });
+
+    // Watch the installation state and notify the shell when a plugin-managed
+    // operation transitions from active → done. Also force-invalidate the
+    // global server query so the rest of the SPA (overview, console gates)
+    // refreshes even on installs without Reverb.
+    const prevActiveRef = useRef<{ active: boolean; type: string | null; name: string | null }>({
+        active: false, type: null, name: null,
+    });
+    useEffect(() => {
+        const prev = prevActiveRef.current;
+        const nextActive = installation?.is_active ?? false;
+        const nextType = installation?.status === 'uninstalling' ? 'modpack_uninstall' : 'modpack';
+        const nextName = installation?.modpack_name ?? null;
+
+        // Track the last seen ACTIVE op so the completion notification can
+        // reuse the right name even if the row got deleted (uninstall path).
+        if (nextActive) {
+            prevActiveRef.current = { active: true, type: nextType, name: nextName };
+            return;
+        }
+
+        // Transition active → not-active : completed (or failed).
+        if (prev.active && !nextActive) {
+            prevActiveRef.current = { active: false, type: null, name: null };
+            void qc.invalidateQueries({ queryKey: ['servers', serverId] });
+            // Only notify completion on success — for `failed` we leave the
+            // user on the modpack page where the error is rendered inline.
+            const lastStatus = installation?.status ?? null;
+            const isCompletion = lastStatus === 'completed'
+                || (lastStatus === null && prev.type === 'modpack_uninstall'); // row deleted = uninstall succeeded
+            if (isCompletion) {
+                P.notifyOperationComplete(prev.type ?? 'modpack', { serverId, name: prev.name });
+            }
+        }
+    }, [installation?.is_active, installation?.status, installation?.modpack_name, serverId, qc]);
 
     // ---------------------------------------------------------------------
     // Render

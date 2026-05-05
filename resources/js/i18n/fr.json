@@ -221,6 +221,11 @@
             }
         }
     },
+    "modpacks": {
+        "tab": {
+            "label": "Modpacks"
+        }
+    },
     "servers": {
         "list": {
             "title": "Mes serveurs",
@@ -550,6 +555,20 @@
             "reinstall_confirm": "Réinstaller maintenant",
             "reinstall_name_mismatch": "Le nom saisi ne correspond pas.",
             "reinstall_error": "Échec de la réinstallation. Veuillez réessayer dans un instant."
+        },
+        "operations": {
+            "completion": {
+                "install": "Installation terminée. Le serveur est prêt.",
+                "unsuspend": "Le serveur a été réactivé.",
+                "modpack": "Modpack {{name}} installé avec succès.",
+                "modpack_uninstall": "Modpack désinstallé. Le serveur est revenu en vanilla.",
+                "dismiss": "Fermer"
+            },
+            "banner": {
+                "modpack_installing": "Installation du modpack {{name}} en cours…",
+                "modpack_uninstalling": "Désinstallation du modpack en cours…",
+                "server_installing": "Installation du serveur en cours…"
+            }
         }
     },
     "nav": {

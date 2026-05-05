@@ -50,7 +50,10 @@
                         {{-- Header --}}
                         <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem;">
                             <div style="display: flex; align-items: flex-start; gap: 0.75rem; min-width: 0;">
-                                @include('filament.pages.partials.plugin-logo', ['official' => $plugin['official'] ?? false])
+                                @include('filament.pages.partials.plugin-logo', [
+                                    'official' => $plugin['official'] ?? false,
+                                    'iconUrl' => $plugin['icon_url'] ?? null,
+                                ])
                                 <div style="min-width: 0;">
                                     <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                                         <h3 style="font-size: 0.875rem; font-weight: 600; color: white; margin: 0;">{{ $plugin['name'] }}</h3>
@@ -139,7 +142,10 @@
                 @foreach ($marketplacePlugins as $mp)
                     <div style="{{ $cardStyle }}">
                         <div style="display: flex; align-items: flex-start; gap: 0.75rem; min-width: 0;">
-                            @include('filament.pages.partials.plugin-logo', ['official' => $mp['official'] ?? false])
+                            @include('filament.pages.partials.plugin-logo', [
+                                'official' => $mp['official'] ?? false,
+                                'iconUrl' => $mp['icon_url'] ?? null,
+                            ])
                             <div style="min-width: 0; flex: 1 1 auto;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                                     <h3 style="font-size: 0.875rem; font-weight: 600; color: white; margin: 0;">{{ $mp['name'] }}</h3>

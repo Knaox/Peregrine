@@ -62,6 +62,22 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
             registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number }>) => {
                 get().registerServerHomeSection(sectionId, component);
             },
+            // Plugin → shell bridge for long-running operation lifecycle.
+            // Implemented as plain DOM CustomEvents so the listener side
+            // (resources/js/hooks/useServerOperationLifecycle.ts) doesn't
+            // need a direct dependency on this store, and so plugin bundles
+            // can fire from any context (queueMicrotask, mutation onSuccess,
+            // polling watchers, …) without importing anything.
+            notifyOperationStart: (type, opts) => {
+                window.dispatchEvent(new CustomEvent('peregrine:operation-start', {
+                    detail: { type, ...opts },
+                }));
+            },
+            notifyOperationComplete: (type, opts) => {
+                window.dispatchEvent(new CustomEvent('peregrine:operation-complete', {
+                    detail: { type, ...opts },
+                }));
+            },
         };
 
         set({ isInitialized: true });
