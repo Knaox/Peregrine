@@ -3,12 +3,14 @@
 namespace Tests\Feature;
 
 use App\Enums\BridgeMode;
+use App\Jobs\Bridge\ReconcilePelicanMirrorJob;
 use App\Jobs\Bridge\SyncServerFromPelicanWebhookJob;
 use App\Jobs\Bridge\SyncUserFromPelicanWebhookJob;
 use App\Models\Setting;
 use App\Services\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Tests\TestCase;
 
@@ -187,9 +189,14 @@ class PelicanWebhookTest extends TestCase
         $this->assertSame(77, $row->payload_summary['pelican_server_id']);
     }
 
-    public function test_returns_200_when_payload_is_missing_critical_fields(): void
+    public function test_returns_200_and_dispatches_reconcile_when_server_event_payload_is_broken(): void
     {
+        // Pelican has a known bug shipping `(array) $model` instead of
+        // `$model->toArray()` for Eloquent CRUD events — we lose the model
+        // id but still know the event class. Fallback : trigger a full
+        // mirror reconciliation against Pelican's canonical server list.
         Bus::fake();
+        Cache::flush();
 
         $response = $this->pelicanPost([
             'event' => 'eloquent.created: App\\Models\\Server',
@@ -197,8 +204,54 @@ class PelicanWebhookTest extends TestCase
         ]);
 
         $response->assertStatus(200);
+        $response->assertJson(['skipped' => 'missing_fields', 'fallback' => 'reconcile_dispatched']);
+        Bus::assertDispatched(ReconcilePelicanMirrorJob::class, 1);
+        Bus::assertNotDispatched(SyncServerFromPelicanWebhookJob::class);
+    }
+
+    public function test_broken_non_server_event_does_not_trigger_reconcile(): void
+    {
+        // Reconciliation only knows about servers — broken payloads on
+        // User / Node / Egg events just log and bail out.
+        Bus::fake();
+        Cache::flush();
+
+        $response = $this->pelicanPost([
+            'event' => 'eloquent.created: App\\Models\\User',
+            'data' => [],
+        ]);
+
+        $response->assertStatus(200);
         $response->assertJson(['skipped' => 'missing_fields']);
-        Bus::assertNothingDispatched();
+        Bus::assertNotDispatched(ReconcilePelicanMirrorJob::class);
+    }
+
+    public function test_burst_of_broken_server_events_dispatches_reconcile_only_once(): void
+    {
+        // Pelican fires 3-4 events for a single server lifecycle action
+        // (created:Server, updated:Allocation, updated:Server, …) — they
+        // arrive within seconds. The debounce lock keeps the queue clean.
+        Bus::fake();
+        Cache::flush();
+
+        $first = $this->pelicanPost([
+            'event' => 'eloquent.created: App\\Models\\Server',
+            'data' => [],
+        ]);
+        $second = $this->pelicanPost([
+            'event' => 'eloquent.updated: App\\Models\\Server',
+            'data' => [],
+        ]);
+        $third = $this->pelicanPost([
+            'event' => 'eloquent.deleted: App\\Models\\Server',
+            'data' => [],
+        ]);
+
+        $first->assertJson(['fallback' => 'reconcile_dispatched']);
+        $second->assertJson(['fallback' => 'reconcile_debounced']);
+        $third->assertJson(['fallback' => 'reconcile_debounced']);
+
+        Bus::assertDispatchedTimes(ReconcilePelicanMirrorJob::class, 1);
     }
 
     public function test_short_form_event_from_x_webhook_event_header_is_recognised(): void

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Bridge;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\Bridge\ReconcilePelicanMirrorJob;
 use App\Models\PelicanProcessedEvent;
 use App\Services\Bridge\PelicanEventClassifier;
 use App\Services\Bridge\PelicanWebhookDispatcher;
@@ -57,7 +58,29 @@ class PelicanWebhookController extends Controller
                 'model_id' => $modelId,
                 'keys' => array_keys($payload),
             ]);
-            return response()->json(['received' => true, 'skipped' => 'missing_fields'], 200);
+
+            // Pelican has a known bug where Eloquent CRUD events ship
+            // `(array) $model` instead of `$model->toArray()` — keys are
+            // Eloquent internals, the model id is unrecoverable. For Server
+            // events we recover by triggering a full mirror reconciliation
+            // against the Pelican Application API (debounced so a burst of
+            // 3-4 broken events from a single Pelican action only schedules
+            // one reconciliation).
+            $fallback = null;
+            if ($modelId === 0 && $eventType !== '') {
+                $kind = $this->classifier->classify($eventType);
+                if ($kind->isServer()) {
+                    $fallback = ReconcilePelicanMirrorJob::dispatchDebounced()
+                        ? 'reconcile_dispatched'
+                        : 'reconcile_debounced';
+                }
+            }
+
+            return response()->json(array_filter([
+                'received' => true,
+                'skipped' => 'missing_fields',
+                'fallback' => $fallback,
+            ], fn ($v) => $v !== null), 200);
         }
 
         $hash = $this->computeIdempotencyHash($eventType, $modelId, $data, $request->getContent());
