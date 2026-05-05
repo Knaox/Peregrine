@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAdminServers } from '@/hooks/useAdminServers';
 import { useAuthStore } from '@/stores/authStore';
+import { useServersListLiveUpdates } from '@/hooks/useServersListLiveUpdates';
 import { AdminServerRow } from '@/components/admin/AdminServerRow';
 
 /**
@@ -22,6 +23,7 @@ export function AdminServersPage() {
         page,
         per_page: 25,
     });
+    useServersListLiveUpdates({ userId: user?.id ?? null, isAdmin: Boolean(user?.is_admin) });
 
     if (user === null) {
         return null;

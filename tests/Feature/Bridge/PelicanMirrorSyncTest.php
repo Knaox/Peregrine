@@ -347,7 +347,7 @@ class PelicanMirrorSyncTest extends TestCase
         $clientMock = Mockery::mock(PelicanClientService::class);
         $this->app->instance(PelicanClientService::class, $clientMock);
 
-        (new SyncServerStatusJob)->handle($clientMock, app(\App\Services\Bridge\BridgeModeService::class), $pelicanMock);
+        (new SyncServerStatusJob)->handle($clientMock, app(\App\Services\Bridge\PelicanMirrorReconciler::class));
 
         Bus::assertDispatched(SyncServerFromPelicanWebhookJob::class, fn ($j) => $j->pelicanServerId === 555);
     }
@@ -372,9 +372,128 @@ class PelicanMirrorSyncTest extends TestCase
         $clientMock = Mockery::mock(PelicanClientService::class);
         $this->app->instance(PelicanClientService::class, $clientMock);
 
-        (new SyncServerStatusJob)->handle($clientMock, app(\App\Services\Bridge\BridgeModeService::class), $pelicanMock);
+        (new SyncServerStatusJob)->handle($clientMock, app(\App\Services\Bridge\PelicanMirrorReconciler::class));
 
         $this->assertDatabaseMissing('servers', ['pelican_server_id' => 9999]);
+    }
+
+    public function test_reconciliation_dispatches_sync_when_pelican_status_drifts_to_suspended(): void
+    {
+        // The exact case the user hit : suspending a server in Pelican fires
+        // a broken `updated: Server` webhook (no model id). Reconciliation
+        // sees Pelican.isSuspended=true vs local.status=active → dispatches
+        // sync, the sync job pulls the canonical state, persists 'suspended'
+        // and broadcasts on the user + admin channels for live UI refresh.
+        Bus::fake();
+
+        $owner = User::factory()->create(['pelican_user_id' => 5]);
+        Server::create([
+            'pelican_server_id' => 270,
+            'user_id' => $owner->id,
+            'name' => 'mc-test',
+            'identifier' => 'mctest',
+            'status' => 'active',
+        ]);
+
+        $suspended = new PelicanServer(
+            id: 270,
+            identifier: 'mctest',
+            name: 'mc-test',
+            description: '',
+            userId: 5,
+            nodeId: 1,
+            eggId: 1,
+            nestId: 0,
+            isSuspended: true,
+            limits: new ServerLimits(memory: 1024, swap: 0, disk: 5000, io: 500, cpu: 100),
+            status: 'suspended',
+        );
+
+        $pelicanMock = Mockery::mock(PelicanApplicationService::class);
+        $pelicanMock->shouldReceive('listServers')->andReturn([$suspended]);
+        $this->app->instance(PelicanApplicationService::class, $pelicanMock);
+
+        app(\App\Services\Bridge\PelicanMirrorReconciler::class)->reconcile();
+
+        Bus::assertDispatched(SyncServerFromPelicanWebhookJob::class, function ($j): bool {
+            return $j->pelicanServerId === 270
+                && ($j->payloadSnapshot['suspended'] ?? null) === true;
+        });
+    }
+
+    public function test_reconciliation_skips_sync_when_status_already_in_sync(): void
+    {
+        Bus::fake();
+
+        $owner = User::factory()->create(['pelican_user_id' => 5]);
+        Server::create([
+            'pelican_server_id' => 271,
+            'user_id' => $owner->id,
+            'name' => 'steady',
+            'identifier' => 'steady',
+            'status' => 'active',
+        ]);
+
+        $idle = new PelicanServer(
+            id: 271,
+            identifier: 'steady',
+            name: 'steady',
+            description: '',
+            userId: 5,
+            nodeId: 1,
+            eggId: 1,
+            nestId: 0,
+            isSuspended: false,
+            limits: new ServerLimits(memory: 1024, swap: 0, disk: 5000, io: 500, cpu: 100),
+            status: null,
+        );
+
+        $pelicanMock = Mockery::mock(PelicanApplicationService::class);
+        $pelicanMock->shouldReceive('listServers')->andReturn([$idle]);
+        $this->app->instance(PelicanApplicationService::class, $pelicanMock);
+
+        app(\App\Services\Bridge\PelicanMirrorReconciler::class)->reconcile();
+
+        Bus::assertNotDispatched(SyncServerFromPelicanWebhookJob::class);
+    }
+
+    public function test_reconciliation_does_not_override_runtime_states(): void
+    {
+        // Runtime states (running / stopped / offline) are managed by the
+        // runtime-status sync, not the App API reconciler. Pelican answering
+        // 'active' (idle) for a row currently 'running' is not drift.
+        Bus::fake();
+
+        $owner = User::factory()->create(['pelican_user_id' => 5]);
+        Server::create([
+            'pelican_server_id' => 272,
+            'user_id' => $owner->id,
+            'name' => 'live',
+            'identifier' => 'live',
+            'status' => 'running',
+        ]);
+
+        $idle = new PelicanServer(
+            id: 272,
+            identifier: 'live',
+            name: 'live',
+            description: '',
+            userId: 5,
+            nodeId: 1,
+            eggId: 1,
+            nestId: 0,
+            isSuspended: false,
+            limits: new ServerLimits(memory: 1024, swap: 0, disk: 5000, io: 500, cpu: 100),
+            status: null,
+        );
+
+        $pelicanMock = Mockery::mock(PelicanApplicationService::class);
+        $pelicanMock->shouldReceive('listServers')->andReturn([$idle]);
+        $this->app->instance(PelicanApplicationService::class, $pelicanMock);
+
+        app(\App\Services\Bridge\PelicanMirrorReconciler::class)->reconcile();
+
+        Bus::assertNotDispatched(SyncServerFromPelicanWebhookJob::class);
     }
 
     public function test_server_created_event_maps_egg_id_when_egg_mirror_exists(): void

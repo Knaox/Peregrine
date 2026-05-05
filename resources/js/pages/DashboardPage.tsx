@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useAuthStore } from '@/stores/authStore';
 import { useServers } from '@/hooks/useServers';
+import { useServersListLiveUpdates } from '@/hooks/useServersListLiveUpdates';
 import { useServerStats } from '@/hooks/useServerStats';
 import { usePowerAction } from '@/hooks/usePowerAction';
 import { useDashboardLayout } from '@/hooks/useDashboardLayout';
@@ -24,6 +25,7 @@ export function DashboardPage() {
     const { t } = useTranslation();
     const { user } = useAuthStore();
     const { data, isLoading } = useServers();
+    useServersListLiveUpdates({ userId: user?.id ?? null, isAdmin: Boolean(user?.is_admin) });
     const { data: statsMap } = useServerStats();
     const { sendPower, isPending: isPowerPending } = usePowerAction();
     const selection = useServerSelection();

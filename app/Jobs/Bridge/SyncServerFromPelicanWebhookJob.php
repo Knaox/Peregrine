@@ -118,7 +118,7 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
         }
 
         if ($updates !== []) {
-            event(new ServerMirrorChanged((int) $server->id, ServerMirrorChanged::RESOURCE_SERVER, ServerMirrorChanged::ACTION_UPSERT, (int) $server->id));
+            event(new ServerMirrorChanged((int) $server->id, ServerMirrorChanged::RESOURCE_SERVER, ServerMirrorChanged::ACTION_UPSERT, (int) $server->id, $server->accessUsers()->pluck('users.id')->all()));
         }
 
         Log::info('SyncServerFromPelicanWebhookJob: shop-owned server updated', [
@@ -195,7 +195,7 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
             $owner->id => ['role' => 'owner', 'permissions' => null],
         ]);
 
-        event(new ServerMirrorChanged((int) $server->id, ServerMirrorChanged::RESOURCE_SERVER, ServerMirrorChanged::ACTION_UPSERT, (int) $server->id));
+        event(new ServerMirrorChanged((int) $server->id, ServerMirrorChanged::RESOURCE_SERVER, ServerMirrorChanged::ACTION_UPSERT, (int) $server->id, $server->accessUsers()->pluck('users.id')->all()));
 
         Log::info('SyncServerFromPelicanWebhookJob: server mirrored', [
             'pelican_server_id' => $this->pelicanServerId,
@@ -254,8 +254,18 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
         }
 
         $serverLocalId = (int) $server->id;
+        // Capture the pivot BEFORE delete — the cascade clears access_users
+        // server-side and we need the ids to broadcast on each user channel
+        // so list pages drop the row in real-time.
+        $accessUserIds = $this->collectAccessUserIds($server);
         $server->delete();
-        event(new ServerMirrorChanged($serverLocalId, ServerMirrorChanged::RESOURCE_SERVER, ServerMirrorChanged::ACTION_DELETE, $serverLocalId));
+        event(new ServerMirrorChanged(
+            $serverLocalId,
+            ServerMirrorChanged::RESOURCE_SERVER,
+            ServerMirrorChanged::ACTION_DELETE,
+            $serverLocalId,
+            $accessUserIds,
+        ));
 
         Log::info('SyncServerFromPelicanWebhookJob: server removed', [
             'pelican_server_id' => $this->pelicanServerId,
