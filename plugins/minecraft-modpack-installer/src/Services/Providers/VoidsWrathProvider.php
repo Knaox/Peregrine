@@ -82,6 +82,29 @@ final class VoidsWrathProvider implements ModpackProviderInterface
         return new SearchResult($hits, count($hits), 1, max(count($hits), 1));
     }
 
+    public function getModpack(string $modpackId): ?ModpackSummary
+    {
+        $catalog = $this->loadCatalog();
+        foreach ($catalog as $entry) {
+            if ((string) ($entry['id'] ?? '') !== $modpackId) {
+                continue;
+            }
+
+            return new ModpackSummary(
+                provider: $this->id(),
+                modpackId: (string) $entry['id'],
+                name: (string) ($entry['displayName'] ?? $modpackId),
+                slug: null,
+                description: $entry['description'] ?? null,
+                iconUrl: $entry['logo'] ?? null,
+                externalUrl: $entry['platformUrl'] ?? null,
+                isServerCompatible: ! empty($entry['serverPackUrl']),
+            );
+        }
+
+        return null;
+    }
+
     /** @return list<ModpackVersion> */
     public function listVersions(string $modpackId, ?string $minecraftVersion): array
     {

@@ -57,8 +57,8 @@
         },
         "uninstall_modal": {
             "title": "Désinstaller {{name}} ?",
-            "warning": "Tous les fichiers du serveur seront supprimés et le serveur réinstallé en vanilla.",
-            "confirm": "Désinstaller",
+            "warning": "Tous les fichiers du serveur seront supprimés définitivement, puis le serveur sera réinstallé à neuf sur son œuf d'origine. Action irréversible — sauvegardez vos mondes d'abord. Le serveur sera injoignable pendant quelques minutes.",
+            "confirm": "Désinstaller et tout effacer",
             "submitting": "Démarrage…",
             "cancel": "Annuler"
         },

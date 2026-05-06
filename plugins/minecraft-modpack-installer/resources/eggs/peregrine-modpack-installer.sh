@@ -645,10 +645,37 @@ install_quilt() {
 }
 
 # ---------------------------------------------------------------------------
+# Uninstall mode — wipe /mnt/server clean. The plugin then swaps the server
+# back to the original egg with skip_scripts=false to let it install from
+# scratch on an empty directory. Phase 1 of the two-phase uninstall flow.
+# ---------------------------------------------------------------------------
+uninstall_modpack() {
+    log "Uninstall mode — wiping $WORKDIR"
+
+    mkdir -p "$WORKDIR"
+    cd "$WORKDIR" || fail "cannot cd $WORKDIR"
+
+    # Delete every file/dir at the root of /mnt/server. -mindepth 1 keeps
+    # the mountpoint itself intact so Wings doesn't lose the volume.
+    find . -mindepth 1 -delete 2>/dev/null || true
+
+    # Pelican expects an install completion signal — a successful exit is
+    # enough; no placeholder files needed because the next phase (original
+    # egg reinstall) will repopulate the directory from scratch.
+    log "Uninstall complete — directory wiped"
+    exit 0
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 main() {
-    log "Modpack Installer starting"
+    log "Modpack Installer starting (operation=${BB_MODPACK_OPERATION:-install})"
+
+    if [ "${BB_MODPACK_OPERATION:-install}" = "uninstall" ]; then
+        uninstall_modpack
+    fi
+
     : "${BB_MODPACK_PROVIDER:?provider not set}"
     : "${BB_MODPACK_ID:?modpack id not set}"
     : "${BB_MODPACK_VERSION_ID:?version id not set}"

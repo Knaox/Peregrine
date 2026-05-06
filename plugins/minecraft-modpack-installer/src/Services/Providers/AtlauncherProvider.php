@@ -106,6 +106,48 @@ final class AtlauncherProvider implements ModpackProviderInterface
         return new SearchResult($hits, count($hits), 1, max(count($hits), 1));
     }
 
+    public function getModpack(string $modpackId): ?ModpackSummary
+    {
+        $key = 'modpacks:atlauncher:meta:'.sha1($modpackId);
+
+        return $this->cache->remember($key, 24 * 3600, function () use ($modpackId): ?ModpackSummary {
+            $query = <<<'GQL'
+            query Pack($safe: String!) {
+                packBySafeName(safeName: $safe) {
+                    id
+                    name
+                    safeName
+                    description
+                }
+            }
+            GQL;
+
+            try {
+                $response = $this->graphql($query, ['safe' => $modpackId]);
+            } catch (Throwable) {
+                return null;
+            }
+
+            $node = $response['data']['packBySafeName'] ?? null;
+            if (! is_array($node) || empty($node['id'])) {
+                return null;
+            }
+
+            $safeName = (string) ($node['safeName'] ?? $modpackId);
+
+            return new ModpackSummary(
+                provider: $this->id(),
+                modpackId: $safeName,
+                name: (string) ($node['name'] ?? $modpackId),
+                slug: $safeName,
+                description: $node['description'] ?? null,
+                iconUrl: "https://cdn.atlauncher.com/launcher/images/{$safeName}.png",
+                externalUrl: "https://atlauncher.com/pack/{$safeName}",
+                isServerCompatible: null,
+            );
+        });
+    }
+
     /** @return list<ModpackVersion> */
     public function listVersions(string $modpackId, ?string $minecraftVersion): array
     {

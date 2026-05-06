@@ -109,6 +109,39 @@ final class ModrinthProvider implements ModpackProviderInterface
         );
     }
 
+    public function getModpack(string $modpackId): ?ModpackSummary
+    {
+        $key = 'modpacks:modrinth:meta:'.sha1($modpackId);
+
+        return $this->cache->remember($key, 24 * 3600, function () use ($modpackId): ?ModpackSummary {
+            try {
+                $entry = $this->client()
+                    ->get(self::BASE_URL.'/project/'.rawurlencode($modpackId))
+                    ->throw()
+                    ->json();
+            } catch (Throwable) {
+                return null;
+            }
+
+            if (! is_array($entry) || empty($entry['id'])) {
+                return null;
+            }
+
+            $slug = $entry['slug'] ?? null;
+
+            return new ModpackSummary(
+                provider: $this->id(),
+                modpackId: (string) ($entry['id'] ?? $modpackId),
+                name: (string) ($entry['title'] ?? $modpackId),
+                slug: $slug,
+                description: $entry['description'] ?? null,
+                iconUrl: $entry['icon_url'] ?? null,
+                externalUrl: $slug !== null ? 'https://modrinth.com/modpack/'.$slug : null,
+                isServerCompatible: $this->isServerCompatible($entry['server_side'] ?? null),
+            );
+        });
+    }
+
     /** @return list<ModpackVersion> */
     public function listVersions(string $modpackId, ?string $minecraftVersion): array
     {
@@ -156,14 +189,23 @@ final class ModrinthProvider implements ModpackProviderInterface
             return [];
         }
 
+        // Include both `release` (modern MC: 1.16+) AND `old_release`
+        // (legacy MC: 1.7.10, 1.8.9, 1.10.2, 1.12.2 …) — many popular
+        // modpacks target legacy versions and were otherwise hidden from
+        // the version filter. Keep snapshots/betas out so the list stays
+        // useful for users picking a stable target.
         $versions = [];
         foreach ($response ?? [] as $entry) {
-            if (($entry['version_type'] ?? '') === 'release') {
+            $type = (string) ($entry['version_type'] ?? '');
+            if ($type === 'release' || $type === 'old_release') {
                 $versions[] = (string) $entry['version'];
             }
         }
 
-        return $versions;
+        // Newest-first ordering by semver; non-semver falls back to string sort.
+        usort($versions, static fn ($a, $b) => version_compare((string) $b, (string) $a));
+
+        return array_values(array_unique($versions));
     }
 
     private function isServerCompatible(?string $serverSide): ?bool

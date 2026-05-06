@@ -132,6 +132,44 @@ final class CurseForgeProvider implements ModpackProviderInterface
         return new SearchResult($hits, $total, $criteria->page, $criteria->pageSize);
     }
 
+    public function getModpack(string $modpackId): ?ModpackSummary
+    {
+        if (! $this->isConfigured()) {
+            return null;
+        }
+
+        $key = 'modpacks:curseforge:meta:'.sha1($modpackId);
+
+        return $this->cache->remember($key, 24 * 3600, function () use ($modpackId): ?ModpackSummary {
+            try {
+                $response = $this->client()
+                    ->get(self::BASE_URL.'/mods/'.rawurlencode($modpackId))
+                    ->throw()
+                    ->json();
+            } catch (Throwable) {
+                return null;
+            }
+
+            $entry = $response['data'] ?? null;
+            if (! is_array($entry) || empty($entry['id'])) {
+                return null;
+            }
+
+            return new ModpackSummary(
+                provider: $this->id(),
+                modpackId: (string) $entry['id'],
+                name: (string) ($entry['name'] ?? $modpackId),
+                slug: $entry['slug'] ?? null,
+                description: $entry['summary'] ?? null,
+                iconUrl: $entry['logo']['thumbnailUrl']
+                    ?? $entry['logo']['url']
+                    ?? null,
+                externalUrl: $entry['links']['websiteUrl'] ?? null,
+                isServerCompatible: $this->detectServerCompatibility($entry),
+            );
+        });
+    }
+
     /** @return list<ModpackVersion> */
     public function listVersions(string $modpackId, ?string $minecraftVersion): array
     {

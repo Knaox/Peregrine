@@ -49,13 +49,23 @@ class PelicanClient
      * StartupModificationService validates `environment` against the new
      * egg's variable rules — caller must pass at least the required vars.
      *
+     * Returns the decoded response body so callers can confirm Pelican
+     * accepted the swap (in particular, that `attributes.egg` matches
+     * the requested egg id) before kicking off a reinstall. If Pelican
+     * returns an empty 204, callers should fall back to `getServerRaw()`.
+     *
      * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
      */
-    public function updateServerStartup(int $pelicanServerId, array $payload): void
+    public function updateServerStartup(int $pelicanServerId, array $payload): array
     {
-        $this->http->request()
+        $response = $this->http->request()
             ->patch("/api/application/servers/{$pelicanServerId}/startup", $payload)
             ->throw();
+
+        $body = $response->json();
+
+        return is_array($body) ? $body : [];
     }
 
     /**

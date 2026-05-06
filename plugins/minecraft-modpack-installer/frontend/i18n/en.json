@@ -57,8 +57,8 @@
         },
         "uninstall_modal": {
             "title": "Uninstall {{name}}?",
-            "warning": "All server files will be deleted and the server reinstalled vanilla.",
-            "confirm": "Uninstall",
+            "warning": "All server files will be permanently deleted, then the server will be reinstalled fresh on its original egg. This is irreversible — back up any worlds first. The server will be unreachable for a few minutes.",
+            "confirm": "Uninstall & wipe",
             "submitting": "Starting…",
             "cancel": "Cancel"
         },

@@ -31,6 +31,7 @@ class ReconcileStaleInstallations extends Command
                 ModpackInstallationStatus::Pending->value,
                 ModpackInstallationStatus::Installing->value,
                 ModpackInstallationStatus::Uninstalling->value,
+                ModpackInstallationStatus::Reinstalling->value,
             ])
             ->where('started_at', '<', $threshold)
             ->update([

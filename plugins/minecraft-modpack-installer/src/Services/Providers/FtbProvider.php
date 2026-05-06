@@ -97,6 +97,15 @@ final class FtbProvider implements ModpackProviderInterface
         return new SearchResult($hits, count($hits), 1, max(count($hits), 1));
     }
 
+    public function getModpack(string $modpackId): ?ModpackSummary
+    {
+        if (! ctype_digit($modpackId)) {
+            return null;
+        }
+
+        return $this->fetchDetail((int) $modpackId);
+    }
+
     /** @return list<ModpackVersion> */
     public function listVersions(string $modpackId, ?string $minecraftVersion): array
     {

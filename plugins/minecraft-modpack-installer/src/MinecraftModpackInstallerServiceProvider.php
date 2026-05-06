@@ -107,19 +107,37 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
     private function registerManifestEnricher(): void
     {
         ManifestEnricherRegistry::getInstance()->register(self::PLUGIN_ID, function (array $manifest): array {
-            $eggIds = Cache::remember('modpack_settings.whitelisted_egg_ids', 60, function (): array {
-                try {
-                    return $this->app->make(\Plugins\MinecraftModpackInstaller\Services\ModpackSettingsService::class)
-                        ->whitelistedEggIds();
-                } catch (\Throwable) {
-                    return [];
+            $settings = $this->app->make(\Plugins\MinecraftModpackInstaller\Services\ModpackSettingsService::class);
+
+            $eggIds = Cache::remember(
+                'modpack_settings.whitelisted_egg_ids',
+                60,
+                static function () use ($settings): array {
+                    try {
+                        return $settings->whitelistedEggIds();
+                    } catch (\Throwable) {
+                        return [];
+                    }
                 }
-            });
+            );
+
+            $route = Cache::remember(
+                'modpack_settings.page_route',
+                60,
+                static function () use ($settings): string {
+                    try {
+                        return $settings->pageRoute();
+                    } catch (\Throwable) {
+                        return '/modpacks';
+                    }
+                }
+            );
 
             $entries = $manifest['server_sidebar_entries'] ?? [];
             foreach ($entries as $idx => $entry) {
                 if (($entry['id'] ?? null) === 'modpacks') {
                     $entries[$idx]['requires_egg_ids'] = $eggIds;
+                    $entries[$idx]['route_suffix'] = $route;
                 }
             }
             $manifest['server_sidebar_entries'] = $entries;
@@ -195,7 +213,7 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
     /**
      * On modern Peregrine cores, Filament resources/pages declared by the
      * plugin are auto-discovered (PluginManager::contributeToFilamentPanel).
-     * On older cores, register the settings page manually via a `booted`
+     * On older cores, register the settings resource manually via a `booted`
      * callback. Mirrors the pattern in egg-config-editor.
      */
     private function registerFilamentFallback(): void
@@ -206,8 +224,8 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
 
         $this->app->booted(function (): void {
             try {
-                \Filament\Facades\Filament::getDefaultPanel()->pages([
-                    \Plugins\MinecraftModpackInstaller\Filament\Pages\ModpackSettings::class,
+                \Filament\Facades\Filament::getDefaultPanel()->resources([
+                    \Plugins\MinecraftModpackInstaller\Filament\Resources\ModpackConfigResource::class,
                 ]);
             } catch (\Throwable) {
                 // No default panel registered yet — skip silently.
