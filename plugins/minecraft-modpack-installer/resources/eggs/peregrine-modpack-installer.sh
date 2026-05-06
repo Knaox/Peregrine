@@ -19,7 +19,12 @@
 set -uo pipefail
 
 WORKDIR="/mnt/server"
-TMPDIR="/tmp/bb-modpack-$$"
+# Stage on the persistent server volume (subject to the server's disk
+# quota, typically several GB) instead of the install container's /tmp
+# (typically a few hundred MB tmpfs) — large modpacks like Cobblemon
+# expand to 300-500 MB which overflows the container tmpfs and aborts
+# the unzip with "write error (disk full?)".
+TMPDIR="/mnt/server/.bb-modpack-tmp-$$"
 USER_AGENT="PeregrineModpackInstaller/1.0 (+https://games.biomebounty.com)"
 
 # Counter of soft failures that should still abort the install. Provider
