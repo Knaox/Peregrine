@@ -11,6 +11,7 @@ use App\Services\Pelican\PelicanNetworkService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class ServerController extends Controller
 {
@@ -181,13 +182,34 @@ class ServerController extends Controller
     {
         $this->authorize('reinstallServer', $server);
 
+        $validated = $request->validate([
+            'wipe_data' => ['sometimes', 'boolean'],
+        ]);
+        $wipeData = (bool) ($validated['wipe_data'] ?? false);
+
+        // Optional pre-step: drop every file in /mnt/server before triggering
+        // the reinstall. The egg's install script then runs against an empty
+        // directory, giving the same effect as a fresh server creation.
+        // Without this flag the reinstall just re-runs the install script
+        // on top of the existing files (Pelican's default behaviour).
+        if ($wipeData) {
+            try {
+                $this->clientService->wipeServerFiles($server->identifier);
+            } catch (\Throwable $e) {
+                Log::warning('server reinstall: wipe step failed (continuing without wipe)', [
+                    'server_id' => $server->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         $this->clientService->reinstallServer($server->identifier);
 
         AdminActionPerformed::dispatchIfCrossUser(
             admin: $request->user(),
             action: 'server.reinstall',
             server: $server,
-            payload: [],
+            payload: ['wipe_data' => $wipeData],
             ip: $request->ip(),
             userAgent: (string) $request->userAgent(),
         );

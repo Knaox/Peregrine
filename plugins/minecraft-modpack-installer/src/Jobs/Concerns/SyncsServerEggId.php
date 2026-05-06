@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Plugins\MinecraftModpackInstaller\Jobs\Concerns;
 
+use App\Events\Mirror\ServerMirrorChanged;
 use App\Models\Server;
 use App\Services\Sync\EggResolver;
 use Psr\Log\LoggerInterface;
@@ -82,6 +83,28 @@ trait SyncsServerEggId
             $logger->warning('modpack: local server status update failed', [
                 'server_id' => $server->id,
                 'target_status' => $status,
+                'error' => $e->getMessage(),
+            ]);
+
+            return;
+        }
+
+        // Broadcast mirror.changed so the React shell's
+        // `useServerLiveUpdates` hook invalidates ['servers', id, 'server']
+        // and re-runs the sidebar install gate (only Console + Home stay
+        // visible while servers.status === 'provisioning'). Without this
+        // the user only sees the locked sidebar after a full page reload.
+        try {
+            event(new ServerMirrorChanged(
+                serverId: (int) $server->id,
+                resource: ServerMirrorChanged::RESOURCE_SERVER,
+                action: ServerMirrorChanged::ACTION_UPSERT,
+                resourceId: (int) $server->id,
+                accessUserIds: $server->accessUsers()->pluck('users.id')->all(),
+            ));
+        } catch (Throwable $e) {
+            $logger->info('modpack: ServerMirrorChanged broadcast failed (non-fatal)', [
+                'server_id' => $server->id,
                 'error' => $e->getMessage(),
             ]);
         }

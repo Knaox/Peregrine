@@ -546,8 +546,12 @@
             "rename_error": "The rename request failed. Try again in a moment.",
             "reinstall_title": "Reinstall server",
             "reinstall_warning": "Reinstall will re-run the egg install script. It can overwrite configuration files and, depending on the egg, wipe data. This action cannot be undone.",
+            "reinstall_warning_wipe": "Every file in /mnt/server will be permanently deleted before the egg's install script runs. Worlds, configs, plugins, mods — everything. This action is irreversible. Back up first if you need to keep anything.",
+            "reinstall_wipe_label": "Delete all server data and reinstall",
+            "reinstall_wipe_help": "Wipes /mnt/server first, then triggers the reinstall — same end state as a freshly created server.",
             "reinstall_confirm_help": "Type the server name \"{{name}}\" to confirm.",
             "reinstall_confirm": "Reinstall now",
+            "reinstall_confirm_wipe": "Wipe & reinstall",
             "reinstall_name_mismatch": "The server name you typed doesn't match.",
             "reinstall_error": "The reinstall request failed. Try again in a moment."
         }

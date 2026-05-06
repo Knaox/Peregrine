@@ -82,6 +82,9 @@ export async function renameServer(id: number, name: string): Promise<Server> {
     return data;
 }
 
-export async function reinstallServer(id: number): Promise<void> {
-    await request(`/api/servers/${id}/reinstall`, { method: 'POST' });
+export async function reinstallServer(id: number, options: { wipeData?: boolean } = {}): Promise<void> {
+    await request(`/api/servers/${id}/reinstall`, {
+        method: 'POST',
+        body: JSON.stringify({ wipe_data: !!options.wipeData }),
+    });
 }

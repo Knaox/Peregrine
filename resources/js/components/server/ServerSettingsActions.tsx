@@ -27,6 +27,7 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
     const [dialog, setDialog] = useState<Dialog>(null);
     const [renameValue, setRenameValue] = useState(server.name);
     const [confirmText, setConfirmText] = useState('');
+    const [wipeData, setWipeData] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
@@ -40,6 +41,7 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
         setError('');
         setRenameValue(server.name);
         setConfirmText('');
+        setWipeData(false);
     };
 
     const handleRename = async () => {
@@ -70,9 +72,15 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
         setSubmitting(true);
         setError('');
         try {
-            await reinstallServer(server.id);
+            await reinstallServer(server.id, { wipeData });
+            // Pelican flips status to 'installing' instantly on a successful
+            // reinstall request → mirror.changed broadcasts and the sidebar
+            // gates itself, but invalidate eagerly so the user sees the
+            // spinner without waiting on the websocket round-trip.
             await queryClient.invalidateQueries({ queryKey: ['servers', server.id] });
+            await queryClient.invalidateQueries({ queryKey: ['servers', server.id, 'server'] });
             setDialog(null);
+            setWipeData(false);
         } catch (err) {
             setError(err instanceof ApiError ? t('servers.settings.reinstall_error') : t('common.error'));
         } finally {
@@ -172,8 +180,27 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
                                         {t('servers.settings.reinstall_title')}
                                     </h3>
                                     <div className="rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-3 py-2 text-xs text-[var(--color-danger)]">
-                                        {t('servers.settings.reinstall_warning')}
+                                        {wipeData
+                                            ? t('servers.settings.reinstall_warning_wipe')
+                                            : t('servers.settings.reinstall_warning')}
                                     </div>
+                                    <label className="flex items-start gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={wipeData}
+                                            onChange={() => setWipeData((v) => !v)}
+                                            disabled={submitting}
+                                            className="mt-1"
+                                        />
+                                        <span className="flex flex-col gap-0.5">
+                                            <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                                                {t('servers.settings.reinstall_wipe_label')}
+                                            </span>
+                                            <span className="text-xs text-[var(--color-text-muted)]">
+                                                {t('servers.settings.reinstall_wipe_help')}
+                                            </span>
+                                        </span>
+                                    </label>
                                     <p className="text-xs text-[var(--color-text-muted)]">
                                         {t('servers.settings.reinstall_confirm_help', { name: server.name })}
                                     </p>
@@ -196,7 +223,9 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
                                             onClick={handleReinstall}
                                             disabled={submitting || confirmText.trim() === ''}
                                         >
-                                            {submitting ? t('common.loading') : t('servers.settings.reinstall_confirm')}
+                                            {submitting ? t('common.loading') : (wipeData
+                                                ? t('servers.settings.reinstall_confirm_wipe')
+                                                : t('servers.settings.reinstall_confirm'))}
                                         </Button>
                                     </div>
                                 </>
