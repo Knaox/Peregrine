@@ -97,8 +97,10 @@ class UninstallModpackJob implements ShouldQueue
 
             // Mirror the temporary installer egg id into the local DB so
             // the panel UI doesn't keep showing the old (real) egg during
-            // the wipe phase.
+            // the wipe phase. Flip status to provisioning so the panel
+            // shows a spinner — we'll restore to active in finalizeUninstall.
             $this->syncLocalEggId($server, $installerEggId, $logger);
+            $this->setLocalServerStatus($server, 'provisioning', $logger);
 
             $pelican->reinstallServer((int) $server->pelican_server_id);
 
@@ -113,6 +115,9 @@ class UninstallModpackJob implements ShouldQueue
                 $installation,
                 'uninstall_dispatch_failed: '.substr($e->getMessage(), 0, 800),
             );
+            if ($server !== null) {
+                $this->setLocalServerStatus($server, 'provisioning_failed', $logger);
+            }
 
             // Best-effort: try to restore the user's original egg so the
             // server isn't left stranded on the installer egg.

@@ -99,6 +99,7 @@ class InstallModpackJob implements ShouldQueue
                 'BB_MODPACK_GAME_VERSION' => $this->extractMinecraftVersion($installation),
                 'BB_MODPACK_PURGE' => $installation->purge_files ? '1' : '0',
                 'BB_MODPACK_CURSEFORGE_KEY' => (string) ($settings->curseforgeApiKey() ?? ''),
+                'BB_MODPACK_OPERATION' => 'install',
                 'SERVER_JARFILE' => 'server.jar',
             ];
 
@@ -124,8 +125,11 @@ class InstallModpackJob implements ShouldQueue
             // Mirror the swap into the local servers.egg_id immediately —
             // Pelican will fire the Server\Installed webhook on completion,
             // but we want the panel UI to reflect the installer egg during
-            // the install, not the previous one.
+            // the install, not the previous one. Also flip local status
+            // so the panel UI shows a "provisioning" indicator on the
+            // server row throughout the modpack install.
             $this->syncLocalEggId($server, $confirmedEggId, $logger);
+            $this->setLocalServerStatus($server, 'provisioning', $logger);
 
             $pelican->reinstallServer((int) $server->pelican_server_id);
 
@@ -135,6 +139,9 @@ class InstallModpackJob implements ShouldQueue
                 'installation' => $installation->id, 'error' => $e->getMessage(),
             ]);
             $this->markFailed($installation, 'install_dispatch_failed: '.$e->getMessage());
+            if ($server !== null) {
+                $this->setLocalServerStatus($server, 'provisioning_failed', $logger);
+            }
             $this->bestEffortRollback($installation, $pelican, $logger);
 
             throw $e;
@@ -143,13 +150,22 @@ class InstallModpackJob implements ShouldQueue
 
     public function failed(Throwable $e): void
     {
-        $installation = ModpackInstallation::find($this->installationId);
+        $installation = ModpackInstallation::with('server')->find($this->installationId);
         if ($installation === null) {
             return;
         }
         if ($installation->status === ModpackInstallationStatus::Installing
             || $installation->status === ModpackInstallationStatus::Pending) {
             $this->markFailed($installation, 'job_failed: '.substr($e->getMessage(), 0, 800));
+            if ($installation->server !== null) {
+                // Best-effort: leave a clean slate so the panel UI doesn't
+                // show a permanent spinner if the queue worker died mid-job.
+                try {
+                    $installation->server->forceFill(['status' => 'provisioning_failed'])->save();
+                } catch (\Throwable) {
+                    // ignore — Concerns trait isn't loaded here
+                }
+            }
         }
     }
 

@@ -59,4 +59,31 @@ trait SyncsServerEggId
             ]);
         }
     }
+
+    /**
+     * Mirror the Pelican install/reinstall flag into Peregrine's local
+     * `servers.status` so the panel UI shows the server as "provisioning"
+     * (ready/active toggles to a spinner) for the duration of the modpack
+     * operation. The status enum allows: provisioning, active, suspended,
+     * terminated, running, stopped, offline, provisioning_failed.
+     *
+     * `provisioning` is the value Peregrine itself uses while a server is
+     * being created — the same UI affordance applies cleanly to a modpack
+     * install/uninstall.
+     */
+    private function setLocalServerStatus(Server $server, string $status, LoggerInterface $logger): void
+    {
+        if ((string) $server->status === $status) {
+            return;
+        }
+        try {
+            $server->forceFill(['status' => $status])->save();
+        } catch (Throwable $e) {
+            $logger->warning('modpack: local server status update failed', [
+                'server_id' => $server->id,
+                'target_status' => $status,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
 }

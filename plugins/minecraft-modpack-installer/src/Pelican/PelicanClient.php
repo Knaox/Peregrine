@@ -80,6 +80,51 @@ class PelicanClient
     }
 
     /**
+     * Reset every BB_MODPACK_* env var on the server to a harmless default
+     * value while we're still on the installer egg.
+     *
+     * Pelican's `StartupModificationService` (the service behind
+     * `PATCH /api/application/servers/{id}/startup`) calls
+     * `ServerVariable::updateOrCreate(...)` per env key but never deletes
+     * orphans (verified against the Pelican source — confirmed by
+     * pelican-dev/panel discussion #430 and PR #811 which added a
+     * deletion-based `EggChangerService` that is *only* invoked from the
+     * Filament admin "Change egg" form, not from the API). The Application
+     * API does not expose any flag to bypass that limitation.
+     *
+     * Wings itself filters by current egg via the `Server::variables()`
+     * relationship (`->hasMany(EggVariable::class, 'egg_id', 'egg_id')`)
+     * so the BB_MODPACK_* orphans never reach the runtime container —
+     * but they do surface in admin UIs and panel debug tools. This scrub
+     * neutralises the values so the rows that remain in Pelican's DB
+     * carry no modpack-specific data.
+     *
+     * Values here must satisfy the installer egg's validation rules; we use
+     * the rules' permissive minimums (provider → modrinth, ids → '_', etc.).
+     */
+    public function scrubInstallerEnvironment(int $pelicanServerId, int $installerEggId, string $startupCommand): void
+    {
+        $this->http->request()
+            ->patch("/api/application/servers/{$pelicanServerId}/startup", [
+                'egg' => $installerEggId,
+                'image' => 'ghcr.io/pelican-eggs/yolks:java_21',
+                'startup' => $startupCommand,
+                'environment' => [
+                    'BB_MODPACK_PROVIDER' => 'modrinth',
+                    'BB_MODPACK_ID' => '_',
+                    'BB_MODPACK_VERSION_ID' => '_',
+                    'BB_MODPACK_GAME_VERSION' => '',
+                    'BB_MODPACK_PURGE' => '0',
+                    'BB_MODPACK_CURSEFORGE_KEY' => '',
+                    'BB_MODPACK_OPERATION' => 'install',
+                    'SERVER_JARFILE' => 'server.jar',
+                ],
+                'skip_scripts' => true,
+            ])
+            ->throw();
+    }
+
+    /**
      * Import an egg into Pelican via the Application API. UUID match in
      * the payload triggers an in-place update of the existing egg row.
      *

@@ -110,6 +110,16 @@
             "user_editable": true,
             "rules": ["required", "regex:/^[\\w.\\-]+\\.jar$/"],
             "sort": 7
+        },
+        {
+            "name": "Operation mode",
+            "description": "When 'uninstall' the script wipes /mnt/server and exits without downloading anything; otherwise runs the normal modpack install. Set automatically by the plugin during the two-phase uninstall flow; do not edit.",
+            "env_variable": "BB_MODPACK_OPERATION",
+            "default_value": "install",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": ["required", "in:install,uninstall"],
+            "sort": 8
         }
     ]
 }

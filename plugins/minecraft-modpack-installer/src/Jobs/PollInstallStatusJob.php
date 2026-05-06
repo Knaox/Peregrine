@@ -16,6 +16,7 @@ use Plugins\MinecraftModpackInstaller\Events\UninstallationCompleted;
 use Plugins\MinecraftModpackInstaller\Jobs\Concerns\SyncsServerEggId;
 use Plugins\MinecraftModpackInstaller\Models\ModpackInstallation;
 use Plugins\MinecraftModpackInstaller\Pelican\PelicanClient;
+use Plugins\MinecraftModpackInstaller\Services\EggImporter;
 use Plugins\MinecraftModpackInstaller\Services\JavaVersionDetectionService;
 use Plugins\MinecraftModpackInstaller\Services\ModpackSettingsService;
 use Psr\Log\LoggerInterface;
@@ -46,6 +47,7 @@ class PollInstallStatusJob implements ShouldQueue
         PelicanClient $pelican,
         ModpackSettingsService $settings,
         JavaVersionDetectionService $javaDetection,
+        EggImporter $eggImporter,
         LoggerInterface $logger,
     ): void {
         $installation = ModpackInstallation::with('server')->find($this->installationId);
@@ -70,6 +72,7 @@ class PollInstallStatusJob implements ShouldQueue
         $timeoutAt = $installation->started_at?->copy()->addMinutes($settings->installTimeoutMinutes());
         if ($timeoutAt !== null && now()->greaterThan($timeoutAt)) {
             $this->markFailed($installation, 'timeout');
+            $this->setLocalServerStatus($server, 'provisioning_failed', $logger);
 
             return;
         }
@@ -100,6 +103,7 @@ class PollInstallStatusJob implements ShouldQueue
                 default => 'unknown_phase_failed',
             };
             $this->markFailed($installation, $reason);
+            $this->setLocalServerStatus($server, 'provisioning_failed', $logger);
             // Roll back to the user's original egg whenever we still own
             // the installer egg — i.e. install or wipe phase. The
             // reinstall phase is already on the user's egg, so no rollback
@@ -112,9 +116,9 @@ class PollInstallStatusJob implements ShouldQueue
         }
 
         if ($isInstall) {
-            $this->finalizeInstall($installation, $pelican, $javaDetection, $logger);
+            $this->finalizeInstall($installation, $pelican, $eggImporter, $javaDetection, $logger);
         } elseif ($isUninstall) {
-            $this->beginUninstallPhase2($installation, $pelican, $logger);
+            $this->beginUninstallPhase2($installation, $pelican, $eggImporter, $logger);
         } else {
             // $isReinstall — phase 2 done, server is back on the user's
             // original egg with a fresh install. Drop the row.
@@ -130,6 +134,7 @@ class PollInstallStatusJob implements ShouldQueue
     private function finalizeInstall(
         ModpackInstallation $installation,
         PelicanClient $pelican,
+        EggImporter $eggImporter,
         JavaVersionDetectionService $javaDetection,
         LoggerInterface $logger,
     ): void {
@@ -145,6 +150,24 @@ class PollInstallStatusJob implements ShouldQueue
             $java = 17;
         }
 
+        // Scrub BB_MODPACK_* values before the egg swap. While we're still on
+        // the installer egg these keys can be safely overwritten with their
+        // permissive defaults (provider→modrinth, ids→'_', purge→0, op→
+        // install). After the swap, even though Pelican filters env by
+        // current egg when sending to Wings, the server_variables rows
+        // still surface in admin UIs and panel debug tools.
+        try {
+            $pelican->scrubInstallerEnvironment(
+                $serverId,
+                $eggImporter->ensureImported(),
+                'java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}',
+            );
+        } catch (Throwable $e) {
+            $logger->warning('modpack: BB_MODPACK_* scrub failed (continuing)', [
+                'installation' => $installation->id, 'error' => $e->getMessage(),
+            ]);
+        }
+
         try {
             $pelican->updateServerStartup($serverId, [
                 'egg' => $installation->pelican_egg_snapshot_id,
@@ -155,6 +178,9 @@ class PollInstallStatusJob implements ShouldQueue
                     is_array($installation->pelican_environment_snapshot)
                         ? $installation->pelican_environment_snapshot
                         : [],
+                    // Modpack install symlinks /mnt/server/server.jar → the
+                    // real loader jar. Override SERVER_JARFILE so the
+                    // original egg's startup command runs the symlink.
                     ['SERVER_JARFILE' => 'server.jar'],
                 ),
                 'skip_scripts' => true,
@@ -164,6 +190,7 @@ class PollInstallStatusJob implements ShouldQueue
                 'installation' => $installation->id, 'error' => $e->getMessage(),
             ]);
             $this->markFailed($installation, 'swap_back_failed: '.$e->getMessage());
+            $this->setLocalServerStatus($server, 'provisioning_failed', $logger);
 
             return;
         }
@@ -177,6 +204,8 @@ class PollInstallStatusJob implements ShouldQueue
             (int) $installation->pelican_egg_snapshot_id,
             $logger,
         );
+        // Restore the server to active so the panel UI clears the spinner.
+        $this->setLocalServerStatus($server, 'active', $logger);
 
         $installation->update([
             'status' => ModpackInstallationStatus::Completed->value,
@@ -197,6 +226,7 @@ class PollInstallStatusJob implements ShouldQueue
     private function beginUninstallPhase2(
         ModpackInstallation $installation,
         PelicanClient $pelican,
+        EggImporter $eggImporter,
         LoggerInterface $logger,
     ): void {
         $server = $installation->server;
@@ -206,12 +236,32 @@ class PollInstallStatusJob implements ShouldQueue
             return;
         }
 
+        // Same scrub as install finalize: drop the BB_MODPACK_* installer
+        // values before the user's egg comes back, otherwise they linger
+        // in server_variables and surface in panel admin UIs.
+        try {
+            $pelican->scrubInstallerEnvironment(
+                (int) $server->pelican_server_id,
+                $eggImporter->ensureImported(),
+                'java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}',
+            );
+        } catch (Throwable $e) {
+            $logger->warning('modpack: BB_MODPACK_* scrub failed (continuing)', [
+                'installation' => $installation->id, 'error' => $e->getMessage(),
+            ]);
+        }
+
         try {
             $pelican->updateServerStartup((int) $server->pelican_server_id, [
                 'egg' => $installation->pelican_egg_snapshot_id,
                 'image' => $installation->pelican_image_snapshot ?? 'ghcr.io/pelican-eggs/yolks:java_17',
                 'startup' => $installation->pelican_startup_snapshot
                     ?? 'java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}',
+                // Restore the original SERVER_JARFILE — Pelican is about to
+                // run the original egg's install script on an empty
+                // /mnt/server (just wiped in phase 1), so the egg expects
+                // its own jar name (paper.jar / fabric-server-launch.jar
+                // / etc.), not our removed symlink.
                 'environment' => array_replace(
                     is_array($installation->pelican_environment_snapshot)
                         ? $installation->pelican_environment_snapshot
@@ -229,6 +279,8 @@ class PollInstallStatusJob implements ShouldQueue
                 (int) $installation->pelican_egg_snapshot_id,
                 $logger,
             );
+            // Stay in provisioning until phase 2 reinstall completes.
+            $this->setLocalServerStatus($server, 'provisioning', $logger);
 
             $pelican->reinstallServer((int) $server->pelican_server_id);
         } catch (Throwable $e) {
@@ -236,6 +288,7 @@ class PollInstallStatusJob implements ShouldQueue
                 'installation' => $installation->id, 'error' => $e->getMessage(),
             ]);
             $this->markFailed($installation, 'phase2_dispatch_failed: '.$e->getMessage());
+            $this->setLocalServerStatus($server, 'provisioning_failed', $logger);
 
             return;
         }
@@ -251,6 +304,14 @@ class PollInstallStatusJob implements ShouldQueue
     private function finalizeUninstall(ModpackInstallation $installation, LoggerInterface $logger): void
     {
         $server = $installation->server;
+
+        if ($server !== null) {
+            // Phase 2 reinstall on the user's original egg fired the
+            // Server\Installed webhook which already nulled `status` —
+            // but make sure the panel doesn't keep showing provisioning
+            // if the webhook didn't make it through.
+            $this->setLocalServerStatus($server, 'active', $logger);
+        }
 
         try {
             event(new UninstallationCompleted($server));
