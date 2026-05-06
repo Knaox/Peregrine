@@ -58,6 +58,35 @@ ensure_tools() {
 
 # Args: <url> <output-file> [optional auth header].
 http_download() {
+    # Per-attempt budget: 15s connect + 120s body. Three attempts → worst
+    # case ~6 minutes per file. Mods are typically < 50MB so 120s body is
+    # plenty even on slow links; pack archives use a longer dedicated path
+    # (see http_download_large below).
+    local url="$1" out="$2" header="${3:-}" attempt rc
+    for attempt in 1 2 3; do
+        if [ -n "$header" ]; then
+            curl -fL --retry 0 --connect-timeout 15 --max-time 120 \
+                -H "User-Agent: $USER_AGENT" -H "$header" \
+                -o "$out" "$url"
+        else
+            curl -fL --retry 0 --connect-timeout 15 --max-time 120 \
+                -H "User-Agent: $USER_AGENT" \
+                -o "$out" "$url"
+        fi
+        rc=$?
+        if [ "$rc" -eq 0 ]; then
+            return 0
+        fi
+        warn "download attempt $attempt failed (curl rc=$rc) — $url"
+        sleep $((attempt * 2))
+    done
+    return 1
+}
+
+# Used for the modpack archive itself (CurseForge zips, .mrpack, FTB
+# server bundles) which can legitimately exceed 100MB and need a longer
+# body window than individual mods.
+http_download_large() {
     local url="$1" out="$2" header="${3:-}" attempt rc
     for attempt in 1 2 3; do
         if [ -n "$header" ]; then
@@ -73,7 +102,7 @@ http_download() {
         if [ "$rc" -eq 0 ]; then
             return 0
         fi
-        warn "download attempt $attempt failed (curl rc=$rc) — $url"
+        warn "large download attempt $attempt failed (curl rc=$rc) — $url"
         sleep $((attempt * 3))
     done
     return 1
@@ -217,7 +246,9 @@ install_modrinth() {
     [ -n "$primary_url" ] && [ "$primary_url" != "null" ] || fail "Modrinth primary file URL missing"
 
     log "Downloading $primary_filename"
-    http_download "$primary_url" "$TMPDIR/$primary_filename" \
+    # Modpack archives can run >100MB (Cobblemon, ATM10, etc.) — use the
+    # large-file budget instead of the per-mod default.
+    http_download_large "$primary_url" "$TMPDIR/$primary_filename" \
         || fail "Modrinth pack download failed"
 
     case "$primary_filename" in
@@ -233,20 +264,34 @@ install_modrinth() {
 install_modrinth_mrpack() {
     local pack="$1"
     local extract="$TMPDIR/mrpack"
+    local pack_size
+    pack_size=$(stat -c%s "$pack" 2>/dev/null || echo 0)
 
-    log "Extracting .mrpack manifest"
+    log "Extracting .mrpack manifest ($((pack_size / 1024 / 1024)) MB) into $extract"
     mkdir -p "$extract"
-    unzip -qo "$pack" -d "$extract" || fail "mrpack extract failed"
+    if ! unzip -qo "$pack" -d "$extract" </dev/null; then
+        fail "mrpack extract failed"
+    fi
+
+    local extracted_count
+    extracted_count=$(find "$extract" -type f 2>/dev/null | wc -l)
+    log "  → extracted $extracted_count file(s) from .mrpack"
 
     [ -f "$extract/modrinth.index.json" ] || fail "modrinth.index.json missing in mrpack"
 
     if [ -d "$extract/overrides" ]; then
-        log "Copying overrides/"
+        local overrides_count
+        overrides_count=$(find "$extract/overrides" -type f 2>/dev/null | wc -l)
+        log "Copying overrides/ ($overrides_count file(s))"
         cp -rT "$extract/overrides" "$WORKDIR"
+        log "  → overrides copied"
     fi
     if [ -d "$extract/server-overrides" ]; then
-        log "Copying server-overrides/"
+        local soverrides_count
+        soverrides_count=$(find "$extract/server-overrides" -type f 2>/dev/null | wc -l)
+        log "Copying server-overrides/ ($soverrides_count file(s))"
         cp -rT "$extract/server-overrides" "$WORKDIR"
+        log "  → server-overrides copied"
     fi
 
     local total resolved required required_failed index
@@ -256,12 +301,22 @@ install_modrinth_mrpack() {
     required=0
     required_failed=0
 
+    local progress_start
+    progress_start=$(date +%s)
+
     for index in $(seq 0 $((total - 1))); do
         local entry path url server_env mirror mirror_count m
         entry=$(jq -c ".files[$index]" "$extract/modrinth.index.json")
         path=$(echo "$entry" | jq -r '.path')
         url=$(echo "$entry" | jq -r '.downloads[0]')
         server_env=$(echo "$entry" | jq -r '.env.server // "required"')
+
+        # Periodic progress so the operator can see the script is alive
+        # during long mod resolutions (large packs declare 200+ files).
+        if [ $((index % 10)) -eq 0 ] && [ "$index" -gt 0 ]; then
+            local elapsed=$(( $(date +%s) - progress_start ))
+            log "  progress: $index/$total resolved=$resolved (${elapsed}s elapsed)"
+        fi
 
         if [ "$server_env" = "unsupported" ]; then
             continue
@@ -368,7 +423,7 @@ install_curseforge() {
     fi
 
     log "Downloading $file_name"
-    http_download "$download_url" "$TMPDIR/$file_name" "$hdr" \
+    http_download_large "$download_url" "$TMPDIR/$file_name" "$hdr" \
         || fail "CurseForge download failed"
 
     if [ "$is_server_pack" = "true" ]; then
@@ -560,7 +615,7 @@ install_ftb() {
     case "$server_url" in
         http*)
             log "Downloading FTB pre-built server bundle"
-            http_download "$server_url" "$TMPDIR/ftb-server.tar.gz" || fail "FTB server bundle download failed"
+            http_download_large "$server_url" "$TMPDIR/ftb-server.tar.gz" || fail "FTB server bundle download failed"
             if file "$TMPDIR/ftb-server.tar.gz" | grep -qi 'gzip'; then
                 tar -xzf "$TMPDIR/ftb-server.tar.gz" -C "$WORKDIR"
             else
@@ -654,7 +709,7 @@ install_technic() {
         zip_url=$(echo "$pack" | jq -r '.url // empty')
         [ -n "$zip_url" ] && [ "$zip_url" != "null" ] || fail "Technic non-Solder pack URL missing"
         log "Downloading flat Technic pack zip"
-        http_download "$zip_url" "$TMPDIR/technic-pack.zip" || fail "Technic pack download failed"
+        http_download_large "$zip_url" "$TMPDIR/technic-pack.zip" || fail "Technic pack download failed"
         unzip -qo "$TMPDIR/technic-pack.zip" -d "$WORKDIR" || fail "unzip failed"
     fi
 }
@@ -676,7 +731,7 @@ install_voidswrath() {
     [ -n "$server_url" ] && [ "$server_url" != "null" ] || fail "VoidsWrath modpack has no serverPackUrl"
 
     log "Downloading VoidsWrath server pack"
-    http_download "$server_url" "$TMPDIR/voids.zip" || fail "VoidsWrath download failed"
+    http_download_large "$server_url" "$TMPDIR/voids.zip" || fail "VoidsWrath download failed"
     unzip -qo "$TMPDIR/voids.zip" -d "$WORKDIR" || fail "unzip failed"
 }
 
