@@ -10,6 +10,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Plugins\MinecraftModpackInstaller\Console\ImportEgg;
@@ -48,10 +49,14 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
         $this->app->singleton(PelicanClient::class);
 
         $this->app->singleton(ModpackProviderRegistry::class, function (Application $app): ModpackProviderRegistry {
+            // Per provider ToS (notably Modrinth), every outbound request
+            // must carry an identifying User-Agent. We surface the panel's
+            // own URL so abuse reports route back to the operator who
+            // actually issued the request — never a hardcoded vendor URL.
             $userAgent = sprintf(
                 'PeregrineModpackInstaller/%s (+%s)',
                 (string) ($app['config']->get('app.version', '1.0')),
-                (string) ($app['config']->get('app.url', 'https://games.biomebounty.com')),
+                (string) ($app['config']->get('app.url', 'https://peregrine.local')),
             );
 
             $registry = new ModpackProviderRegistry();
@@ -93,6 +98,31 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
         $this->registerSchedule();
         $this->registerFilamentFallback();
         $this->registerManifestEnricher();
+        $this->registerEventListeners();
+    }
+
+    /**
+     * Listen to core lifecycle events the plugin needs to react to. Safe to
+     * call when the event class isn't shipped by the host — the listener is
+     * skipped silently (mirrors the Invitations permission-registry guard).
+     *
+     * Currently:
+     *
+     *  - `App\Events\ServerReinstallStarting` (added in Peregrine after this
+     *    plugin shipped) — fires when an operator clicks "Reinstall" on the
+     *    server homepage. The plugin drops its modpack_installations row so
+     *    the modpack tab stops showing the pack as installed.
+     */
+    private function registerEventListeners(): void
+    {
+        if (! class_exists('\\App\\Events\\ServerReinstallStarting')) {
+            return;
+        }
+
+        Event::listen(
+            \App\Events\ServerReinstallStarting::class,
+            \Plugins\MinecraftModpackInstaller\Listeners\ClearModpackOnReinstall::class,
+        );
     }
 
     /**

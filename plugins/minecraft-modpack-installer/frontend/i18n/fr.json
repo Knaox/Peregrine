@@ -27,6 +27,23 @@
                 "quilt": "Quilt",
                 "neoforge": "NeoForge"
             },
+            "sort": {
+                "label": "Tri",
+                "default": "Par défaut",
+                "relevance": "Pertinence",
+                "popular": "Plus populaires",
+                "downloads": "Plus téléchargés",
+                "updated": "Récemment mis à jour",
+                "newest": "Plus récents",
+                "name": "Nom (A→Z)",
+                "follows": "Plus suivis",
+                "plays": "Plus joués",
+                "featured": "Mis en avant"
+            },
+            "category": {
+                "label": "Catégorie",
+                "all": "Toutes les catégories"
+            },
             "search_placeholder": "Rechercher un modpack…",
             "page_size": { "label": "Par page" }
         },
@@ -46,7 +63,13 @@
             "version_label": "Version",
             "version_placeholder": "Choisir une version…",
             "loading_versions": "Chargement des versions…",
-            "no_versions": "Aucune version ne correspond à vos filtres.",
+            "no_versions": "Aucune version disponible pour ce modpack.",
+            "mc_filter_label": "Version de Minecraft",
+            "mc_filter_any": "Toute version de Minecraft",
+            "mc_filter_count": "{{compat}} versions sur {{total}} compatibles",
+            "incompatible_badge": "Incompatible",
+            "mc_unknown": "Version MC inconnue",
+            "selection_label": "Sélection :",
             "purge": {
                 "label": "Supprimer tous les fichiers du serveur avant l'installation",
                 "help": "Action irréversible. Recommandé pour une installation propre."

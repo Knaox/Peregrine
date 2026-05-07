@@ -8,6 +8,7 @@ use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\Client\Factory;
 use Plugins\MinecraftModpackInstaller\Enums\ModpackProvider;
 use Plugins\MinecraftModpackInstaller\Exceptions\ProviderRequestException;
+use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackCategory;
 use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackProviderCapabilities;
 use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackSummary;
 use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackVersion;
@@ -19,6 +20,21 @@ use Throwable;
 final class ModrinthProvider implements ModpackProviderInterface
 {
     private const BASE_URL = 'https://api.modrinth.com/v2';
+
+    /**
+     * Canonical sort id → Modrinth `index` value. The unified UI exposes the
+     * canonical ids; each provider is responsible for its own translation.
+     * Modrinth doesn't have a direct "name" sort — we fall back to relevance
+     * with the query name and rely on the provider's relevance ranking.
+     */
+    private const SORT_MAP = [
+        'relevance' => 'relevance',
+        'popular' => 'downloads',
+        'downloads' => 'downloads',
+        'updated' => 'updated',
+        'newest' => 'newest',
+        'follows' => 'follows',
+    ];
 
     public function __construct(
         private readonly Factory $http,
@@ -45,6 +61,8 @@ final class ModrinthProvider implements ModpackProviderInterface
             loaderFilter: true,
             serverMarker: true,
             multipleVersions: true,
+            sortModes: ['relevance', 'popular', 'downloads', 'updated', 'newest', 'follows'],
+            categoryFilter: true,
         );
     }
 
@@ -58,6 +76,48 @@ final class ModrinthProvider implements ModpackProviderInterface
         );
     }
 
+    /** @return list<ModpackCategory> */
+    public function listCategories(): array
+    {
+        return $this->cache->remember(
+            'modpacks:modrinth:categories',
+            24 * 3600,
+            function (): array {
+                try {
+                    $response = $this->client()
+                        ->get(self::BASE_URL.'/tag/category')
+                        ->throw()
+                        ->json();
+                } catch (Throwable) {
+                    return [];
+                }
+
+                $out = [];
+                foreach ($response ?? [] as $entry) {
+                    // Filter to project-type=modpack categories so the UI
+                    // doesn't surface mod-only buckets like "library" that
+                    // never produce results when paired with project_type:modpack.
+                    if (! is_array($entry) || ($entry['project_type'] ?? null) !== 'modpack') {
+                        continue;
+                    }
+                    $name = (string) ($entry['name'] ?? '');
+                    if ($name === '') {
+                        continue;
+                    }
+                    $out[] = new ModpackCategory(
+                        id: $name,
+                        label: ucwords(str_replace(['-', '_'], ' ', $name)),
+                        iconUrl: $entry['icon'] ?? null,
+                    );
+                }
+
+                usort($out, static fn ($a, $b) => strcasecmp($a->label, $b->label));
+
+                return $out;
+            },
+        );
+    }
+
     public function search(SearchCriteria $criteria): SearchResult
     {
         $facets = [['project_type:modpack']];
@@ -67,8 +127,12 @@ final class ModrinthProvider implements ModpackProviderInterface
         if ($criteria->loader !== null) {
             $facets[] = ["categories:{$criteria->loader->value}"];
         }
+        if ($criteria->category !== null && $criteria->category !== '') {
+            $facets[] = ["categories:{$criteria->category}"];
+        }
 
         $offset = max(0, ($criteria->page - 1) * $criteria->pageSize);
+        $sortIndex = self::SORT_MAP[$criteria->sort ?? 'relevance'] ?? 'relevance';
 
         try {
             $response = $this->client()
@@ -77,7 +141,7 @@ final class ModrinthProvider implements ModpackProviderInterface
                     'facets' => json_encode($facets, JSON_THROW_ON_ERROR),
                     'limit' => $criteria->pageSize,
                     'offset' => $offset,
-                    'index' => 'relevance',
+                    'index' => $sortIndex,
                 ])
                 ->throw()
                 ->json();
@@ -142,7 +206,14 @@ final class ModrinthProvider implements ModpackProviderInterface
         });
     }
 
-    /** @return list<ModpackVersion> */
+    /**
+     * Modrinth's `/project/{id}/version` returns the FULL list (no pagination
+     * on its side). We pass `featured=false` to get every version including
+     * older releases the maintainer didn't pin, and skip the changelog body
+     * to keep the payload small.
+     *
+     * @return list<ModpackVersion>
+     */
     public function listVersions(string $modpackId, ?string $minecraftVersion): array
     {
         $params = [];

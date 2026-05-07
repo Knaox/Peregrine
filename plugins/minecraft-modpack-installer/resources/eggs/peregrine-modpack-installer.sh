@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Minecraft: Modpack — Installer
-# (c) Damien Rouge / rouge-informatique.ch — License: MIT
+# Copyright (c) Peregrine — License: MIT
 #
 # Universal Minecraft modpack installer. Authored from scratch from the public
 # marketplace docs; not derived from any third-party installer. Runs inside the
@@ -14,7 +14,7 @@
 #   BB_MODPACK_GAME_VERSION   minecraft version hint (optional)
 #   BB_MODPACK_PURGE          1 to wipe /mnt/server before installing
 #   BB_MODPACK_CURSEFORGE_KEY CurseForge API key (only used by the curseforge provider)
-#   SERVER_JARFILE            target jar filename (the script symlinks server.jar to whatever it finds)
+#   SERVER_JARFILE                   target jar filename (the script symlinks server.jar to whatever it finds)
 
 set -uo pipefail
 
@@ -24,8 +24,8 @@ WORKDIR="/mnt/server"
 # (typically a few hundred MB tmpfs) — large modpacks like Cobblemon
 # expand to 300-500 MB which overflows the container tmpfs and aborts
 # the unzip with "write error (disk full?)".
-TMPDIR="/mnt/server/.bb-modpack-tmp-$$"
-USER_AGENT="PeregrineModpackInstaller/1.0 (+https://games.biomebounty.com)"
+TMPDIR="/mnt/server/.peregrine-modpack-tmp-$$"
+USER_AGENT="PeregrineModpackInstaller/1.1 (+https://github.com/peregrine-panel)"
 
 # Counter of soft failures that should still abort the install. Provider
 # routines bump this whenever a *required* asset (server jar, gameplay-

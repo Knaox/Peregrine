@@ -9,6 +9,7 @@ use Illuminate\Http\Client\Factory;
 use Plugins\MinecraftModpackInstaller\Enums\ModpackLoader;
 use Plugins\MinecraftModpackInstaller\Enums\ModpackProvider;
 use Plugins\MinecraftModpackInstaller\Exceptions\ProviderRequestException;
+use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackCategory;
 use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackProviderCapabilities;
 use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackSummary;
 use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackVersion;
@@ -29,12 +30,25 @@ final class CurseForgeProvider implements ModpackProviderInterface
     /** Maximum index+pageSize value the CurseForge API will accept. */
     private const RESULT_CAP = 10_000;
 
+    /** Defensive cap on how many file pages we walk for a single modpack. */
+    private const VERSION_PAGE_LIMIT = 20;
+
     /** Loader name → CurseForge numeric id. */
     private const LOADER_MAP = [
         ModpackLoader::Forge->value => 1,
         ModpackLoader::Fabric->value => 4,
         ModpackLoader::Quilt->value => 5,
         ModpackLoader::NeoForge->value => 6,
+    ];
+
+    /** Canonical sort id → CurseForge `sortField` integer. */
+    private const SORT_MAP = [
+        'relevance' => 1,  // Featured (CF's relevance/featured ranking)
+        'popular' => 2,    // Popularity
+        'updated' => 3,    // LastUpdated
+        'name' => 4,       // Name
+        'downloads' => 6,  // TotalDownloads
+        'newest' => 11,    // ReleaseDate
     ];
 
     public function __construct(
@@ -63,6 +77,8 @@ final class CurseForgeProvider implements ModpackProviderInterface
             loaderFilter: true,
             serverMarker: true,
             multipleVersions: true,
+            sortModes: ['relevance', 'popular', 'updated', 'newest', 'name', 'downloads'],
+            categoryFilter: true,
         );
     }
 
@@ -76,6 +92,53 @@ final class CurseForgeProvider implements ModpackProviderInterface
         );
     }
 
+    /** @return list<ModpackCategory> */
+    public function listCategories(): array
+    {
+        if (! $this->isConfigured()) {
+            return [];
+        }
+
+        return $this->cache->remember(
+            'modpacks:curseforge:categories',
+            24 * 3600,
+            function (): array {
+                try {
+                    $response = $this->client()
+                        ->get(self::BASE_URL.'/categories', [
+                            'gameId' => self::GAME_ID,
+                            'classId' => self::CLASS_ID_MODPACK,
+                        ])
+                        ->throw()
+                        ->json();
+                } catch (Throwable) {
+                    return [];
+                }
+
+                $out = [];
+                foreach ($response['data'] ?? [] as $entry) {
+                    $id = $entry['id'] ?? null;
+                    $name = $entry['name'] ?? null;
+                    if (! is_int($id) && ! ctype_digit((string) $id)) {
+                        continue;
+                    }
+                    if (! is_string($name) || $name === '') {
+                        continue;
+                    }
+                    $out[] = new ModpackCategory(
+                        id: (string) $id,
+                        label: $name,
+                        iconUrl: $entry['iconUrl'] ?? null,
+                    );
+                }
+
+                usort($out, static fn ($a, $b) => strcasecmp($a->label, $b->label));
+
+                return $out;
+            },
+        );
+    }
+
     public function search(SearchCriteria $criteria): SearchResult
     {
         $index = max(0, ($criteria->page - 1) * $criteria->pageSize);
@@ -83,13 +146,17 @@ final class CurseForgeProvider implements ModpackProviderInterface
             return new SearchResult(hits: [], total: 0, currentPage: $criteria->page, perPage: $criteria->pageSize);
         }
 
+        $sortField = self::SORT_MAP[$criteria->sort ?? 'relevance'] ?? self::SORT_MAP['relevance'];
+
         $params = [
             'gameId' => self::GAME_ID,
             'classId' => self::CLASS_ID_MODPACK,
             'index' => $index,
             'pageSize' => min($criteria->pageSize, 50),
-            'sortField' => 2,
-            'sortOrder' => 'desc',
+            'sortField' => $sortField,
+            // CF treats name asc as "alphabetical"; for everything else
+            // descending matches "most/biggest first" intuition.
+            'sortOrder' => $sortField === self::SORT_MAP['name'] ? 'asc' : 'desc',
         ];
         if ($criteria->query !== null && $criteria->query !== '') {
             $params['searchFilter'] = $criteria->query;
@@ -97,7 +164,16 @@ final class CurseForgeProvider implements ModpackProviderInterface
         if ($criteria->minecraftVersion !== null) {
             $params['gameVersion'] = $criteria->minecraftVersion;
         }
-        if ($criteria->loader !== null && isset(self::LOADER_MAP[$criteria->loader->value])) {
+        if ($criteria->category !== null && $criteria->category !== '' && ctype_digit($criteria->category)) {
+            $params['categoryId'] = (int) $criteria->category;
+        }
+        // CurseForge silently DROPS modLoaderType when gameVersion is missing
+        // (documented quirk). Either pair them, or omit the loader to avoid
+        // misleading "wrong version" results — we choose the latter so the
+        // UI's loader dropdown still narrows results once a version is set.
+        if ($criteria->loader !== null
+            && isset(self::LOADER_MAP[$criteria->loader->value])
+            && $criteria->minecraftVersion !== null) {
             $params['modLoaderType'] = self::LOADER_MAP[$criteria->loader->value];
         }
 
@@ -112,6 +188,19 @@ final class CurseForgeProvider implements ModpackProviderInterface
 
         $hits = [];
         foreach ($response['data'] ?? [] as $entry) {
+            // Defensive: when an MC version filter is set we must drop hits
+            // whose published files don't actually include that version.
+            // CF's `gameVersion` parameter scopes to MODS WITH FILES on that
+            // version, not "modpacks targeting that version" — older 1.8.9
+            // packs still appear when the user filters by 1.20.1 because
+            // they have a stray 1.20-tagged metadata file. Verifying the
+            // gameVersions array on `latestFilesIndexes` keeps the listing
+            // honest.
+            if ($criteria->minecraftVersion !== null
+                && ! $this->modSupportsVersion($entry, $criteria->minecraftVersion)) {
+                continue;
+            }
+
             $hits[] = new ModpackSummary(
                 provider: $this->id(),
                 modpackId: (string) $entry['id'],
@@ -170,35 +259,70 @@ final class CurseForgeProvider implements ModpackProviderInterface
         });
     }
 
-    /** @return list<ModpackVersion> */
+    /**
+     * Walks every page of the modpack's files endpoint until the API stops
+     * returning new rows. Big modded packs (Better MC, ATM10, …) have more
+     * than 50 files which the previous single-page implementation missed.
+     *
+     * @return list<ModpackVersion>
+     */
     public function listVersions(string $modpackId, ?string $minecraftVersion): array
     {
-        $params = ['pageSize' => 50, 'index' => 0];
-        if ($minecraftVersion !== null) {
-            $params['gameVersion'] = $minecraftVersion;
-        }
-
-        try {
-            $response = $this->client()
-                ->get(self::BASE_URL."/mods/{$modpackId}/files", $params)
-                ->throw()
-                ->json();
-        } catch (Throwable $e) {
-            throw new ProviderRequestException($this->id(), 'listVersions failed: '.$e->getMessage(), $e);
-        }
-
+        $perPage = 50; // CF's documented max
         $versions = [];
-        foreach ($response['data'] ?? [] as $entry) {
-            $loaders = $this->extractLoadersFromGameVersions($entry['gameVersions'] ?? []);
-            $minecraftVersions = $this->extractMinecraftVersions($entry['gameVersions'] ?? []);
+        $seen = [];
 
-            $versions[] = new ModpackVersion(
-                versionId: (string) $entry['id'],
-                label: (string) ($entry['displayName'] ?? $entry['fileName'] ?? ''),
-                minecraftVersions: $minecraftVersions,
-                loaders: $loaders,
-                releaseType: $this->mapReleaseType((int) ($entry['releaseType'] ?? 1)),
-            );
+        for ($page = 0; $page < self::VERSION_PAGE_LIMIT; $page++) {
+            $index = $page * $perPage;
+            if ($index + $perPage > self::RESULT_CAP) {
+                break;
+            }
+
+            $params = ['pageSize' => $perPage, 'index' => $index];
+            if ($minecraftVersion !== null) {
+                $params['gameVersion'] = $minecraftVersion;
+            }
+
+            try {
+                $response = $this->client()
+                    ->get(self::BASE_URL."/mods/{$modpackId}/files", $params)
+                    ->throw()
+                    ->json();
+            } catch (Throwable $e) {
+                throw new ProviderRequestException($this->id(), 'listVersions failed: '.$e->getMessage(), $e);
+            }
+
+            $batch = $response['data'] ?? [];
+            if (! is_array($batch) || $batch === []) {
+                break;
+            }
+
+            foreach ($batch as $entry) {
+                $fileId = (string) ($entry['id'] ?? '');
+                if ($fileId === '' || isset($seen[$fileId])) {
+                    continue;
+                }
+                $seen[$fileId] = true;
+
+                $loaders = $this->extractLoadersFromGameVersions($entry['gameVersions'] ?? []);
+                $minecraftVersions = $this->extractMinecraftVersions($entry['gameVersions'] ?? []);
+
+                $versions[] = new ModpackVersion(
+                    versionId: $fileId,
+                    label: (string) ($entry['displayName'] ?? $entry['fileName'] ?? ''),
+                    minecraftVersions: $minecraftVersions,
+                    loaders: $loaders,
+                    releaseType: $this->mapReleaseType((int) ($entry['releaseType'] ?? 1)),
+                );
+            }
+
+            $total = (int) ($response['pagination']['totalCount'] ?? 0);
+            if ($total > 0 && count($versions) >= $total) {
+                break;
+            }
+            if (count($batch) < $perPage) {
+                break;
+            }
         }
 
         return $versions;
@@ -240,6 +364,36 @@ final class CurseForgeProvider implements ModpackProviderInterface
         }
 
         return null;
+    }
+
+    /**
+     * Verifies a CurseForge mod entry actually publishes files for the
+     * requested MC version. Looks at both `latestFilesIndexes` (the
+     * authoritative per-version index) and the fallback `latestFiles[].gameVersions`
+     * because CF returns one shape or the other depending on the endpoint
+     * version.
+     *
+     * @param  array<string, mixed>  $entry
+     */
+    private function modSupportsVersion(array $entry, string $minecraftVersion): bool
+    {
+        foreach ($entry['latestFilesIndexes'] ?? [] as $idx) {
+            if (is_array($idx) && (string) ($idx['gameVersion'] ?? '') === $minecraftVersion) {
+                return true;
+            }
+        }
+        foreach ($entry['latestFiles'] ?? [] as $file) {
+            foreach ($file['gameVersions'] ?? [] as $tag) {
+                if ((string) $tag === $minecraftVersion) {
+                    return true;
+                }
+            }
+        }
+
+        // No version metadata at all → trust CF's own filter and let the
+        // hit through (this keeps brand-new packs without published
+        // metadata visible).
+        return ! isset($entry['latestFilesIndexes']) && ! isset($entry['latestFiles']);
     }
 
     /**

@@ -38,6 +38,11 @@ final class AtlauncherProvider implements ModpackProviderInterface
 
     public function capabilities(): ModpackProviderCapabilities
     {
+        // ATLauncher's GraphQL schema is documented as unstable; we expose
+        // only what the search query above actually uses (free-text only).
+        // Sort/filter could be added by extending the GraphQL document, but
+        // not all schema versions accept the same arguments — keep the
+        // capability surface conservative until we introspect the live schema.
         return new ModpackProviderCapabilities(
             search: true,
             pagination: false,
@@ -45,11 +50,19 @@ final class AtlauncherProvider implements ModpackProviderInterface
             loaderFilter: false,
             serverMarker: false,
             multipleVersions: true,
+            sortModes: ['relevance'],
+            categoryFilter: false,
         );
     }
 
     /** @return list<string> */
     public function listMinecraftVersions(): array
+    {
+        return [];
+    }
+
+    /** @return list<\Plugins\MinecraftModpackInstaller\Services\DTO\ModpackCategory> */
+    public function listCategories(): array
     {
         return [];
     }

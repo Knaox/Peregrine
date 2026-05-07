@@ -167,7 +167,9 @@ class UninstallModpackJob implements ShouldQueue
                     ?? 'java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}',
                 'environment' => $installation->pelican_environment_snapshot
                     ?? ['SERVER_JARFILE' => $installation->pelican_jarfile_snapshot ?? 'server.jar'],
-                'skip_scripts' => true,
+                // See finalizeInstall: skip_scripts must NOT be true here or
+                // it persists on the server row and breaks future reinstalls.
+                'skip_scripts' => false,
             ]);
 
             $this->syncLocalEggId(

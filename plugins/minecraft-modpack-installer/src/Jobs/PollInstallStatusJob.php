@@ -183,7 +183,15 @@ class PollInstallStatusJob implements ShouldQueue
                     // original egg's startup command runs the symlink.
                     ['SERVER_JARFILE' => 'server.jar'],
                 ),
-                'skip_scripts' => true,
+                // skip_scripts MUST stay false: Pelican's
+                // StartupModificationService never triggers an install on
+                // PATCH (only POST /settings/reinstall does), so the flag
+                // has no benefit here, and it persists on the server row —
+                // every subsequent native /reinstall would then be silently
+                // skipped (Pelican fires Server\Installed instantly without
+                // running the egg's install script). See server 10 in the
+                // logs at 18:09:34 for the exact failure mode.
+                'skip_scripts' => false,
             ]);
         } catch (Throwable $e) {
             $logger->error('modpack: swap-back failed', [
@@ -347,7 +355,10 @@ class PollInstallStatusJob implements ShouldQueue
                 'startup' => $installation->pelican_startup_snapshot ?? 'java -jar {{SERVER_JARFILE}}',
                 'environment' => $installation->pelican_environment_snapshot
                     ?? ['SERVER_JARFILE' => 'server.jar'],
-                'skip_scripts' => true,
+                // See finalizeInstall: skip_scripts must NOT be left true
+                // or it persists on the server row and breaks every
+                // future native reinstall.
+                'skip_scripts' => false,
             ]);
 
             $this->syncLocalEggId(

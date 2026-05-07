@@ -38,6 +38,8 @@ final class VoidsWrathProvider implements ModpackProviderInterface
 
     public function capabilities(): ModpackProviderCapabilities
     {
+        // The VoidsWrath catalog is a static JSON file with 6 entries;
+        // sort/filter is academic, but we expose `relevance` for UI parity.
         return new ModpackProviderCapabilities(
             search: true,
             pagination: false,
@@ -45,11 +47,19 @@ final class VoidsWrathProvider implements ModpackProviderInterface
             loaderFilter: false,
             serverMarker: true,
             multipleVersions: false,
+            sortModes: ['relevance'],
+            categoryFilter: false,
         );
     }
 
     /** @return list<string> */
     public function listMinecraftVersions(): array
+    {
+        return [];
+    }
+
+    /** @return list<\Plugins\MinecraftModpackInstaller\Services\DTO\ModpackCategory> */
+    public function listCategories(): array
     {
         return [];
     }

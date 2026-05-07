@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\AdminActionPerformed;
+use App\Events\Mirror\ServerMirrorChanged;
+use App\Events\ServerReinstallStarting;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ServerResource;
 use App\Models\Server;
@@ -187,6 +189,21 @@ class ServerController extends Controller
         ]);
         $wipeData = (bool) ($validated['wipe_data'] ?? false);
 
+        // Plugin hook: let listeners clean state tied to the previous
+        // server config before the egg install script runs again. The
+        // modpack-installer plugin uses this to drop its installation row
+        // so the modpack tab no longer shows the pack as installed.
+        // Failures in listeners are non-fatal — the reinstall must still
+        // proceed even if a plugin can't clean up.
+        try {
+            event(new ServerReinstallStarting($server, $wipeData));
+        } catch (\Throwable $e) {
+            Log::warning('server reinstall: ServerReinstallStarting listener threw', [
+                'server_id' => $server->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // Optional pre-step: drop every file in /mnt/server before triggering
         // the reinstall. The egg's install script then runs against an empty
         // directory, giving the same effect as a fresh server creation.
@@ -204,6 +221,26 @@ class ServerController extends Controller
         }
 
         $this->clientService->reinstallServer($server->identifier);
+
+        // Mirror Pelican's "installing" state into the local servers row
+        // immediately so the panel UI shows the spinner / install gate
+        // without waiting for the Server\Installed webhook to arrive
+        // (which only fires on completion, not on start).
+        try {
+            $server->forceFill(['status' => 'provisioning'])->save();
+            event(new ServerMirrorChanged(
+                serverId: (int) $server->id,
+                resource: ServerMirrorChanged::RESOURCE_SERVER,
+                action: ServerMirrorChanged::ACTION_UPSERT,
+                resourceId: (int) $server->id,
+                accessUserIds: $server->accessUsers()->pluck('users.id')->all(),
+            ));
+        } catch (\Throwable $e) {
+            Log::info('server reinstall: local status update / broadcast failed (non-fatal)', [
+                'server_id' => $server->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         AdminActionPerformed::dispatchIfCrossUser(
             admin: $request->user(),

@@ -119,14 +119,24 @@ class PelicanClient
                     'BB_MODPACK_OPERATION' => 'install',
                     'SERVER_JARFILE' => 'server.jar',
                 ],
-                'skip_scripts' => true,
+                // skip_scripts MUST be false: PATCH /startup never triggers
+                // an install on its own, so a true value provides no
+                // benefit, but it's stored persistently on the server row
+                // and would silently skip every future native /reinstall.
+                'skip_scripts' => false,
             ])
             ->throw();
     }
 
     /**
-     * Import an egg into Pelican via the Application API. UUID match in
-     * the payload triggers an in-place update of the existing egg row.
+     * Import an egg into Pelican via the Application API.
+     *
+     * Important: contrary to older comments, Pelican's
+     * `POST /api/application/eggs/import` does NOT upsert by UUID —
+     * re-POSTing the same UUID raises HTTP 500 (`UniqueConstraintViolationException`)
+     * because the importer service blindly calls `Egg::create()`. Callers
+     * MUST therefore look up an existing egg via {@see findEggIdByUuid()}
+     * before invoking this method.
      *
      * @param  array<string, mixed>  $payload  Decoded egg JSON (PLCN_v3 document).
      * @return int Pelican egg ID.
@@ -147,5 +157,115 @@ class PelicanClient
         }
 
         return (int) $id;
+    }
+
+    /**
+     * Look up a Pelican egg by its UUID. Walks paginated `GET /eggs` until
+     * a match is found or the list is exhausted. Returns `null` when no
+     * egg has the requested UUID.
+     *
+     * Used by {@see \Plugins\MinecraftModpackInstaller\Services\EggImporter}
+     * before attempting a (re)import — Pelican's import endpoint 500s on
+     * UUID collisions, so we have to do the existence check ourselves.
+     */
+    /**
+     * Return the env_variable names declared on a given egg. Used by the
+     * diagnostic tooling to detect when Pelican's egg has drifted from the
+     * bundled template (e.g. after a half-applied import that left the
+     * variable rows in an inconsistent state).
+     *
+     * @return list<string>
+     */
+    public function getEggVariableEnvNames(int $eggId): array
+    {
+        try {
+            $response = $this->http->request()
+                ->get("/api/application/eggs/{$eggId}", ['include' => 'variables'])
+                ->throw()
+                ->json();
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $rows = $response['attributes']['relationships']['variables']['data']
+            ?? $response['data']['attributes']['relationships']['variables']['data']
+            ?? [];
+
+        if (! is_array($rows)) {
+            return [];
+        }
+
+        $names = [];
+        foreach ($rows as $row) {
+            $env = $row['attributes']['env_variable'] ?? null;
+            if (is_string($env) && $env !== '') {
+                $names[] = $env;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * Hard-delete an egg from Pelican via the Application API. Used by the
+     * `modpacks:import-egg --hard` console command to recover from a
+     * corrupted egg row (e.g. variables out of sync with the bundled
+     * template). Returns silently on 404 (egg already gone).
+     */
+    public function deleteEgg(int $eggId): void
+    {
+        $response = $this->http->request()
+            ->delete("/api/application/eggs/{$eggId}");
+
+        // 404 = already gone, treat as success. Anything else (including
+        // 409 if a server still references the egg) bubbles up.
+        if ($response->status() === 404) {
+            return;
+        }
+
+        $response->throw();
+    }
+
+    public function findEggIdByUuid(string $uuid): ?int
+    {
+        $page = 1;
+        $maxPages = 20; // safety cap; even huge installs ship < 200 eggs
+        while ($page <= $maxPages) {
+            try {
+                $response = $this->http->request()
+                    ->get('/api/application/eggs', ['per_page' => 100, 'page' => $page])
+                    ->throw()
+                    ->json();
+            } catch (\Throwable) {
+                return null;
+            }
+
+            $rows = $response['data'] ?? [];
+            if (! is_array($rows) || $rows === []) {
+                return null;
+            }
+
+            foreach ($rows as $row) {
+                $attrs = $row['attributes'] ?? [];
+                if (! is_array($attrs)) {
+                    continue;
+                }
+                if (($attrs['uuid'] ?? null) === $uuid) {
+                    $id = $attrs['id'] ?? null;
+                    if (is_int($id) || (is_string($id) && ctype_digit($id))) {
+                        return (int) $id;
+                    }
+                }
+            }
+
+            $pagination = $response['meta']['pagination'] ?? null;
+            $totalPages = is_array($pagination) ? (int) ($pagination['total_pages'] ?? 1) : 1;
+            if ($page >= $totalPages) {
+                return null;
+            }
+            $page++;
+        }
+
+        return null;
     }
 }

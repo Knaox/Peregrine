@@ -148,6 +148,40 @@ Route::middleware('auth')->group(function () {
         },
     );
 
+    Route::get(
+        'servers/{serverIdentifier}/modpacks/providers/{provider}/categories',
+        function (string $serverIdentifier, string $provider, Request $request, ModpackProviderRegistry $registry, EligibilityService $eligibility) use ($resolveServer, $requirePerm): JsonResponse {
+            $server = $resolveServer($serverIdentifier, $request);
+            $requirePerm($request, $server, 'modpack.read');
+
+            if (! $eligibility->isEligible($server)) {
+                abort(403, __('modpacks.errors.server_not_eligible'));
+            }
+
+            $providerEnum = ModpackProvider::tryFrom($provider);
+            if ($providerEnum === null || ! $registry->has($providerEnum)) {
+                return response()->json(['error' => 'modpacks.errors.unknown_provider'], 422);
+            }
+            $impl = $registry->get($providerEnum);
+            if (! $impl->capabilities()->categoryFilter) {
+                return response()->json(['data' => []]);
+            }
+
+            $cacheKey = "modpacks:{$provider}:categories:public";
+            $categories = Cache::remember(
+                $cacheKey,
+                12 * 3600,
+                fn (): array => array_map(static fn ($c) => [
+                    'id' => $c->id,
+                    'label' => $c->label,
+                    'icon_url' => $c->iconUrl,
+                ], $impl->listCategories()),
+            );
+
+            return response()->json(['data' => $categories]);
+        },
+    );
+
     // ---------------------------------------------------------------------
     // Search
     // ---------------------------------------------------------------------
@@ -169,6 +203,8 @@ Route::middleware('auth')->group(function () {
                 'loader' => ['nullable', 'string', 'in:forge,fabric,quilt,neoforge'],
                 'page' => ['nullable', 'integer', 'min:1', 'max:200'],
                 'size' => ['nullable', 'integer', 'in:6,12,24'],
+                'sort' => ['nullable', 'string', 'in:relevance,popular,downloads,updated,newest,name,follows,plays,featured'],
+                'category' => ['nullable', 'string', 'max:64'],
             ]);
 
             $providerEnum = ModpackProvider::tryFrom($validated['provider'] ?? '')
@@ -183,12 +219,26 @@ Route::middleware('auth')->group(function () {
                 return response()->json(['error' => 'modpacks.errors.provider_not_configured'], 422);
             }
 
+            // Drop sort values that the provider doesn't declare — keeps the
+            // route forgiving when the frontend caches a stale capability set.
+            $caps = $provider->capabilities();
+            $sort = $validated['sort'] ?? null;
+            if ($sort !== null && ! in_array($sort, $caps->sortModes, true)) {
+                $sort = null;
+            }
+            $category = $validated['category'] ?? null;
+            if ($category !== null && ! $caps->categoryFilter) {
+                $category = null;
+            }
+
             $criteria = new SearchCriteria(
                 query: $validated['q'] ?? null,
                 minecraftVersion: $validated['mc'] ?? null,
                 loader: ModpackLoader::tryFromAny($validated['loader'] ?? null),
                 page: (int) ($validated['page'] ?? 1),
                 pageSize: (int) ($validated['size'] ?? 12),
+                sort: $sort,
+                category: $category,
             );
 
             try {

@@ -40,6 +40,9 @@ final class TechnicProvider implements ModpackProviderInterface
 
     public function capabilities(): ModpackProviderCapabilities
     {
+        // Technic's reverse-engineered API caps `/search` at 15 results
+        // and exposes no sort/filter knobs — the unified UI hides those
+        // controls when this provider is active.
         return new ModpackProviderCapabilities(
             search: true,
             pagination: false,
@@ -47,11 +50,19 @@ final class TechnicProvider implements ModpackProviderInterface
             loaderFilter: false,
             serverMarker: false,
             multipleVersions: true,
+            sortModes: ['relevance'],
+            categoryFilter: false,
         );
     }
 
     /** @return list<string> */
     public function listMinecraftVersions(): array
+    {
+        return [];
+    }
+
+    /** @return list<\Plugins\MinecraftModpackInstaller\Services\DTO\ModpackCategory> */
+    public function listCategories(): array
     {
         return [];
     }

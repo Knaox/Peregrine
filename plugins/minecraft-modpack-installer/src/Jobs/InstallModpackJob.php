@@ -92,6 +92,9 @@ class InstallModpackJob implements ShouldQueue
 
             $installerEggId = $eggImporter->ensureImported();
 
+            // The egg only declares the BB_MODPACK_* variables, so
+            // anything else listed here would be stripped by Pelican before
+            // hitting the installer container. Keep the wire surface tight.
             $installerEnvironment = [
                 'BB_MODPACK_PROVIDER' => $installation->provider->value,
                 'BB_MODPACK_ID' => $installation->modpack_id,
@@ -195,12 +198,15 @@ class InstallModpackJob implements ShouldQueue
                     ?? 'java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}',
                 'environment' => $installation->pelican_environment_snapshot
                     ?? ['SERVER_JARFILE' => $installation->pelican_jarfile_snapshot ?? 'server.jar'],
-                'skip_scripts' => true,
+                // skip_scripts must stay false: PATCH /startup never runs an
+                // install on its own, so the flag has no effect during
+                // rollback — but Pelican stores it on the server row and a
+                // persisted true would silently skip every future native
+                // reinstall. Mirror the egg id locally instead so the panel
+                // still reflects the right egg post-rollback.
+                'skip_scripts' => false,
             ]);
 
-            // skip_scripts=true → no Pelican webhook fires, so mirror the
-            // egg id locally ourselves. Otherwise the panel would still
-            // show the installer egg after a failed install.
             $this->syncLocalEggId(
                 $installation->server,
                 (int) $installation->pelican_egg_snapshot_id,
