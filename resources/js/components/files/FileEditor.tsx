@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import clsx from 'clsx';
@@ -61,7 +62,12 @@ export function FileEditor({
     const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
     const langLabel = ext === 'yml' || ext === 'yaml' ? 'YAML' : ext === 'json' ? 'JSON' : ext === 'properties' ? 'PROPS' : ext.toUpperCase();
 
-    return (
+    // Render via portal to document.body so the editor escapes every
+    // ancestor stacking context (notably <m.main> with `relative z-10`
+    // and the LeftSidebar's `backdrop-filter` — both create stacking
+    // contexts that trap the panel's z-50 under the sidebar on Classic
+    // / Rail variants). Same pattern as PulseDetailDrawer / FileActionMenu.
+    const editor = (
         <>
             {/* Backdrop */}
             <m.div
@@ -183,4 +189,7 @@ export function FileEditor({
             </m.div>
         </>
     );
+
+    if (typeof document === 'undefined') return null;
+    return createPortal(editor, document.body);
 }
