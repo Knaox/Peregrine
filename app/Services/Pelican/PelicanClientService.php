@@ -149,11 +149,97 @@ class PelicanClientService
     }
 
     // -------------------------------------------------------------------------
+    // File operations (used by wipe-and-reinstall flow)
+    // -------------------------------------------------------------------------
+
+    /**
+     * List entries in a directory of a server's filesystem via the Pelican
+     * Client API. Each row carries `name`, `mode`, `is_file`, `is_symlink`,
+     * `size`, etc. — we mostly need `name` + `is_file` for the wipe path.
+     *
+     * @return array<int, array<string, mixed>>
+     *
+     * @throws RequestException
+     */
+    public function listFiles(string $serverIdentifier, string $directory = '/'): array
+    {
+        $response = $this->request()
+            ->get("/api/client/servers/{$serverIdentifier}/files/list", ['directory' => $directory])
+            ->throw();
+
+        $entries = [];
+        foreach (($response->json('data') ?? []) as $entry) {
+            $attrs = $entry['attributes'] ?? $entry;
+            if (! is_array($attrs)) {
+                continue;
+            }
+            $entries[] = $attrs;
+        }
+
+        return $entries;
+    }
+
+    /**
+     * Delete one or more files/directories from a server via the Pelican
+     * Client API. Pelican accepts both files and directory names — directories
+     * are removed recursively. The `root` is the parent directory, the
+     * `files` array is a list of names relative to that root.
+     *
+     * @param  list<string>  $files
+     *
+     * @throws RequestException
+     */
+    public function deleteFiles(string $serverIdentifier, string $root, array $files): void
+    {
+        if ($files === []) {
+            return;
+        }
+
+        $this->request()
+            ->post("/api/client/servers/{$serverIdentifier}/files/delete", [
+                'root' => $root,
+                'files' => array_values($files),
+            ])
+            ->throw();
+    }
+
+    /**
+     * Wipe the entire /mnt/server volume of a server by listing the root and
+     * issuing a single bulk delete. Used by the reinstall flow when the
+     * "delete data" option is checked. Does NOT trigger a reinstall — caller
+     * follows up with reinstallServer().
+     *
+     * @throws RequestException
+     */
+    public function wipeServerFiles(string $serverIdentifier): void
+    {
+        $entries = $this->listFiles($serverIdentifier, '/');
+        $names = [];
+        foreach ($entries as $entry) {
+            $name = $entry['name'] ?? null;
+            if (is_string($name) && $name !== '' && $name !== '.' && $name !== '..') {
+                $names[] = $name;
+            }
+        }
+
+        $this->deleteFiles($serverIdentifier, '/', $names);
+    }
+
+    // -------------------------------------------------------------------------
     // Startup variables
     // -------------------------------------------------------------------------
 
     /**
      * Get startup variables for a server.
+     *
+     * Returns an empty array when Pelican replies with HTTP 409
+     * `ServerStateConflictException` — that's the documented response
+     * while the server is mid-install / mid-reinstall (e.g. during a
+     * modpack-installer egg swap or a panel-triggered reinstall) and is
+     * not an error worth bubbling up. Callers polling this endpoint can
+     * just retry once the server settles.
+     *
+     * Any other HTTP error still throws the underlying `RequestException`.
      *
      * @return array<int, array<string, mixed>>
      *
@@ -161,9 +247,16 @@ class PelicanClientService
      */
     public function getStartupVariables(string $serverIdentifier): array
     {
-        $response = $this->request()
-            ->get("/api/client/servers/{$serverIdentifier}/startup")
-            ->throw();
+        try {
+            $response = $this->request()
+                ->get("/api/client/servers/{$serverIdentifier}/startup")
+                ->throw();
+        } catch (RequestException $e) {
+            if ($e->response !== null && $e->response->status() === 409) {
+                return [];
+            }
+            throw $e;
+        }
 
         $data = $response->json('data') ?? [];
 

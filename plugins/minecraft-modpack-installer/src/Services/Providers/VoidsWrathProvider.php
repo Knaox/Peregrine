@@ -38,6 +38,8 @@ final class VoidsWrathProvider implements ModpackProviderInterface
 
     public function capabilities(): ModpackProviderCapabilities
     {
+        // The VoidsWrath catalog is a static JSON file with 6 entries;
+        // sort/filter is academic, but we expose `relevance` for UI parity.
         return new ModpackProviderCapabilities(
             search: true,
             pagination: false,
@@ -45,11 +47,19 @@ final class VoidsWrathProvider implements ModpackProviderInterface
             loaderFilter: false,
             serverMarker: true,
             multipleVersions: false,
+            sortModes: ['relevance'],
+            categoryFilter: false,
         );
     }
 
     /** @return list<string> */
     public function listMinecraftVersions(): array
+    {
+        return [];
+    }
+
+    /** @return list<\Plugins\MinecraftModpackInstaller\Services\DTO\ModpackCategory> */
+    public function listCategories(): array
     {
         return [];
     }
@@ -80,6 +90,29 @@ final class VoidsWrathProvider implements ModpackProviderInterface
         }
 
         return new SearchResult($hits, count($hits), 1, max(count($hits), 1));
+    }
+
+    public function getModpack(string $modpackId): ?ModpackSummary
+    {
+        $catalog = $this->loadCatalog();
+        foreach ($catalog as $entry) {
+            if ((string) ($entry['id'] ?? '') !== $modpackId) {
+                continue;
+            }
+
+            return new ModpackSummary(
+                provider: $this->id(),
+                modpackId: (string) $entry['id'],
+                name: (string) ($entry['displayName'] ?? $modpackId),
+                slug: null,
+                description: $entry['description'] ?? null,
+                iconUrl: $entry['logo'] ?? null,
+                externalUrl: $entry['platformUrl'] ?? null,
+                isServerCompatible: ! empty($entry['serverPackUrl']),
+            );
+        }
+
+        return null;
     }
 
     /** @return list<ModpackVersion> */

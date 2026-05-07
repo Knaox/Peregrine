@@ -114,6 +114,19 @@ class InstallationOrchestrator
 
     private function resolveSummary(ModpackProviderInterface $provider, ModpackInstallIntent $intent): ?ModpackSummary
     {
+        // Direct API lookup by id — guarantees we persist the real modpack
+        // name + icon + url. The previous implementation re-used the search
+        // endpoint which returned wrong data for numeric ids (FTB,
+        // CurseForge) where full-text search rarely matched.
+        try {
+            $direct = $provider->getModpack($intent->modpackId);
+            if ($direct !== null) {
+                return $direct;
+            }
+        } catch (Throwable) {
+            // fall through to legacy search-based fallback below
+        }
+
         try {
             $criteria = new SearchCriteria(
                 query: $intent->modpackId,
@@ -128,11 +141,11 @@ class InstallationOrchestrator
                     return $hit;
                 }
             }
-
-            return $result->hits[0] ?? null;
         } catch (Throwable) {
-            return null;
+            // ignore, return null below
         }
+
+        return null;
     }
 
     private function resolveVersion(ModpackProviderInterface $provider, ModpackInstallIntent $intent): ?ModpackVersion

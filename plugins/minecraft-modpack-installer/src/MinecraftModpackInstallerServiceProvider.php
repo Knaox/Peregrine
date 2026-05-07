@@ -10,6 +10,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Plugins\MinecraftModpackInstaller\Console\ImportEgg;
@@ -48,10 +49,14 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
         $this->app->singleton(PelicanClient::class);
 
         $this->app->singleton(ModpackProviderRegistry::class, function (Application $app): ModpackProviderRegistry {
+            // Per provider ToS (notably Modrinth), every outbound request
+            // must carry an identifying User-Agent. We surface the panel's
+            // own URL so abuse reports route back to the operator who
+            // actually issued the request — never a hardcoded vendor URL.
             $userAgent = sprintf(
                 'PeregrineModpackInstaller/%s (+%s)',
                 (string) ($app['config']->get('app.version', '1.0')),
-                (string) ($app['config']->get('app.url', 'https://games.biomebounty.com')),
+                (string) ($app['config']->get('app.url', 'https://peregrine.local')),
             );
 
             $registry = new ModpackProviderRegistry();
@@ -93,6 +98,31 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
         $this->registerSchedule();
         $this->registerFilamentFallback();
         $this->registerManifestEnricher();
+        $this->registerEventListeners();
+    }
+
+    /**
+     * Listen to core lifecycle events the plugin needs to react to. Safe to
+     * call when the event class isn't shipped by the host — the listener is
+     * skipped silently (mirrors the Invitations permission-registry guard).
+     *
+     * Currently:
+     *
+     *  - `App\Events\ServerReinstallStarting` (added in Peregrine after this
+     *    plugin shipped) — fires when an operator clicks "Reinstall" on the
+     *    server homepage. The plugin drops its modpack_installations row so
+     *    the modpack tab stops showing the pack as installed.
+     */
+    private function registerEventListeners(): void
+    {
+        if (! class_exists('\\App\\Events\\ServerReinstallStarting')) {
+            return;
+        }
+
+        Event::listen(
+            \App\Events\ServerReinstallStarting::class,
+            \Plugins\MinecraftModpackInstaller\Listeners\ClearModpackOnReinstall::class,
+        );
     }
 
     /**
@@ -107,19 +137,37 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
     private function registerManifestEnricher(): void
     {
         ManifestEnricherRegistry::getInstance()->register(self::PLUGIN_ID, function (array $manifest): array {
-            $eggIds = Cache::remember('modpack_settings.whitelisted_egg_ids', 60, function (): array {
-                try {
-                    return $this->app->make(\Plugins\MinecraftModpackInstaller\Services\ModpackSettingsService::class)
-                        ->whitelistedEggIds();
-                } catch (\Throwable) {
-                    return [];
+            $settings = $this->app->make(\Plugins\MinecraftModpackInstaller\Services\ModpackSettingsService::class);
+
+            $eggIds = Cache::remember(
+                'modpack_settings.whitelisted_egg_ids',
+                60,
+                static function () use ($settings): array {
+                    try {
+                        return $settings->whitelistedEggIds();
+                    } catch (\Throwable) {
+                        return [];
+                    }
                 }
-            });
+            );
+
+            $route = Cache::remember(
+                'modpack_settings.page_route',
+                60,
+                static function () use ($settings): string {
+                    try {
+                        return $settings->pageRoute();
+                    } catch (\Throwable) {
+                        return '/modpacks';
+                    }
+                }
+            );
 
             $entries = $manifest['server_sidebar_entries'] ?? [];
             foreach ($entries as $idx => $entry) {
                 if (($entry['id'] ?? null) === 'modpacks') {
                     $entries[$idx]['requires_egg_ids'] = $eggIds;
+                    $entries[$idx]['route_suffix'] = $route;
                 }
             }
             $manifest['server_sidebar_entries'] = $entries;
@@ -195,7 +243,7 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
     /**
      * On modern Peregrine cores, Filament resources/pages declared by the
      * plugin are auto-discovered (PluginManager::contributeToFilamentPanel).
-     * On older cores, register the settings page manually via a `booted`
+     * On older cores, register the settings resource manually via a `booted`
      * callback. Mirrors the pattern in egg-config-editor.
      */
     private function registerFilamentFallback(): void
@@ -206,8 +254,8 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
 
         $this->app->booted(function (): void {
             try {
-                \Filament\Facades\Filament::getDefaultPanel()->pages([
-                    \Plugins\MinecraftModpackInstaller\Filament\Pages\ModpackSettings::class,
+                \Filament\Facades\Filament::getDefaultPanel()->resources([
+                    \Plugins\MinecraftModpackInstaller\Filament\Resources\ModpackConfigResource::class,
                 ]);
             } catch (\Throwable) {
                 // No default panel registered yet — skip silently.

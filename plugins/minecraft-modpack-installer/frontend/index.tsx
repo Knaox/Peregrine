@@ -14,7 +14,7 @@
  */
 import {
     api, BASE, C, h, P, PROVIDER_LABEL_KEY, S, svg,
-    type Capabilities, type InstallationState, type ModpackHit, type ModpackVersion,
+    type Capabilities, type Category, type InstallationState, type ModpackHit, type ModpackVersion,
     type Provider, type SearchMeta,
 } from './shared';
 import { renderInstallModal, renderUninstallModal } from './modals';
@@ -81,6 +81,8 @@ function ModpacksPage() {
     const [committedSearch, setCommittedSearch] = useState<string>('');
     const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
     const [page, setPage] = useState<number>(1);
+    const [sort, setSort] = useState<string>('');     // '' = provider default
+    const [category, setCategory] = useState<string>('');
 
     // Initialise providerId from the providers list once it lands.
     if (providerId === '' && providers.length > 0) {
@@ -99,6 +101,8 @@ function ModpacksPage() {
         setProviderId(newId);
         setMcVersion('');
         setLoader('');
+        setSort('');
+        setCategory('');
         setPage(1);
     };
 
@@ -114,17 +118,30 @@ function ModpacksPage() {
     const mcVersions: string[] = (mcVersionsQ.data as { data?: string[] } | undefined)?.data ?? [];
 
     // ---------------------------------------------------------------------
+    // Categories / tags (provider-conditional)
+    // ---------------------------------------------------------------------
+    const categoriesQ = useQuery({
+        queryKey: ['mp', identifier, 'categories', providerId],
+        queryFn: () => api<{ data: Category[] }>(`${BASE}/servers/${identifier}/modpacks/providers/${providerId}/categories`),
+        enabled: !!identifier && !!providerId && (caps?.category_filter ?? false),
+        staleTime: 12 * 60 * 60_000,
+    });
+    const categories: Category[] = (categoriesQ.data as { data?: Category[] } | undefined)?.data ?? [];
+
+    // ---------------------------------------------------------------------
     // Search
     // ---------------------------------------------------------------------
     const searchEnabled = !!identifier && !!providerId && (currentProvider?.configured ?? false);
     const searchQ = useQuery({
-        queryKey: ['mp', identifier, 'search', providerId, committedSearch, mcVersion, loader, page, pageSize],
+        queryKey: ['mp', identifier, 'search', providerId, committedSearch, mcVersion, loader, sort, category, page, pageSize],
         queryFn: () => {
             const url = new URL(`${BASE}/servers/${identifier}/modpacks/search`, window.location.origin);
             url.searchParams.set('provider', providerId);
             if (committedSearch) url.searchParams.set('q', committedSearch);
             if (mcVersion) url.searchParams.set('mc', mcVersion);
             if (loader) url.searchParams.set('loader', loader);
+            if (sort) url.searchParams.set('sort', sort);
+            if (category) url.searchParams.set('category', category);
             url.searchParams.set('page', String(page));
             url.searchParams.set('size', String(pageSize));
             return api<SearchResponse>(url.pathname + url.search);
@@ -160,11 +177,15 @@ function ModpacksPage() {
     const [uninstallOpen, setUninstallOpen] = useState<boolean>(false);
     const [uninstallError, setUninstallError] = useState<string | null>(null);
 
+    // Intentionally fetched WITHOUT the marketplace's MC filter so the modal
+    // can show every version that exists for the modpack — and let the user
+    // narrow on the spot. Filtering server-side here would amputate the list
+    // without any way to recover it without closing the modal.
     const installVersionsQ = useQuery({
-        queryKey: ['mp', identifier, 'versions', installTarget?.provider, installTarget?.modpack_id, mcVersion],
+        queryKey: ['mp', identifier, 'versions', installTarget?.provider, installTarget?.modpack_id],
         queryFn: () => {
             if (!installTarget) return Promise.resolve({ data: [] });
-            const u = `${BASE}/servers/${identifier}/modpacks/${installTarget.provider}/${encodeURIComponent(installTarget.modpack_id)}/versions${mcVersion ? `?mc=${encodeURIComponent(mcVersion)}` : ''}`;
+            const u = `${BASE}/servers/${identifier}/modpacks/${installTarget.provider}/${encodeURIComponent(installTarget.modpack_id)}/versions`;
             return api<{ data: ModpackVersion[] }>(u);
         },
         enabled: !!installTarget,
@@ -282,6 +303,8 @@ function ModpacksPage() {
             providers, providerId, setProviderId: resetForProvider,
             mcVersions, mcVersion, setMcVersion: (v) => { setMcVersion(v); setPage(1); },
             loader, setLoader: (v) => { setLoader(v); setPage(1); },
+            sort, setSort: (v) => { setSort(v); setPage(1); },
+            categories, category, setCategory: (v) => { setCategory(v); setPage(1); },
             searchTerm, setSearchTerm,
             commitSearch: () => { setCommittedSearch(searchTerm); setPage(1); },
             pageSize, setPageSize: (v) => { setPageSize(v); setPage(1); },
@@ -401,6 +424,11 @@ interface FiltersProps {
     setMcVersion: (v: string) => void;
     loader: string;
     setLoader: (v: string) => void;
+    sort: string;
+    setSort: (v: string) => void;
+    categories: Category[];
+    category: string;
+    setCategory: (v: string) => void;
     searchTerm: string;
     setSearchTerm: (v: string) => void;
     commitSearch: () => void;
@@ -447,6 +475,40 @@ function renderFilters(p: FiltersProps): ReturnType<typeof h> {
                 h('option', { key: 'fabric', value: 'fabric' }, t('modpacks.filters.loader.fabric')),
                 h('option', { key: 'quilt', value: 'quilt' }, t('modpacks.filters.loader.quilt')),
                 h('option', { key: 'neoforge', value: 'neoforge' }, t('modpacks.filters.loader.neoforge')),
+            ])
+            : null,
+
+        // Sort dropdown — only the values declared by the active provider's
+        // capabilities. Hidden when the provider exposes only one mode (or
+        // none) since a 1-option dropdown is just visual noise.
+        (p.caps?.sort_modes ?? []).length > 1
+            ? h('select', {
+                key: 'sort',
+                value: p.sort,
+                onChange: (e: { target: { value: string } }) => p.setSort(e.target.value),
+                style: C.select,
+                'aria-label': t('modpacks.filters.sort.label'),
+            }, [
+                h('option', { key: '_', value: '' }, t('modpacks.filters.sort.default')),
+                ...((p.caps?.sort_modes ?? []).map(mode =>
+                    h('option', { key: mode, value: mode }, t(`modpacks.filters.sort.${mode}`)))),
+            ])
+            : null,
+
+        // Category dropdown — provider-conditional. Categories arrive
+        // asynchronously (separate query) so we render a disabled
+        // placeholder until the list is loaded.
+        p.caps?.category_filter
+            ? h('select', {
+                key: 'cat',
+                value: p.category,
+                onChange: (e: { target: { value: string } }) => p.setCategory(e.target.value),
+                style: C.select,
+                disabled: p.categories.length === 0,
+                'aria-label': t('modpacks.filters.category.label'),
+            }, [
+                h('option', { key: '_', value: '' }, t('modpacks.filters.category.all')),
+                ...p.categories.map(c => h('option', { key: c.id, value: c.id }, c.label)),
             ])
             : null,
 

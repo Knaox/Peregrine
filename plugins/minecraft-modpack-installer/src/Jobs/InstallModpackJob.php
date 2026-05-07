@@ -11,11 +11,13 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Plugins\MinecraftModpackInstaller\Enums\ModpackInstallationStatus;
 use Plugins\MinecraftModpackInstaller\Events\InstallationFailed;
+use Plugins\MinecraftModpackInstaller\Jobs\Concerns\SyncsServerEggId;
 use Plugins\MinecraftModpackInstaller\Models\ModpackInstallation;
 use Plugins\MinecraftModpackInstaller\Pelican\PelicanClient;
 use Plugins\MinecraftModpackInstaller\Services\EggImporter;
 use Plugins\MinecraftModpackInstaller\Services\ModpackSettingsService;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 class InstallModpackJob implements ShouldQueue
@@ -24,6 +26,7 @@ class InstallModpackJob implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
+    use SyncsServerEggId;
 
     public int $tries = 1;
 
@@ -89,6 +92,9 @@ class InstallModpackJob implements ShouldQueue
 
             $installerEggId = $eggImporter->ensureImported();
 
+            // The egg only declares the BB_MODPACK_* variables, so
+            // anything else listed here would be stripped by Pelican before
+            // hitting the installer container. Keep the wire surface tight.
             $installerEnvironment = [
                 'BB_MODPACK_PROVIDER' => $installation->provider->value,
                 'BB_MODPACK_ID' => $installation->modpack_id,
@@ -96,16 +102,37 @@ class InstallModpackJob implements ShouldQueue
                 'BB_MODPACK_GAME_VERSION' => $this->extractMinecraftVersion($installation),
                 'BB_MODPACK_PURGE' => $installation->purge_files ? '1' : '0',
                 'BB_MODPACK_CURSEFORGE_KEY' => (string) ($settings->curseforgeApiKey() ?? ''),
+                'BB_MODPACK_OPERATION' => 'install',
                 'SERVER_JARFILE' => 'server.jar',
             ];
 
-            $pelican->updateServerStartup((int) $server->pelican_server_id, [
+            $updateResponse = $pelican->updateServerStartup((int) $server->pelican_server_id, [
                 'egg' => $installerEggId,
                 'image' => 'ghcr.io/pelican-eggs/yolks:java_21',
                 'startup' => 'java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}',
                 'environment' => $installerEnvironment,
                 'skip_scripts' => false,
             ]);
+
+            // Confirm Pelican accepted the egg swap before kicking off the
+            // reinstall — silent ignores would otherwise install the modpack
+            // on the previous egg and leave the panel out of sync.
+            $confirmedEggId = $this->confirmedEggId($updateResponse, $pelican, (int) $server->pelican_server_id);
+            if ($confirmedEggId !== $installerEggId) {
+                throw new RuntimeException(
+                    "egg_swap_unconfirmed: expected {$installerEggId} got "
+                    .($confirmedEggId === null ? 'null' : (string) $confirmedEggId)
+                );
+            }
+
+            // Mirror the swap into the local servers.egg_id immediately —
+            // Pelican will fire the Server\Installed webhook on completion,
+            // but we want the panel UI to reflect the installer egg during
+            // the install, not the previous one. Also flip local status
+            // so the panel UI shows a "provisioning" indicator on the
+            // server row throughout the modpack install.
+            $this->syncLocalEggId($server, $confirmedEggId, $logger);
+            $this->setLocalServerStatus($server, 'provisioning', $logger);
 
             $pelican->reinstallServer((int) $server->pelican_server_id);
 
@@ -115,6 +142,9 @@ class InstallModpackJob implements ShouldQueue
                 'installation' => $installation->id, 'error' => $e->getMessage(),
             ]);
             $this->markFailed($installation, 'install_dispatch_failed: '.$e->getMessage());
+            if ($server !== null) {
+                $this->setLocalServerStatus($server, 'provisioning_failed', $logger);
+            }
             $this->bestEffortRollback($installation, $pelican, $logger);
 
             throw $e;
@@ -123,13 +153,22 @@ class InstallModpackJob implements ShouldQueue
 
     public function failed(Throwable $e): void
     {
-        $installation = ModpackInstallation::find($this->installationId);
+        $installation = ModpackInstallation::with('server')->find($this->installationId);
         if ($installation === null) {
             return;
         }
         if ($installation->status === ModpackInstallationStatus::Installing
             || $installation->status === ModpackInstallationStatus::Pending) {
             $this->markFailed($installation, 'job_failed: '.substr($e->getMessage(), 0, 800));
+            if ($installation->server !== null) {
+                // Best-effort: leave a clean slate so the panel UI doesn't
+                // show a permanent spinner if the queue worker died mid-job.
+                try {
+                    $installation->server->forceFill(['status' => 'provisioning_failed'])->save();
+                } catch (\Throwable) {
+                    // ignore — Concerns trait isn't loaded here
+                }
+            }
         }
     }
 
@@ -159,8 +198,20 @@ class InstallModpackJob implements ShouldQueue
                     ?? 'java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}',
                 'environment' => $installation->pelican_environment_snapshot
                     ?? ['SERVER_JARFILE' => $installation->pelican_jarfile_snapshot ?? 'server.jar'],
-                'skip_scripts' => true,
+                // skip_scripts must stay false: PATCH /startup never runs an
+                // install on its own, so the flag has no effect during
+                // rollback — but Pelican stores it on the server row and a
+                // persisted true would silently skip every future native
+                // reinstall. Mirror the egg id locally instead so the panel
+                // still reflects the right egg post-rollback.
+                'skip_scripts' => false,
             ]);
+
+            $this->syncLocalEggId(
+                $installation->server,
+                (int) $installation->pelican_egg_snapshot_id,
+                $logger,
+            );
         } catch (Throwable $e) {
             $logger->warning('modpack: rollback after install failure failed', [
                 'installation' => $installation->id, 'error' => $e->getMessage(),
@@ -176,5 +227,35 @@ class InstallModpackJob implements ShouldQueue
         }
 
         return '';
+    }
+
+    /**
+     * Extract the egg id Pelican confirmed for the swap. Tries the PATCH
+     * response first (newer Pelican versions return the resource), then
+     * falls back to a fresh GET — covers 204 No Content and lets us
+     * detect silent ignores.
+     *
+     * @param  array<string, mixed>  $patchResponse
+     */
+    private function confirmedEggId(array $patchResponse, PelicanClient $pelican, int $pelicanServerId): ?int
+    {
+        $candidate = $patchResponse['attributes']['egg']
+            ?? $patchResponse['data']['attributes']['egg']
+            ?? null;
+
+        if (is_int($candidate) || (is_string($candidate) && ctype_digit($candidate))) {
+            return (int) $candidate;
+        }
+
+        try {
+            $raw = $pelican->getServerRaw($pelicanServerId);
+            $eggId = $raw['attributes']['egg'] ?? null;
+
+            return is_int($eggId) || (is_string($eggId) && ctype_digit($eggId))
+                ? (int) $eggId
+                : null;
+        } catch (Throwable) {
+            return null;
+        }
     }
 }

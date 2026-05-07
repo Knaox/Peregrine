@@ -1,6 +1,6 @@
 # Minecraft: Modpack — Installer
 
-A Peregrine plugin that lets a server owner install, update and remove a Minecraft modpack on one of their servers in a few clicks. Aggregates the six main public modpack marketplaces, auto-detects the Java version the modpack requires, and switches the server runtime accordingly.
+**Official Peregrine plugin** that lets a server owner install, update and remove a Minecraft modpack on one of their servers in a few clicks. Aggregates the six main public modpack marketplaces, auto-detects the Java version the modpack requires, and switches the server runtime accordingly.
 
 ## Capabilities
 

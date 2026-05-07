@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Minecraft: Modpack — Installer
-# (c) Damien Rouge / rouge-informatique.ch — License: MIT
+# Copyright (c) Peregrine — License: MIT
 #
 # Universal Minecraft modpack installer. Authored from scratch from the public
 # marketplace docs; not derived from any third-party installer. Runs inside the
@@ -14,17 +14,33 @@
 #   BB_MODPACK_GAME_VERSION   minecraft version hint (optional)
 #   BB_MODPACK_PURGE          1 to wipe /mnt/server before installing
 #   BB_MODPACK_CURSEFORGE_KEY CurseForge API key (only used by the curseforge provider)
-#   SERVER_JARFILE            target jar filename (the script symlinks server.jar to whatever it finds)
+#   SERVER_JARFILE                   target jar filename (the script symlinks server.jar to whatever it finds)
 
 set -uo pipefail
 
 WORKDIR="/mnt/server"
-TMPDIR="/tmp/bb-modpack-$$"
-USER_AGENT="PeregrineModpackInstaller/1.0 (+https://games.biomebounty.com)"
+# Stage on the persistent server volume (subject to the server's disk
+# quota, typically several GB) instead of the install container's /tmp
+# (typically a few hundred MB tmpfs) — large modpacks like Cobblemon
+# expand to 300-500 MB which overflows the container tmpfs and aborts
+# the unzip with "write error (disk full?)".
+TMPDIR="/mnt/server/.peregrine-modpack-tmp-$$"
+USER_AGENT="PeregrineModpackInstaller/1.1 (+https://github.com/peregrine-panel)"
+
+# Counter of soft failures that should still abort the install. Provider
+# routines bump this whenever a *required* asset (server jar, gameplay-
+# critical mod) fails to download. main() inspects it after the loader
+# install and aborts with FATAL if non-zero so Pelican marks the install
+# failed instead of silently completing on a broken /mnt/server.
+CRITICAL_FAILURES=0
 
 log()  { printf '[modpack-installer] %s\n' "$*"; }
 warn() { printf '[modpack-installer] WARN: %s\n' "$*" >&2; }
 fail() { printf '[modpack-installer] FATAL: %s\n' "$*" >&2; exit 1; }
+crit() {
+    printf '[modpack-installer] CRITICAL: %s\n' "$*" >&2
+    CRITICAL_FAILURES=$((CRITICAL_FAILURES + 1))
+}
 
 cleanup() { rm -rf "$TMPDIR" 2>/dev/null || true; }
 trap cleanup EXIT
@@ -47,6 +63,35 @@ ensure_tools() {
 
 # Args: <url> <output-file> [optional auth header].
 http_download() {
+    # Per-attempt budget: 15s connect + 120s body. Three attempts → worst
+    # case ~6 minutes per file. Mods are typically < 50MB so 120s body is
+    # plenty even on slow links; pack archives use a longer dedicated path
+    # (see http_download_large below).
+    local url="$1" out="$2" header="${3:-}" attempt rc
+    for attempt in 1 2 3; do
+        if [ -n "$header" ]; then
+            curl -fL --retry 0 --connect-timeout 15 --max-time 120 \
+                -H "User-Agent: $USER_AGENT" -H "$header" \
+                -o "$out" "$url"
+        else
+            curl -fL --retry 0 --connect-timeout 15 --max-time 120 \
+                -H "User-Agent: $USER_AGENT" \
+                -o "$out" "$url"
+        fi
+        rc=$?
+        if [ "$rc" -eq 0 ]; then
+            return 0
+        fi
+        warn "download attempt $attempt failed (curl rc=$rc) — $url"
+        sleep $((attempt * 2))
+    done
+    return 1
+}
+
+# Used for the modpack archive itself (CurseForge zips, .mrpack, FTB
+# server bundles) which can legitimately exceed 100MB and need a longer
+# body window than individual mods.
+http_download_large() {
     local url="$1" out="$2" header="${3:-}" attempt rc
     for attempt in 1 2 3; do
         if [ -n "$header" ]; then
@@ -62,7 +107,7 @@ http_download() {
         if [ "$rc" -eq 0 ]; then
             return 0
         fi
-        warn "download attempt $attempt failed (curl rc=$rc) — $url"
+        warn "large download attempt $attempt failed (curl rc=$rc) — $url"
         sleep $((attempt * 3))
     done
     return 1
@@ -136,11 +181,25 @@ EOF
 }
 
 # Heuristic: find a likely server jar in $WORKDIR and symlink server.jar to it.
+# Forge "run.sh" / NeoForge ".sh" launchers (modern 1.17+ Forge) are picked up
+# via a separate path because they don't ship a single fat jar — the script
+# delegates startup to user_jvm_args.txt + a launcher script. We rewrite
+# server.jar to a tiny shim that reads run.sh in those cases.
 finalize_jar() {
     cd "$WORKDIR" || return 1
 
-    if [ -f "server.jar" ]; then
-        log "server.jar already in place."
+    if [ -f "server.jar" ] && [ -s "server.jar" ]; then
+        log "server.jar already in place ($(stat -c%s server.jar) bytes)."
+        return 0
+    fi
+
+    # Modern Forge (1.17+) ships a `run.sh` / `run.bat` plus a libraries/
+    # tree instead of a runnable jar. The egg's startup command must call
+    # bash run.sh directly — we surface the situation clearly so the
+    # admin can adjust startup if Pelican didn't pick the modded egg.
+    if [ -f "$WORKDIR/run.sh" ]; then
+        log "Detected modern Forge/NeoForge launcher (run.sh) — leaving server.jar absent."
+        log "Startup command should be: bash run.sh nogui"
         return 0
     fi
 
@@ -161,7 +220,7 @@ finalize_jar() {
         "purpur-*.jar" \
         "*.jar"
     do
-        candidate=$(find "$WORKDIR" -maxdepth 2 -type f -name "$pattern" 2>/dev/null | head -n1)
+        candidate=$(find "$WORKDIR" -maxdepth 2 -type f -name "$pattern" -size +1c 2>/dev/null | head -n1)
         [ -n "$candidate" ] && break
     done
 
@@ -170,7 +229,7 @@ finalize_jar() {
         return 1
     fi
 
-    log "Symlinking server.jar -> $(basename "$candidate")"
+    log "Symlinking server.jar -> $(basename "$candidate") ($(stat -c%s "$candidate") bytes)"
     ln -sf "$(realpath --relative-to="$WORKDIR" "$candidate")" "$WORKDIR/server.jar"
 }
 
@@ -192,7 +251,9 @@ install_modrinth() {
     [ -n "$primary_url" ] && [ "$primary_url" != "null" ] || fail "Modrinth primary file URL missing"
 
     log "Downloading $primary_filename"
-    http_download "$primary_url" "$TMPDIR/$primary_filename" \
+    # Modpack archives can run >100MB (Cobblemon, ATM10, etc.) — use the
+    # large-file budget instead of the per-mod default.
+    http_download_large "$primary_url" "$TMPDIR/$primary_filename" \
         || fail "Modrinth pack download failed"
 
     case "$primary_filename" in
@@ -208,47 +269,107 @@ install_modrinth() {
 install_modrinth_mrpack() {
     local pack="$1"
     local extract="$TMPDIR/mrpack"
+    local pack_size
+    pack_size=$(stat -c%s "$pack" 2>/dev/null || echo 0)
 
-    log "Extracting .mrpack manifest"
+    log "Extracting .mrpack manifest ($((pack_size / 1024 / 1024)) MB) into $extract"
     mkdir -p "$extract"
-    unzip -qo "$pack" -d "$extract" || fail "mrpack extract failed"
+    if ! unzip -qo "$pack" -d "$extract" </dev/null; then
+        fail "mrpack extract failed"
+    fi
+
+    local extracted_count
+    extracted_count=$(find "$extract" -type f 2>/dev/null | wc -l)
+    log "  → extracted $extracted_count file(s) from .mrpack"
 
     [ -f "$extract/modrinth.index.json" ] || fail "modrinth.index.json missing in mrpack"
 
     if [ -d "$extract/overrides" ]; then
-        log "Copying overrides/"
+        local overrides_count
+        overrides_count=$(find "$extract/overrides" -type f 2>/dev/null | wc -l)
+        log "Copying overrides/ ($overrides_count file(s))"
         cp -rT "$extract/overrides" "$WORKDIR"
+        log "  → overrides copied"
     fi
     if [ -d "$extract/server-overrides" ]; then
-        log "Copying server-overrides/"
+        local soverrides_count
+        soverrides_count=$(find "$extract/server-overrides" -type f 2>/dev/null | wc -l)
+        log "Copying server-overrides/ ($soverrides_count file(s))"
         cp -rT "$extract/server-overrides" "$WORKDIR"
+        log "  → server-overrides copied"
     fi
 
-    local total resolved index
+    local total resolved required required_failed index
     total=$(jq '.files | length' "$extract/modrinth.index.json")
     log "Resolving $total external file(s) declared in modrinth.index.json"
     resolved=0
+    required=0
+    required_failed=0
+
+    local progress_start
+    progress_start=$(date +%s)
 
     for index in $(seq 0 $((total - 1))); do
-        local entry path url server_env
+        local entry path url server_env mirror mirror_count m
         entry=$(jq -c ".files[$index]" "$extract/modrinth.index.json")
         path=$(echo "$entry" | jq -r '.path')
         url=$(echo "$entry" | jq -r '.downloads[0]')
         server_env=$(echo "$entry" | jq -r '.env.server // "required"')
 
+        # Periodic progress so the operator can see the script is alive
+        # during long mod resolutions (large packs declare 200+ files).
+        if [ $((index % 10)) -eq 0 ] && [ "$index" -gt 0 ]; then
+            local elapsed=$(( $(date +%s) - progress_start ))
+            log "  progress: $index/$total resolved=$resolved (${elapsed}s elapsed)"
+        fi
+
         if [ "$server_env" = "unsupported" ]; then
             continue
         fi
 
+        if [ "$server_env" = "required" ]; then
+            required=$((required + 1))
+        fi
+
         local outpath="$WORKDIR/$path"
         mkdir -p "$(dirname "$outpath")"
+
+        # mrpack files declare a list of download mirrors — try each in
+        # order. The previous version only ever tried the first URL and
+        # silently dropped required files on transient failures.
+        local got=0
         if http_download "$url" "$outpath"; then
+            got=1
+        else
+            mirror_count=$(echo "$entry" | jq '.downloads | length // 0')
+            for m in $(seq 1 $((mirror_count - 1))); do
+                mirror=$(echo "$entry" | jq -r ".downloads[$m]")
+                if [ -n "$mirror" ] && [ "$mirror" != "null" ]; then
+                    log "  retrying via mirror: $mirror"
+                    if http_download "$mirror" "$outpath"; then
+                        got=1
+                        break
+                    fi
+                fi
+            done
+        fi
+
+        if [ "$got" -eq 1 ]; then
             resolved=$((resolved + 1))
         else
-            warn "failed to download $path (continuing)"
+            if [ "$server_env" = "required" ]; then
+                required_failed=$((required_failed + 1))
+                warn "REQUIRED file failed: $path"
+            else
+                warn "optional file failed: $path"
+            fi
         fi
     done
-    log "Resolved $resolved/$total file(s)"
+    log "Resolved $resolved/$total file(s) (required failed: $required_failed/$required)"
+
+    if [ "$required_failed" -gt 0 ]; then
+        crit "$required_failed required mrpack file(s) failed to download — modpack would be incomplete"
+    fi
 
     local mc forge fabric quilt neoforge
     mc=$(jq -r '.dependencies.minecraft // ""' "$extract/modrinth.index.json")
@@ -307,7 +428,7 @@ install_curseforge() {
     fi
 
     log "Downloading $file_name"
-    http_download "$download_url" "$TMPDIR/$file_name" "$hdr" \
+    http_download_large "$download_url" "$TMPDIR/$file_name" "$hdr" \
         || fail "CurseForge download failed"
 
     if [ "$is_server_pack" = "true" ]; then
@@ -340,28 +461,69 @@ install_curseforge_manifest() {
     mc=$(jq -r '.minecraft.version' "$extract/manifest.json")
     loader_id=$(jq -r '.minecraft.modLoaders[] | select(.primary == true) | .id // empty' "$extract/manifest.json")
 
-    local total index
+    local total resolved missing required missing_required index
     total=$(jq '.files | length' "$extract/manifest.json")
     log "Resolving $total mod file(s) from CurseForge manifest"
     mkdir -p "$WORKDIR/mods"
+    resolved=0
+    missing=0
+    required=0
+    missing_required=0
+
     for index in $(seq 0 $((total - 1))); do
-        local pid fid file_meta dl filename
+        local pid fid req file_meta dl filename
         pid=$(jq -r ".files[$index].projectID" "$extract/manifest.json")
         fid=$(jq -r ".files[$index].fileID" "$extract/manifest.json")
+        req=$(jq -r ".files[$index].required // true" "$extract/manifest.json")
 
-        file_meta=$(http_get "https://api.curseforge.com/v1/mods/$pid/files/$fid" "$hdr") || continue
+        if [ "$req" = "true" ]; then
+            required=$((required + 1))
+        fi
+
+        if ! file_meta=$(http_get "https://api.curseforge.com/v1/mods/$pid/files/$fid" "$hdr"); then
+            warn "metadata fetch failed for mod $pid/$fid"
+            missing=$((missing + 1))
+            [ "$req" = "true" ] && missing_required=$((missing_required + 1))
+            continue
+        fi
+
         dl=$(echo "$file_meta" | jq -r '.data.downloadUrl // empty')
         filename=$(echo "$file_meta" | jq -r '.data.fileName // empty')
 
+        # Detect mods that have third-party-distribution disabled. CurseForge's
+        # API returns downloadUrl=null AND the reconstructed CDN URL is gated
+        # behind authenticated client redirects. There is no automated way to
+        # bypass this — surface a clear actionable error so the operator knows
+        # the modpack can't be installed automatically.
         if [ -z "$dl" ]; then
-            local file_id_str padded
+            local file_id_str padded reconstructed
             file_id_str=$(echo "$file_meta" | jq -r '.data.id')
             padded=$(printf '%07d' "$file_id_str")
-            dl="https://edge.forgecdn.net/files/${padded:0:4}/${padded:4}/$filename"
+            reconstructed="https://edge.forgecdn.net/files/${padded:0:4}/${padded:4}/$filename"
+            log "  $filename: downloadUrl null, trying reconstructed CDN URL"
+            if ! http_download "$reconstructed" "$WORKDIR/mods/$filename"; then
+                warn "third-party-distribution disabled for $filename (project $pid file $fid) — CDN refused"
+                missing=$((missing + 1))
+                [ "$req" = "true" ] && missing_required=$((missing_required + 1))
+                continue
+            fi
+            resolved=$((resolved + 1))
+            continue
         fi
 
-        http_download "$dl" "$WORKDIR/mods/$filename" || warn "failed mod $filename (continuing)"
+        if http_download "$dl" "$WORKDIR/mods/$filename"; then
+            resolved=$((resolved + 1))
+        else
+            warn "download failed for $filename"
+            missing=$((missing + 1))
+            [ "$req" = "true" ] && missing_required=$((missing_required + 1))
+        fi
     done
+    log "Resolved $resolved/$total mod(s) (missing required: $missing_required/$required)"
+
+    if [ "$missing_required" -gt 0 ]; then
+        crit "$missing_required required CurseForge mod(s) failed to download — modpack incomplete (likely third-party-distribution disabled)"
+    fi
 
     case "$loader_id" in
         forge-*)    install_forge "$mc" "${loader_id#forge-}" ;;
@@ -458,7 +620,7 @@ install_ftb() {
     case "$server_url" in
         http*)
             log "Downloading FTB pre-built server bundle"
-            http_download "$server_url" "$TMPDIR/ftb-server.tar.gz" || fail "FTB server bundle download failed"
+            http_download_large "$server_url" "$TMPDIR/ftb-server.tar.gz" || fail "FTB server bundle download failed"
             if file "$TMPDIR/ftb-server.tar.gz" | grep -qi 'gzip'; then
                 tar -xzf "$TMPDIR/ftb-server.tar.gz" -C "$WORKDIR"
             else
@@ -552,7 +714,7 @@ install_technic() {
         zip_url=$(echo "$pack" | jq -r '.url // empty')
         [ -n "$zip_url" ] && [ "$zip_url" != "null" ] || fail "Technic non-Solder pack URL missing"
         log "Downloading flat Technic pack zip"
-        http_download "$zip_url" "$TMPDIR/technic-pack.zip" || fail "Technic pack download failed"
+        http_download_large "$zip_url" "$TMPDIR/technic-pack.zip" || fail "Technic pack download failed"
         unzip -qo "$TMPDIR/technic-pack.zip" -d "$WORKDIR" || fail "unzip failed"
     fi
 }
@@ -574,7 +736,7 @@ install_voidswrath() {
     [ -n "$server_url" ] && [ "$server_url" != "null" ] || fail "VoidsWrath modpack has no serverPackUrl"
 
     log "Downloading VoidsWrath server pack"
-    http_download "$server_url" "$TMPDIR/voids.zip" || fail "VoidsWrath download failed"
+    http_download_large "$server_url" "$TMPDIR/voids.zip" || fail "VoidsWrath download failed"
     unzip -qo "$TMPDIR/voids.zip" -d "$WORKDIR" || fail "unzip failed"
 }
 
@@ -583,72 +745,191 @@ install_voidswrath() {
 # ---------------------------------------------------------------------------
 install_vanilla() {
     local mc="$1"
-    [ -n "$mc" ] || { warn "install_vanilla: no mc version"; return; }
+    [ -n "$mc" ] || { crit "install_vanilla: no mc version"; return 1; }
     log "Installing vanilla Minecraft server $mc"
+
     local manifest version_url server_url
-    manifest=$(http_get "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json") || return
+    manifest=$(http_get "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json") || {
+        crit "Mojang version manifest unreachable"
+        return 1
+    }
     version_url=$(echo "$manifest" | jq -r --arg v "$mc" '.versions[] | select(.id == $v) | .url' | head -n1)
-    [ -n "$version_url" ] || { warn "vanilla manifest: $mc not found"; return; }
+    [ -n "$version_url" ] || { crit "Mojang manifest does not contain version $mc"; return 1; }
+
     local version_meta
-    version_meta=$(http_get "$version_url") || return
+    version_meta=$(http_get "$version_url") || { crit "Mojang version metadata unreachable for $mc"; return 1; }
     server_url=$(echo "$version_meta" | jq -r '.downloads.server.url // empty')
-    [ -n "$server_url" ] && [ "$server_url" != "null" ] || { warn "no server.jar URL for $mc"; return; }
-    http_download "$server_url" "$WORKDIR/server.jar" || warn "vanilla server jar download failed"
+    [ -n "$server_url" ] && [ "$server_url" != "null" ] || {
+        crit "No server jar published by Mojang for $mc (likely a snapshot or pre-1.2.5)"
+        return 1
+    }
+
+    if ! http_download "$server_url" "$WORKDIR/server.jar"; then
+        crit "Vanilla server jar download failed for $mc"
+        return 1
+    fi
+    if [ ! -s "$WORKDIR/server.jar" ]; then
+        crit "Vanilla server jar empty after download"
+        return 1
+    fi
 }
 
 install_forge() {
     local mc="$1" forge="$2"
-    [ -n "$mc" ] && [ -n "$forge" ] || { warn "install_forge: missing args"; return; }
+    [ -n "$mc" ] && [ -n "$forge" ] || { crit "install_forge: missing args (mc=$mc forge=$forge)"; return 1; }
     log "Installing Forge $forge for $mc"
-    local installer_url installer
-    installer_url="https://maven.minecraftforge.net/net/minecraftforge/forge/${mc}-${forge}/forge-${mc}-${forge}-installer.jar"
-    installer="$TMPDIR/forge-installer.jar"
-    if ! http_download "$installer_url" "$installer"; then
-        warn "Forge installer download failed (URL: $installer_url) — trying fallback"
-        installer_url="https://maven.minecraftforge.net/net/minecraftforge/forge/${mc}-${forge}-${mc}/forge-${mc}-${forge}-${mc}-installer.jar"
-        http_download "$installer_url" "$installer" || { warn "Forge installer unreachable"; return; }
+
+    local installer="$TMPDIR/forge-installer.jar"
+    # Try every known Forge installer URL pattern. Legacy 1.7.10/1.8.x duplicate
+    # the MC version in the path; modern 1.16+ does not. We try both rather than
+    # branching on heuristics so unusual builds (1.7.10-10.13.x, 1.8.9-11.15.x)
+    # are caught.
+    local installer_urls=(
+        "https://maven.minecraftforge.net/net/minecraftforge/forge/${mc}-${forge}/forge-${mc}-${forge}-installer.jar"
+        "https://maven.minecraftforge.net/net/minecraftforge/forge/${mc}-${forge}-${mc}/forge-${mc}-${forge}-${mc}-installer.jar"
+        "https://files.minecraftforge.net/maven/net/minecraftforge/forge/${mc}-${forge}/forge-${mc}-${forge}-installer.jar"
+    )
+
+    local got=0 url
+    for url in "${installer_urls[@]}"; do
+        log "Trying Forge installer: $url"
+        if http_download "$url" "$installer" && [ -s "$installer" ]; then
+            got=1
+            break
+        fi
+    done
+    if [ "$got" -ne 1 ]; then
+        crit "Forge installer unreachable for $mc-$forge (every known URL failed)"
+        return 1
     fi
-    (cd "$WORKDIR" && timeout 600 java -jar "$installer" --installServer 2>&1 | tail -n 30) \
-        || warn "Forge installer returned non-zero (jar may still be usable)"
+
+    # `--installServer .` (with dot) is required by all Forge installers from
+    # 1.16+ onwards; older installers ignore the argument silently. `--mirror`
+    # falls back to the official files.minecraftforge.net mirror if maven is
+    # rate-limiting the Wings IP.
+    local installer_log="$TMPDIR/forge-install.log"
+    if ! (cd "$WORKDIR" && timeout 900 java -jar "$installer" --installServer . > "$installer_log" 2>&1); then
+        warn "Forge installer returned non-zero — last 30 lines:"
+        tail -n 30 "$installer_log" >&2 || true
+        # Don't fail here — older Forge versions exit non-zero even on
+        # success after writing the jar. finalize_jar will catch a real
+        # failure (no jar produced).
+    fi
 }
 
 install_neoforge() {
     local mc="$1" neo="$2"
-    log "Installing NeoForge $neo for $mc"
-    local url installer
-    url="https://maven.neoforged.net/releases/net/neoforged/neoforge/${neo}/neoforge-${neo}-installer.jar"
-    installer="$TMPDIR/neoforge-installer.jar"
-    http_download "$url" "$installer" || { warn "NeoForge installer unreachable"; return; }
-    (cd "$WORKDIR" && timeout 600 java -jar "$installer" --installServer 2>&1 | tail -n 30) \
-        || warn "NeoForge installer returned non-zero"
+    [ -n "$neo" ] || { crit "install_neoforge: missing version"; return 1; }
+    log "Installing NeoForge $neo (mc $mc)"
+
+    local installer="$TMPDIR/neoforge-installer.jar"
+    # NeoForge moved its maven layout once early on; legacy 20.x packs may
+    # still point at the `forge` artifactId. Try both.
+    local installer_urls=(
+        "https://maven.neoforged.net/releases/net/neoforged/neoforge/${neo}/neoforge-${neo}-installer.jar"
+        "https://maven.neoforged.net/releases/net/neoforged/forge/${neo}/forge-${neo}-installer.jar"
+    )
+
+    local got=0 url
+    for url in "${installer_urls[@]}"; do
+        log "Trying NeoForge installer: $url"
+        if http_download "$url" "$installer" && [ -s "$installer" ]; then
+            got=1
+            break
+        fi
+    done
+    if [ "$got" -ne 1 ]; then
+        crit "NeoForge installer unreachable for $neo (every known URL failed)"
+        return 1
+    fi
+
+    local installer_log="$TMPDIR/neoforge-install.log"
+    if ! (cd "$WORKDIR" && timeout 900 java -jar "$installer" --installServer . > "$installer_log" 2>&1); then
+        warn "NeoForge installer returned non-zero — last 30 lines:"
+        tail -n 30 "$installer_log" >&2 || true
+    fi
 }
 
 install_fabric() {
     local mc="$1" fab="$2"
+    [ -n "$mc" ] && [ -n "$fab" ] || { crit "install_fabric: missing args (mc=$mc fab=$fab)"; return 1; }
     log "Installing Fabric loader $fab for $mc"
-    local installer_meta installer_version url
-    installer_meta=$(http_get "https://meta.fabricmc.net/v2/versions/installer") || return
-    installer_version=$(echo "$installer_meta" | jq -r '.[0].version')
-    url="https://meta.fabricmc.net/v2/versions/loader/${mc}/${fab}/${installer_version}/server/jar"
-    http_download "$url" "$WORKDIR/fabric-server-launch.jar" \
-        || warn "Fabric server jar download failed"
+
+    local installer_meta installer_version
+    installer_meta=$(http_get "https://meta.fabricmc.net/v2/versions/installer") || {
+        crit "Fabric installer metadata unreachable"
+        return 1
+    }
+    installer_version=$(echo "$installer_meta" | jq -r '.[0].version // empty')
+    [ -n "$installer_version" ] || {
+        crit "Fabric installer metadata missing latest version"
+        return 1
+    }
+
+    local url="https://meta.fabricmc.net/v2/versions/loader/${mc}/${fab}/${installer_version}/server/jar"
+    if ! http_download "$url" "$WORKDIR/fabric-server-launch.jar"; then
+        crit "Fabric server jar download failed (mc=$mc loader=$fab) — Fabric does not support this MC version or the loader version is invalid"
+        return 1
+    fi
+
+    if [ ! -s "$WORKDIR/fabric-server-launch.jar" ]; then
+        crit "Fabric server jar is empty — download corrupted"
+        return 1
+    fi
 }
 
 install_quilt() {
     local mc="$1" quilt="$2"
+    [ -n "$mc" ] && [ -n "$quilt" ] || { crit "install_quilt: missing args"; return 1; }
     log "Installing Quilt loader $quilt for $mc"
+
     local installer="$TMPDIR/quilt-installer.jar"
-    http_download "https://quiltmc.org/api/v1/download-latest-installer/java-universal" "$installer" \
-        || { warn "Quilt installer unreachable"; return; }
-    (cd "$WORKDIR" && timeout 600 java -jar "$installer" install server "$mc" "$quilt" --download-server --install-dir="$WORKDIR" 2>&1 | tail -n 30) \
-        || warn "Quilt installer returned non-zero"
+    if ! http_download "https://quiltmc.org/api/v1/download-latest-installer/java-universal" "$installer"; then
+        crit "Quilt installer unreachable"
+        return 1
+    fi
+
+    local installer_log="$TMPDIR/quilt-install.log"
+    if ! (cd "$WORKDIR" && timeout 600 java -jar "$installer" install server "$mc" "$quilt" --download-server --install-dir="$WORKDIR" > "$installer_log" 2>&1); then
+        warn "Quilt installer returned non-zero — last 30 lines:"
+        tail -n 30 "$installer_log" >&2 || true
+        # quilt installer has been observed to exit non-zero after a
+        # successful install — let finalize_jar make the final call.
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Uninstall mode — wipe /mnt/server clean. The plugin then swaps the server
+# back to the original egg with skip_scripts=false to let it install from
+# scratch on an empty directory. Phase 1 of the two-phase uninstall flow.
+# ---------------------------------------------------------------------------
+uninstall_modpack() {
+    log "Uninstall mode — wiping $WORKDIR"
+
+    mkdir -p "$WORKDIR"
+    cd "$WORKDIR" || fail "cannot cd $WORKDIR"
+
+    # Delete every file/dir at the root of /mnt/server. -mindepth 1 keeps
+    # the mountpoint itself intact so Wings doesn't lose the volume.
+    find . -mindepth 1 -delete 2>/dev/null || true
+
+    # Pelican expects an install completion signal — a successful exit is
+    # enough; no placeholder files needed because the next phase (original
+    # egg reinstall) will repopulate the directory from scratch.
+    log "Uninstall complete — directory wiped"
+    exit 0
 }
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 main() {
-    log "Modpack Installer starting"
+    log "Modpack Installer starting (operation=${BB_MODPACK_OPERATION:-install})"
+
+    if [ "${BB_MODPACK_OPERATION:-install}" = "uninstall" ]; then
+        uninstall_modpack
+    fi
+
     : "${BB_MODPACK_PROVIDER:?provider not set}"
     : "${BB_MODPACK_ID:?modpack id not set}"
     : "${BB_MODPACK_VERSION_ID:?version id not set}"
@@ -667,7 +948,14 @@ main() {
     esac
 
     write_eula
-    finalize_jar || warn "server.jar finalization incomplete — manual placement may be needed"
+
+    if ! finalize_jar; then
+        fail "server.jar could not be located after install — pack did not produce a runnable server. Check the log above for the loader installer output."
+    fi
+
+    if [ "$CRITICAL_FAILURES" -gt 0 ]; then
+        fail "$CRITICAL_FAILURES critical error(s) occurred during install (see CRITICAL log lines above) — refusing to mark install successful with a broken /mnt/server"
+    fi
 
     log "Modpack installation complete"
     exit 0

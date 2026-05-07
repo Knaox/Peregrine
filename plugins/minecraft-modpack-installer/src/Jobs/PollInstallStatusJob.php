@@ -13,8 +13,10 @@ use Plugins\MinecraftModpackInstaller\Enums\ModpackInstallationStatus;
 use Plugins\MinecraftModpackInstaller\Events\InstallationCompleted;
 use Plugins\MinecraftModpackInstaller\Events\InstallationFailed;
 use Plugins\MinecraftModpackInstaller\Events\UninstallationCompleted;
+use Plugins\MinecraftModpackInstaller\Jobs\Concerns\SyncsServerEggId;
 use Plugins\MinecraftModpackInstaller\Models\ModpackInstallation;
 use Plugins\MinecraftModpackInstaller\Pelican\PelicanClient;
+use Plugins\MinecraftModpackInstaller\Services\EggImporter;
 use Plugins\MinecraftModpackInstaller\Services\JavaVersionDetectionService;
 use Plugins\MinecraftModpackInstaller\Services\ModpackSettingsService;
 use Psr\Log\LoggerInterface;
@@ -31,6 +33,7 @@ class PollInstallStatusJob implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
+    use SyncsServerEggId;
 
     public int $tries = 1;
 
@@ -44,6 +47,7 @@ class PollInstallStatusJob implements ShouldQueue
         PelicanClient $pelican,
         ModpackSettingsService $settings,
         JavaVersionDetectionService $javaDetection,
+        EggImporter $eggImporter,
         LoggerInterface $logger,
     ): void {
         $installation = ModpackInstallation::with('server')->find($this->installationId);
@@ -53,7 +57,8 @@ class PollInstallStatusJob implements ShouldQueue
 
         $isInstall = $installation->status === ModpackInstallationStatus::Installing;
         $isUninstall = $installation->status === ModpackInstallationStatus::Uninstalling;
-        if (! $isInstall && ! $isUninstall) {
+        $isReinstall = $installation->status === ModpackInstallationStatus::Reinstalling;
+        if (! $isInstall && ! $isUninstall && ! $isReinstall) {
             return;
         }
 
@@ -67,6 +72,7 @@ class PollInstallStatusJob implements ShouldQueue
         $timeoutAt = $installation->started_at?->copy()->addMinutes($settings->installTimeoutMinutes());
         if ($timeoutAt !== null && now()->greaterThan($timeoutAt)) {
             $this->markFailed($installation, 'timeout');
+            $this->setLocalServerStatus($server, 'provisioning_failed', $logger);
 
             return;
         }
@@ -90,9 +96,19 @@ class PollInstallStatusJob implements ShouldQueue
         }
 
         if ($status === 'install_failed' || $status === 'reinstall_failed') {
-            $reason = $isInstall ? 'install_script_failed' : 'uninstall_script_failed';
+            $reason = match (true) {
+                $isInstall => 'install_script_failed',
+                $isUninstall => 'uninstall_wipe_failed',
+                $isReinstall => 'uninstall_reinstall_failed',
+                default => 'unknown_phase_failed',
+            };
             $this->markFailed($installation, $reason);
-            if ($isInstall) {
+            $this->setLocalServerStatus($server, 'provisioning_failed', $logger);
+            // Roll back to the user's original egg whenever we still own
+            // the installer egg — i.e. install or wipe phase. The
+            // reinstall phase is already on the user's egg, so no rollback
+            // would help.
+            if ($isInstall || $isUninstall) {
                 $this->bestEffortRollback($installation, $pelican, $logger);
             }
 
@@ -100,8 +116,12 @@ class PollInstallStatusJob implements ShouldQueue
         }
 
         if ($isInstall) {
-            $this->finalizeInstall($installation, $pelican, $javaDetection, $logger);
+            $this->finalizeInstall($installation, $pelican, $eggImporter, $javaDetection, $logger);
+        } elseif ($isUninstall) {
+            $this->beginUninstallPhase2($installation, $pelican, $eggImporter, $logger);
         } else {
+            // $isReinstall — phase 2 done, server is back on the user's
+            // original egg with a fresh install. Drop the row.
             $this->finalizeUninstall($installation, $logger);
         }
     }
@@ -114,6 +134,7 @@ class PollInstallStatusJob implements ShouldQueue
     private function finalizeInstall(
         ModpackInstallation $installation,
         PelicanClient $pelican,
+        EggImporter $eggImporter,
         JavaVersionDetectionService $javaDetection,
         LoggerInterface $logger,
     ): void {
@@ -129,6 +150,24 @@ class PollInstallStatusJob implements ShouldQueue
             $java = 17;
         }
 
+        // Scrub BB_MODPACK_* values before the egg swap. While we're still on
+        // the installer egg these keys can be safely overwritten with their
+        // permissive defaults (provider→modrinth, ids→'_', purge→0, op→
+        // install). After the swap, even though Pelican filters env by
+        // current egg when sending to Wings, the server_variables rows
+        // still surface in admin UIs and panel debug tools.
+        try {
+            $pelican->scrubInstallerEnvironment(
+                $serverId,
+                $eggImporter->ensureImported(),
+                'java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}',
+            );
+        } catch (Throwable $e) {
+            $logger->warning('modpack: BB_MODPACK_* scrub failed (continuing)', [
+                'installation' => $installation->id, 'error' => $e->getMessage(),
+            ]);
+        }
+
         try {
             $pelican->updateServerStartup($serverId, [
                 'egg' => $installation->pelican_egg_snapshot_id,
@@ -139,25 +178,53 @@ class PollInstallStatusJob implements ShouldQueue
                     is_array($installation->pelican_environment_snapshot)
                         ? $installation->pelican_environment_snapshot
                         : [],
+                    // Modpack install symlinks /mnt/server/server.jar → the
+                    // real loader jar. Override SERVER_JARFILE so the
+                    // original egg's startup command runs the symlink.
                     ['SERVER_JARFILE' => 'server.jar'],
                 ),
-                'skip_scripts' => true,
+                // skip_scripts MUST stay false: Pelican's
+                // StartupModificationService never triggers an install on
+                // PATCH (only POST /settings/reinstall does), so the flag
+                // has no benefit here, and it persists on the server row —
+                // every subsequent native /reinstall would then be silently
+                // skipped (Pelican fires Server\Installed instantly without
+                // running the egg's install script). See server 10 in the
+                // logs at 18:09:34 for the exact failure mode.
+                'skip_scripts' => false,
             ]);
         } catch (Throwable $e) {
             $logger->error('modpack: swap-back failed', [
                 'installation' => $installation->id, 'error' => $e->getMessage(),
             ]);
             $this->markFailed($installation, 'swap_back_failed: '.$e->getMessage());
+            $this->setLocalServerStatus($server, 'provisioning_failed', $logger);
 
             return;
         }
+
+        // Mirror the egg swap into Peregrine's local DB right away — fast UI
+        // path. The Server\Installed webhook may or may not fire depending
+        // on the skip_scripts state, and even when it does the round-trip
+        // through Reverb takes a beat; clearing the spinner instantly here
+        // is the difference between a snappy UX and a phantom "still
+        // installing" indicator.
+        $this->syncLocalEggId(
+            $server,
+            (int) $installation->pelican_egg_snapshot_id,
+            $logger,
+        );
+        $this->setLocalServerStatus($server, 'active', $logger);
 
         // Defensive belt-and-suspenders : Pelican fires `updated:Server`
         // automatically and Peregrine's webhook listener will sync the local
         // mirror on its own — but if the webhook is disabled (or Reverb is
         // down on a particular host), the local egg_id stays stale and the UI
         // shows the modpack-installer egg until next reconciler tick. Dispatch
-        // the sync job manually so we own the freshness regardless.
+        // the sync job manually so we own the freshness regardless. This
+        // overlaps with the syncLocalEggId() above by design — they pull
+        // from different sources (snapshot vs live Pelican) and a stale
+        // snapshot can't bite us thanks to this.
         try {
             $apiSnapshot = $pelican->getServerRaw($serverId);
             \App\Jobs\Bridge\SyncServerFromPelicanWebhookJob::dispatch(
@@ -181,9 +248,101 @@ class PollInstallStatusJob implements ShouldQueue
         event(new InstallationCompleted($installation));
     }
 
+    /**
+     * Phase 2 trigger: the wipe is done, swap the server back onto the
+     * user's original egg with skip_scripts=false so Pelican repopulates
+     * /mnt/server from the egg's normal install script. We move into
+     * `Reinstalling` and reschedule the poll to track the reinstall.
+     */
+    private function beginUninstallPhase2(
+        ModpackInstallation $installation,
+        PelicanClient $pelican,
+        EggImporter $eggImporter,
+        LoggerInterface $logger,
+    ): void {
+        $server = $installation->server;
+        if ($server === null || $installation->pelican_egg_snapshot_id === null) {
+            $this->markFailed($installation, 'phase2_missing_snapshot');
+
+            return;
+        }
+
+        // Same scrub as install finalize: drop the BB_MODPACK_* installer
+        // values before the user's egg comes back, otherwise they linger
+        // in server_variables and surface in panel admin UIs.
+        try {
+            $pelican->scrubInstallerEnvironment(
+                (int) $server->pelican_server_id,
+                $eggImporter->ensureImported(),
+                'java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}',
+            );
+        } catch (Throwable $e) {
+            $logger->warning('modpack: BB_MODPACK_* scrub failed (continuing)', [
+                'installation' => $installation->id, 'error' => $e->getMessage(),
+            ]);
+        }
+
+        try {
+            $pelican->updateServerStartup((int) $server->pelican_server_id, [
+                'egg' => $installation->pelican_egg_snapshot_id,
+                'image' => $installation->pelican_image_snapshot ?? 'ghcr.io/pelican-eggs/yolks:java_17',
+                'startup' => $installation->pelican_startup_snapshot
+                    ?? 'java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}',
+                // Restore the original SERVER_JARFILE — Pelican is about to
+                // run the original egg's install script on an empty
+                // /mnt/server (just wiped in phase 1), so the egg expects
+                // its own jar name (paper.jar / fabric-server-launch.jar
+                // / etc.), not our removed symlink.
+                'environment' => array_replace(
+                    is_array($installation->pelican_environment_snapshot)
+                        ? $installation->pelican_environment_snapshot
+                        : [],
+                    ['SERVER_JARFILE' => $installation->pelican_jarfile_snapshot ?? 'server.jar'],
+                ),
+                'skip_scripts' => false,
+            ]);
+
+            // Reinstall (skip_scripts=false) will fire the Server\Installed
+            // webhook on completion, but we mirror eagerly so the panel UI
+            // reflects the user's original egg right away.
+            $this->syncLocalEggId(
+                $server,
+                (int) $installation->pelican_egg_snapshot_id,
+                $logger,
+            );
+            // Stay in provisioning until phase 2 reinstall completes.
+            $this->setLocalServerStatus($server, 'provisioning', $logger);
+
+            $pelican->reinstallServer((int) $server->pelican_server_id);
+        } catch (Throwable $e) {
+            $logger->error('modpack: uninstall phase 2 dispatch failed', [
+                'installation' => $installation->id, 'error' => $e->getMessage(),
+            ]);
+            $this->markFailed($installation, 'phase2_dispatch_failed: '.$e->getMessage());
+            $this->setLocalServerStatus($server, 'provisioning_failed', $logger);
+
+            return;
+        }
+
+        $installation->update([
+            'status' => ModpackInstallationStatus::Reinstalling->value,
+            'status_message' => null,
+        ]);
+
+        $this->reschedule();
+    }
+
     private function finalizeUninstall(ModpackInstallation $installation, LoggerInterface $logger): void
     {
         $server = $installation->server;
+
+        if ($server !== null) {
+            // Phase 2 reinstall on the user's original egg fired the
+            // Server\Installed webhook which already nulled `status` —
+            // but make sure the panel doesn't keep showing provisioning
+            // if the webhook didn't make it through.
+            $this->setLocalServerStatus($server, 'active', $logger);
+        }
 
         try {
             event(new UninstallationCompleted($server));
@@ -219,8 +378,17 @@ class PollInstallStatusJob implements ShouldQueue
                 'startup' => $installation->pelican_startup_snapshot ?? 'java -jar {{SERVER_JARFILE}}',
                 'environment' => $installation->pelican_environment_snapshot
                     ?? ['SERVER_JARFILE' => 'server.jar'],
-                'skip_scripts' => true,
+                // See finalizeInstall: skip_scripts must NOT be left true
+                // or it persists on the server row and breaks every
+                // future native reinstall.
+                'skip_scripts' => false,
             ]);
+
+            $this->syncLocalEggId(
+                $installation->server,
+                (int) $installation->pelican_egg_snapshot_id,
+                $logger,
+            );
         } catch (Throwable $e) {
             $logger->warning('modpack: rollback after failed install failed', [
                 'error' => $e->getMessage(),

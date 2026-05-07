@@ -8,6 +8,7 @@ use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Http\Client\Factory;
 use Plugins\MinecraftModpackInstaller\Enums\ModpackProvider;
 use Plugins\MinecraftModpackInstaller\Exceptions\ProviderRequestException;
+use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackCategory;
 use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackProviderCapabilities;
 use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackSummary;
 use Plugins\MinecraftModpackInstaller\Services\DTO\ModpackVersion;
@@ -16,9 +17,20 @@ use Plugins\MinecraftModpackInstaller\Services\DTO\SearchResult;
 use Plugins\MinecraftModpackInstaller\Services\Providers\Contracts\ModpackProviderInterface;
 use Throwable;
 
+/**
+ * Feed The Beast provider — backed by https://api.modpacks.ch (no auth).
+ *
+ * The API has no generic search-with-filters endpoint; it exposes a small
+ * family of specialised lists instead (popular by installs / by plays /
+ * featured / search / byTag / byVersion). We multiplex our unified
+ * SearchCriteria onto whichever specialised endpoint matches the request.
+ */
 final class FtbProvider implements ModpackProviderInterface
 {
     private const BASE_URL = 'https://api.modpacks.ch';
+
+    /** Per-page cap requested from the various list endpoints. */
+    private const LIST_LIMIT = 30;
 
     /** Internal modpack IDs known to be uninteresting/internal. */
     private const FILTERED_IDS = [81];
@@ -44,27 +56,95 @@ final class FtbProvider implements ModpackProviderInterface
         return new ModpackProviderCapabilities(
             search: true,
             pagination: false,
-            minecraftVersionFilter: false,
+            // FTB has /byVersion/<mc> — populate the dropdown from listMinecraftVersions().
+            minecraftVersionFilter: true,
             loaderFilter: false,
             serverMarker: true,
             multipleVersions: true,
+            sortModes: ['relevance', 'popular', 'plays', 'featured'],
+            categoryFilter: true,
         );
     }
 
     /** @return list<string> */
     public function listMinecraftVersions(): array
     {
-        return [];
+        // FTB doesn't expose a canonical version list — derive one from
+        // recently popular packs so the dropdown reflects what's actually
+        // installable today (and not 1.4.7 from a decade ago).
+        return $this->cache->remember(
+            'modpacks:ftb:mc-versions',
+            12 * 3600,
+            function (): array {
+                $hits = $this->fetchListEndpoint(self::BASE_URL.'/public/modpack/popular/installs/'.self::LIST_LIMIT);
+                $seen = [];
+                foreach ($hits as $hit) {
+                    foreach ($hit['target_versions'] ?? [] as $mc) {
+                        $mc = (string) $mc;
+                        if (preg_match('/^\d+\.\d+(\.\d+)?$/', $mc) === 1) {
+                            $seen[$mc] = true;
+                        }
+                    }
+                }
+                $versions = array_keys($seen);
+                usort($versions, static fn ($a, $b) => version_compare((string) $b, (string) $a));
+
+                return array_values($versions);
+            },
+        );
+    }
+
+    /** @return list<ModpackCategory> */
+    public function listCategories(): array
+    {
+        return $this->cache->remember(
+            'modpacks:ftb:tags',
+            12 * 3600,
+            function (): array {
+                try {
+                    $response = $this->client()
+                        ->get(self::BASE_URL.'/public/tag/popular/'.self::LIST_LIMIT)
+                        ->throw()
+                        ->json();
+                } catch (Throwable) {
+                    return [];
+                }
+
+                if (! is_array($response) || ($response['status'] ?? null) === 'error') {
+                    return [];
+                }
+
+                $tags = $response['tags'] ?? $response;
+                if (! is_array($tags)) {
+                    return [];
+                }
+
+                $out = [];
+                foreach ($tags as $tag) {
+                    $name = is_array($tag) ? (string) ($tag['name'] ?? '') : (string) $tag;
+                    if ($name === '') {
+                        continue;
+                    }
+                    $out[] = new ModpackCategory(
+                        id: $name,
+                        label: ucwords(str_replace(['-', '_'], ' ', $name)),
+                    );
+                }
+
+                usort($out, static fn ($a, $b) => strcasecmp($a->label, $b->label));
+
+                return $out;
+            },
+        );
     }
 
     public function search(SearchCriteria $criteria): SearchResult
     {
-        try {
-            $term = $criteria->query ?? '';
-            $endpoint = $term !== ''
-                ? self::BASE_URL.'/public/modpack/search/30?term='.urlencode($term)
-                : self::BASE_URL.'/public/modpack/popular/installs/30';
+        // Pick the best-matching list endpoint based on the active filters.
+        // Ordered most-specific first.
+        $endpoint = $this->resolveSearchEndpoint($criteria);
 
+        try {
             $response = $this->client()->get($endpoint)->throw()->json();
         } catch (Throwable $e) {
             throw new ProviderRequestException($this->id(), 'search failed: '.$e->getMessage(), $e);
@@ -95,6 +175,15 @@ final class FtbProvider implements ModpackProviderInterface
         }
 
         return new SearchResult($hits, count($hits), 1, max(count($hits), 1));
+    }
+
+    public function getModpack(string $modpackId): ?ModpackSummary
+    {
+        if (! ctype_digit($modpackId)) {
+            return null;
+        }
+
+        return $this->fetchDetail((int) $modpackId);
     }
 
     /** @return list<ModpackVersion> */
@@ -147,6 +236,58 @@ final class FtbProvider implements ModpackProviderInterface
                 loaders: array_values(array_unique($loaders)),
                 releaseType: strtolower((string) ($version['type'] ?? 'release')),
             );
+        }
+
+        return $out;
+    }
+
+    private function resolveSearchEndpoint(SearchCriteria $criteria): string
+    {
+        $term = trim((string) ($criteria->query ?? ''));
+        $sort = $criteria->sort ?? 'relevance';
+        $limit = self::LIST_LIMIT;
+
+        if ($criteria->category !== null && $criteria->category !== '') {
+            return self::BASE_URL.'/public/modpack/byTag/'.rawurlencode($criteria->category);
+        }
+        if ($criteria->minecraftVersion !== null) {
+            return self::BASE_URL.'/public/modpack/byVersion/'.rawurlencode($criteria->minecraftVersion);
+        }
+        if ($term !== '') {
+            return self::BASE_URL."/public/modpack/search/{$limit}?term=".urlencode($term);
+        }
+
+        return match ($sort) {
+            'plays' => self::BASE_URL."/public/modpack/popular/plays/{$limit}",
+            'featured' => self::BASE_URL."/public/modpack/featured/{$limit}",
+            default => self::BASE_URL."/public/modpack/popular/installs/{$limit}",
+        };
+    }
+
+    /**
+     * Returns the *raw modpack rows* from a list endpoint that returns
+     * either `{packs: [<id>...]}` (search/byVersion/byTag) or `{packs: [<row>...]}`
+     * (popular). This unifies them by hydrating the id-only shape on demand.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function fetchListEndpoint(string $endpoint): array
+    {
+        try {
+            $response = $this->client()->get($endpoint)->throw()->json();
+        } catch (Throwable) {
+            return [];
+        }
+        if (! is_array($response) || ($response['status'] ?? null) === 'error') {
+            return [];
+        }
+        $rows = $response['packs'] ?? [];
+
+        $out = [];
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                $out[] = $row;
+            }
         }
 
         return $out;

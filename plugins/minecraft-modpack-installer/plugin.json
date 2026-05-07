@@ -3,19 +3,20 @@
     "name": "Minecraft: Modpack - Installer",
     "version": "1.0.0",
     "description": "Install, update and remove Minecraft modpacks on a server in a few clicks. Aggregates Modrinth, CurseForge, ATLauncher, Feed The Beast, Technic and VoidsWrath. Auto-detects the required Java version after install and switches the server runtime accordingly.",
-    "author": "Damien Rouge — rouge-informatique.ch",
+    "author": "Peregrine",
+    "vendor": "peregrine",
     "license": "MIT",
     "min_peregrine_version": "1.0.0",
     "bundled": true,
     "service_provider": "MinecraftModpackInstallerServiceProvider",
-    "manage_url": "/admin/modpack-settings",
+    "manage_url": "/admin/modpack-configs",
     "frontend": {
         "bundle": "frontend/dist/bundle.js",
         "nav": [],
         "server_sidebar_entries": [
             {
                 "id": "modpacks",
-                "label_key": "modpacks.tab.label",
+                "label_key": "minecraft-modpack-installer:modpacks.tab.label",
                 "icon": "package",
                 "route_suffix": "/modpacks",
                 "order": 9,
@@ -23,32 +24,5 @@
             }
         ]
     },
-    "settings_schema": [
-        {
-            "key": "modpack_curseforge_api_key",
-            "type": "password",
-            "label": "CurseForge API key",
-            "default": ""
-        },
-        {
-            "key": "modpack_install_timeout_minutes",
-            "type": "number",
-            "label": "Install timeout (minutes)",
-            "default": 30
-        },
-        {
-            "key": "modpack_default_provider",
-            "type": "select",
-            "label": "Default provider",
-            "default": "modrinth",
-            "options": {
-                "modrinth": "Modrinth",
-                "curseforge": "CurseForge",
-                "atlauncher": "ATLauncher",
-                "ftb": "Feed The Beast",
-                "technic": "Technic",
-                "voidswrath": "VoidsWrath"
-            }
-        }
-    ]
+    "settings_schema": []
 }

@@ -40,6 +40,9 @@ final class TechnicProvider implements ModpackProviderInterface
 
     public function capabilities(): ModpackProviderCapabilities
     {
+        // Technic's reverse-engineered API caps `/search` at 15 results
+        // and exposes no sort/filter knobs — the unified UI hides those
+        // controls when this provider is active.
         return new ModpackProviderCapabilities(
             search: true,
             pagination: false,
@@ -47,11 +50,19 @@ final class TechnicProvider implements ModpackProviderInterface
             loaderFilter: false,
             serverMarker: false,
             multipleVersions: true,
+            sortModes: ['relevance'],
+            categoryFilter: false,
         );
     }
 
     /** @return list<string> */
     public function listMinecraftVersions(): array
+    {
+        return [];
+    }
+
+    /** @return list<\Plugins\MinecraftModpackInstaller\Services\DTO\ModpackCategory> */
+    public function listCategories(): array
     {
         return [];
     }
@@ -96,6 +107,44 @@ final class TechnicProvider implements ModpackProviderInterface
         }
 
         return new SearchResult($hits, count($hits), 1, max(count($hits), 1));
+    }
+
+    public function getModpack(string $modpackId): ?ModpackSummary
+    {
+        $key = 'modpacks:technic:meta:'.sha1($modpackId);
+        $build = $this->launcherBuild();
+
+        return $this->cache->remember($key, 24 * 3600, function () use ($modpackId, $build): ?ModpackSummary {
+            try {
+                $response = $this->client()
+                    ->get(self::BASE_URL.'/modpack/'.rawurlencode($modpackId), ['build' => $build])
+                    ->throw()
+                    ->json();
+            } catch (Throwable) {
+                return null;
+            }
+
+            if (! is_array($response) || empty($response['name'])) {
+                return null;
+            }
+
+            $slug = (string) ($response['name'] ?? $modpackId);
+
+            return new ModpackSummary(
+                provider: $this->id(),
+                modpackId: $slug,
+                name: (string) ($response['displayName'] ?? $response['display_name'] ?? $slug),
+                slug: $slug,
+                description: $response['description'] ?? null,
+                iconUrl: $response['icon']['url']
+                    ?? $response['logo']['url']
+                    ?? $response['icon']
+                    ?? $response['logo']
+                    ?? null,
+                externalUrl: $response['url'] ?? "https://www.technicpack.net/modpack/{$slug}",
+                isServerCompatible: null,
+            );
+        });
     }
 
     /** @return list<ModpackVersion> */

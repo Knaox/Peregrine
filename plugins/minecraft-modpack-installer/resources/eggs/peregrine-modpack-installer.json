@@ -6,7 +6,7 @@
     },
     "exported_at": "2026-05-05T00:00:00+00:00",
     "name": "Peregrine Modpack Installer",
-    "author": "damien@rouge-informatique.ch",
+    "author": "plugins@peregrine.app",
     "uuid": "d8a3f1b9-2e4c-4b7a-8f6d-3c9e5d2b1a4f",
     "description": "Universal Minecraft modpack installer for the Peregrine panel. Downloads and deploys a server-ready modpack from Modrinth, CurseForge, ATLauncher, Feed The Beast, Technic or VoidsWrath, then hands the server back to its native runtime egg.",
     "tags": [
@@ -110,6 +110,16 @@
             "user_editable": true,
             "rules": ["required", "regex:/^[\\w.\\-]+\\.jar$/"],
             "sort": 7
+        },
+        {
+            "name": "Operation mode",
+            "description": "When 'uninstall' the script wipes /mnt/server and exits without downloading anything; otherwise runs the normal modpack install. Set automatically by the plugin during the two-phase uninstall flow; do not edit.",
+            "env_variable": "BB_MODPACK_OPERATION",
+            "default_value": "install",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": ["required", "in:install,uninstall"],
+            "sort": 8
         }
     ]
 }

@@ -63,6 +63,20 @@ export interface Capabilities {
     loader_filter: boolean;
     server_marker: boolean;
     multiple_versions: boolean;
+    /**
+     * Canonical sort identifiers the provider supports
+     * (`relevance | popular | downloads | updated | newest | name | follows | plays | featured`).
+     * Empty list means the provider doesn't expose a sort knob.
+     */
+    sort_modes: string[];
+    /** Whether the provider exposes a category/tag filter. */
+    category_filter: boolean;
+}
+
+export interface Category {
+    id: string;
+    label: string;
+    icon_url: string | null;
 }
 
 export interface Provider {
@@ -153,7 +167,20 @@ export const C = {
     bannerError: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.875rem 1rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(var(--color-danger-rgb),0.25)', background: 'rgba(var(--color-danger-rgb),0.08)', color: 'var(--color-text-primary)' },
 
     modalScrim: { position: 'fixed' as const, inset: 0, zIndex: 60, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' },
-    modalCard: { width: '100%', maxWidth: 480, borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', padding: '1.25rem', display: 'flex', flexDirection: 'column' as const, gap: '1rem', boxShadow: 'var(--shadow-lg)' },
+    modalCard: { width: '100%', maxWidth: 560, maxHeight: 'calc(100vh - 2rem)', overflowY: 'auto' as const, borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', padding: '1.25rem', display: 'flex', flexDirection: 'column' as const, gap: '1rem', boxShadow: 'var(--shadow-lg)' },
+    versionList: { display: 'flex', flexDirection: 'column' as const, gap: '0.375rem', maxHeight: 320, overflowY: 'auto' as const, padding: '0.25rem', borderRadius: 'var(--radius)', border: '1px solid var(--color-border)', background: 'var(--color-background)' },
+    versionRow: (selected: boolean, compatible: boolean) => ({
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.625rem',
+        padding: '0.5rem 0.625rem',
+        borderRadius: 'var(--radius)',
+        cursor: 'pointer',
+        border: '1px solid ' + (selected ? 'var(--color-primary)' : 'transparent'),
+        background: selected ? 'rgba(var(--color-primary-rgb),0.08)' : 'transparent',
+        opacity: compatible ? 1 : 0.55,
+        transition: 'background 120ms, border-color 120ms',
+    }),
 
     skeleton: { borderRadius: 'var(--radius-lg)', minHeight: 220 },
     pagination: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', padding: '0.5rem 0' },

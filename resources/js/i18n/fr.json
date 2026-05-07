@@ -551,8 +551,12 @@
             "rename_error": "Échec du renommage. Veuillez réessayer dans un instant.",
             "reinstall_title": "Réinstaller le serveur",
             "reinstall_warning": "La réinstallation relance le script d'installation de l'egg. Elle peut écraser des fichiers de configuration et, selon l'egg, effacer des données. Cette action est irréversible.",
+            "reinstall_warning_wipe": "Tous les fichiers de /mnt/server seront supprimés définitivement avant l'exécution du script d'installation de l'egg. Mondes, configs, plugins, mods — tout. Action irréversible. Sauvegardez d'abord ce que vous voulez conserver.",
+            "reinstall_wipe_label": "Supprimer toutes les données et réinstaller",
+            "reinstall_wipe_help": "Vide /mnt/server d'abord, puis lance la réinstallation — résultat identique à un serveur fraîchement créé.",
             "reinstall_confirm_help": "Tapez le nom du serveur « {{name}} » pour confirmer.",
             "reinstall_confirm": "Réinstaller maintenant",
+            "reinstall_confirm_wipe": "Tout effacer et réinstaller",
             "reinstall_name_mismatch": "Le nom saisi ne correspond pas.",
             "reinstall_error": "Échec de la réinstallation. Veuillez réessayer dans un instant."
         },

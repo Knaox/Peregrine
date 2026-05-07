@@ -84,6 +84,72 @@ export function ServerOverviewPage() {
     // regular dashboard without the user having to F5.
     useRefetchServerOnInstallComplete(serverId, installCompleted, server?.status);
 
+    // ---- HOOKS ABOVE EARLY RETURNS ----
+    // Every hook in this component runs unconditionally before any of the
+    // status-driven `return`s below. Otherwise React drops the call count
+    // when status flips from active → provisioning mid-session and throws
+    // minified error #300 ("Rendered fewer hooks than expected"). The
+    // useMemos compute null-safe so they're cheap to run when `server` is
+    // still loading.
+
+    // Permission helpers — null-safe so the hook deps below stay stable
+    // through the loading state.
+    const perms = server?.permissions ?? null;
+    const isOwner = !!server && (!server.role || server.role === 'owner' || perms === null);
+    const hasPerm = (p: string) => isOwner || (perms?.includes(p) ?? false);
+
+    // Plugin-contributed home sections, sorted by their declared `order` then
+    // filtered by permissions and (optional) egg whitelist. Owners always see
+    // them; subusers need the `required_permission` claim if the manifest
+    // declares one. The `requires_egg_ids` filter mirrors the sidebar-entry
+    // behaviour so plugins can dynamically opt out of mounting on servers
+    // they have no data for (e.g. egg-config-editor sets it from DB).
+    const pluginHomeSections = useMemo(() => {
+        const out: { key: string; Component: React.ComponentType<{ serverId: number }>; order: number }[] = [];
+        if (!server) return out;
+        const currentEggId = Number(server.egg?.id ?? 0);
+        for (const manifest of pluginManifests) {
+            for (const section of manifest.server_home_sections ?? []) {
+                if (section.required_permission && !hasPerm(section.required_permission)) continue;
+                if (Array.isArray(section.requires_egg_ids) && section.requires_egg_ids.length > 0
+                    && !section.requires_egg_ids.includes(currentEggId)) {
+                    continue;
+                }
+                const Component = pluginHomeSectionComponents[section.id];
+                if (!Component) continue;
+                out.push({ key: `${manifest.id}:${section.id}`, Component, order: section.order ?? 100 });
+            }
+        }
+        return out.sort((a, b) => a.order - b.order);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pluginManifests, pluginHomeSectionComponents, isOwner, perms, server?.egg?.id, server?.id]);
+
+    const filteredEntries = useMemo(() => {
+        // Merge core + plugin sidebar entries
+        const pluginEntries: SidebarEntry[] = [];
+        const currentEggId = Number(server?.egg?.id ?? 0);
+        for (const manifest of pluginManifests) {
+            for (const se of manifest.server_sidebar_entries ?? []) {
+                // Optional egg whitelist — generic plugin-system feature.
+                if (Array.isArray(se.requires_egg_ids) && se.requires_egg_ids.length > 0
+                    && !se.requires_egg_ids.includes(currentEggId)) {
+                    continue;
+                }
+                pluginEntries.push({ id: se.id, label_key: se.label_key, icon: se.icon, enabled: true, route_suffix: se.route_suffix, order: se.order ?? 100 });
+            }
+        }
+        const all = [...sidebarConfig.entries, ...pluginEntries].sort((a, b) => a.order - b.order);
+
+        if (isOwner) return all;
+        return all.filter((e) => {
+            const req = SIDEBAR_ENTRY_PERMISSIONS[e.id];
+            if (!req) return true;
+            return perms?.includes(req) ?? false;
+        });
+    }, [sidebarConfig.entries, pluginManifests, isOwner, perms, server?.egg?.id]);
+
+    // ---- EARLY RETURNS (no further hooks below this point) ----
+
     if (serverLoading || !server) {
         return <div className="flex min-h-[40vh] items-center justify-center"><Spinner size="lg" /></div>;
     }
@@ -114,11 +180,6 @@ export function ServerOverviewPage() {
     const isRunningState = state === 'running' || state === 'active';
     const uptime = resources?.uptime;
 
-    // Permission helpers
-    const perms = server.permissions ?? null;
-    const isOwner = !server.role || server.role === 'owner' || perms === null;
-    const hasPerm = (p: string) => isOwner || (perms?.includes(p) ?? false);
-
     const canStart = hasPerm('control.start');
     const canStop = hasPerm('control.stop');
     const canRestart = hasPerm('control.restart');
@@ -129,54 +190,6 @@ export function ServerOverviewPage() {
     const canViewConfig = hasPerm('overview.server-info') || hasPerm('settings.rename');
     const canRename = hasPerm('settings.rename');
     const canReinstall = hasPerm('settings.reinstall');
-
-    // Plugin-contributed home sections, sorted by their declared `order` then
-    // filtered by permissions and (optional) egg whitelist. Owners always see
-    // them; subusers need the `required_permission` claim if the manifest
-    // declares one. The `requires_egg_ids` filter mirrors the sidebar-entry
-    // behaviour so plugins can dynamically opt out of mounting on servers
-    // they have no data for (e.g. egg-config-editor sets it from DB).
-    const pluginHomeSections = useMemo(() => {
-        const out: { key: string; Component: React.ComponentType<{ serverId: number }>; order: number }[] = [];
-        const currentEggId = Number(server?.egg?.id ?? 0);
-        for (const manifest of pluginManifests) {
-            for (const section of manifest.server_home_sections ?? []) {
-                if (section.required_permission && !hasPerm(section.required_permission)) continue;
-                if (Array.isArray(section.requires_egg_ids) && section.requires_egg_ids.length > 0
-                    && !section.requires_egg_ids.includes(currentEggId)) {
-                    continue;
-                }
-                const Component = pluginHomeSectionComponents[section.id];
-                if (!Component) continue;
-                out.push({ key: `${manifest.id}:${section.id}`, Component, order: section.order ?? 100 });
-            }
-        }
-        return out.sort((a, b) => a.order - b.order);
-    }, [pluginManifests, pluginHomeSectionComponents, isOwner, perms, server?.egg?.id]);
-
-    const filteredEntries = useMemo(() => {
-        // Merge core + plugin sidebar entries
-        const pluginEntries: SidebarEntry[] = [];
-        const currentEggId = Number(server?.egg?.id ?? 0);
-        for (const manifest of pluginManifests) {
-            for (const se of manifest.server_sidebar_entries ?? []) {
-                // Optional egg whitelist — generic plugin-system feature.
-                if (Array.isArray(se.requires_egg_ids) && se.requires_egg_ids.length > 0
-                    && !se.requires_egg_ids.includes(currentEggId)) {
-                    continue;
-                }
-                pluginEntries.push({ id: se.id, label_key: se.label_key, icon: se.icon, enabled: true, route_suffix: se.route_suffix, order: se.order ?? 100 });
-            }
-        }
-        const all = [...sidebarConfig.entries, ...pluginEntries].sort((a, b) => a.order - b.order);
-
-        if (isOwner) return all;
-        return all.filter((e) => {
-            const req = SIDEBAR_ENTRY_PERMISSIONS[e.id];
-            if (!req) return true;
-            return perms?.includes(req) ?? false;
-        });
-    }, [sidebarConfig.entries, pluginManifests, isOwner, perms, server?.egg?.id]);
 
     const handleCopy = () => {
         if (!address) return;
