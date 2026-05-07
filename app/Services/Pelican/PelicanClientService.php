@@ -232,15 +232,31 @@ class PelicanClientService
     /**
      * Get startup variables for a server.
      *
+     * Returns an empty array when Pelican replies with HTTP 409
+     * `ServerStateConflictException` — that's the documented response
+     * while the server is mid-install / mid-reinstall (e.g. during a
+     * modpack-installer egg swap or a panel-triggered reinstall) and is
+     * not an error worth bubbling up. Callers polling this endpoint can
+     * just retry once the server settles.
+     *
+     * Any other HTTP error still throws the underlying `RequestException`.
+     *
      * @return array<int, array<string, mixed>>
      *
      * @throws RequestException
      */
     public function getStartupVariables(string $serverIdentifier): array
     {
-        $response = $this->request()
-            ->get("/api/client/servers/{$serverIdentifier}/startup")
-            ->throw();
+        try {
+            $response = $this->request()
+                ->get("/api/client/servers/{$serverIdentifier}/startup")
+                ->throw();
+        } catch (RequestException $e) {
+            if ($e->response !== null && $e->response->status() === 409) {
+                return [];
+            }
+            throw $e;
+        }
 
         $data = $response->json('data') ?? [];
 
