@@ -174,6 +174,23 @@ fi
 # Run migrations + warm caches when the panel is marked installed.
 if [ "${PANEL_INSTALLED:-false}" = "true" ] || [ -f storage/.installed ]; then
     php artisan migrate --force || true
+
+    # Plugin reconciliation BEFORE caches warm — this is what prevents the
+    # 2026-05-08 prod incident from recurring : after a `git pull` (or a
+    # marketplace install on an old base), a plugin's on-disk version can
+    # diverge from its DB row, leaving a hot row pointing at a manifest
+    # that doesn't actually exist on disk OR pointing at an outdated DB
+    # state that's incompatible with newer host code (e.g. `invitations`
+    # 1.0.0 in DB while disk is at 1.1.0 with new public API). The
+    # `plugin:reconcile-on-boot` command :
+    #   1. Deactivates rows whose directory has vanished (zombie rows
+    #      from a previously-bundled plugin no longer in the image).
+    #   2. force-resyncs rows whose disk version != DB version, running
+    #      any new migrations the upgraded plugin shipped.
+    # The command is idempotent and never throws fatally — broken plugins
+    # are gated downstream by `PluginBootstrap`'s defensive boot.
+    php artisan plugin:reconcile-on-boot || true
+
     php artisan config:cache || true
     php artisan route:cache || true
 fi

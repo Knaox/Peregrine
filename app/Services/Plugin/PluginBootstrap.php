@@ -64,7 +64,23 @@ class PluginBootstrap
             }
         }
 
-        // Step 2: Boot ServiceProviders (autoloaders are now all registered)
+        // Step 2: Boot ServiceProviders (autoloaders are now all registered).
+        //
+        // Defensive boot — each plugin is wrapped in its own try/catch so a
+        // single misbehaving plugin can NEVER 500 the entire panel. Real-
+        // world incident 2026-05-08 : an outdated `invitations` plugin
+        // (without `availableForServer` parameter) made the freshly-installed
+        // `minecraft-modpack-installer` throw `Unknown named parameter
+        // $availableForServer` at boot, and Laravel's exception handler
+        // treated that as a fatal — every Livewire request returned 500,
+        // including `/admin/plugins` (the very page that would have let the
+        // admin uninstall the bad plugin). Lock-out chicken-and-egg.
+        //
+        // Now : a plugin that throws at register time is logged at WARNING
+        // level (so the operator sees it in `storage/logs/laravel.log`) but
+        // skipped, and the rest of the panel boots normally. The admin can
+        // navigate to /admin/plugins, see the broken plugin, and recover
+        // (uninstall, force-resync, version bump via marketplace …).
         foreach ($activePlugins as $plugin) {
             $manifest = $this->discovery->getManifest($plugin->plugin_id);
 
@@ -75,11 +91,40 @@ class PluginBootstrap
             $studlyId = Str::studly($plugin->plugin_id);
             $providerClass = $manifest['service_provider'] ?? null;
 
-            if ($providerClass) {
-                $fqcn = "Plugins\\{$studlyId}\\{$providerClass}";
+            if (! $providerClass) {
+                continue;
+            }
 
-                if (class_exists($fqcn)) {
-                    $this->app->register($fqcn);
+            $fqcn = "Plugins\\{$studlyId}\\{$providerClass}";
+
+            if (! class_exists($fqcn)) {
+                continue;
+            }
+
+            try {
+                $this->app->register($fqcn);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning(
+                    "PluginBootstrap: plugin '{$plugin->plugin_id}' failed to register and was skipped",
+                    [
+                        'plugin_id' => $plugin->plugin_id,
+                        'provider' => $fqcn,
+                        'exception' => $e::class,
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile().':'.$e->getLine(),
+                    ],
+                );
+                // Soft-deactivate the plugin in DB so subsequent boots don't
+                // retry the same crash. The admin can re-activate from
+                // /admin/plugins after fixing the underlying issue
+                // (force-resync, marketplace update, manual edit). Wrapped
+                // in its own try/catch because a DB write failure here
+                // mustn't itself crash the boot.
+                try {
+                    $plugin->update(['is_active' => false]);
+                } catch (\Throwable) {
+                    // logged via the outer warning already ; nothing more
+                    // we can usefully do at this level of the stack.
                 }
             }
         }
@@ -213,35 +258,52 @@ class PluginBootstrap
         $loader = require base_path('vendor/autoload.php');
 
         foreach ($activePlugins as $plugin) {
-            $pluginPath = $this->discovery->getPluginPath($plugin->plugin_id);
-            if (! $pluginPath) {
-                continue;
-            }
+            // Same defensive pattern as bootPlugins() : a single plugin's
+            // discoverResources()/discoverPages() must never break Filament
+            // panel construction. Without this, a plugin shipping a syntax
+            // error in one of its Resource files would 500 every /admin/*
+            // route, including /admin/plugins — the only place to fix it.
+            try {
+                $pluginPath = $this->discovery->getPluginPath($plugin->plugin_id);
+                if (! $pluginPath) {
+                    continue;
+                }
 
-            $studlyId = \Illuminate\Support\Str::studly($plugin->plugin_id);
-            $baseNs = "Plugins\\{$studlyId}";
-            $srcPath = $pluginPath . '/src/';
+                $studlyId = \Illuminate\Support\Str::studly($plugin->plugin_id);
+                $baseNs = "Plugins\\{$studlyId}";
+                $srcPath = $pluginPath . '/src/';
 
-            if (! $this->files->isDirectory($srcPath)) {
-                continue;
-            }
+                if (! $this->files->isDirectory($srcPath)) {
+                    continue;
+                }
 
-            // Idempotent PSR-4 registration — same call as bootPlugins().
-            $loader->addPsr4("{$baseNs}\\", $srcPath);
+                // Idempotent PSR-4 registration — same call as bootPlugins().
+                $loader->addPsr4("{$baseNs}\\", $srcPath);
 
-            $resourcesDir = $srcPath . 'Filament/Resources';
-            if ($this->files->isDirectory($resourcesDir)) {
-                $panel->discoverResources(
-                    in: $resourcesDir,
-                    for: "{$baseNs}\\Filament\\Resources",
-                );
-            }
+                $resourcesDir = $srcPath . 'Filament/Resources';
+                if ($this->files->isDirectory($resourcesDir)) {
+                    $panel->discoverResources(
+                        in: $resourcesDir,
+                        for: "{$baseNs}\\Filament\\Resources",
+                    );
+                }
 
-            $pagesDir = $srcPath . 'Filament/Pages';
-            if ($this->files->isDirectory($pagesDir)) {
-                $panel->discoverPages(
-                    in: $pagesDir,
-                    for: "{$baseNs}\\Filament\\Pages",
+                $pagesDir = $srcPath . 'Filament/Pages';
+                if ($this->files->isDirectory($pagesDir)) {
+                    $panel->discoverPages(
+                        in: $pagesDir,
+                        for: "{$baseNs}\\Filament\\Pages",
+                    );
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning(
+                    "PluginBootstrap: plugin '{$plugin->plugin_id}' failed Filament contribution and was skipped",
+                    [
+                        'plugin_id' => $plugin->plugin_id,
+                        'exception' => $e::class,
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile().':'.$e->getLine(),
+                    ],
                 );
             }
         }
