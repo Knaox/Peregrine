@@ -2,27 +2,20 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-// ---------------------------------------------------------------------------
-// Eager-loaded namespaces — bundled into the main entry chunk so the very
-// first paint already has translated strings. Everything else is lazy-loaded
-// on the route mount via `loadNamespace()` (see useNamespace hook).
-//
-// `common`     — shared chrome (nav, errors, common buttons), used by every
-//                layout including the auth shell.
-// `auth-login` — first public page when the user lands logged-out; eager
-//                loading avoids a one-frame flash of raw keys on /login.
-// ---------------------------------------------------------------------------
-import enCommon from './locales/en/common.json';
-import frCommon from './locales/fr/common.json';
-import enAuthLogin from './locales/en/auth-login.json';
-import frAuthLogin from './locales/fr/auth-login.json';
-
 const SUPPORTED = ['en', 'fr'] as const;
 type SupportedLocale = (typeof SUPPORTED)[number];
 
 declare global {
     interface Window {
         __DEFAULT_LOCALE__?: string;
+        // Inlined by resources/views/app.blade.php — pre-compiled by
+        // App\Services\I18n\I18nBootService for the user's effective locale.
+        // Carries every namespace JSON as a single nested map so i18next
+        // boots fully populated, no fetch needed for the active locale.
+        __I18N_BUNDLE__?: {
+            locale: string;
+            resources: Record<string, Record<string, unknown>>;
+        };
     }
 }
 
@@ -38,16 +31,46 @@ function resolveAdminDefault(): SupportedLocale {
 const adminDefault = resolveAdminDefault();
 
 // ---------------------------------------------------------------------------
-// Lazy namespace loader — discovers every `./locales/<lng>/<ns>.json` at build
-// time via Vite's static glob import. Each file becomes its own chunk; the
-// dynamic `import()` triggers the network/cache fetch only when the namespace
-// is actually requested by a page.
+// SSR-inlined bundle (the active locale, ~12 KB gzipped). Available
+// synchronously before the first React render — no FOUC, no waterfall.
+// If the Blade shell didn't inline anything (rare: standalone tools, tests),
+// we fall back to an empty object and let lazy loading take over.
+// ---------------------------------------------------------------------------
+const inlined = (typeof window !== 'undefined' ? window.__I18N_BUNDLE__ : null) ?? {
+    locale: adminDefault,
+    resources: {},
+};
+
+// Build i18next's `resources` map from the inlined bundle. Only the active
+// locale ships in the HTML to keep the bundle small; the OTHER locale (the
+// one the user can switch to via /profile) is lazy-loaded on demand.
+const initialResources: Record<string, Record<string, Record<string, unknown>>> = {
+    [inlined.locale]: inlined.resources,
+};
+
+// Track which (locale, ns) tuples we've already registered so the lazy loader
+// is a no-op when called for namespaces that were inlined.
+const loaded = new Set<string>();
+for (const ns of Object.keys(inlined.resources)) {
+    loaded.add(`${inlined.locale}:${ns}`);
+}
+
+// ---------------------------------------------------------------------------
+// Lazy namespace loader — used when:
+//  (a) the user switches to a locale we did NOT inline (the other supported
+//      language), or
+//  (b) a namespace gets added between deploys and the cached bundle is stale
+//      (the etag-keyed cache on the backend resolves this within 6 hours, but
+//      the client-side fallback ensures correctness in the meantime).
+//
+// Discovers every `./locales/<lng>/<ns>.json` at build time via Vite's static
+// glob import. Each file becomes its own chunk; the dynamic `import()`
+// triggers the network/cache fetch only when the namespace is actually
+// requested.
 // ---------------------------------------------------------------------------
 const lazyLoaders = import.meta.glob<{ default: Record<string, unknown> }>(
     './locales/*/*.json',
 );
-
-const loaded = new Set<string>();
 
 export async function loadNamespace(ns: string, locale?: string): Promise<void> {
     const targets = locale
@@ -82,17 +105,15 @@ i18n
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
-        resources: {
-            en: {
-                common: enCommon,
-                'auth-login': enAuthLogin,
-            },
-            fr: {
-                common: frCommon,
-                'auth-login': frAuthLogin,
-            },
-        },
-        ns: ['common', 'auth-login'],
+        resources: initialResources,
+        // Boot directly on the inlined locale — the LanguageDetector below
+        // can still override (e.g. user toggled in localStorage) but in 99%
+        // of cases this is what they want and avoids one extra namespace
+        // fetch on first paint.
+        lng: inlined.locale,
+        ns: Object.keys(inlined.resources).length > 0
+            ? Object.keys(inlined.resources)
+            : ['common', 'auth-login'],
         defaultNS: 'common',
         fallbackNS: 'common',
         // Detection order: localStorage (user picked one before) > browser
@@ -113,14 +134,18 @@ i18n
         },
     });
 
-// When the user flips locale in /profile, re-fetch every already-loaded
-// namespace into the new language so no stale string sticks around.
-i18n.on('languageChanged', () => {
-    Array.from(loaded).forEach((cacheKey) => {
+// When the user flips locale in /profile, lazy-load the target locale (it
+// wasn't inlined) for every namespace already in use, so the page flips
+// without raw keys. Cached after the first switch.
+i18n.on('languageChanged', (newLng) => {
+    // Collect distinct namespaces from the loaded set
+    const namespaces = new Set<string>();
+    for (const cacheKey of loaded) {
         const ns = cacheKey.split(':')[1] ?? '';
-        if (!ns) return;
-        // Trigger a load for the new language; existing entries stay registered.
-        void loadNamespace(ns);
+        if (ns) namespaces.add(ns);
+    }
+    namespaces.forEach((ns) => {
+        void loadNamespace(ns, newLng);
     });
 });
 

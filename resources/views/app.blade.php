@@ -22,6 +22,18 @@
     // The SPA's i18n config uses this as the fallback language when no
     // localStorage / browser preference matches a supported locale.
     $defaultLocale = app(\App\Services\SettingsService::class)->get('default_locale', 'en');
+
+    // Pre-compile the i18n resource bundle for the user's effective locale
+    // (their saved preference if logged in, otherwise the admin default) and
+    // inline it as `window.__I18N_BUNDLE__` further down. Removes every
+    // translation HTTP round-trip on first paint — the SPA boots with strings
+    // already in the document. Net cost on the wire: ~12 KB gzipped per
+    // locale. Cache-keyed by mtime, see I18nBootService.
+    $i18nLocale = auth()->user()->locale ?? $defaultLocale;
+    if (! in_array($i18nLocale, ['en', 'fr'], true)) {
+        $i18nLocale = $defaultLocale;
+    }
+    $i18nBundle = app(\App\Services\I18n\I18nBootService::class)->bootstrap($i18nLocale);
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $initialMode }}">
 <head>
@@ -48,6 +60,10 @@
     <script>window.__BRANDING__ = @json($branding);</script>
     <script>window.__THEME_MODE__ = @json($userThemeMode);</script>
     <script>window.__DEFAULT_LOCALE__ = @json($defaultLocale);</script>
+    {{-- Inlined i18n bundle for the user's effective locale. Read by
+         resources/js/i18n/config.ts at boot — zero fetch, zero waterfall,
+         no flash of untranslated content even on slow mobile networks. --}}
+    <script>window.__I18N_BUNDLE__ = @json(['locale' => $i18nLocale, 'resources' => $i18nBundle]);</script>
     <style>:root {
         @foreach($initialCssVars as $key => $value){{ $key }}: {{ $value }};
         @endforeach
