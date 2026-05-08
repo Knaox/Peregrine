@@ -14,6 +14,7 @@ import { CategoryHeader } from '@/components/server/CategoryHeader';
 import { DropZoneIndicator } from '@/components/server/DropZoneIndicator';
 import { AddCategoryButton } from '@/components/server/AddCategoryButton';
 import { GripIcon } from '@/components/server/GripIcon';
+import { useNamespace } from '@/i18n/useNamespace';
 
 type Layout = ReturnType<typeof useDashboardLayout>;
 type Drag = ReturnType<typeof usePointerDrag>;
@@ -37,6 +38,7 @@ interface DashboardCategoryListProps extends GridProps {
 }
 
 export function DashboardCategoryList({ layout, ...gridProps }: DashboardCategoryListProps) {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
     const { drag } = gridProps;
 
@@ -65,7 +67,7 @@ export function DashboardCategoryList({ layout, ...gridProps }: DashboardCategor
 
                 {layout.uncategorizedServers.length > 0 && (
                     <div>
-                        <ServerGroupHeader name={t('servers.list.uncategorized')} count={layout.uncategorizedServers.length} />
+                        <ServerGroupHeader name={t('server-overview:list.uncategorized')} count={layout.uncategorizedServers.length} />
                         <ServerGrid servers={layout.uncategorizedServers} zoneId="uncategorized" {...gridProps} />
                     </div>
                 )}

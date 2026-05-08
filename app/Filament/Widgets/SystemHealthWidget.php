@@ -21,7 +21,7 @@ class SystemHealthWidget extends BaseWidget
 
     public function getHeading(): ?string
     {
-        return __('admin.widgets.system_health.title');
+        return __('admin/widgets.system_health.title');
     }
 
     protected function getStats(): array
@@ -39,8 +39,8 @@ class SystemHealthWidget extends BaseWidget
             default => 'danger',
         };
         $workerLabel = $jobs === 0
-            ? __('admin.widgets.system_health.healthy')
-            : __('admin.widgets.stats.jobs_queued', ['n' => $jobs]);
+            ? __('admin/widgets.system_health.healthy')
+            : __('admin/widgets.stats.jobs_queued', ['n' => $jobs]);
 
         // Last Pelican sync — check the latest successful run from sync_logs.
         $lastSync = SyncLog::query()
@@ -50,7 +50,7 @@ class SystemHealthWidget extends BaseWidget
             ->first();
 
         $syncColor = 'gray';
-        $syncLabel = __('admin.widgets.system_health.never');
+        $syncLabel = __('admin/widgets.system_health.never');
         if ($lastSync && $lastSync->completed_at) {
             $minutes = $lastSync->completed_at->diffInMinutes($now);
             $syncLabel = $lastSync->completed_at->diffForHumans();
@@ -65,9 +65,9 @@ class SystemHealthWidget extends BaseWidget
         // Bridge mode — translate to a colored badge.
         $bridgeMode = app(BridgeModeService::class)->current();
         [$bridgeLabel, $bridgeColor] = match ($bridgeMode) {
-            BridgeMode::ShopStripe => [__('admin.badges.bridge_mode.shop_stripe'), 'success'],
-            BridgeMode::Paymenter => [__('admin.badges.bridge_mode.paymenter'), 'info'],
-            default => [__('admin.badges.bridge_mode.disabled'), 'gray'],
+            BridgeMode::ShopStripe => [__('admin/_shell.badges.bridge_mode.shop_stripe'), 'success'],
+            BridgeMode::Paymenter => [__('admin/_shell.badges.bridge_mode.paymenter'), 'info'],
+            default => [__('admin/_shell.badges.bridge_mode.disabled'), 'gray'],
         };
 
         // Cache — try a tiny round-trip to detect a broken store.
@@ -80,21 +80,21 @@ class SystemHealthWidget extends BaseWidget
             $cacheOk = false;
         }
         $cacheLabel = $cacheOk
-            ? __('admin.widgets.system_health.healthy')
-            : __('admin.widgets.system_health.down');
+            ? __('admin/widgets.system_health.healthy')
+            : __('admin/widgets.system_health.down');
         $cacheColor = $cacheOk ? 'success' : 'danger';
 
         return [
-            Stat::make(__('admin.widgets.system_health.queue_worker'), $workerLabel)
+            Stat::make(__('admin/widgets.system_health.queue_worker'), $workerLabel)
                 ->descriptionIcon($jobs === 0 ? 'heroicon-o-check-circle' : 'heroicon-o-exclamation-triangle')
                 ->color($workerColor),
-            Stat::make(__('admin.widgets.system_health.last_sync'), $syncLabel)
+            Stat::make(__('admin/widgets.system_health.last_sync'), $syncLabel)
                 ->descriptionIcon('heroicon-o-arrow-path')
                 ->color($syncColor),
-            Stat::make(__('admin.widgets.system_health.bridge_mode'), $bridgeLabel)
+            Stat::make(__('admin/widgets.system_health.bridge_mode'), $bridgeLabel)
                 ->descriptionIcon('heroicon-o-link')
                 ->color($bridgeColor),
-            Stat::make(__('admin.widgets.system_health.cache'), $cacheLabel)
+            Stat::make(__('admin/widgets.system_health.cache'), $cacheLabel)
                 ->descriptionIcon($cacheOk ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
                 ->color($cacheColor),
         ];

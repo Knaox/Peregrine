@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useAuthProviders } from '@/hooks/useAuthProviders';
 import { ApiError } from '@/services/api';
 import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface LoginFormCardProps {
     /** Visual chrome around the form. Defaults to a glass card with blur. */
@@ -20,6 +21,7 @@ interface LoginFormCardProps {
  * background/layout differs per template.
  */
 export function LoginFormCard({ variant = 'glass', className }: LoginFormCardProps) {
+    useNamespace(["auth-social"] as const);
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -42,14 +44,14 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
     const canRegisterLocal = localEnabled && localRegistrationEnabled;
     const canRegisterCanonical = canonicalRegisterUrl !== null;
     const canonicalProviderLabel =
-        canonicalProvider !== null ? t(`auth.providers.${canonicalProvider}`) : '';
+        canonicalProvider !== null ? t(`auth-social:providers.${canonicalProvider}`) : '';
 
     useEffect(() => {
         const errorKey = searchParams.get('error');
         if (errorKey === null) return;
         const translated = t(errorKey, { provider: canonicalProviderLabel });
         setProviderError(
-            translated === errorKey ? t('auth.social.oauth_failed') : translated,
+            translated === errorKey ? t('auth-social:oauth_failed') : translated,
         );
         const next = new URLSearchParams(searchParams);
         next.delete('error');
@@ -68,7 +70,7 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
             }
             navigate('/dashboard');
         } catch (err) {
-            setError(err instanceof ApiError ? t('auth.login.error') : t('common.error'));
+            setError(err instanceof ApiError ? t('auth-login:error') : t('common:error'));
         } finally {
             setIsSubmitting(false);
         }
@@ -107,7 +109,7 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
                                 <button
                                     type="button"
                                     onClick={() => setProviderError('')}
-                                    aria-label={t('common.close')}
+                                    aria-label={t('common:close')}
                                     className="text-[var(--color-danger)]/70 hover:text-[var(--color-danger)] transition-colors cursor-pointer"
                                 >
                                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -125,7 +127,7 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
                     <div className="flex items-center gap-3 py-1">
                         <div className="flex-1 h-px bg-[var(--color-border)]" />
                         <span className="text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
-                            {t('auth.login.or')}
+                            {t('auth-login:or')}
                         </span>
                         <div className="flex-1 h-px bg-[var(--color-border)]" />
                     </div>
@@ -150,7 +152,7 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
                             id="email"
                             type="email"
                             value={email}
-                            label={t('auth.login.email')}
+                            label={t('auth-login:email')}
                             onChange={setEmail}
                             focused={focusedField === 'email'}
                             onFocus={() => setFocusedField('email')}
@@ -160,7 +162,7 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
                             id="password"
                             type="password"
                             value={password}
-                            label={t('auth.login.password')}
+                            label={t('auth-login:password')}
                             onChange={setPassword}
                             focused={focusedField === 'password'}
                             onFocus={() => setFocusedField('password')}
@@ -175,7 +177,7 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
                                 className="h-5 w-5 sm:h-4 sm:w-4 rounded border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-primary)] cursor-pointer"
                             />
                             <span className="text-sm text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors">
-                                {t('auth.login.remember')}
+                                {t('auth-login:remember')}
                             </span>
                         </label>
 
@@ -191,7 +193,7 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
                                 'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
                             )}
                         >
-                            {isSubmitting ? t('common.loading') : t('auth.login.button')}
+                            {isSubmitting ? t('common:loading') : t('auth-login:button')}
                         </button>
                     </form>
                 )}
@@ -199,14 +201,14 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
 
             {(canRegisterLocal || canRegisterCanonical) && (
                 <p className="mt-5 text-center text-sm text-[var(--color-text-muted)]">
-                    {t('auth.login.no_account')}{' '}
+                    {t('auth-login:no_account')}{' '}
                     {canRegisterCanonical ? (
                         <>
                             <a
                                 href={canonicalRegisterUrl as string}
                                 className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
                             >
-                                {t('auth.login.create_account_canonical', { provider: canonicalProviderLabel })}
+                                {t('auth-login:create_account_canonical', { provider: canonicalProviderLabel })}
                             </a>
                             {canRegisterLocal && (
                                 <>
@@ -215,7 +217,7 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
                                         to="/register"
                                         className="font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
                                     >
-                                        {t('auth.login.create_account_local')}
+                                        {t('auth-login:create_account_local')}
                                     </Link>
                                 </>
                             )}
@@ -225,7 +227,7 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
                             to="/register"
                             className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
                         >
-                            {t('auth.login.create_account')}
+                            {t('auth-login:create_account')}
                         </Link>
                     )}
                 </p>

@@ -52,12 +52,12 @@ class BridgeSettings extends Page implements HasForms
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.pages.bridge_settings.navigation');
+        return __('admin/bridge_settings.page.navigation');
     }
 
     public function getTitle(): string
     {
-        return __('admin.pages.bridge_settings.title');
+        return __('admin/bridge_settings.page.title');
     }
 
     public string $bridge_mode = 'disabled';
@@ -143,7 +143,7 @@ class BridgeSettings extends Page implements HasForms
         $settings->set('bridge_stripe_billing_portal_url', (string) ($data['bridge_stripe_billing_portal_url'] ?? ''));
         $settings->set('bridge_resubscribe_url', (string) ($data['bridge_resubscribe_url'] ?? ''));
 
-        Notification::make()->title(__('admin.notifications.bridge_settings_saved'))->success()->send();
+        Notification::make()->title(__('admin/_shell.notifications.bridge_settings_saved'))->success()->send();
 
         // Don't keep the typed secrets in the form state.
         $this->bridge_shop_shared_secret = '';
@@ -174,7 +174,7 @@ class BridgeSettings extends Page implements HasForms
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label(__('admin.actions.save_settings'))->submit('save'),
+            Action::make('save')->label(__('admin/_shell.actions.save_settings'))->submit('save'),
         ];
     }
 }

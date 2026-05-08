@@ -4,6 +4,7 @@ import { useAdminServers } from '@/hooks/useAdminServers';
 import { useAuthStore } from '@/stores/authStore';
 import { useServersListLiveUpdates } from '@/hooks/useServersListLiveUpdates';
 import { AdminServerRow } from '@/components/admin/AdminServerRow';
+import { useNamespace } from '@/i18n/useNamespace';
 
 /**
  * Admin mode dashboard at /admin/servers — shows every server in the panel
@@ -11,6 +12,7 @@ import { AdminServerRow } from '@/components/admin/AdminServerRow';
  * `admin` + `two-factor` middleware. Non-admins see an explicit denial.
  */
 export function AdminServersPage() {
+    useNamespace(["admin-servers-spa","server-overview"] as const);
     const { t } = useTranslation();
     const { user } = useAuthStore();
     const [search, setSearch] = useState('');
@@ -33,7 +35,7 @@ export function AdminServersPage() {
         return (
             <div className="p-8">
                 <div className="rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-3 text-sm text-[var(--color-danger)]">
-                    {t('errors.no_permission')}
+                    {t('common:errors.no_permission')}
                 </div>
             </div>
         );
@@ -44,15 +46,15 @@ export function AdminServersPage() {
             <header className="flex items-end justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-                        {t('admin.servers.title')}
+                        {t('admin-servers-spa:servers.title')}
                     </h1>
                     <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                        {t('admin.servers.subtitle')}
+                        {t('admin-servers-spa:servers.subtitle')}
                     </p>
                 </div>
                 {data?.meta !== undefined && (
                     <span className="text-sm text-[var(--color-text-muted)]">
-                        {t('admin.servers.count', { count: data.meta.total })}
+                        {t('admin-servers-spa:servers.count', { count: data.meta.total })}
                     </span>
                 )}
             </header>
@@ -60,7 +62,7 @@ export function AdminServersPage() {
             <div className="flex gap-3">
                 <input
                     type="search"
-                    placeholder={t('admin.servers.search_placeholder')}
+                    placeholder={t('admin-servers-spa:servers.search_placeholder')}
                     value={search}
                     onChange={(e) => {
                         setSearch(e.target.value);
@@ -76,20 +78,20 @@ export function AdminServersPage() {
                     }}
                     className="rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:border-[var(--color-primary)]"
                 >
-                    <option value="">{t('admin.servers.filter.any_status')}</option>
-                    <option value="active">{t('servers.status.active')}</option>
-                    <option value="suspended">{t('servers.status.suspended')}</option>
-                    <option value="terminated">{t('servers.status.terminated')}</option>
+                    <option value="">{t('admin-servers-spa:servers.filter.any_status')}</option>
+                    <option value="active">{t('server-overview:status.active')}</option>
+                    <option value="suspended">{t('server-overview:status.suspended')}</option>
+                    <option value="terminated">{t('server-overview:status.terminated')}</option>
                 </select>
             </div>
 
             {isLoading && (
-                <p className="text-sm text-[var(--color-text-muted)]">{t('common.loading')}</p>
+                <p className="text-sm text-[var(--color-text-muted)]">{t('common:loading')}</p>
             )}
 
             {isError && (
                 <div className="rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-3 text-sm text-[var(--color-danger)]">
-                    {t('common.error')}
+                    {t('common:error')}
                 </div>
             )}
 
@@ -97,7 +99,7 @@ export function AdminServersPage() {
                 <>
                     {data.data.length === 0 ? (
                         <p className="text-center text-sm text-[var(--color-text-muted)] py-12">
-                            {t('admin.servers.empty')}
+                            {t('admin-servers-spa:servers.empty')}
                         </p>
                     ) : (
                         <div className="space-y-2">
@@ -115,7 +117,7 @@ export function AdminServersPage() {
                                 disabled={page === 1}
                                 className="rounded-[var(--radius)] border border-[var(--color-border)] px-3 py-1.5 text-sm text-[var(--color-text-secondary)] disabled:opacity-50 cursor-pointer"
                             >
-                                {t('common.previous')}
+                                {t('common:previous')}
                             </button>
                             <span className="text-sm text-[var(--color-text-muted)]">
                                 {page} / {data.meta.last_page}
@@ -126,7 +128,7 @@ export function AdminServersPage() {
                                 disabled={page === data.meta.last_page}
                                 className="rounded-[var(--radius)] border border-[var(--color-border)] px-3 py-1.5 text-sm text-[var(--color-text-secondary)] disabled:opacity-50 cursor-pointer"
                             >
-                                {t('common.next')}
+                                {t('common:next')}
                             </button>
                         </div>
                     )}

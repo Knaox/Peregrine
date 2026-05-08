@@ -3,6 +3,7 @@ import { SelectField } from './fields/SelectField';
 import { SliderField } from './fields/SliderField';
 import { ToggleField } from './fields/ToggleField';
 import type { ThemeDraft } from '@/types/themeStudio.types';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const SHELL_VARIANT_OPTIONS = [
     { value: 'default', label: 'Top navbar (classic)' },
@@ -41,23 +42,24 @@ interface ThemeLayoutSectionProps {
  * complète.
  */
 export function ThemeLayoutSection({ draft, onField }: ThemeLayoutSectionProps) {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
 
     const shellOptions = SHELL_VARIANT_OPTIONS.map((o) => ({
         value: o.value,
-        label: t(`theme_studio.app_shell_variant.${o.value}`, o.label),
+        label: t(`theme-studio:app_shell_variant.${o.value}`, o.label),
     }));
     const alignOptions = HEADER_ALIGN_OPTIONS.map((o) => ({
         value: o.value,
-        label: t(`theme_studio.layout_align.${o.value}`, o.label),
+        label: t(`theme-studio:layout_align.${o.value}`, o.label),
     }));
     const containerOptions = CONTAINER_MAX_OPTIONS.map((o) => ({
         value: o.value,
-        label: t(`theme_studio.container_max.${o.value}`, o.label),
+        label: t(`theme-studio:container_max.${o.value}`, o.label),
     }));
     const paddingOptions = PAGE_PADDING_OPTIONS.map((o) => ({
         value: o.value,
-        label: t(`theme_studio.page_padding.${o.value}`, o.label),
+        label: t(`theme-studio:page_padding.${o.value}`, o.label),
     }));
 
     const isWorkspace = draft.theme_app_shell_variant === 'workspace';
@@ -65,7 +67,7 @@ export function ThemeLayoutSection({ draft, onField }: ThemeLayoutSectionProps) 
     return (
         <div className="flex flex-col gap-4">
             <SelectField
-                label={t('theme_studio.fields.theme_app_shell_variant', 'App shell')}
+                label={t('theme-studio:fields.theme_app_shell_variant', 'App shell')}
                 value={draft.theme_app_shell_variant}
                 options={shellOptions}
                 onChange={(v) => onField('theme_app_shell_variant', v as ThemeDraft['theme_app_shell_variant'])}
@@ -74,13 +76,12 @@ export function ThemeLayoutSection({ draft, onField }: ThemeLayoutSectionProps) 
             {isWorkspace ? (
                 <>
                     <p className="-mt-2 rounded-[var(--radius-md)] border border-[var(--color-border)]/40 bg-[var(--color-surface)]/60 px-3 py-2 text-[11px] leading-relaxed text-[var(--color-text-muted)]">
-                        {t(
-                            'theme_studio.fields.theme_app_shell_variant_help_ws',
+                        {t('theme-studio:fields.theme_app_shell_variant_help_ws',
                             'Workspace mode shows the rail-specific controls below. Container width and page padding still apply to both shells.',
                         )}
                     </p>
                     <SliderField
-                        label={t('theme_studio.fields.theme_workspace_rail_width', 'Rail width')}
+                        label={t('theme-studio:fields.theme_workspace_rail_width', 'Rail width')}
                         value={draft.theme_workspace_rail_width}
                         min={60}
                         max={120}
@@ -92,7 +93,7 @@ export function ThemeLayoutSection({ draft, onField }: ThemeLayoutSectionProps) 
             ) : (
                 <>
                     <SliderField
-                        label={t('theme_studio.fields.theme_layout_header_height', 'Header height')}
+                        label={t('theme-studio:fields.theme_layout_header_height', 'Header height')}
                         value={draft.theme_layout_header_height}
                         min={48}
                         max={96}
@@ -101,12 +102,12 @@ export function ThemeLayoutSection({ draft, onField }: ThemeLayoutSectionProps) 
                         onChange={(v) => onField('theme_layout_header_height', v)}
                     />
                     <ToggleField
-                        label={t('theme_studio.fields.theme_layout_header_sticky', 'Sticky header')}
+                        label={t('theme-studio:fields.theme_layout_header_sticky', 'Sticky header')}
                         value={draft.theme_layout_header_sticky}
                         onChange={(v) => onField('theme_layout_header_sticky', v)}
                     />
                     <SelectField
-                        label={t('theme_studio.fields.theme_layout_header_align', 'Header layout')}
+                        label={t('theme-studio:fields.theme_layout_header_align', 'Header layout')}
                         value={draft.theme_layout_header_align}
                         options={alignOptions}
                         onChange={(v) => onField('theme_layout_header_align', v)}
@@ -115,13 +116,13 @@ export function ThemeLayoutSection({ draft, onField }: ThemeLayoutSectionProps) 
             )}
 
             <SelectField
-                label={t('theme_studio.fields.theme_layout_container_max', 'Container width')}
+                label={t('theme-studio:fields.theme_layout_container_max', 'Container width')}
                 value={draft.theme_layout_container_max}
                 options={containerOptions}
                 onChange={(v) => onField('theme_layout_container_max', v)}
             />
             <SelectField
-                label={t('theme_studio.fields.theme_layout_page_padding', 'Page padding')}
+                label={t('theme-studio:fields.theme_layout_page_padding', 'Page padding')}
                 value={draft.theme_layout_page_padding}
                 options={paddingOptions}
                 onChange={(v) => onField('theme_layout_page_padding', v)}

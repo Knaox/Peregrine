@@ -27,7 +27,7 @@ class AuthController extends Controller
             ['email' => $validated['email'], 'password' => $validated['password']],
             $validated['remember'] ?? false,
         )) {
-            return response()->json(['message' => 'auth.login.error'], 422);
+            return response()->json(['message' => 'auth-login:error'], 422);
         }
 
         /** @var User $user */
@@ -76,7 +76,7 @@ class AuthController extends Controller
         $localRegistrationEnabled = $settings->get('auth_local_registration_enabled', 'true') === 'true';
 
         if (! $localRegistrationEnabled) {
-            return response()->json(['message' => 'auth.register.disabled'], 403);
+            return response()->json(['message' => 'auth-register:disabled'], 403);
         }
 
         $validated = $request->validated();

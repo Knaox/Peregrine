@@ -25,14 +25,14 @@ class ListUsers extends ListRecords
         return [
             Actions\CreateAction::make(),
             Actions\Action::make('syncUsers')
-                ->label(__('admin.resource_pages.sync_users.label'))
+                ->label(__('admin/users.sync.label'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
                 ->disabled($blockReason !== null)
                 ->tooltip($blockReason)
                 ->requiresConfirmation()
-                ->modalHeading(__('admin.resource_pages.sync_users.modal_heading'))
-                ->modalDescription(__('admin.resource_pages.sync_users.modal_description'))
+                ->modalHeading(__('admin/users.sync.modal_heading'))
+                ->modalDescription(__('admin/users.sync.modal_description'))
                 ->action(function (): void {
                     $syncService = app(SyncService::class);
                     $comparison = $syncService->compareUsers();
@@ -40,7 +40,7 @@ class ListUsers extends ListRecords
 
                     if ($newCount === 0) {
                         Notification::make()
-                            ->title(__('admin.resource_pages.sync_users.no_new'))
+                            ->title(__('admin/users.sync.no_new'))
                             ->info()
                             ->send();
 
@@ -51,7 +51,7 @@ class ListUsers extends ListRecords
                     $imported = $syncService->importUsers($ids);
 
                     Notification::make()
-                        ->title(__('admin.resource_pages.sync_users_imported', ['count' => $imported]))
+                        ->title(__('admin/users.sync.imported', ['count' => $imported]))
                         ->success()
                         ->send();
                 }),

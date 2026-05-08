@@ -57,7 +57,7 @@ export function WorkspaceShell() {
                     backdropFilter: 'var(--glass-blur)',
                     boxShadow: 'var(--glass-highlight), var(--shadow-sm)',
                 }}
-                aria-label={t('nav.primary', 'Primary navigation')}
+                aria-label={t('common:nav.primary', 'Primary navigation')}
             >
                 <WorkspaceRail links={links} isAdmin={user?.is_admin ?? false} />
             </aside>
@@ -75,7 +75,7 @@ export function WorkspaceShell() {
                 <button
                     type="button"
                     onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
-                    aria-label={isMobileNavOpen ? t('nav.close', 'Close menu') : t('nav.open', 'Open menu')}
+                    aria-label={isMobileNavOpen ? t('common:nav.close', 'Close menu') : t('common:nav.open', 'Open menu')}
                     className="rounded-[var(--radius)] p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] cursor-pointer"
                 >
                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,7 +109,7 @@ export function WorkspaceShell() {
                             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
                             className="fixed inset-y-0 left-0 z-50 flex w-[min(85vw,288px)] flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)] md:hidden"
                             role="dialog"
-                            aria-label={t('nav.primary', 'Primary navigation')}
+                            aria-label={t('common:nav.primary', 'Primary navigation')}
                         >
                             <WorkspaceRail
                                 links={links}

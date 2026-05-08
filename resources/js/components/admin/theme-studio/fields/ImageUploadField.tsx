@@ -2,6 +2,7 @@ import { useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { getCsrfHeaders } from '@/services/http';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface ImageUploadFieldProps {
     label: string;
@@ -29,6 +30,7 @@ export function ImageUploadField({
     onChange,
     description,
 }: ImageUploadFieldProps) {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
     const id = useId();
     const fileRef = useRef<HTMLInputElement>(null);
@@ -83,7 +85,7 @@ export function ImageUploadField({
                 >
                     {!value && (
                         <span className="text-[10px] text-[var(--color-text-muted)]">
-                            {t('theme_studio.image_empty', 'No image')}
+                            {t('theme-studio:image_empty', 'No image')}
                         </span>
                     )}
                 </div>
@@ -101,10 +103,10 @@ export function ImageUploadField({
                         )}
                     >
                         {isUploading
-                            ? t('theme_studio.image_uploading', 'Uploading…')
+                            ? t('theme-studio:image_uploading', 'Uploading…')
                             : value
-                                ? t('theme_studio.image_replace', 'Replace')
-                                : t('theme_studio.image_upload', 'Upload image')}
+                                ? t('theme-studio:image_replace', 'Replace')
+                                : t('theme-studio:image_upload', 'Upload image')}
                     </button>
                     {value && (
                         <button
@@ -116,7 +118,7 @@ export function ImageUploadField({
                                 'cursor-pointer',
                             )}
                         >
-                            {t('theme_studio.image_clear', 'Remove')}
+                            {t('theme-studio:image_clear', 'Remove')}
                         </button>
                     )}
                 </div>
@@ -134,7 +136,7 @@ export function ImageUploadField({
             </div>
             {error && (
                 <p className="text-[11px] text-[var(--color-danger)]">
-                    {t('theme_studio.image_error', 'Upload failed:')} {error}
+                    {t('theme-studio:image_error', 'Upload failed:')} {error}
                 </p>
             )}
             {!error && description && (

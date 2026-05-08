@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import type { ConsoleMessage } from '@/types/ConsoleMessage';
 import type { Server } from '@/types/Server';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface InstallationOverviewProps {
     server: Server;
@@ -27,6 +28,7 @@ interface InstallationOverviewProps {
  * 'active' once the Pelican `updated: Server` webhook is processed).
  */
 export function InstallationOverview({ server, messages, installCompleted }: InstallationOverviewProps) {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
     const navigate = useNavigate();
 
@@ -131,13 +133,13 @@ export function InstallationOverview({ server, messages, installCompleted }: Ins
                             </h1>
                             <p className="text-sm sm:text-base font-medium text-[var(--color-text-secondary)]">
                                 {installCompleted
-                                    ? t('servers.install.completed_title')
-                                    : t('servers.install.in_progress_title')}
+                                    ? t('server-overview:install.completed_title')
+                                    : t('server-overview:install.in_progress_title')}
                             </p>
                             <p className="mx-auto max-w-md text-xs sm:text-sm text-[var(--color-text-muted)]">
                                 {installCompleted
-                                    ? t('servers.install.completed_description')
-                                    : t('servers.install.in_progress_description')}
+                                    ? t('server-overview:install.completed_description')
+                                    : t('server-overview:install.in_progress_description')}
                             </p>
                         </div>
 
@@ -155,7 +157,7 @@ export function InstallationOverview({ server, messages, installCompleted }: Ins
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 17l6-5-6-5" />
                             </svg>
-                            {t('servers.install.view_console')}
+                            {t('server-overview:install.view_console')}
                         </button>
                     </div>
                 </div>
@@ -181,7 +183,7 @@ export function InstallationOverview({ server, messages, installCompleted }: Ins
                                 style={{ background: 'var(--color-primary)' }}
                             />
                         </span>
-                        {t('servers.install.live_log_label')}
+                        {t('server-overview:install.live_log_label')}
                     </span>
                     <span className="text-[10px] font-mono text-[var(--color-text-muted)] opacity-60">
                         {messages.length}
@@ -193,7 +195,7 @@ export function InstallationOverview({ server, messages, installCompleted }: Ins
                 >
                     {recentLines.length === 0 ? (
                         <span className="text-[var(--color-text-muted)]">
-                            {t('servers.install.waiting_for_output')}
+                            {t('server-overview:install.waiting_for_output')}
                         </span>
                     ) : (
                         recentLines.map((msg) => (

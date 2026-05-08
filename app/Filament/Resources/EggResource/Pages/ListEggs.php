@@ -24,7 +24,7 @@ class ListEggs extends ListRecords
 
         return [
             Actions\Action::make('syncEggs')
-                ->label(__('admin.resource_pages.sync_eggs.label'))
+                ->label(__('admin/eggs.sync.label'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
                 ->disabled($blockReason !== null)
@@ -34,7 +34,7 @@ class ListEggs extends ListRecords
                     $count = $syncService->syncEggs();
 
                     Notification::make()
-                        ->title(__('admin.resource_pages.sync_eggs.success', ['count' => $count]))
+                        ->title(__('admin/eggs.sync.success', ['count' => $count]))
                         ->success()
                         ->send();
                 }),

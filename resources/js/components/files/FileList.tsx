@@ -5,6 +5,7 @@ import { type FileListProps } from '@/components/files/FileList.props';
 import { FileActionMenu } from '@/components/files/FileActionMenu';
 import { Spinner } from '@/components/ui/Spinner';
 import { formatBytes } from '@/utils/format';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const ARCHIVE_EXTENSIONS = ['.zip', '.tar', '.tar.gz', '.tar.bz2', '.tgz'];
 
@@ -39,6 +40,7 @@ export function FileList({
     onNavigate, onOpenFile, onRename, onDelete, onCompress, onDecompress, onChmod, onDownload,
     canUpdate = true, canDelete = true, canArchive = true, canDownload = true,
 }: FileListProps) {
+    useNamespace(["server-files"] as const);
     const { t } = useTranslation();
     const allSelected = files.length > 0 && selectedFiles.size === files.length;
 
@@ -48,7 +50,7 @@ export function FileList({
             <svg className="w-12 h-12 text-[var(--color-text-muted)] opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
-            <p className="text-[var(--color-text-muted)] text-sm">{t('servers.files.empty')}</p>
+            <p className="text-[var(--color-text-muted)] text-sm">{t('server-files:files.empty')}</p>
         </div>
     );
 
@@ -61,9 +63,9 @@ export function FileList({
                     <input type="checkbox" checked={allSelected} onChange={onToggleSelectAll} className="rounded cursor-pointer" />
                 </div>
                 <div className="w-6 flex-shrink-0" />
-                <div className="flex-1 min-w-0">{t('servers.files.name')}</div>
-                <div className="w-24 text-right hidden sm:block">{t('servers.files.size')}</div>
-                <div className="w-40 text-right hidden md:block">{t('servers.files.modified')}</div>
+                <div className="flex-1 min-w-0">{t('server-files:files.name')}</div>
+                <div className="w-24 text-right hidden sm:block">{t('server-files:files.size')}</div>
+                <div className="w-40 text-right hidden md:block">{t('server-files:files.modified')}</div>
                 <div className="w-8" />
             </div>
 

@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/Badge';
 import type { BadgeProps } from '@/components/ui/Badge.props';
 import type { Server } from '@/types/Server';
 import type { ServerStatusBadgeProps } from '@/components/server/ServerStatusBadge.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const statusColorMap: Record<Server['status'], NonNullable<BadgeProps['color']>> = {
     running: 'green',
@@ -16,11 +17,12 @@ const statusColorMap: Record<Server['status'], NonNullable<BadgeProps['color']>>
 };
 
 export function ServerStatusBadge({ status }: ServerStatusBadgeProps) {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
 
     return (
         <Badge color={statusColorMap[status]}>
-            {t(`servers.status.${status}`)}
+            {t(`server-overview:status.${status}`)}
         </Badge>
     );
 }

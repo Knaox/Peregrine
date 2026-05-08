@@ -92,7 +92,7 @@ export function LoginOverlayTemplate({
                             {branding.app_name}
                         </h1>
                     )}
-                    <p className="mt-1 text-sm text-white/70">{t('auth.login.title')}</p>
+                    <p className="mt-1 text-sm text-white/70">{t('auth-login:title')}</p>
                 </div>
 
                 <LoginFormCard variant="glass" />

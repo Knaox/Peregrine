@@ -34,12 +34,12 @@ class Plugins extends Page implements HasForms
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.pages.plugins.navigation');
+        return __('admin/plugins.page.navigation');
     }
 
     public function getTitle(): string
     {
-        return __('admin.pages.plugins.title');
+        return __('admin/plugins.page.title');
     }
 
     /** @var array<int, array<string, mixed>> */

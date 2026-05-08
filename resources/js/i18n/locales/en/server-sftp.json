@@ -1,0 +1,21 @@
+{
+    "sftp": {
+        "title": "SFTP Access",
+        "credentials_title": "Connection Details",
+        "set_password": "Set SFTP Password",
+        "host": "Host",
+        "port": "Port",
+        "username": "Username",
+        "password_label": "SFTP Password",
+        "password_confirm": "Confirm Password",
+        "password_error": "Failed to update SFTP password.",
+        "password_mismatch": "Passwords do not match.",
+        "copy": "Copy",
+        "copied": "Copied!",
+        "copy_success": "Copied to clipboard",
+        "host_note": "Use this address and port to connect via SFTP.",
+        "quick_connect": "Copy SFTP connection string",
+        "instructions": "Connect using an SFTP client like FileZilla or WinSCP with the credentials above.",
+        "password_changed": "SFTP password updated successfully."
+    }
+}

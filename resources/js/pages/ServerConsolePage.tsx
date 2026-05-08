@@ -14,6 +14,7 @@ import { ServerPowerControls } from '@/components/server/ServerPowerControls';
 import { ConsoleOutput } from '@/components/console/ConsoleOutput';
 import { ConsoleInput } from '@/components/console/ConsoleInput';
 import type { ConsoleMessage } from '@/types/ConsoleMessage';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const STATE_COLORS: Record<string, string> = {
     running: 'var(--color-success)',
@@ -29,6 +30,7 @@ interface ModpackBannerState {
 }
 
 export function ServerConsolePage() {
+    useNamespace(["server-console","server-overview"] as const);
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const location = useLocation();
@@ -77,27 +79,27 @@ export function ServerConsolePage() {
     const isStopping = serverState === 'stopping';
 
     const stateLabel = useMemo(() => {
-        if (serverState === 'running') return t('servers.console.status_running');
-        if (isStarting) return t('servers.console.status_starting');
-        if (isStopping) return t('servers.console.status_stopping');
-        return t('servers.console.status_stopped');
+        if (serverState === 'running') return t('server-console:console.status_running');
+        if (isStarting) return t('server-console:console.status_starting');
+        if (isStopping) return t('server-console:console.status_stopping');
+        return t('server-console:console.status_stopped');
     }, [serverState, isStarting, isStopping, t]);
 
     const enrichedMessages: ConsoleMessage[] = useMemo(() => {
         // Install context wins over the regular state messages — Wings is
         // streaming install output and the user wants to see it raw.
         if (isProvisioning && messages.length === 0) {
-            return [{ id: -4, text: `[Peregrine] ${t('servers.install.waiting_for_output')}`, timestamp: Date.now() }];
+            return [{ id: -4, text: `[Peregrine] ${t('server-overview:install.waiting_for_output')}`, timestamp: Date.now() }];
         }
         if (isProvisioning) return messages;
         if (isStopped && messages.length === 0) {
-            return [{ id: -1, text: `[Peregrine] ${t('servers.console.server_stopped_message')}`, timestamp: Date.now() }];
+            return [{ id: -1, text: `[Peregrine] ${t('server-console:console.server_stopped_message')}`, timestamp: Date.now() }];
         }
         if (isStarting && messages.length === 0) {
-            return [{ id: -2, text: `[Peregrine] ${t('servers.console.server_starting_message')}`, timestamp: Date.now() }];
+            return [{ id: -2, text: `[Peregrine] ${t('server-console:console.server_starting_message')}`, timestamp: Date.now() }];
         }
         if (isStopping) {
-            return [...messages, { id: -3, text: `[Peregrine] ${t('servers.console.server_stopping_message')}`, timestamp: Date.now() }];
+            return [...messages, { id: -3, text: `[Peregrine] ${t('server-console:console.server_stopping_message')}`, timestamp: Date.now() }];
         }
         return messages;
     }, [messages, isStopped, isStarting, isStopping, isProvisioning, t]);
@@ -118,10 +120,10 @@ export function ServerConsolePage() {
             {showInstallBanner ? (
                 <Alert variant="info">
                     {bannerState.modpackInstallingBanner
-                        ? t('servers.operations.banner.modpack_installing', {
+                        ? t('server-overview:operations.banner.modpack_installing', {
                             name: bannerState.modpackName ?? '',
                         })
-                        : t('servers.operations.banner.server_installing')}
+                        : t('server-overview:operations.banner.server_installing')}
                 </Alert>
             ) : null}
 
@@ -139,7 +141,7 @@ export function ServerConsolePage() {
                                     <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: 'var(--color-primary)' }} />
                                 </span>
                                 <span className="text-xs font-semibold" style={{ color: 'var(--color-primary)' }}>
-                                    {installCompleted ? t('servers.install.completed_title') : t('servers.install.in_progress_title')}
+                                    {installCompleted ? t('server-overview:install.completed_title') : t('server-overview:install.in_progress_title')}
                                 </span>
                             </div>
                         ) : (
@@ -156,7 +158,7 @@ export function ServerConsolePage() {
                         <span className="inline-flex items-center gap-1.5 text-[10px] font-mono"
                             style={{ color: isConnected ? 'var(--color-success)' : 'var(--color-danger)' }}>
                             <span className="h-1.5 w-1.5 rounded-full" style={{ background: isConnected ? 'var(--color-success)' : 'var(--color-danger)' }} />
-                            {isConnected ? t('servers.console.connected') : t('servers.console.disconnected')}
+                            {isConnected ? t('server-console:console.connected') : t('server-console:console.disconnected')}
                         </span>
                     </div>
 
@@ -165,7 +167,7 @@ export function ServerConsolePage() {
                         <svg className="h-4 w-4 sm:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                        <span className="hidden sm:inline">{t('servers.console.clear')}</span>
+                        <span className="hidden sm:inline">{t('server-console:console.clear')}</span>
                     </Button>
                 </div>
 

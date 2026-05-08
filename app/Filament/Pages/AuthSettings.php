@@ -43,12 +43,12 @@ class AuthSettings extends Page implements HasForms
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.pages.auth_settings.navigation');
+        return __('admin/auth_settings.page.navigation');
     }
 
     public function getTitle(): string
     {
-        return __('admin.pages.auth_settings.title');
+        return __('admin/auth_settings.page.title');
     }
 
     public bool $auth_local_enabled = true;
@@ -174,8 +174,8 @@ class AuthSettings extends Page implements HasForms
             $user = auth()->user();
             if ($user !== null && $user->is_admin && ! $user->hasTwoFactor()) {
                 Notification::make()
-                    ->title(__('admin.notifications.auth_2fa_setup_first_title'))
-                    ->body(__('admin.notifications.auth_2fa_setup_first_body'))
+                    ->title(__('admin/_shell.notifications.auth_2fa_setup_first_title'))
+                    ->body(__('admin/_shell.notifications.auth_2fa_setup_first_body'))
                     ->danger()
                     ->send();
 
@@ -192,8 +192,8 @@ class AuthSettings extends Page implements HasForms
         $canonicalCount = (int) $shopWillBeEnabled + (int) $paymenterWillBeEnabled + (int) $whmcsWillBeEnabled;
         if ($canonicalCount > 1) {
             Notification::make()
-                ->title(__('admin.notifications.auth_only_one_idp_title'))
-                ->body(__('admin.notifications.auth_only_one_idp_body'))
+                ->title(__('admin/_shell.notifications.auth_only_one_idp_title'))
+                ->body(__('admin/_shell.notifications.auth_only_one_idp_body'))
                 ->danger()
                 ->send();
 
@@ -216,8 +216,8 @@ class AuthSettings extends Page implements HasForms
                 $exclusive = $registry->providerHasExclusiveUsers($pid);
                 if ($exclusive > 0 && ! $ack) {
                     Notification::make()
-                        ->title(__('admin.notifications.auth_disable_lockout_title', ['provider' => $pid, 'count' => $exclusive]))
-                        ->body(__('admin.notifications.auth_disable_lockout_body'))
+                        ->title(__('admin/_shell.notifications.auth_disable_lockout_title', ['provider' => $pid, 'count' => $exclusive]))
+                        ->body(__('admin/_shell.notifications.auth_disable_lockout_body'))
                         ->danger()
                         ->send();
 
@@ -240,7 +240,7 @@ class AuthSettings extends Page implements HasForms
             'linkedin' => $this->defaultRedirect('linkedin'),
         ]);
 
-        Notification::make()->title(__('admin.notifications.auth_settings_saved'))->success()->send();
+        Notification::make()->title(__('admin/_shell.notifications.auth_settings_saved'))->success()->send();
 
         // Reset the acknowledgement + secrets inputs so they don't stick.
         $this->acknowledge_disable_risk = false;
@@ -309,7 +309,7 @@ class AuthSettings extends Page implements HasForms
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label(__('admin.actions.save_settings'))->submit('save'),
+            Action::make('save')->label(__('admin/_shell.actions.save_settings'))->submit('save'),
         ];
     }
 }

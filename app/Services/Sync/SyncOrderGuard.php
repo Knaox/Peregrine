@@ -34,7 +34,7 @@ class SyncOrderGuard
 
     public static function orderHint(): string
     {
-        return __('admin.sync_order.order_hint');
+        return __('admin/_shell.sync_order.order_hint');
     }
 
     public function nodesSynced(): bool
@@ -59,7 +59,7 @@ class SyncOrderGuard
     public function blockSyncUsers(): ?string
     {
         if (! $this->nodesSynced()) {
-            return __('admin.sync_order.block_nodes_first');
+            return __('admin/_shell.sync_order.block_nodes_first');
         }
         return null;
     }
@@ -67,10 +67,10 @@ class SyncOrderGuard
     public function blockSyncEggs(): ?string
     {
         if (! $this->nodesSynced()) {
-            return __('admin.sync_order.block_nodes_first');
+            return __('admin/_shell.sync_order.block_nodes_first');
         }
         if (! $this->usersSynced()) {
-            return __('admin.sync_order.block_users_first');
+            return __('admin/_shell.sync_order.block_users_first');
         }
         return null;
     }
@@ -78,13 +78,13 @@ class SyncOrderGuard
     public function blockSyncServers(): ?string
     {
         if (! $this->nodesSynced()) {
-            return __('admin.sync_order.block_nodes_first');
+            return __('admin/_shell.sync_order.block_nodes_first');
         }
         if (! $this->usersSynced()) {
-            return __('admin.sync_order.block_users_first');
+            return __('admin/_shell.sync_order.block_users_first');
         }
         if (! $this->eggsSynced()) {
-            return __('admin.sync_order.block_eggs_first');
+            return __('admin/_shell.sync_order.block_eggs_first');
         }
         return null;
     }
@@ -99,10 +99,10 @@ class SyncOrderGuard
             ($done ? '✅' : '⚠️').' '.$label;
 
         return implode(' → ', [
-            $tag($this->nodesSynced(), __('admin.sync_order.step_nodes')),
-            $tag($this->usersSynced(), __('admin.sync_order.step_users')),
-            $tag($this->eggsSynced(), __('admin.sync_order.step_eggs')),
-            __('admin.sync_order.step_servers'),
+            $tag($this->nodesSynced(), __('admin/_shell.sync_order.step_nodes')),
+            $tag($this->usersSynced(), __('admin/_shell.sync_order.step_users')),
+            $tag($this->eggsSynced(), __('admin/_shell.sync_order.step_eggs')),
+            __('admin/_shell.sync_order.step_servers'),
         ]);
     }
 }

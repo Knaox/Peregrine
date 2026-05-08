@@ -1,0 +1,21 @@
+{
+    "sftp": {
+        "title": "Accès SFTP",
+        "credentials_title": "Informations de connexion",
+        "set_password": "Définir le mot de passe SFTP",
+        "host": "Hôte",
+        "port": "Port",
+        "username": "Nom d'utilisateur",
+        "password_label": "Mot de passe SFTP",
+        "password_confirm": "Confirmer le mot de passe",
+        "password_error": "Échec de la mise à jour du mot de passe SFTP.",
+        "password_mismatch": "Les mots de passe ne correspondent pas.",
+        "copy": "Copier",
+        "copied": "Copié !",
+        "copy_success": "Copié dans le presse-papiers",
+        "host_note": "Utilisez cette adresse et ce port pour vous connecter en SFTP.",
+        "quick_connect": "Copier la chaîne de connexion SFTP",
+        "instructions": "Connectez-vous avec un client SFTP comme FileZilla ou WinSCP en utilisant les identifiants ci-dessus.",
+        "password_changed": "Mot de passe SFTP mis à jour."
+    }
+}

@@ -1,0 +1,36 @@
+{
+    "actions": {
+        "start": "Démarrer",
+        "stop": "Arrêter",
+        "restart": "Redémarrer",
+        "kill": "Forcer l'arrêt"
+    },
+    "power": {
+        "confirm_kill": "Êtes-vous sûr de vouloir forcer l'arrêt de ce serveur ? Cela peut entraîner une perte de données.",
+        "success": "Signal envoyé.",
+        "error": "Échec de l'envoi du signal."
+    },
+    "console": {
+        "title": "Console",
+        "send_command": "Envoyer une commande...",
+        "connected": "Connecté",
+        "disconnected": "Déconnecté",
+        "reconnecting": "Reconnexion...",
+        "connection_error": "Erreur de connexion",
+        "clear": "Effacer",
+        "scroll_to_bottom": "Aller en bas",
+        "server_offline": "Le serveur est hors ligne. Console indisponible.",
+        "server_stopped_message": "Le serveur est actuellement hors ligne. Utilisez les contrôles ci-dessus pour le démarrer.",
+        "server_starting_message": "Le serveur est en cours de démarrage...",
+        "server_stopping_message": "Le serveur est en cours d'arrêt...",
+        "status_running": "En cours",
+        "status_stopped": "Arrêté",
+        "status_starting": "Démarrage",
+        "status_stopping": "Arrêt"
+    },
+    "websocket": {
+        "pelican_throttled": "Pelican limite les requêtes pour ce serveur. Patiente un instant et réessaie.",
+        "pelican_denied": "Pelican refuse l'accès à la console de ce serveur.",
+        "pelican_unavailable": "Pelican est actuellement injoignable. La console se reconnectera automatiquement."
+    }
+}

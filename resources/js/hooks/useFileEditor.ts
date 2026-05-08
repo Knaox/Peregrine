@@ -37,7 +37,7 @@ export function useFileEditor() {
             setContent(fileContent);
             setOriginalContent(fileContent);
         } catch {
-            setError(t('servers.files.open_error', { defaultValue: 'Cannot open this file. It may be binary or too large.' }));
+            setError(t('server-files:files.open_error', { defaultValue: 'Cannot open this file. It may be binary or too large.' }));
         } finally {
             setIsLoading(false);
         }
@@ -45,7 +45,7 @@ export function useFileEditor() {
 
     const closeFile = useCallback(() => {
         if (isDirty) {
-            const confirmed = window.confirm(t('servers.files.unsaved_changes'));
+            const confirmed = window.confirm(t('server-files:files.unsaved_changes'));
             if (!confirmed) return;
         }
         setEditingFile(null);

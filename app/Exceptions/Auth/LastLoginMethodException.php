@@ -11,7 +11,7 @@ class LastLoginMethodException extends SocialAuthException
 {
     public function errorKey(): string
     {
-        return 'auth.social.cannot_unlink_last_method';
+        return 'auth-social:cannot_unlink_last_method';
     }
 
     public function statusCode(): int

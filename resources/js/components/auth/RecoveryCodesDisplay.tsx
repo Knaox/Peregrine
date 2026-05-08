@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface RecoveryCodesDisplayProps {
     codes: string[];
@@ -8,6 +9,7 @@ interface RecoveryCodesDisplayProps {
 }
 
 export function RecoveryCodesDisplay({ codes, onAcknowledge }: RecoveryCodesDisplayProps) {
+    useNamespace(["auth-2fa"] as const);
     const { t } = useTranslation();
     const [saved, setSaved] = useState(false);
 
@@ -24,9 +26,9 @@ export function RecoveryCodesDisplay({ codes, onAcknowledge }: RecoveryCodesDisp
     return (
         <div className="space-y-4">
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                {t('auth.2fa.setup.recovery_title')}
+                {t('auth-2fa:setup.recovery_title')}
             </h3>
-            <p className="text-sm text-[var(--color-text-muted)]">{t('auth.2fa.setup.recovery_intro')}</p>
+            <p className="text-sm text-[var(--color-text-muted)]">{t('auth-2fa:setup.recovery_intro')}</p>
 
             <div className="grid grid-cols-2 gap-2 rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 font-mono text-sm text-[var(--color-text-primary)]">
                 {codes.map((code) => (
@@ -41,7 +43,7 @@ export function RecoveryCodesDisplay({ codes, onAcknowledge }: RecoveryCodesDisp
                 onClick={download}
                 className="w-full rounded-[var(--radius)] border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] cursor-pointer transition-colors"
             >
-                {t('auth.2fa.setup.recovery_download')}
+                {t('auth-2fa:setup.recovery_download')}
             </button>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -52,7 +54,7 @@ export function RecoveryCodesDisplay({ codes, onAcknowledge }: RecoveryCodesDisp
                     className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-primary)] cursor-pointer"
                 />
                 <span className="text-sm text-[var(--color-text-secondary)]">
-                    {t('auth.2fa.setup.recovery_acknowledge')}
+                    {t('auth-2fa:setup.recovery_acknowledge')}
                 </span>
             </label>
 
@@ -67,7 +69,7 @@ export function RecoveryCodesDisplay({ codes, onAcknowledge }: RecoveryCodesDisp
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                 )}
             >
-                {t('auth.2fa.setup.recovery_done_cta')}
+                {t('auth-2fa:setup.recovery_done_cta')}
             </button>
         </div>
     );

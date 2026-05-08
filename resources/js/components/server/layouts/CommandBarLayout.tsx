@@ -12,6 +12,7 @@ import type { CardConfig } from '@/hooks/useCardConfig';
 import type { PowerSignal } from '@/types/PowerSignal';
 import type { Server } from '@/types/Server';
 import type { ServerStats, ServerStatsMap } from '@/types/ServerStats';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface CommandBarLayoutProps {
     servers: Server[];
@@ -43,6 +44,7 @@ function CommandBarLayoutImpl({
     onPower,
     isPowerPending,
 }: CommandBarLayoutProps) {
+    useNamespace(["server-overview"] as const);
     return (
         <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)]/50 bg-[var(--color-surface)]/40 backdrop-blur-sm">
             {servers.map((server, idx) => (
@@ -201,7 +203,7 @@ function CommandBarRowImpl({
                         className="hidden md:inline-flex items-center gap-1.5 rounded-[var(--radius-full)] border border-[var(--color-border)]/60 bg-[var(--color-background)]/40 px-2.5 py-1 font-mono text-[11px] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors cursor-pointer"
                     >
                         <span className="h-1.5 w-1.5 rounded-full" style={{ background: health.color }} aria-hidden />
-                        {copied ? t('servers.list.copied') : address}
+                        {copied ? t('server-overview:list.copied') : address}
                     </button>
                 )}
 
@@ -225,7 +227,7 @@ function CommandBarRowImpl({
                             color: health.color,
                         }}
                     >
-                        {t(`servers.status.${state}`, state)}
+                        {t(`server-overview:status.${state}`, state)}
                     </span>
                 )}
 

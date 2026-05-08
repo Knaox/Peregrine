@@ -30,10 +30,10 @@ export function ConnectionTestButton({
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
-                        {t('common.loading')}
+                        {t('common:loading')}
                     </span>
                 ) : (
-                    t('common.test_connection')
+                    t('common:test_connection')
                 )}
             </button>
 
@@ -42,7 +42,7 @@ export function ConnectionTestButton({
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    {successMessage ?? t('common.connection_success')}
+                    {successMessage ?? t('common:connection_success')}
                 </div>
             )}
 
@@ -51,7 +51,7 @@ export function ConnectionTestButton({
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    {errorMessage ?? result.error ?? t('common.connection_failed')}
+                    {errorMessage ?? result.error ?? t('common:connection_failed')}
                 </div>
             )}
         </div>

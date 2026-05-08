@@ -15,18 +15,18 @@ final class NetworkSection
 {
     public static function make(): Section
     {
-        return Section::make(__('admin.settings_form.network.section'))
-            ->description(__('admin.settings_form.network.description'))
+        return Section::make(__('admin/settings.form.network.section'))
+            ->description(__('admin/settings.form.network.description'))
             ->icon('heroicon-o-shield-check')
             ->headerActions([
                 Action::make('clearTrustedProxies')
-                    ->label(__('admin.settings_form.network.clear'))
+                    ->label(__('admin/settings.form.network.clear'))
                     ->icon('heroicon-o-trash')
                     ->color('danger')
                     ->link()
                     ->action(fn (Set $set) => $set('trusted_proxies', [])),
                 Action::make('setCloudflareIps')
-                    ->label(__('admin.settings_form.network.cloudflare'))
+                    ->label(__('admin/settings.form.network.cloudflare'))
                     ->icon('heroicon-o-cloud')
                     ->color('primary')
                     ->link()
@@ -42,7 +42,7 @@ final class NetworkSection
                         $set('trusted_proxies', $merged);
                     }),
                 Action::make('setDockerRanges')
-                    ->label(__('admin.settings_form.network.docker'))
+                    ->label(__('admin/settings.form.network.docker'))
                     ->icon('heroicon-o-cube')
                     ->color('primary')
                     ->link()
@@ -61,10 +61,10 @@ final class NetworkSection
             ])
             ->schema([
                 TagsInput::make('trusted_proxies')
-                    ->label(__('admin.settings_form.network.trusted_proxies_label'))
-                    ->placeholder(__('admin.settings_form.network.placeholder'))
+                    ->label(__('admin/settings.form.network.trusted_proxies_label'))
+                    ->placeholder(__('admin/settings.form.network.placeholder'))
                     ->reorderable()
-                    ->helperText(__('admin.settings_form.network.helper')),
+                    ->helperText(__('admin/settings.form.network.helper')),
                 // /broadcasting/auth rate cap. Echo POSTs once per
                 // private channel subscription ; on a fresh tab open
                 // an admin sees server + user + admin-mirror = 3 / load
@@ -74,8 +74,8 @@ final class NetworkSection
                 // single user ; the operator can lift further if
                 // they have many users behind one Cloudflare IP.
                 TextInput::make('broadcasting_auth_rate_limit_per_minute')
-                    ->label(__('admin.settings_form.network.broadcasting_auth_label'))
-                    ->helperText(__('admin.settings_form.network.broadcasting_auth_helper'))
+                    ->label(__('admin/settings.form.network.broadcasting_auth_label'))
+                    ->helperText(__('admin/settings.form.network.broadcasting_auth_helper'))
                     ->numeric()
                     ->minValue(30)
                     ->maxValue(10000)
@@ -90,8 +90,8 @@ final class NetworkSection
                 // run a many-tenant Peregrine and want to protect Pelican
                 // from a misbehaving client.
                 TextInput::make('pelican_proxy_rate_limit_per_minute')
-                    ->label(__('admin.settings_form.network.pelican_proxy_label'))
-                    ->helperText(__('admin.settings_form.network.pelican_proxy_helper'))
+                    ->label(__('admin/settings.form.network.pelican_proxy_label'))
+                    ->helperText(__('admin/settings.form.network.pelican_proxy_helper'))
                     ->numeric()
                     ->minValue(60)
                     ->maxValue(100000)

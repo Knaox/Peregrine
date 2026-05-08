@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { ServerSearchBar } from '@/components/server/ServerSearchBar';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface DashboardToolbarProps {
     search: string;
@@ -14,6 +15,7 @@ interface DashboardToolbarProps {
  * Lives above the category grid on the dashboard.
  */
 export function DashboardToolbar({ search, onSearchChange, isSelectionMode, onToggleSelection }: DashboardToolbarProps) {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
 
     return (
@@ -32,7 +34,7 @@ export function DashboardToolbar({ search, onSearchChange, isSelectionMode, onTo
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-                {t('servers.list.select_mode')}
+                {t('server-overview:list.select_mode')}
             </button>
             <div className="flex-1">
                 <ServerSearchBar value={search} onChange={onSearchChange} />

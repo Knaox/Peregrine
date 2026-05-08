@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function ServerEmptyState() {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
 
     return (
@@ -30,7 +32,7 @@ export function ServerEmptyState() {
                     </svg>
                 </div>
             </div>
-            <p className="text-sm text-[var(--color-text-secondary)]">{t('servers.list.empty')}</p>
+            <p className="text-sm text-[var(--color-text-secondary)]">{t('server-overview:list.empty')}</p>
         </m.div>
     );
 }

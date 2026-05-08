@@ -11,7 +11,7 @@ class ProviderDisabledException extends SocialAuthException
 {
     public function errorKey(): string
     {
-        return 'auth.social.provider_disabled';
+        return 'auth-social:provider_disabled';
     }
 
     public function statusCode(): int

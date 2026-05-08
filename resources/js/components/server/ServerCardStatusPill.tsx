@@ -54,7 +54,7 @@ export function ServerCardStatusPill({ state, position }: ServerCardStatusPillPr
     if (!isSuspended && !isProvisioning) return null;
 
     const v = isSuspended ? SUSPEND_VARS : INSTALL_VARS;
-    const labelKey = isSuspended ? 'servers.status.suspended' : 'servers.status.provisioning';
+    const labelKey = isSuspended ? 'server-overview:status.suspended' : 'server-overview:status.provisioning';
     const isRibbon = position === 'corner-ribbon';
 
     return (

@@ -1,0 +1,16 @@
+{
+    "providers": {
+        "shop": "Shop",
+        "google": "Google",
+        "discord": "Discord",
+        "linkedin": "LinkedIn",
+        "paymenter": "Paymenter",
+        "whmcs": "WHMCS"
+    },
+    "register_on_canonical_first": "No account found. Please register on {{provider}} first, then sign in here.",
+    "email_not_verified": "The provider hasn't verified this email. Sign in with your primary method, then link this account from your profile.",
+    "email_not_verified_shop": "Your Shop email is not verified. Open the verification email we sent you on the Shop, confirm your address, then try again.",
+    "cannot_unlink_last_method": "This is your only sign-in method — set a password or link another provider before unlinking.",
+    "provider_disabled": "This sign-in method isn't available.",
+    "oauth_failed": "Sign-in failed. Please try again."
+}

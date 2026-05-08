@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { useSftpPassword } from '@/hooks/useSftpPassword';
 import type { SftpCredentialsProps } from '@/components/server/SftpCredentials.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 function ClipboardIcon({ className }: { className?: string }) {
     return (
@@ -80,12 +81,12 @@ function CopyField({ label, value }: { label: string; value: string }) {
                 {copied ? (
                     <>
                         <CheckIcon className="h-3.5 w-3.5 text-[var(--color-success)]" />
-                        <span className="text-[var(--color-success)]">{t('servers.sftp.copied')}</span>
+                        <span className="text-[var(--color-success)]">{t('server-sftp:sftp.copied')}</span>
                     </>
                 ) : (
                     <>
                         <ClipboardIcon className="h-3.5 w-3.5" />
-                        {t('servers.sftp.copy')}
+                        {t('server-sftp:sftp.copy')}
                     </>
                 )}
             </button>
@@ -115,14 +116,14 @@ function CredentialsSection({ sftpHost, sftpPort, sftpUsername, quickConnect, qc
                     <KeyIcon className="h-4 w-4 text-[var(--color-primary)]" />
                 </div>
                 <h3 className="text-sm sm:text-base font-semibold text-[var(--color-text-primary)]">
-                    {t('servers.sftp.credentials_title')}
+                    {t('server-sftp:sftp.credentials_title')}
                 </h3>
             </div>
 
             <div className="space-y-1 divide-y divide-[var(--color-border)]/50">
-                <CopyField label={t('servers.sftp.host')} value={sftpHost} />
-                <CopyField label={t('servers.sftp.port')} value={sftpPort} />
-                <CopyField label={t('servers.sftp.username')} value={sftpUsername} />
+                <CopyField label={t('server-sftp:sftp.host')} value={sftpHost} />
+                <CopyField label={t('server-sftp:sftp.port')} value={sftpPort} />
+                <CopyField label={t('server-sftp:sftp.username')} value={sftpUsername} />
             </div>
 
             {/* Quick connect */}
@@ -146,12 +147,12 @@ function CredentialsSection({ sftpHost, sftpPort, sftpUsername, quickConnect, qc
                     ) : (
                         <LinkIcon className="h-4 w-4" />
                     )}
-                    {qcCopied ? t('servers.sftp.copied') : t('servers.sftp.quick_connect')}
+                    {qcCopied ? t('server-sftp:sftp.copied') : t('server-sftp:sftp.quick_connect')}
                 </button>
             </div>
 
             <p className="mt-3 text-xs text-[var(--color-text-muted)] leading-relaxed">
-                {t('servers.sftp.host_note')}
+                {t('server-sftp:sftp.host_note')}
             </p>
         </m.div>
     );
@@ -182,36 +183,36 @@ function PasswordSection({ password, confirm, mismatch, isPending, isSuccess, er
                     <LockIcon className="h-4 w-4 text-[var(--color-warning)]" />
                 </div>
                 <h3 className="text-sm sm:text-base font-semibold text-[var(--color-text-primary)]">
-                    {t('servers.sftp.set_password')}
+                    {t('server-sftp:sftp.set_password')}
                 </h3>
             </div>
 
             {isSuccess && (
                 <Alert variant="success" className="mb-4">
-                    {t('servers.sftp.password_changed')}
+                    {t('server-sftp:sftp.password_changed')}
                 </Alert>
             )}
             {error && (
                 <Alert variant="error" className="mb-4">
-                    {t('servers.sftp.password_error')}
+                    {t('server-sftp:sftp.password_error')}
                 </Alert>
             )}
             {mismatch && (
                 <Alert variant="error" className="mb-4">
-                    {t('servers.sftp.password_mismatch')}
+                    {t('server-sftp:sftp.password_mismatch')}
                 </Alert>
             )}
 
             <form onSubmit={onSubmit} className="space-y-4">
                 <Input
                     type="password"
-                    label={t('servers.sftp.password_label')}
+                    label={t('server-sftp:sftp.password_label')}
                     value={password}
                     onChange={(e) => onPasswordChange(e.target.value)}
                 />
                 <Input
                     type="password"
-                    label={t('servers.sftp.password_confirm')}
+                    label={t('server-sftp:sftp.password_confirm')}
                     value={confirm}
                     onChange={(e) => onConfirmChange(e.target.value)}
                 />
@@ -221,18 +222,19 @@ function PasswordSection({ password, confirm, mismatch, isPending, isSuccess, er
                     isLoading={isPending}
                     disabled={!password || !confirm}
                 >
-                    {t('servers.sftp.set_password')}
+                    {t('server-sftp:sftp.set_password')}
                 </Button>
             </form>
 
             <p className="mt-5 text-xs text-[var(--color-text-muted)] leading-relaxed">
-                {t('servers.sftp.instructions')}
+                {t('server-sftp:sftp.instructions')}
             </p>
         </m.div>
     );
 }
 
 export function SftpCredentials({ server }: SftpCredentialsProps) {
+    useNamespace(["server-sftp"] as const);
     const { setSftpPassword, isPending, isSuccess, error, reset } = useSftpPassword();
 
     const [password, setPassword] = useState('');

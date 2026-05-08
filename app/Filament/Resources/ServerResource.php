@@ -27,17 +27,17 @@ class ServerResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.resources.servers.navigation');
+        return __('admin/servers.resource.navigation');
     }
 
     public static function getModelLabel(): string
     {
-        return __('admin.resources.servers.label');
+        return __('admin/servers.resource.label');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('admin.resources.servers.plural');
+        return __('admin/servers.resource.plural');
     }
 
     public static function form(Schema $schema): Schema

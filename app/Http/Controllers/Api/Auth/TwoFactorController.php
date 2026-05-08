@@ -47,7 +47,7 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if ($user->hasTwoFactor()) {
-            return response()->json(['error' => 'auth.2fa.already_enabled'], 409);
+            return response()->json(['error' => 'auth-2fa:already_enabled'], 409);
         }
 
         $recoveryCodes = $this->twoFactor->verifyAndActivate(
@@ -57,7 +57,7 @@ class TwoFactorController extends Controller
         );
 
         if ($recoveryCodes === []) {
-            return response()->json(['error' => 'auth.2fa.invalid_code'], 422);
+            return response()->json(['error' => 'auth-2fa:invalid_code'], 422);
         }
 
         return response()->json(['recovery_codes' => $recoveryCodes]);
@@ -76,7 +76,7 @@ class TwoFactorController extends Controller
         $state = $this->challenges->get($challengeId);
 
         if ($state === null) {
-            return response()->json(['error' => 'auth.2fa.challenge_expired'], 410);
+            return response()->json(['error' => 'auth-2fa:challenge_expired'], 410);
         }
 
         $user = User::find($state['user_id']);
@@ -84,7 +84,7 @@ class TwoFactorController extends Controller
         if ($user === null) {
             $this->challenges->purge($challengeId);
 
-            return response()->json(['error' => 'auth.2fa.challenge_expired'], 410);
+            return response()->json(['error' => 'auth-2fa:challenge_expired'], 410);
         }
 
         if (! $this->twoFactor->verifyChallenge($user, $code)) {
@@ -97,7 +97,7 @@ class TwoFactorController extends Controller
                 $this->challenges->purge($challengeId);
             }
 
-            return response()->json(['error' => 'auth.2fa.invalid_code'], 422);
+            return response()->json(['error' => 'auth-2fa:invalid_code'], 422);
         }
 
         Auth::login($user);
@@ -120,7 +120,7 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if (! $user->hasTwoFactor()) {
-            return response()->json(['error' => 'auth.2fa.not_enabled'], 409);
+            return response()->json(['error' => 'auth-2fa:not_enabled'], 409);
         }
 
         $password = $request->input('password');
@@ -128,14 +128,14 @@ class TwoFactorController extends Controller
 
         if (is_string($password) && $password !== '' && ! empty($user->password)) {
             if (! Hash::check($password, (string) $user->password)) {
-                return response()->json(['error' => 'auth.2fa.invalid_password'], 422);
+                return response()->json(['error' => 'auth-2fa:invalid_password'], 422);
             }
         } elseif (is_string($code) && $code !== '') {
             if (! $this->twoFactor->verifyChallenge($user, $code)) {
-                return response()->json(['error' => 'auth.2fa.invalid_code'], 422);
+                return response()->json(['error' => 'auth-2fa:invalid_code'], 422);
             }
         } else {
-            return response()->json(['error' => 'auth.2fa.invalid_password'], 422);
+            return response()->json(['error' => 'auth-2fa:invalid_password'], 422);
         }
 
         $this->twoFactor->disable($user);
@@ -149,7 +149,7 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if (! $user->hasTwoFactor()) {
-            return response()->json(['error' => 'auth.2fa.not_enabled'], 409);
+            return response()->json(['error' => 'auth-2fa:not_enabled'], 409);
         }
 
         return response()->json([

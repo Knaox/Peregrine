@@ -1,11 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export interface AddCategoryButtonProps {
     onCreate: (name: string) => void;
 }
 
 export function AddCategoryButton({ onCreate }: AddCategoryButtonProps) {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
     const [isEditing, setIsEditing] = useState(false);
     const [value, setValue] = useState('');
@@ -62,7 +64,7 @@ export function AddCategoryButton({ onCreate }: AddCategoryButtonProps) {
                     onChange={(e) => setValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     onBlur={handleBlur}
-                    placeholder={t('servers.list.category_placeholder')}
+                    placeholder={t('server-overview:list.category_placeholder')}
                     className="w-full bg-transparent border-none outline-none text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
                     autoFocus
                 />
@@ -79,7 +81,7 @@ export function AddCategoryButton({ onCreate }: AddCategoryButtonProps) {
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            <span className="text-sm">{t('servers.list.add_category')}</span>
+            <span className="text-sm">{t('server-overview:list.add_category')}</span>
         </button>
     );
 }

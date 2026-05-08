@@ -1,0 +1,27 @@
+{
+    "network": {
+        "title": "Réseau",
+        "ip": "Adresse IP",
+        "port": "Port",
+        "notes": "Notes",
+        "notes_placeholder": "Serveur Minecraft",
+        "primary": "Principal",
+        "set_primary": "Définir comme principal",
+        "primary_set": "Allocation principale mise à jour.",
+        "notes_updated": "Notes mises à jour.",
+        "delete": "Supprimer l'allocation",
+        "confirm_delete": "Êtes-vous sûr de vouloir supprimer cette allocation ?",
+        "deleted": "Allocation supprimée.",
+        "added": "Nouvelle allocation assignée.",
+        "add": "Ajouter une allocation",
+        "add_error": "Aucune allocation disponible sur ce node. Contactez votre administrateur.",
+        "add_rate_limited": "Trop de requêtes. Veuillez patienter avant de réessayer.",
+        "add_limit_reached": "Limite d'allocations atteinte pour ce serveur.",
+        "no_allocations": "Aucune allocation réseau.",
+        "no_allocations_hint": "Ajoutez une allocation pour attribuer une IP et un port a ce serveur.",
+        "selected_count": "{{count}} sélectionnée(s)",
+        "deselect_all": "Tout désélectionner",
+        "bulk_delete": "Supprimer la sélection",
+        "bulk_confirm": "Supprimer {{count}} allocation(s) ?"
+    }
+}

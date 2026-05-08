@@ -6,6 +6,7 @@ import { unlinkProvider, socialRedirectUrl } from '@/services/authApi';
 import { useAuthProviders, useLinkedIdentities } from '@/hooks/useAuthProviders';
 import { ApiError } from '@/services/http';
 import type { AuthProviderId } from '@/types/AuthProvider';
+import { useNamespace } from '@/i18n/useNamespace';
 
 /**
  * Profile > Security subsection showing currently-linked OAuth identities
@@ -16,6 +17,7 @@ import type { AuthProviderId } from '@/types/AuthProvider';
  * that case).
  */
 export function LinkedAccountsList() {
+    useNamespace(["auth-social","settings-security"] as const);
     const { t } = useTranslation();
     const providers = useAuthProviders();
     const linked = useLinkedIdentities();
@@ -29,16 +31,16 @@ export function LinkedAccountsList() {
             void qc.invalidateQueries({ queryKey: ['linked-identities'] });
         },
         onError: (e) => {
-            if (e instanceof ApiError && e.data['error'] === 'auth.social.cannot_unlink_last_method') {
-                setError(t('auth.social.cannot_unlink_last_method'));
+            if (e instanceof ApiError && e.data['error'] === 'auth-social:cannot_unlink_last_method') {
+                setError(t('auth-social:cannot_unlink_last_method'));
                 return;
             }
-            setError(t('common.error'));
+            setError(t('common:error'));
         },
     });
 
     if (providers.isLoading || linked.isLoading) {
-        return <p className="text-sm text-[var(--color-text-muted)]">{t('common.loading')}</p>;
+        return <p className="text-sm text-[var(--color-text-muted)]">{t('common:loading')}</p>;
     }
 
     const linkedProviderIds = new Set((linked.data?.data ?? []).map((i) => i.provider));
@@ -55,7 +57,7 @@ export function LinkedAccountsList() {
 
             {enabledProviders.length === 0 && (
                 <p className="text-sm text-[var(--color-text-muted)]">
-                    {t('settings.security.no_providers_enabled')}
+                    {t('settings-security:security.no_providers_enabled')}
                 </p>
             )}
 
@@ -70,12 +72,12 @@ export function LinkedAccountsList() {
                     >
                         <div>
                             <div className="text-sm font-medium text-[var(--color-text-primary)]">
-                                {t(`auth.providers.${p.id}`)}
+                                {t(`auth-social:providers.${p.id}`)}
                             </div>
                             <div className="text-xs text-[var(--color-text-muted)]">
                                 {isLinked && linkedIdentity !== undefined
                                     ? linkedIdentity.provider_email
-                                    : t('settings.security.not_linked')}
+                                    : t('settings-security:security.not_linked')}
                             </div>
                         </div>
 
@@ -90,16 +92,16 @@ export function LinkedAccountsList() {
                                     'hover:border-[var(--color-danger)]/50 hover:text-[var(--color-danger)]',
                                     'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-[var(--color-border)] disabled:hover:text-[var(--color-text-secondary)]',
                                 )}
-                                title={! canUnlinkAny ? t('auth.social.cannot_unlink_last_method') : ''}
+                                title={! canUnlinkAny ? t('auth-social:cannot_unlink_last_method') : ''}
                             >
-                                {t('settings.security.unlink')}
+                                {t('settings-security:security.unlink')}
                             </button>
                         ) : (
                             <a
                                 href={socialRedirectUrl(p.id)}
                                 className="rounded-[var(--radius)] bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer hover:bg-[var(--color-primary-hover)]"
                             >
-                                {t('settings.security.link')}
+                                {t('settings-security:security.link')}
                             </a>
                         )}
                     </div>

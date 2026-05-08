@@ -1,0 +1,42 @@
+{
+    "next": "Next",
+    "previous": "Previous",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "copy": "Copy",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "test_connection": "Test Connection",
+    "connection_success": "Connection successful",
+    "connection_failed": "Connection failed",
+    "required": "This field is required",
+    "optional": "Optional",
+    "install": "Install",
+    "installing": "Installing...",
+    "coming_soon": "Coming soon",
+    "back": "Back",
+    "close": "Close",
+    "errors": {
+        "no_permission": "You don't have permission to view this page."
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "servers": "Servers",
+        "settings": "Settings",
+        "settings_admin": "Admin settings",
+        "profile": "Profile",
+        "logout": "Logout",
+        "user_menu": "User menu",
+        "greeting_morning": "Good morning, {{name}}",
+        "greeting_afternoon": "Good afternoon, {{name}}",
+        "greeting_evening": "Good evening, {{name}}",
+        "greeting_night": "Good night, {{name}}",
+        "primary": "Primary navigation",
+        "close": "Close menu",
+        "open": "Open menu"
+    }
+}

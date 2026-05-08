@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import type { AuthProvider, AuthProviderId } from '@/types/AuthProvider';
 import { socialRedirectUrl } from '@/services/authApi';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface SocialLoginButtonsProps {
     providers: AuthProvider[];
@@ -35,6 +36,7 @@ const COLOR: Record<AuthProviderId, string> = {
  * browser to the provider's authorize URL.
  */
 export function SocialLoginButtons({ providers }: SocialLoginButtonsProps) {
+    useNamespace(["auth-social"] as const);
     const { t } = useTranslation();
 
     if (providers.length === 0) {
@@ -72,7 +74,7 @@ export function SocialLoginButtons({ providers }: SocialLoginButtonsProps) {
                             <path d={ICON[p.id]} />
                         </svg>
                     )}
-                    {t('auth.login.oauth_button', { provider: t(`auth.providers.${p.id}`) })}
+                    {t('auth-login:oauth_button', { provider: t(`auth-social:providers.${p.id}`) })}
                 </a>
             ))}
         </div>

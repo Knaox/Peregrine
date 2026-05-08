@@ -9,6 +9,7 @@ import { useBranding } from '@/hooks/useBranding';
 import { updateProfile } from '@/services/userApi';
 import { getHeaderIcon } from '@/utils/headerIcons';
 import type { HeaderLink } from '@/types/Branding';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface WorkspaceRailProps {
     links: HeaderLink[];
@@ -29,6 +30,7 @@ interface WorkspaceRailProps {
  * shortcut at the bottom when relevant.
  */
 export function WorkspaceRail({ links, isAdmin, expanded = false, onNavigate }: WorkspaceRailProps) {
+    useNamespace(["profile"] as const);
     const { t, i18n } = useTranslation();
     const branding = useBranding();
     const location = useLocation();
@@ -81,12 +83,12 @@ export function WorkspaceRail({ links, isAdmin, expanded = false, onNavigate }: 
             </Link>
 
             <nav className={clsx('mt-6 flex flex-1 flex-col gap-1.5', expanded ? 'w-full px-3' : 'items-center')}
-                aria-label={t('nav.primary', 'Primary navigation')}
+                aria-label={t('common:nav.primary', 'Primary navigation')}
             >
                 <RailItem
                     to="/dashboard"
                     icon={getHeaderIcon('home')}
-                    label={t('nav.dashboard', 'Dashboard')}
+                    label={t('common:nav.dashboard', 'Dashboard')}
                     expanded={expanded}
                     isActive={location.pathname === '/dashboard'}
                     onClick={onNavigate}
@@ -123,7 +125,7 @@ export function WorkspaceRail({ links, isAdmin, expanded = false, onNavigate }: 
                     <RailExternal
                         href="/admin"
                         icon={SettingsIcon}
-                        label={t('nav.settings_admin')}
+                        label={t('common:nav.settings_admin')}
                         expanded={expanded}
                         newTab={false}
                     />
@@ -162,10 +164,10 @@ export function WorkspaceRail({ links, isAdmin, expanded = false, onNavigate }: 
                                 role="menu"
                             >
                                 <Link to="/profile" onClick={close} className="block px-4 py-2 text-sm hover:bg-[var(--color-surface-hover)]">
-                                    {t('nav.profile')}
+                                    {t('common:nav.profile')}
                                 </Link>
                                 <div className="flex items-center justify-between px-4 py-2">
-                                    <span className="text-xs text-[var(--color-text-muted)]">{t('profile.locale')}</span>
+                                    <span className="text-xs text-[var(--color-text-muted)]">{t('profile:locale')}</span>
                                     <div className="flex gap-1">
                                         {['en', 'fr'].map((l) => (
                                             <button
@@ -185,13 +187,13 @@ export function WorkspaceRail({ links, isAdmin, expanded = false, onNavigate }: 
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between px-4 py-2">
-                                    <span className="text-xs text-[var(--color-text-muted)]">{t('profile.theme_mode.label')}</span>
+                                    <span className="text-xs text-[var(--color-text-muted)]">{t('profile:theme_mode.label')}</span>
                                     <div className="flex gap-1">
                                         {(['light', 'auto', 'dark'] as const).map((m) => (
                                             <button
                                                 key={m}
                                                 type="button"
-                                                aria-label={t(`profile.theme_mode.${m}`)}
+                                                aria-label={t(`profile:theme_mode.${m}`)}
                                                 onClick={() => { void handleMode(m); }}
                                                 className={clsx(
                                                     'flex h-6 w-6 items-center justify-center rounded',
@@ -209,7 +211,7 @@ export function WorkspaceRail({ links, isAdmin, expanded = false, onNavigate }: 
                                     onClick={handleLogout}
                                     className="block w-full px-4 py-2 text-left text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] cursor-pointer"
                                 >
-                                    {t('nav.logout')}
+                                    {t('common:nav.logout')}
                                 </button>
                             </m.div>
                         )}

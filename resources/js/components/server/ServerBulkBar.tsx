@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { AnimatePresence, m } from 'motion/react';
 import { Button } from '@/components/ui/Button';
 import type { ServerBulkBarProps } from '@/components/server/ServerBulkBar.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function ServerBulkBar({
     selectedCount,
@@ -9,6 +10,7 @@ export function ServerBulkBar({
     onDeselectAll,
     isPending,
 }: ServerBulkBarProps) {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
 
     return (
@@ -29,7 +31,7 @@ export function ServerBulkBar({
                     <div className="mx-auto flex max-w-5xl flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
                         <span className="text-sm font-medium text-[var(--color-text-primary)]">
                             <span className="text-[var(--color-primary)]">{selectedCount}</span>
-                            {' '}{t('servers.list.selected_count', { count: selectedCount })}
+                            {' '}{t('server-overview:list.selected_count', { count: selectedCount })}
                         </span>
                         <div className="flex items-center gap-2 flex-wrap justify-center">
                             <Button
@@ -39,7 +41,7 @@ export function ServerBulkBar({
                                 onClick={() => onBulkPower('start')}
                                 className="bg-[var(--color-success)] hover:shadow-[var(--shadow-glow-success)]"
                             >
-                                {t('servers.bulk.start_all')}
+                                {t('server-overview:bulk.start_all')}
                             </Button>
                             <Button
                                 variant="danger"
@@ -47,7 +49,7 @@ export function ServerBulkBar({
                                 disabled={isPending}
                                 onClick={() => onBulkPower('stop')}
                             >
-                                {t('servers.bulk.stop_all')}
+                                {t('server-overview:bulk.stop_all')}
                             </Button>
                             <Button
                                 variant="primary"
@@ -56,14 +58,14 @@ export function ServerBulkBar({
                                 onClick={() => onBulkPower('restart')}
                                 className="bg-[var(--color-warning)] hover:shadow-[0_0_20px_rgba(245,158,11,0.3)]"
                             >
-                                {t('servers.bulk.restart_all')}
+                                {t('server-overview:bulk.restart_all')}
                             </Button>
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={onDeselectAll}
                             >
-                                {t('servers.list.deselect_all')}
+                                {t('server-overview:list.deselect_all')}
                             </Button>
                         </div>
                     </div>

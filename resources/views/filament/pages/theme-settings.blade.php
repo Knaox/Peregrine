@@ -9,7 +9,7 @@
     @endphp
 
     @include('filament.pages.partials.settings-shell', [
-        'subtitle' => __('admin.pages.theme_settings.subtitle'),
+        'subtitle' => __('admin/theme_settings.page.subtitle'),
         'badges' => $badges,
         'form' => $this->form,
         'actions' => $this->getFormActions(),

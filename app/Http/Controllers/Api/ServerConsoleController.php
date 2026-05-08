@@ -175,9 +175,9 @@ class ServerConsoleController extends Controller
             // they can read the header and know who threw.
             $status = $e->response?->status() ?? 502;
             $code = match ($status) {
-                429 => 'servers.websocket.pelican_throttled',
-                403, 404 => 'servers.websocket.pelican_denied',
-                default => 'servers.websocket.pelican_unavailable',
+                429 => 'server-console:websocket.pelican_throttled',
+                403, 404 => 'server-console:websocket.pelican_denied',
+                default => 'server-console:websocket.pelican_unavailable',
             };
 
             return response()

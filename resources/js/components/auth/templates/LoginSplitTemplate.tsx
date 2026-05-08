@@ -71,7 +71,7 @@ export function LoginSplitTemplate({
                             )}
                         </div>
                         <h1 className="text-2xl font-semibold tracking-tight text-[var(--color-text-primary)]">
-                            {t('auth.login.title')}
+                            {t('auth-login:title')}
                         </h1>
                     </div>
                     <LoginFormCard variant="flush" className="!p-0" />

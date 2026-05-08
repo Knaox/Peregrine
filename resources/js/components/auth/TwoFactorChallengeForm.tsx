@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface TwoFactorChallengeFormProps {
     onSubmit: (code: string) => Promise<void>;
@@ -9,6 +10,7 @@ interface TwoFactorChallengeFormProps {
 }
 
 export function TwoFactorChallengeForm({ onSubmit, error }: TwoFactorChallengeFormProps) {
+    useNamespace(["auth-2fa"] as const);
     const { t } = useTranslation();
     const [code, setCode] = useState('');
     const [useRecovery, setUseRecovery] = useState(false);
@@ -46,7 +48,7 @@ export function TwoFactorChallengeForm({ onSubmit, error }: TwoFactorChallengeFo
                     htmlFor="challenge-code"
                     className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)]"
                 >
-                    {useRecovery ? t('auth.2fa.challenge.recovery_label') : t('auth.2fa.challenge.code_label')}
+                    {useRecovery ? t('auth-2fa:challenge.recovery_label') : t('auth-2fa:challenge.code_label')}
                 </label>
                 <input
                     id="challenge-code"
@@ -79,7 +81,7 @@ export function TwoFactorChallengeForm({ onSubmit, error }: TwoFactorChallengeFo
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                 )}
             >
-                {isSubmitting ? t('auth.2fa.challenge.submitting') : t('auth.2fa.challenge.submit')}
+                {isSubmitting ? t('auth-2fa:challenge.submitting') : t('auth-2fa:challenge.submit')}
             </button>
 
             <button
@@ -90,7 +92,7 @@ export function TwoFactorChallengeForm({ onSubmit, error }: TwoFactorChallengeFo
                 }}
                 className="w-full text-center text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors cursor-pointer"
             >
-                {useRecovery ? t('auth.2fa.challenge.code_label') : t('auth.2fa.challenge.use_recovery')}
+                {useRecovery ? t('auth-2fa:challenge.code_label') : t('auth-2fa:challenge.use_recovery')}
             </button>
         </form>
     );

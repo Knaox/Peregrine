@@ -9,14 +9,14 @@ interface StepIndicatorProps {
 // step here without the matching component (or vice versa) leaves the wizard
 // with a numbered cell pointing to a different panel than its label suggests.
 const STEP_KEYS = [
-    'setup.steps.language',
-    'setup.steps.database',
-    'setup.steps.admin',
-    'setup.steps.pelican',
-    'setup.steps.auth',
-    'setup.steps.summary',
-    'setup.steps.backfill',
-    'setup.steps.webhook',
+    'setup:steps.language',
+    'setup:steps.database',
+    'setup:steps.admin',
+    'setup:steps.pelican',
+    'setup:steps.auth',
+    'setup:steps.summary',
+    'setup:steps.backfill',
+    'setup:steps.webhook',
 ] as const;
 
 export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {

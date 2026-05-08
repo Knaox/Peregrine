@@ -33,7 +33,7 @@ class OAuthProviderLinkedNotification extends Notification implements ShouldQueu
     {
         $locale = $notifiable->locale ?? 'en';
         $appUrl = rtrim((string) config('app.url', ''), '/');
-        $providerName = __('auth.providers.'.$this->provider, locale: $locale);
+        $providerName = __('auth/social.providers.'.$this->provider, locale: $locale);
 
         $rendered = app(MailTemplateService::class)->render(
             MailTemplateRegistry::AUTH_SOCIAL_LINKED,

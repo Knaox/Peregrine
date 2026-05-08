@@ -1,0 +1,28 @@
+{
+    "backups": {
+        "title": "Backups",
+        "create": "Create Backup",
+        "name": "Backup Name",
+        "name_placeholder": "My Backup",
+        "ignored_files": "Ignored Files",
+        "ignored_help": "Files or directories to exclude (one per line).",
+        "locked": "Locked",
+        "lock": "Lock",
+        "unlock": "Unlock",
+        "download": "Download",
+        "restore": "Restore",
+        "restore_confirm": "Are you sure? This will restore the server to this backup.",
+        "restore_truncate": "Delete all files before restoring",
+        "delete": "Delete Backup",
+        "confirm_delete": "Are you sure you want to delete \"{{name}}\"?",
+        "deleted": "Backup deleted.",
+        "created": "Backup creation started.",
+        "restored": "Backup restore started.",
+        "no_backups": "No backups have been created.",
+        "status_completed": "Completed",
+        "status_creating": "Creating...",
+        "status_failed": "Failed",
+        "size": "Size",
+        "created_at": "Created"
+    }
+}

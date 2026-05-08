@@ -9,6 +9,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useThemeModeStore, type ThemeMode } from '@/stores/themeModeStore';
 import type { ProfileFormProps } from '@/components/profile/ProfileForm.props';
 import type { ThemeModePreference } from '@/types/User';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const LOCALE_OPTIONS = [
     { value: 'en', label: 'English' },
@@ -16,6 +17,7 @@ const LOCALE_OPTIONS = [
 ] as const;
 
 export function ProfileForm({ onSaved }: ProfileFormProps) {
+    useNamespace(["profile"] as const);
     const { t, i18n } = useTranslation();
     const { profile, isLoading, updateProfile, isUpdating, isUpdateSuccess } = useProfile();
 
@@ -80,21 +82,21 @@ export function ProfileForm({ onSaved }: ProfileFormProps) {
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
             <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
-                {t('profile.info')}
+                {t('profile:info')}
             </h3>
 
             {isUpdateSuccess && (
-                <Alert variant="success">{t('profile.saved')}</Alert>
+                <Alert variant="success">{t('profile:saved')}</Alert>
             )}
 
             <Input
-                label={t('profile.name')}
+                label={t('profile:name')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
             />
 
             <Input
-                label={t('profile.email')}
+                label={t('profile:email')}
                 value={profile?.email ?? ''}
                 disabled
             />
@@ -104,7 +106,7 @@ export function ProfileForm({ onSaved }: ProfileFormProps) {
                     htmlFor="locale-select"
                     className="text-sm font-medium text-[var(--color-text-secondary)]"
                 >
-                    {t('profile.locale')}
+                    {t('profile:locale')}
                 </label>
                 <select
                     id="locale-select"
@@ -122,9 +124,9 @@ export function ProfileForm({ onSaved }: ProfileFormProps) {
 
             <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium text-[var(--color-text-secondary)]">
-                    {t('profile.theme_mode.label')}
+                    {t('profile:theme_mode.label')}
                 </span>
-                <div className="flex gap-2" role="radiogroup" aria-label={t('profile.theme_mode.label')}>
+                <div className="flex gap-2" role="radiogroup" aria-label={t('profile:theme_mode.label')}>
                     {(['light', 'auto', 'dark'] as const).map((m) => {
                         const active = themeMode === m;
                         return (
@@ -159,12 +161,12 @@ export function ProfileForm({ onSaved }: ProfileFormProps) {
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
                                     </svg>
                                 )}
-                                {t(`profile.theme_mode.${m}`)}
+                                {t(`profile:theme_mode.${m}`)}
                             </button>
                         );
                     })}
                 </div>
-                <p className="text-xs text-[var(--color-text-muted)]">{t('profile.theme_mode.hint')}</p>
+                <p className="text-xs text-[var(--color-text-muted)]">{t('profile:theme_mode.hint')}</p>
             </div>
 
             <Button
@@ -173,7 +175,7 @@ export function ProfileForm({ onSaved }: ProfileFormProps) {
                 isLoading={isUpdating}
                 disabled={!hasChanges}
             >
-                {t('profile.save')}
+                {t('profile:save')}
             </Button>
         </form>
     );

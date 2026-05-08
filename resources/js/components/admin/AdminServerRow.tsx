@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import type { AdminServer } from '@/types/AdminServer';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface AdminServerRowProps {
     server: AdminServer;
@@ -12,6 +13,7 @@ interface AdminServerRowProps {
  * lets admins open any server).
  */
 export function AdminServerRow({ server }: AdminServerRowProps) {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
 
     return (
@@ -50,7 +52,7 @@ export function AdminServerRow({ server }: AdminServerRowProps) {
                             : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]'
                 }`}
             >
-                {t(`servers.status.${server.status}`, { defaultValue: server.status })}
+                {t(`server-overview:status.${server.status}`, { defaultValue: server.status })}
             </span>
         </div>
     );

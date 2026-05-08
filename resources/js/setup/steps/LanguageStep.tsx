@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { StepProps } from '../types';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const LANGUAGES = [
     { code: 'en', label: 'English', flag: 'EN' },
@@ -7,6 +8,7 @@ const LANGUAGES = [
 ] as const;
 
 export function LanguageStep({ data, onChange, onNext }: StepProps) {
+    useNamespace(["setup"] as const);
     const { t, i18n } = useTranslation();
 
     const handleSelect = (code: string) => {
@@ -18,10 +20,10 @@ export function LanguageStep({ data, onChange, onNext }: StepProps) {
         <div className="space-y-6">
             <div>
                 <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
-                    {t('setup.language.title')}
+                    {t('setup:language.title')}
                 </h2>
                 <p className="text-[var(--color-text-secondary)] text-sm mt-1">
-                    {t('setup.language.description')}
+                    {t('setup:language.description')}
                 </p>
             </div>
 
@@ -59,7 +61,7 @@ export function LanguageStep({ data, onChange, onNext }: StepProps) {
                     onClick={onNext}
                     className="px-6 py-3 sm:py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)]"
                 >
-                    {t('common.next')}
+                    {t('common:next')}
                 </button>
             </div>
         </div>

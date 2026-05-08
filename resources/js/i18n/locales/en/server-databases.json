@@ -1,0 +1,25 @@
+{
+    "databases": {
+        "title": "Databases",
+        "create": "Create Database",
+        "name": "Database Name",
+        "host": "Host",
+        "port": "Port",
+        "username": "Username",
+        "password": "Password",
+        "remote": "Remote Connections",
+        "remote_help": "Where connections are allowed from. Use % for wildcard.",
+        "show_password": "Show password",
+        "hide_password": "Hide password",
+        "rotate_password": "Rotate Password",
+        "rotate_confirm": "Are you sure? This will generate a new random password.",
+        "rotated": "Password rotated successfully.",
+        "delete": "Delete Database",
+        "confirm_delete": "Are you sure you want to delete \"{{name}}\"? This cannot be undone.",
+        "deleted": "Database deleted.",
+        "created": "Database created.",
+        "no_databases": "No databases have been created.",
+        "connections_from": "Connections From",
+        "max_connections": "Max Connections"
+    }
+}

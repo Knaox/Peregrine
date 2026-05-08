@@ -4,6 +4,7 @@ import { formatBytes, formatCpu } from '@/utils/format';
 import { useCountUp } from '@/hooks/useCountUp';
 import type { ServerResourceCardsProps } from '@/components/server/ServerResourceCards.props';
 import { CircularGauge } from '@/components/server/CircularGauge';
+import { useNamespace } from '@/i18n/useNamespace';
 
 function SkeletonCard() {
     return (
@@ -26,6 +27,7 @@ const fadeUp = {
 };
 
 export function ServerResourceCards({ resources, plan, isLoading }: ServerResourceCardsProps) {
+    useNamespace(["server-shell"] as const);
     const { t } = useTranslation();
 
     if (isLoading) {
@@ -57,7 +59,7 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                         </svg>
                     </IconCircle>
-                    <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('servers.resources.cpu')}</span>
+                    <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.cpu')}</span>
                 </div>
                 <div className="flex items-center justify-center py-2">
                     <CircularGauge value={cpu} max={cpuMax} color="var(--color-primary)" label={formatCpu(cpu)} sublabel={`/ ${cpuMax}%`} />
@@ -72,7 +74,7 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
                     </IconCircle>
-                    <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('servers.resources.memory')}</span>
+                    <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.memory')}</span>
                 </div>
                 <div className="flex items-center justify-center py-2">
                     <CircularGauge value={memPercent} max={100} color="var(--color-info)" label={formatBytes(memBytes)} sublabel={ramMax ? `/ ${formatBytes(ramMax)}` : undefined} />
@@ -87,7 +89,7 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
                         </svg>
                     </IconCircle>
-                    <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('servers.resources.disk')}</span>
+                    <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.disk')}</span>
                 </div>
                 <div className="flex items-center justify-center py-2">
                     <CircularGauge value={diskPercent} max={100} color="var(--color-accent)" label={formatBytes(diskBytes)} sublabel={diskMax ? `/ ${formatBytes(diskMax)}` : undefined} />
@@ -102,11 +104,11 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.858 15.355-5.858 21.213 0" />
                         </svg>
                     </IconCircle>
-                    <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('servers.resources.network')}</span>
+                    <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.network')}</span>
                 </div>
                 <div className="space-y-3 pt-2">
-                    <NetworkRow direction="down" label={t('servers.resources.download')} value={netRx} />
-                    <NetworkRow direction="up" label={t('servers.resources.upload')} value={netTx} />
+                    <NetworkRow direction="down" label={t('server-shell:resources.download')} value={netRx} />
+                    <NetworkRow direction="up" label={t('server-shell:resources.upload')} value={netTx} />
                 </div>
             </m.div>
         </m.div>

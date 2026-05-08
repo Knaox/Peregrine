@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import type { PowerSignal } from '@/types/PowerSignal';
 import type { CardConfig } from '@/hooks/useCardConfig';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface ServerCardPowerButtonsProps {
     serverId: number;
@@ -65,6 +66,7 @@ const RestartIcon = (size: string) => (
 function ServerCardPowerButtonsImpl({
     serverId, isRunning, isStopped, isPowerPending, onPower, layout = 'full',
 }: ServerCardPowerButtonsProps) {
+    useNamespace(["server-console"] as const);
     const { t } = useTranslation();
     const iconSize = ICON_SIZES[layout];
     const gap = layout === 'full' ? 'gap-2' : 'gap-1';
@@ -74,7 +76,7 @@ function ServerCardPowerButtonsImpl({
             {isStopped && (
                 <PowerBtn
                     icon={PlayIcon(iconSize)}
-                    title={t('servers.actions.start')}
+                    title={t('server-console:actions.start')}
                     disabled={isPowerPending}
                     onClick={() => onPower(serverId, 'start')}
                     layout={layout}
@@ -84,21 +86,21 @@ function ServerCardPowerButtonsImpl({
                 <>
                     <PowerBtn
                         icon={PlayIcon(iconSize)}
-                        title={t('servers.actions.start')}
+                        title={t('server-console:actions.start')}
                         disabled={isPowerPending}
                         onClick={() => onPower(serverId, 'start')}
                         layout={layout}
                     />
                     <PowerBtn
                         icon={StopIcon(iconSize)}
-                        title={t('servers.actions.stop')}
+                        title={t('server-console:actions.stop')}
                         disabled={isPowerPending}
                         onClick={() => onPower(serverId, 'stop')}
                         layout={layout}
                     />
                     <PowerBtn
                         icon={RestartIcon(iconSize)}
-                        title={t('servers.actions.restart')}
+                        title={t('server-console:actions.restart')}
                         disabled={isPowerPending}
                         onClick={() => onPower(serverId, 'restart')}
                         layout={layout}

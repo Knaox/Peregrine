@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import type { ServerSearchBarProps } from '@/components/server/ServerSearchBar.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function ServerSearchBar({ value, onChange }: ServerSearchBarProps) {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
     const [isFocused, setIsFocused] = useState(false);
 
@@ -29,7 +31,7 @@ export function ServerSearchBar({ value, onChange }: ServerSearchBarProps) {
                 onChange={(e) => onChange(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                placeholder={t('servers.list.search')}
+                placeholder={t('server-overview:list.search')}
                 className={clsx(
                     'w-full rounded-[var(--radius-lg)] py-2.5 pl-10 pr-10 text-sm',
                     'backdrop-blur-md bg-[var(--color-glass)] border',

@@ -4,6 +4,26 @@ All notable changes to the Peregrine panel are documented in this file.
 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha.5] — 2026-05-08
+
+### Highlights
+
+- **Full i18n refactor**: the two monolithic translation files (`lang/en/admin.php` at 1138 lines, `resources/js/i18n/en.json` at 985 lines) are now split into per-page namespaces — 23 PHP files under `lang/{en,fr}/{admin,auth}/*.php` + 19 JSON namespaces under `resources/js/i18n/locales/{en,fr}/*.json`. The largest single file is now `_shell.php` at 266 lines (–77%), `theme-studio.json` at 331 lines (–66%).
+- **Lazy-loaded translation chunks**: each frontend namespace is a separate Vite chunk discovered via `import.meta.glob`, fetched on demand when a page mounts (only `common` and `auth-login` are eager). The plugin i18n contract (`useTranslation(pluginId)`) is preserved.
+
+### Changed
+
+- **Backend translation keys** moved to slash-namespaced paths (`__('admin/servers.list.title')`, `__('auth/social.providers.shop')`). Laravel's file-loader supports the slash natively — no custom resolver. The previous flat keys (`admin.X`, `auth.login.X`, etc.) are removed.
+- **Frontend translation keys** moved to `ns:key` form (`t('server-overview:list.title')`, `t('auth-2fa:invalid_code')`). API error codes returned by the panel (`auth-social:provider_disabled`, `auth-2fa:required_admin_setup`, etc.) flow straight into i18next on the SPA side without any client-side translation lookup table.
+- **Sidebar config defaults** (`ThemeDefaults::SIDEBAR_CONFIG`, `CardConfigResolver`) now ship the new key shape `server-shell:detail.{overview,console,…}`. A `LEGACY_LABEL_KEY_MAP` in `useSidebarConfig.ts` transparently migrates persisted `theme_settings.sidebar_config` rows so customised sidebars keep rendering translated labels — no DB migration required.
+
+### Internal
+
+- Migration scripts checked in under `scripts/i18n/`: `build-mapping.php`, `build-new-locale-files.php`, `rewrite-php.php`, `rewrite-ts.cjs`, `fill-missing-keys.cjs`, `find-missing-keys.cjs`, `verify.sh`. These produce a deterministic key mapping (`mapping.json`, 1031 backend + 800 frontend keys) and apply it byte-for-byte across 58 PHP files + 106 TS/TSX files. Keep them around to ease future namespace splits.
+- New helpers: `resources/js/i18n/useNamespace.ts` (per-page lazy load + locale-switch refetch), `resources/js/i18n/pluginLoader.ts` (extracted from `config.ts` to keep the plugin i18n surface stable across config rewrites).
+
+---
+
 ## [1.0.0-alpha.4] — 2026-05-07
 
 ### Highlights

@@ -10,6 +10,7 @@ import { ServerContextPill } from '@/components/server/sidebar/ServerContextPill
 import { SidebarUserMenu } from '@/components/server/sidebar/SidebarUserMenu';
 import type { useSidebarConfig } from '@/hooks/useSidebarConfig';
 import type { ServerSidebarProps } from '@/components/server/ServerSidebar.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 type DockBarProps = ServerSidebarProps & { config: ReturnType<typeof useSidebarConfig> };
 
@@ -35,6 +36,7 @@ interface HoverState {
  * 8+ items still scroll on narrow phones.
  */
 export function DockBar({ server, config }: DockBarProps) {
+    useNamespace(["server-shell"] as const);
     const { t } = useTranslation();
     const style = config.style ?? 'pills';
     const withLabels = style === 'default';
@@ -92,7 +94,7 @@ export function DockBar({ server, config }: DockBarProps) {
             >
                 <nav
                     role="navigation"
-                    aria-label={t('servers.sidebar.principal')}
+                    aria-label={t('server-shell:sidebar.principal')}
                     className={clsx(
                         'pointer-events-auto flex items-center overflow-x-auto py-2 max-w-[calc(100vw-24px)]',
                         withLabels ? 'gap-1 px-3' : 'gap-1.5 px-3',

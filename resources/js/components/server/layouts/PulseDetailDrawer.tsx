@@ -11,6 +11,7 @@ import type { CardConfig } from '@/hooks/useCardConfig';
 import type { PowerSignal } from '@/types/PowerSignal';
 import type { Server } from '@/types/Server';
 import type { ServerStats } from '@/types/ServerStats';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface PulseDetailDrawerProps {
     server: Server | null;
@@ -37,6 +38,7 @@ export function PulseDetailDrawer({
     onPower,
     isPowerPending,
 }: PulseDetailDrawerProps) {
+    useNamespace(["server-overview"] as const);
     const navigate = useNavigate();
     const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
@@ -119,14 +121,14 @@ export function PulseDetailDrawer({
                         <DrawerHeader
                             server={server}
                             healthColor={health.color}
-                            stateLabel={t(`servers.status.${state}`, state)}
+                            stateLabel={t(`server-overview:status.${state}`, state)}
                             isAlive={health.isAlive}
                             onClose={onClose}
                         />
 
                         <div className="flex-1 overflow-y-auto px-5 pb-6">
                             {address && (
-                                <Section label={t('servers.list.address', 'Address')}>
+                                <Section label={t('server-overview:list.address', 'Address')}>
                                     <button
                                         type="button"
                                         onClick={handleCopy}
@@ -134,31 +136,31 @@ export function PulseDetailDrawer({
                                     >
                                         <span className="flex-1 text-left">{address}</span>
                                         <span className="text-xs text-[var(--color-text-muted)]">
-                                            {copied ? t('servers.list.copied') : t('common.copy', 'Copy')}
+                                            {copied ? t('server-overview:list.copied') : t('common:copy', 'Copy')}
                                         </span>
                                     </button>
                                 </Section>
                             )}
 
                             {stats && !isInactive && (
-                                <Section label={t('servers.list.stats', 'Live stats')}>
+                                <Section label={t('server-overview:list.stats', 'Live stats')}>
                                     <div className="grid grid-cols-2 gap-3">
                                         <Metric label="CPU" value={formatCpu(stats.cpu)} pct={Math.min(100, stats.cpu)} color={health.color} />
                                         <Metric label="RAM" value={formatBytes(stats.memory_bytes)} pct={ramPct} color={health.color} />
                                         <Metric label="Disk" value={formatBytes(stats.disk_bytes)} pct={null} color={health.color} />
-                                        <Metric label={t('servers.list.uptime', 'Uptime')} value={stats.uptime > 0 ? formatUptime(stats.uptime) : '—'} pct={null} color={health.color} />
+                                        <Metric label={t('server-overview:list.uptime', 'Uptime')} value={stats.uptime > 0 ? formatUptime(stats.uptime) : '—'} pct={null} color={health.color} />
                                     </div>
                                 </Section>
                             )}
 
                             {(server.egg || server.plan) && (
-                                <Section label={t('servers.list.config', 'Configuration')}>
+                                <Section label={t('server-overview:list.config', 'Configuration')}>
                                     <dl className="space-y-2 text-sm">
                                         {server.egg && (
-                                            <Row label={t('servers.list.egg', 'Egg')} value={server.egg.name} />
+                                            <Row label={t('server-overview:list.egg', 'Egg')} value={server.egg.name} />
                                         )}
                                         {server.plan && (
-                                            <Row label={t('servers.list.plan', 'Plan')} value={server.plan.name} />
+                                            <Row label={t('server-overview:list.plan', 'Plan')} value={server.plan.name} />
                                         )}
                                     </dl>
                                 </Section>
@@ -186,7 +188,7 @@ export function PulseDetailDrawer({
                                 }}
                                 className="rounded-[var(--radius-md)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary-hover)] cursor-pointer transition-colors"
                             >
-                                {t('servers.list.open', 'Open server')}
+                                {t('server-overview:list.open', 'Open server')}
                                 <span aria-hidden className="ml-2">→</span>
                             </button>
                         </div>

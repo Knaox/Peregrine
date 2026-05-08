@@ -5,8 +5,10 @@ import { FormField } from '../components/FormField';
 import { ConnectionTestButton } from '../components/ConnectionTestButton';
 import { useConnectionTest } from '../hooks/useConnectionTest';
 import { testDatabase, detectDocker } from '../services/setupApi';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) {
+    useNamespace(["setup"] as const);
     const { t } = useTranslation();
     const [dockerDetected, setDockerDetected] = useState(false);
     const [dbReady, setDbReady] = useState(false);
@@ -60,10 +62,10 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
         <div className="space-y-6">
             <div>
                 <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
-                    {t('setup.database.title')}
+                    {t('setup:database.title')}
                 </h2>
                 <p className="text-[var(--color-text-secondary)] text-sm mt-1">
-                    {t('setup.database.description')}
+                    {t('setup:database.description')}
                 </p>
             </div>
 
@@ -73,7 +75,7 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <p className="text-sm text-[var(--color-success)]">
-                        {t('setup.database.docker_db_ready')}
+                        {t('setup:database.docker_db_ready')}
                     </p>
                 </div>
             )}
@@ -84,7 +86,7 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <p className="text-sm text-[var(--color-info)]">
-                        {t('setup.database.docker_detected')}
+                        {t('setup:database.docker_detected')}
                     </p>
                 </div>
             )}
@@ -92,53 +94,53 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
             <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
                     <div className="col-span-2">
-                        <FormField label={t('setup.database.host')} required>
+                        <FormField label={t('setup:database.host')} required>
                             <input
                                 type="text"
                                 value={data.database.host}
                                 onChange={(e) => updateField('host', e.target.value)}
-                                placeholder={t('setup.database.host_placeholder')}
+                                placeholder={t('setup:database.host_placeholder')}
                                 className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                             />
                         </FormField>
                     </div>
-                    <FormField label={t('setup.database.port')} required>
+                    <FormField label={t('setup:database.port')} required>
                         <input
                             type="number"
                             value={data.database.port}
                             onChange={(e) => updateField('port', parseInt(e.target.value, 10) || 0)}
-                            placeholder={t('setup.database.port_placeholder')}
+                            placeholder={t('setup:database.port_placeholder')}
                             className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                         />
                     </FormField>
                 </div>
 
-                <FormField label={t('setup.database.name')} required>
+                <FormField label={t('setup:database.name')} required>
                     <input
                         type="text"
                         value={data.database.database}
                         onChange={(e) => updateField('database', e.target.value)}
-                        placeholder={t('setup.database.name_placeholder')}
+                        placeholder={t('setup:database.name_placeholder')}
                         className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                     />
                 </FormField>
 
-                <FormField label={t('setup.database.username')} required>
+                <FormField label={t('setup:database.username')} required>
                     <input
                         type="text"
                         value={data.database.username}
                         onChange={(e) => updateField('username', e.target.value)}
-                        placeholder={t('setup.database.username_placeholder')}
+                        placeholder={t('setup:database.username_placeholder')}
                         className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                     />
                 </FormField>
 
-                <FormField label={t('setup.database.password')}>
+                <FormField label={t('setup:database.password')}>
                     <input
                         type="password"
                         value={data.database.password}
                         onChange={(e) => updateField('password', e.target.value)}
-                        placeholder={t('setup.database.password_placeholder')}
+                        placeholder={t('setup:database.password_placeholder')}
                         className="w-full px-3 py-2 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-[var(--radius)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                     />
                 </FormField>
@@ -154,10 +156,10 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                     />
                     <span className="text-sm">
                         <span className="font-medium text-[var(--color-text-primary)]">
-                            {t('setup.database.fresh', { defaultValue: 'Fresh install — drop every existing table in this database before migrating' })}
+                            {t('setup:database.fresh', { defaultValue: 'Fresh install — drop every existing table in this database before migrating' })}
                         </span>
                         <span className="block text-xs text-[var(--color-text-muted)] mt-0.5">
-                            {t('setup.database.fresh_hint', { defaultValue: 'Tick this if you hit "Table already exists" — the selected database will be wiped. All data in it is lost.' })}
+                            {t('setup:database.fresh_hint', { defaultValue: 'Tick this if you hit "Table already exists" — the selected database will be wiped. All data in it is lost.' })}
                         </span>
                     </span>
                 </label>
@@ -167,10 +169,10 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                 <ConnectionTestButton
                     result={result}
                     onTest={runTest}
-                    successMessage={t('setup.database.test_success')}
+                    successMessage={t('setup:database.test_success')}
                     errorMessage={
                         result.error
-                            ? t('setup.database.test_failed', { error: result.error })
+                            ? t('setup:database.test_failed', { error: result.error })
                             : undefined
                     }
                 />
@@ -182,7 +184,7 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                     onClick={onPrevious}
                     className="px-6 py-3 sm:py-2 bg-[var(--color-surface-hover)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] ring-1 ring-[var(--color-border)]"
                 >
-                    {t('common.previous')}
+                    {t('common:previous')}
                 </button>
                 <button
                     type="button"
@@ -190,7 +192,7 @@ export function DatabaseStep({ data, onChange, onNext, onPrevious }: StepProps) 
                     disabled={!canProceed}
                     className="px-6 py-3 sm:py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {t('common.next')}
+                    {t('common:next')}
                 </button>
             </div>
         </div>

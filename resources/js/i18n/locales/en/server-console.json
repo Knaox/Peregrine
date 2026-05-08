@@ -1,0 +1,36 @@
+{
+    "actions": {
+        "start": "Start",
+        "stop": "Stop",
+        "restart": "Restart",
+        "kill": "Kill"
+    },
+    "power": {
+        "confirm_kill": "Are you sure you want to kill this server? This may cause data loss.",
+        "success": "Power signal sent.",
+        "error": "Failed to send power signal."
+    },
+    "console": {
+        "title": "Console",
+        "send_command": "Send command...",
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "reconnecting": "Reconnecting...",
+        "connection_error": "Connection error",
+        "clear": "Clear",
+        "scroll_to_bottom": "Scroll to bottom",
+        "server_offline": "Server is offline. Console unavailable.",
+        "server_stopped_message": "Server is currently offline. Use the power controls above to start it.",
+        "server_starting_message": "Server is starting up...",
+        "server_stopping_message": "Server is shutting down...",
+        "status_running": "Running",
+        "status_stopped": "Stopped",
+        "status_starting": "Starting",
+        "status_stopping": "Stopping"
+    },
+    "websocket": {
+        "pelican_throttled": "Pelican is rate-limiting requests for this server. Wait a moment and retry.",
+        "pelican_denied": "Pelican refused access to this server's console.",
+        "pelican_unavailable": "Pelican is currently unreachable. The console will reconnect automatically."
+    }
+}

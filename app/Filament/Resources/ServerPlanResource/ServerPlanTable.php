@@ -34,8 +34,8 @@ final class ServerPlanTable
             ->toolbarActions(self::toolbarActions())
             ->defaultSort('id', 'desc')
             ->emptyStateIcon('heroicon-o-clipboard-document-list')
-            ->emptyStateHeading(__('admin.resources.server_plans.plural'))
-            ->emptyStateDescription(__('admin.common.empty_states.plans'));
+            ->emptyStateHeading(__('admin/server_plans.resource.plural'))
+            ->emptyStateDescription(__('admin/_shell.common.empty_states.plans'));
     }
 
     /**
@@ -44,35 +44,35 @@ final class ServerPlanTable
     private static function columns(): array
     {
         return [
-            Tables\Columns\TextColumn::make('id')->label(__('admin.fields.id'))->sortable(),
-            Tables\Columns\TextColumn::make('name')->label(__('admin.fields.name'))->searchable()->sortable(),
+            Tables\Columns\TextColumn::make('id')->label(__('admin/_shell.fields.id'))->sortable(),
+            Tables\Columns\TextColumn::make('name')->label(__('admin/_shell.fields.name'))->searchable()->sortable(),
             Tables\Columns\TextColumn::make('shop_plan_id')
-                ->label(__('admin.fields.shop_id'))
+                ->label(__('admin/_shell.fields.shop_id'))
                 ->placeholder('—')
                 ->sortable(),
             Tables\Columns\TextColumn::make('price_cents')
-                ->label(__('admin.fields.price'))
+                ->label(__('admin/_shell.fields.price'))
                 ->formatStateUsing(fn ($state, ServerPlan $record) =>
                     $state === null ? '—' : number_format($state / 100, 2).' '.($record->currency ?? '')
                 ),
             Tables\Columns\TextColumn::make('egg.name')
-                ->label(__('admin.fields.egg'))
-                ->placeholder(__('admin.common.not_configured'))
+                ->label(__('admin/_shell.fields.egg'))
+                ->placeholder(__('admin/_shell.common.not_configured'))
                 ->color(fn ($state) => $state === null ? 'warning' : null)
                 ->icon(fn ($state) => $state === null ? 'heroicon-o-exclamation-triangle' : null)
-                ->tooltip(fn ($state) => $state === null ? __('admin.plans.tooltips.no_egg') : null)
+                ->tooltip(fn ($state) => $state === null ? __('admin/server_plans.tooltips.no_egg') : null)
                 ->sortable(),
             Tables\Columns\TextColumn::make('node.name')
-                ->label(__('admin.fields.node'))
-                ->placeholder(__('admin.common.auto'))
-                ->tooltip(fn ($state) => $state === null ? __('admin.plans.tooltips.auto_node') : null)
+                ->label(__('admin/_shell.fields.node'))
+                ->placeholder(__('admin/_shell.common.auto'))
+                ->tooltip(fn ($state) => $state === null ? __('admin/server_plans.tooltips.auto_node') : null)
                 ->sortable(),
             Tables\Columns\TextColumn::make('ram')
-                ->label(__('admin.plans.fields.ram'))
+                ->label(__('admin/server_plans.fields.ram'))
                 ->formatStateUsing(fn ($state) => $state === null ? '—' : number_format($state).' MB')
                 ->sortable(),
             Tables\Columns\IconColumn::make('syncStatus')
-                ->label(__('admin.fields.status'))
+                ->label(__('admin/_shell.fields.status'))
                 ->getStateUsing(fn (ServerPlan $record) => $record->syncStatus())
                 ->icon(fn (string $state): string => match ($state) {
                     'ready' => 'heroicon-o-check-circle',
@@ -89,11 +89,11 @@ final class ServerPlanTable
                     default => 'gray',
                 })
                 ->tooltip(fn (string $state): string => match ($state) {
-                    'ready' => __('admin.plans.sync_status.ready'),
-                    'needs_config' => __('admin.plans.sync_status.needs_config'),
-                    'inactive' => __('admin.plans.sync_status.inactive'),
-                    'sync_error' => __('admin.plans.sync_status.sync_error'),
-                    default => __('admin.common.unknown'),
+                    'ready' => __('admin/server_plans.sync_status.ready'),
+                    'needs_config' => __('admin/server_plans.sync_status.needs_config'),
+                    'inactive' => __('admin/server_plans.sync_status.inactive'),
+                    'sync_error' => __('admin/server_plans.sync_status.sync_error'),
+                    default => __('admin/_shell.common.unknown'),
                 }),
         ];
     }
@@ -104,9 +104,9 @@ final class ServerPlanTable
     private static function filters(): array
     {
         return [
-            Tables\Filters\TernaryFilter::make('is_active')->label(__('admin.plans.filters.active')),
+            Tables\Filters\TernaryFilter::make('is_active')->label(__('admin/server_plans.filters.active')),
             Tables\Filters\Filter::make('needs_config')
-                ->label(__('admin.plans.filters.needs_config'))
+                ->label(__('admin/server_plans.filters.needs_config'))
                 ->query(fn ($q) => $q->whereNull('egg_id')->orWhereNull('node_id')),
         ];
     }
@@ -120,15 +120,15 @@ final class ServerPlanTable
             EditAction::make(),
             DeleteAction::make()
                 ->requiresConfirmation()
-                ->modalHeading(fn (ServerPlan $record): string => __('admin.plans.delete.modal_heading', ['name' => $record->name]))
+                ->modalHeading(fn (ServerPlan $record): string => __('admin/server_plans.delete.modal_heading', ['name' => $record->name]))
                 ->modalDescription(function (ServerPlan $record): string {
                     $count = $record->servers()->count();
                     $base = $count === 0
-                        ? __('admin.plans.delete.no_servers')
-                        : __('admin.plans.delete.with_servers', ['count' => $count]);
-                    return $base.' '.__('admin.plans.delete.irreversible');
+                        ? __('admin/server_plans.delete.no_servers')
+                        : __('admin/server_plans.delete.with_servers', ['count' => $count]);
+                    return $base.' '.__('admin/server_plans.delete.irreversible');
                 })
-                ->modalSubmitActionLabel(__('admin.plans.delete.submit')),
+                ->modalSubmitActionLabel(__('admin/server_plans.delete.submit')),
         ];
     }
 
@@ -141,16 +141,16 @@ final class ServerPlanTable
             BulkActionGroup::make([
                 DeleteBulkAction::make()
                     ->requiresConfirmation()
-                    ->modalHeading(__('admin.plans.delete_bulk.modal_heading'))
+                    ->modalHeading(__('admin/server_plans.delete_bulk.modal_heading'))
                     ->modalDescription(function ($records): string {
                         $totalServers = collect($records)->sum(fn (ServerPlan $p) => $p->servers()->count());
-                        $base = __('admin.plans.delete_bulk.count', ['count' => $records->count()]);
+                        $base = __('admin/server_plans.delete_bulk.count', ['count' => $records->count()]);
                         if ($totalServers > 0) {
-                            $base .= ' '.__('admin.plans.delete_bulk.with_servers', ['count' => $totalServers]);
+                            $base .= ' '.__('admin/server_plans.delete_bulk.with_servers', ['count' => $totalServers]);
                         }
-                        return $base.' '.__('admin.plans.delete_bulk.irreversible');
+                        return $base.' '.__('admin/server_plans.delete_bulk.irreversible');
                     })
-                    ->modalSubmitActionLabel(__('admin.plans.delete_bulk.submit')),
+                    ->modalSubmitActionLabel(__('admin/server_plans.delete_bulk.submit')),
             ]),
         ];
     }

@@ -1,0 +1,15 @@
+{
+    "servers": {
+        "title": "Tous les serveurs",
+        "subtitle": "Tous les serveurs du panel. Ouvrez un serveur pour le gérer — vos actions sont enregistrées dans le journal d'audit.",
+        "mode_toggle": "Vue admin",
+        "search_placeholder": "Rechercher par nom, identifiant, utilisateur…",
+        "filter": {
+            "any_status": "Tous les statuts"
+        },
+        "count": "{{count}} serveur",
+        "count_plural": "{{count}} serveurs",
+        "empty": "Aucun serveur ne correspond à ces filtres.",
+        "owner_label": "Propriétaire"
+    }
+}

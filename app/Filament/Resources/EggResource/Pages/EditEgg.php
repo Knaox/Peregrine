@@ -14,7 +14,7 @@ class EditEgg extends EditRecord
     {
         return [
             Actions\Action::make('back')
-                ->label(__('admin.resource_pages.back_to_list'))
+                ->label(__('admin/eggs.back_to_list'))
                 ->url(EggResource::getUrl('index'))
                 ->color('gray'),
         ];

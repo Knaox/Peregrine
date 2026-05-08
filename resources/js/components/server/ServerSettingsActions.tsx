@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { renameServer, reinstallServer } from '@/services/serverApi';
 import { ApiError } from '@/services/http';
 import type { Server } from '@/types/Server';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface ServerSettingsActionsProps {
     server: Server;
@@ -21,6 +22,7 @@ type Dialog = null | 'rename' | 'reinstall';
  * ServerInfoCard (read-only) because the dialogs carry state + mutations.
  */
 export function ServerSettingsActions({ server, canRename, canReinstall }: ServerSettingsActionsProps) {
+    useNamespace(["server-shell"] as const);
     const { t } = useTranslation();
     const queryClient = useQueryClient();
 
@@ -58,7 +60,7 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
             await queryClient.invalidateQueries({ queryKey: ['servers'] });
             setDialog(null);
         } catch (err) {
-            setError(err instanceof ApiError ? t('servers.settings.rename_error') : t('common.error'));
+            setError(err instanceof ApiError ? t('server-shell:settings.rename_error') : t('common:error'));
         } finally {
             setSubmitting(false);
         }
@@ -66,7 +68,7 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
 
     const handleReinstall = async () => {
         if (confirmText.trim().toLowerCase() !== server.name.trim().toLowerCase()) {
-            setError(t('servers.settings.reinstall_name_mismatch'));
+            setError(t('server-shell:settings.reinstall_name_mismatch'));
             return;
         }
         setSubmitting(true);
@@ -82,7 +84,7 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
             setDialog(null);
             setWipeData(false);
         } catch (err) {
-            setError(err instanceof ApiError ? t('servers.settings.reinstall_error') : t('common.error'));
+            setError(err instanceof ApiError ? t('server-shell:settings.reinstall_error') : t('common:error'));
         } finally {
             setSubmitting(false);
         }
@@ -97,7 +99,7 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                        {t('servers.settings.title')}
+                        {t('server-shell:settings.title')}
                     </h3>
                 </div>
 
@@ -111,7 +113,7 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
                             </svg>
-                            {t('servers.settings.rename')}
+                            {t('server-shell:settings.rename')}
                         </button>
                     )}
                     {canReinstall && (
@@ -123,7 +125,7 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                             </svg>
-                            {t('servers.settings.reinstall')}
+                            {t('server-shell:settings.reinstall')}
                         </button>
                     )}
                 </div>
@@ -146,10 +148,10 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
                             {dialog === 'rename' && (
                                 <>
                                     <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
-                                        {t('servers.settings.rename_title')}
+                                        {t('server-shell:settings.rename_title')}
                                     </h3>
                                     <p className="text-xs text-[var(--color-text-muted)]">
-                                        {t('servers.settings.rename_help')}
+                                        {t('server-shell:settings.rename_help')}
                                     </p>
                                     <input
                                         type="text"
@@ -163,13 +165,13 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
                                     {error && <p className="text-xs text-[var(--color-danger)]">{error}</p>}
                                     <div className="flex justify-end gap-2">
                                         <Button variant="ghost" onClick={close} disabled={submitting}>
-                                            {t('common.cancel')}
+                                            {t('common:cancel')}
                                         </Button>
                                         <Button
                                             onClick={handleRename}
                                             disabled={submitting || renameValue.trim() === '' || renameValue.trim() === server.name}
                                         >
-                                            {submitting ? t('common.loading') : t('servers.settings.rename_confirm')}
+                                            {submitting ? t('common:loading') : t('server-shell:settings.rename_confirm')}
                                         </Button>
                                     </div>
                                 </>
@@ -177,12 +179,12 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
                             {dialog === 'reinstall' && (
                                 <>
                                     <h3 className="text-base font-semibold text-[var(--color-danger)]">
-                                        {t('servers.settings.reinstall_title')}
+                                        {t('server-shell:settings.reinstall_title')}
                                     </h3>
                                     <div className="rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-3 py-2 text-xs text-[var(--color-danger)]">
                                         {wipeData
-                                            ? t('servers.settings.reinstall_warning_wipe')
-                                            : t('servers.settings.reinstall_warning')}
+                                            ? t('server-shell:settings.reinstall_warning_wipe')
+                                            : t('server-shell:settings.reinstall_warning')}
                                     </div>
                                     <label className="flex items-start gap-2 cursor-pointer">
                                         <input
@@ -194,15 +196,15 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
                                         />
                                         <span className="flex flex-col gap-0.5">
                                             <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                                                {t('servers.settings.reinstall_wipe_label')}
+                                                {t('server-shell:settings.reinstall_wipe_label')}
                                             </span>
                                             <span className="text-xs text-[var(--color-text-muted)]">
-                                                {t('servers.settings.reinstall_wipe_help')}
+                                                {t('server-shell:settings.reinstall_wipe_help')}
                                             </span>
                                         </span>
                                     </label>
                                     <p className="text-xs text-[var(--color-text-muted)]">
-                                        {t('servers.settings.reinstall_confirm_help', { name: server.name })}
+                                        {t('server-shell:settings.reinstall_confirm_help', { name: server.name })}
                                     </p>
                                     <input
                                         type="text"
@@ -216,16 +218,16 @@ export function ServerSettingsActions({ server, canRename, canReinstall }: Serve
                                     {error && <p className="text-xs text-[var(--color-danger)]">{error}</p>}
                                     <div className="flex justify-end gap-2">
                                         <Button variant="ghost" onClick={close} disabled={submitting}>
-                                            {t('common.cancel')}
+                                            {t('common:cancel')}
                                         </Button>
                                         <Button
                                             variant="danger"
                                             onClick={handleReinstall}
                                             disabled={submitting || confirmText.trim() === ''}
                                         >
-                                            {submitting ? t('common.loading') : (wipeData
-                                                ? t('servers.settings.reinstall_confirm_wipe')
-                                                : t('servers.settings.reinstall_confirm'))}
+                                            {submitting ? t('common:loading') : (wipeData
+                                                ? t('server-shell:settings.reinstall_confirm_wipe')
+                                                : t('server-shell:settings.reinstall_confirm'))}
                                         </Button>
                                     </div>
                                 </>

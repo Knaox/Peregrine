@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeModeStore, type ThemeMode } from '@/stores/themeModeStore';
 import { updateProfile } from '@/services/userApi';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface SidebarUserMenuProps {
     /** Menu placement — controls where the popover anchors. */
@@ -22,6 +23,7 @@ interface SidebarUserMenuProps {
  * instantly, the backend persist follows.
  */
 export function SidebarUserMenu({ align = 'bottom' }: SidebarUserMenuProps) {
+    useNamespace(["profile"] as const);
     const { t, i18n } = useTranslation();
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
@@ -72,7 +74,7 @@ export function SidebarUserMenu({ align = 'bottom' }: SidebarUserMenuProps) {
                 type="button"
                 onClick={() => setOpen(!open)}
                 title={user.name}
-                aria-label={t('nav.user_menu', { defaultValue: 'User menu' })}
+                aria-label={t('common:nav.user_menu', { defaultValue: 'User menu' })}
                 aria-expanded={open}
                 aria-haspopup="menu"
                 className={clsx(
@@ -116,7 +118,7 @@ export function SidebarUserMenu({ align = 'bottom' }: SidebarUserMenuProps) {
                             role="menuitem"
                             className="block px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--surface-overlay-hover)] hover:text-[var(--color-text-primary)]"
                         >
-                            {t('nav.profile')}
+                            {t('common:nav.profile')}
                         </Link>
 
                         {user.is_admin && (
@@ -125,12 +127,12 @@ export function SidebarUserMenu({ align = 'bottom' }: SidebarUserMenuProps) {
                                 role="menuitem"
                                 className="block px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--surface-overlay-hover)] hover:text-[var(--color-text-primary)]"
                             >
-                                {t('nav.settings_admin')}
+                                {t('common:nav.settings_admin')}
                             </a>
                         )}
 
                         <div className="flex items-center justify-between px-3 py-2">
-                            <span className="text-xs text-[var(--color-text-muted)]">{t('profile.locale')}</span>
+                            <span className="text-xs text-[var(--color-text-muted)]">{t('profile:locale')}</span>
                             <div className="flex gap-1">
                                 {['en', 'fr'].map((lang) => (
                                     <button
@@ -151,8 +153,8 @@ export function SidebarUserMenu({ align = 'bottom' }: SidebarUserMenuProps) {
                         </div>
 
                         <div className="flex items-center justify-between px-3 py-2">
-                            <span className="text-xs text-[var(--color-text-muted)]">{t('profile.theme_mode.label')}</span>
-                            <div className="flex gap-1" role="radiogroup" aria-label={t('profile.theme_mode.label')}>
+                            <span className="text-xs text-[var(--color-text-muted)]">{t('profile:theme_mode.label')}</span>
+                            <div className="flex gap-1" role="radiogroup" aria-label={t('profile:theme_mode.label')}>
                                 {(['light', 'auto', 'dark'] as const).map((mode) => {
                                     const active = themeMode === mode;
                                     const labelKey = `profile.theme_mode.${mode}` as const;
@@ -203,7 +205,7 @@ export function SidebarUserMenu({ align = 'bottom' }: SidebarUserMenuProps) {
                             role="menuitem"
                             className="block w-full px-3 py-2 text-left text-sm text-[var(--color-text-secondary)] hover:bg-[var(--surface-overlay-hover)] hover:text-[var(--color-danger)]"
                         >
-                            {t('nav.logout')}
+                            {t('common:nav.logout')}
                         </button>
                     </m.div>
                 )}

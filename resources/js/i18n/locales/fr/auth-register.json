@@ -1,0 +1,13 @@
+{
+    "title": "Créer un compte",
+    "button": "Créer un compte",
+    "name": "Nom complet",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "password_confirmation": "Confirmer le mot de passe",
+    "has_account": "Déjà un compte ?",
+    "sign_in": "Se connecter",
+    "disabled": "L'inscription est désactivée. Veuillez vous connecter avec votre compte existant.",
+    "redirect_canonical": "Les comptes se créent sur {{provider}}. Inscrivez-vous là-bas, puis revenez ici pour vous connecter.",
+    "create_on_canonical": "Créer mon compte sur {{provider}}"
+}

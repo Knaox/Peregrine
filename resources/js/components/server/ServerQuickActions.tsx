@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { IconButton } from '@/components/ui/IconButton';
 import type { ServerQuickActionsProps } from '@/components/server/ServerQuickActions.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const PlayIcon = (
     <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -25,6 +26,7 @@ const RestartIcon = (
 );
 
 export function ServerQuickActions({ serverId, state, onPower, isPending }: ServerQuickActionsProps) {
+    useNamespace(["server-console"] as const);
     const { t } = useTranslation();
 
     const isRunning = state === 'running' || state === 'active';
@@ -36,7 +38,7 @@ export function ServerQuickActions({ serverId, state, onPower, isPending }: Serv
                 <IconButton
                     icon={PlayIcon}
                     size="sm"
-                    title={t('servers.actions.start')}
+                    title={t('server-console:actions.start')}
                     disabled={isPending}
                     isLoading={isPending}
                     onClick={() => onPower(serverId, 'start')}
@@ -47,7 +49,7 @@ export function ServerQuickActions({ serverId, state, onPower, isPending }: Serv
                     <IconButton
                         icon={StopIcon}
                         size="sm"
-                        title={t('servers.actions.stop')}
+                        title={t('server-console:actions.stop')}
                         disabled={isPending}
                         isLoading={isPending}
                         onClick={() => onPower(serverId, 'stop')}
@@ -55,7 +57,7 @@ export function ServerQuickActions({ serverId, state, onPower, isPending }: Serv
                     <IconButton
                         icon={RestartIcon}
                         size="sm"
-                        title={t('servers.actions.restart')}
+                        title={t('server-console:actions.restart')}
                         disabled={isPending}
                         isLoading={isPending}
                         onClick={() => onPower(serverId, 'restart')}

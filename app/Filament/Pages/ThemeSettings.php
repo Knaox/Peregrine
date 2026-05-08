@@ -32,12 +32,12 @@ class ThemeSettings extends Page implements HasForms
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.pages.theme_settings.navigation');
+        return __('admin/theme_settings.page.navigation');
     }
 
     public function getTitle(): string
     {
-        return __('admin.pages.theme_settings.title');
+        return __('admin/theme_settings.page.title');
     }
 
     // Theme color properties
@@ -149,7 +149,7 @@ class ThemeSettings extends Page implements HasForms
     {
         return [
             Action::make('open_studio')
-                ->label(__('admin.actions.open_theme_studio'))
+                ->label(__('admin/_shell.actions.open_theme_studio'))
                 ->icon('heroicon-o-paint-brush')
                 ->color('primary')
                 ->url('/theme-studio', shouldOpenInNewTab: true),
@@ -188,16 +188,16 @@ class ThemeSettings extends Page implements HasForms
         $settings->clearCache();
         app(\App\Services\ThemeService::class)->clearCache();
 
-        Notification::make()->title(__('admin.notifications.theme_saved_title'))
-            ->body(__('admin.notifications.theme_saved_body'))
+        Notification::make()->title(__('admin/_shell.notifications.theme_saved_title'))
+            ->body(__('admin/_shell.notifications.theme_saved_body'))
             ->success()->send();
     }
 
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label(__('admin.actions.save_theme'))->submit('save'),
-            Action::make('reset')->label(__('admin.actions.reset_defaults'))->color('gray')
+            Action::make('save')->label(__('admin/_shell.actions.save_theme'))->submit('save'),
+            Action::make('reset')->label(__('admin/_shell.actions.reset_defaults'))->color('gray')
                 ->requiresConfirmation()
                 ->action(fn () => $this->resetToDefaults()),
         ];
@@ -216,8 +216,8 @@ class ThemeSettings extends Page implements HasForms
         $settings->clearCache();
         $this->mount();
 
-        Notification::make()->title(__('admin.notifications.theme_reset_title'))
-            ->body(__('admin.notifications.theme_reset_body'))
+        Notification::make()->title(__('admin/_shell.notifications.theme_reset_title'))
+            ->body(__('admin/_shell.notifications.theme_reset_body'))
             ->success()->send();
     }
 

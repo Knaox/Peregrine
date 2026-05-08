@@ -67,7 +67,7 @@ export function LoginCenteredTemplate({ pattern }: LoginCenteredTemplateProps) {
                         </h1>
                     )}
                     <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                        {t('auth.login.title')}
+                        {t('auth-login:title')}
                     </p>
                 </m.div>
 

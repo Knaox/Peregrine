@@ -1,0 +1,15 @@
+{
+    "title": "Connexion",
+    "button": "Se connecter",
+    "oauth_button": "Se connecter avec {{provider}}",
+    "or": "ou",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "remember": "Se souvenir de moi",
+    "forgot_password": "Mot de passe oublié ?",
+    "no_account": "Pas encore de compte ?",
+    "create_account": "Créer un compte",
+    "create_account_canonical": "Créer un compte sur {{provider}}",
+    "create_account_local": "ou en local",
+    "error": "E-mail ou mot de passe invalide."
+}

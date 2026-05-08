@@ -29,24 +29,24 @@ class StatsOverview extends BaseWidget
         };
 
         $queueDescription = $pendingJobs === 0
-            ? __('admin.widgets.system_health.queue_worker') . ' — ' . __('admin.widgets.system_health.healthy')
-            : __('admin.widgets.stats.jobs_queued', ['n' => $pendingJobs]);
+            ? __('admin/widgets.system_health.queue_worker') . ' — ' . __('admin/widgets.system_health.healthy')
+            : __('admin/widgets.stats.jobs_queued', ['n' => $pendingJobs]);
 
         return [
-            Stat::make(__('admin.widgets.stats.users'), User::count())
+            Stat::make(__('admin/widgets.stats.users'), User::count())
                 ->descriptionIcon('heroicon-o-users')
                 ->color('primary'),
-            Stat::make(__('admin.widgets.stats.servers'), Server::count())
+            Stat::make(__('admin/widgets.stats.servers'), Server::count())
                 ->descriptionIcon('heroicon-o-server-stack')
                 ->color('primary'),
-            Stat::make(__('admin.widgets.stats.active_servers'), Server::whereIn('status', ['running', 'active'])->count())
+            Stat::make(__('admin/widgets.stats.active_servers'), Server::whereIn('status', ['running', 'active'])->count())
                 ->descriptionIcon('heroicon-o-check-circle')
                 ->color('success'),
-            Stat::make(__('admin.widgets.stats.pending_jobs'), $pendingJobs)
+            Stat::make(__('admin/widgets.stats.pending_jobs'), $pendingJobs)
                 ->description($queueDescription)
                 ->descriptionIcon($pendingJobs === 0 ? 'heroicon-o-check-circle' : 'heroicon-o-exclamation-triangle')
                 ->color($queueColor),
-            Stat::make(__('admin.widgets.stats.eggs'), Egg::count())
+            Stat::make(__('admin/widgets.stats.eggs'), Egg::count())
                 ->descriptionIcon('heroicon-o-cube')
                 ->color('info'),
         ];

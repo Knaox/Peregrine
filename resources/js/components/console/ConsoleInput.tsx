@@ -2,8 +2,10 @@ import { useState, useCallback, useRef, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import type { ConsoleInputProps } from '@/components/console/ConsoleInput.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function ConsoleInput({ onSend, onHistoryUp, onHistoryDown, disabled }: ConsoleInputProps) {
+    useNamespace(["server-console"] as const);
     const { t } = useTranslation();
     const [value, setValue] = useState('');
     const [isFocused, setIsFocused] = useState(false);
@@ -59,7 +61,7 @@ export function ConsoleInput({ onSend, onHistoryUp, onHistoryDown, disabled }: C
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 disabled={disabled}
-                placeholder={t('servers.console.send_command')}
+                placeholder={t('server-console:console.send_command')}
                 autoFocus
                 className={clsx(
                     'flex-1 bg-transparent font-mono text-sm',

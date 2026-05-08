@@ -6,8 +6,10 @@ import {
     getBackfillStatus,
     type BackfillResource,
 } from '../services/setupApi';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function BackfillStep({ onNext }: StepProps) {
+    useNamespace(["setup"] as const);
     const { t } = useTranslation();
     const [resources, setResources] = useState<Record<string, BackfillResource>>({});
     const [allCompleted, setAllCompleted] = useState(false);
@@ -52,16 +54,16 @@ export function BackfillStep({ onNext }: StepProps) {
         return () => { mounted = false; };
     }, [hasStarted]);
 
-    const labelFor = (key: string): string => t(`setup.backfill.resources.${key}`, { defaultValue: key });
+    const labelFor = (key: string): string => t(`setup:backfill.resources.${key}`, { defaultValue: key });
 
     return (
         <div className="space-y-6">
             <div>
                 <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
-                    {t('setup.backfill.title', { defaultValue: 'Synchronisation initiale' })}
+                    {t('setup:backfill.title', { defaultValue: 'Synchronisation initiale' })}
                 </h2>
                 <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                    {t('setup.backfill.subtitle', { defaultValue: 'Peregrine importe les serveurs, utilisateurs, eggs et nodes existants depuis Pelican. Tu peux continuer le wizard pendant que ça tourne.' })}
+                    {t('setup:backfill.subtitle', { defaultValue: 'Peregrine importe les serveurs, utilisateurs, eggs et nodes existants depuis Pelican. Tu peux continuer le wizard pendant que ça tourne.' })}
                 </p>
             </div>
 
@@ -76,7 +78,7 @@ export function BackfillStep({ onNext }: StepProps) {
                 ))}
                 {Object.keys(resources).length === 0 && (
                     <p className="text-sm text-[var(--color-text-secondary)]">
-                        {t('setup.backfill.starting', { defaultValue: 'Démarrage…' })}
+                        {t('setup:backfill.starting', { defaultValue: 'Démarrage…' })}
                     </p>
                 )}
             </div>
@@ -97,8 +99,8 @@ export function BackfillStep({ onNext }: StepProps) {
                     className="rounded-lg bg-[var(--color-primary)] px-5 py-2 text-sm font-medium text-white"
                 >
                     {allCompleted
-                        ? t('common.next', { defaultValue: 'Suivant' })
-                        : t('setup.backfill.continue_anyway', { defaultValue: 'Continuer (synchro en arrière-plan)' })}
+                        ? t('common:next', { defaultValue: 'Suivant' })
+                        : t('setup:backfill.continue_anyway', { defaultValue: 'Continuer (synchro en arrière-plan)' })}
                 </button>
             </div>
         </div>

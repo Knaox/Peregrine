@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Spinner } from '@/components/ui/Spinner';
 import { useProfile } from '@/hooks/useProfile';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface AuthModeResponse {
     mode: string;
@@ -21,6 +22,7 @@ function useAuthMode() {
 }
 
 export function PasswordForm() {
+    useNamespace(["profile"] as const);
     const { t } = useTranslation();
     const { changePassword, isChangingPassword, isPasswordChanged, passwordError } = useProfile();
     const { data: authMode, isLoading: isAuthModeLoading } = useAuthMode();
@@ -73,38 +75,38 @@ export function PasswordForm() {
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
             <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
-                {t('profile.password.title')}
+                {t('profile:password.title')}
             </h3>
 
             {isPasswordChanged && (
-                <Alert variant="success">{t('profile.password.changed')}</Alert>
+                <Alert variant="success">{t('profile:password.changed')}</Alert>
             )}
             {passwordError && (
                 <Alert variant="error">
-                    {t('profile.password.error')}
+                    {t('profile:password.error')}
                 </Alert>
             )}
             {mismatch && (
                 <Alert variant="error">
-                    {t('profile.password.mismatch')}
+                    {t('profile:password.mismatch')}
                 </Alert>
             )}
 
             <Input
                 type="password"
-                label={t('profile.password.current')}
+                label={t('profile:password.current')}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
             />
             <Input
                 type="password"
-                label={t('profile.password.new')}
+                label={t('profile:password.new')}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
             />
             <Input
                 type="password"
-                label={t('profile.password.confirm')}
+                label={t('profile:password.confirm')}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
             />
@@ -115,7 +117,7 @@ export function PasswordForm() {
                 isLoading={isChangingPassword}
                 disabled={!canSubmit}
             >
-                {t('profile.password.title')}
+                {t('profile:password.title')}
             </Button>
         </form>
     );

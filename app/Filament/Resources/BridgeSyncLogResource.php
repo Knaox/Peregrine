@@ -32,17 +32,17 @@ class BridgeSyncLogResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.resources.bridge_sync_logs.navigation');
+        return __('admin/logs.bridge.resource.navigation');
     }
 
     public static function getModelLabel(): string
     {
-        return __('admin.resources.bridge_sync_logs.label');
+        return __('admin/logs.bridge.resource.label');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('admin.resources.bridge_sync_logs.plural');
+        return __('admin/logs.bridge.resource.plural');
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -62,21 +62,21 @@ class BridgeSyncLogResource extends Resource
                 Tables\Columns\TextColumn::make('attempted_at')
                     ->dateTime()
                     ->sortable()
-                    ->label(__('admin.fields.when')),
+                    ->label(__('admin/_shell.fields.when')),
                 Tables\Columns\TextColumn::make('action')
-                    ->label(__('admin.fields.event_type'))
+                    ->label(__('admin/_shell.fields.event_type'))
                     ->badge()
-                    ->formatStateUsing(fn (string $state) => __('admin.statuses.'.$state))
+                    ->formatStateUsing(fn (string $state) => __('admin/_shell.statuses.'.$state))
                     ->color(fn (string $state): string => $state === 'upsert' ? 'info' : 'warning')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('shop_plan_id')
-                    ->label(__('admin.fields.shop_id'))
+                    ->label(__('admin/_shell.fields.shop_id'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('serverPlan.name')
-                    ->label(__('admin.fields.plan'))
+                    ->label(__('admin/_shell.fields.plan'))
                     ->placeholder('—'),
                 Tables\Columns\TextColumn::make('response_status')
-                    ->label(__('admin.fields.http'))
+                    ->label(__('admin/_shell.fields.http'))
                     ->badge()
                     ->color(fn (int $state): string => match (true) {
                         $state >= 500 => 'danger',
@@ -86,23 +86,23 @@ class BridgeSyncLogResource extends Resource
                     })
                     ->sortable(),
                 Tables\Columns\IconColumn::make('signature_valid')
-                    ->label(__('admin.fields.hmac'))
+                    ->label(__('admin/_shell.fields.hmac'))
                     ->boolean(),
                 Tables\Columns\TextColumn::make('ip_address')
-                    ->label(__('admin.fields.ip'))
+                    ->label(__('admin/_shell.fields.ip'))
                     ->placeholder('—'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('action')
-                    ->label(__('admin.fields.event_type'))
-                    ->options(['upsert' => __('admin.statuses.upsert'), 'delete' => __('admin.statuses.delete')]),
-                Tables\Filters\TernaryFilter::make('signature_valid')->label(__('admin.fields.signature_valid')),
+                    ->label(__('admin/_shell.fields.event_type'))
+                    ->options(['upsert' => __('admin/_shell.statuses.upsert'), 'delete' => __('admin/_shell.statuses.delete')]),
+                Tables\Filters\TernaryFilter::make('signature_valid')->label(__('admin/_shell.fields.signature_valid')),
                 Tables\Filters\SelectFilter::make('response_status')
-                    ->label(__('admin.fields.http_outcome'))
+                    ->label(__('admin/_shell.fields.http_outcome'))
                     ->options([
-                        '2xx' => __('admin.http_filters.success'),
-                        '4xx' => __('admin.http_filters.client_error'),
-                        '5xx' => __('admin.http_filters.server_error'),
+                        '2xx' => __('admin/_shell.http_filters.success'),
+                        '4xx' => __('admin/_shell.http_filters.client_error'),
+                        '5xx' => __('admin/_shell.http_filters.server_error'),
                     ])
                     ->query(function ($query, array $data) {
                         $value = $data['value'] ?? null;
@@ -116,30 +116,30 @@ class BridgeSyncLogResource extends Resource
             ])
             ->recordActions([
                 Action::make('viewPayload')
-                    ->label(__('admin.common.view_payload'))
+                    ->label(__('admin/_shell.common.view_payload'))
                     ->icon('heroicon-o-code-bracket')
                     ->color('gray')
-                    ->modalHeading(__('admin.common.payload_modal_title'))
+                    ->modalHeading(__('admin/_shell.common.payload_modal_title'))
                     ->modalContent(fn (BridgeSyncLog $record): HtmlString => new HtmlString(
                         '<div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.75rem;">'
-                        . '<div><div style="font-weight: 600; margin-bottom: 0.25rem;">'.e(__('admin.common.request')).'</div>'
+                        . '<div><div style="font-weight: 600; margin-bottom: 0.25rem;">'.e(__('admin/_shell.common.request')).'</div>'
                         . '<pre style="background: rgba(0,0,0,0.4); padding: 0.75rem; border-radius: 0.375rem; overflow: auto; max-height: 30vh; white-space: pre-wrap; word-break: break-all;">'
                         . e(is_array($record->request_payload) ? json_encode($record->request_payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : (string) $record->request_payload)
                         . '</pre></div>'
-                        . '<div><div style="font-weight: 600; margin-bottom: 0.25rem;">'.e(__('admin.common.response')).' (HTTP '.e((string) $record->response_status).')</div>'
+                        . '<div><div style="font-weight: 600; margin-bottom: 0.25rem;">'.e(__('admin/_shell.common.response')).' (HTTP '.e((string) $record->response_status).')</div>'
                         . '<pre style="background: rgba(0,0,0,0.4); padding: 0.75rem; border-radius: 0.375rem; overflow: auto; max-height: 30vh; white-space: pre-wrap; word-break: break-all;">'
                         . e((string) ($record->response_body ?? '—'))
                         . '</pre></div>'
                         . '</div>'
                     ))
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel(__('admin.common.close')),
+                    ->modalCancelActionLabel(__('admin/_shell.common.close')),
             ])
             ->toolbarActions([])
             ->defaultSort('attempted_at', 'desc')
             ->emptyStateIcon('heroicon-o-clipboard-document-check')
-            ->emptyStateHeading(__('admin.resources.bridge_sync_logs.plural'))
-            ->emptyStateDescription(__('admin.common.empty_states.logs'));
+            ->emptyStateHeading(__('admin/logs.bridge.resource.plural'))
+            ->emptyStateDescription(__('admin/_shell.common.empty_states.logs'));
     }
 
     public static function getPages(): array

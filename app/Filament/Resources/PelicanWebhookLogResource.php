@@ -36,17 +36,17 @@ class PelicanWebhookLogResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.resources.pelican_webhook_logs.navigation');
+        return __('admin/logs.pelican_webhook.resource.navigation');
     }
 
     public static function getModelLabel(): string
     {
-        return __('admin.resources.pelican_webhook_logs.label');
+        return __('admin/logs.pelican_webhook.resource.label');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('admin.resources.pelican_webhook_logs.plural');
+        return __('admin/logs.pelican_webhook.resource.plural');
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -69,17 +69,17 @@ class PelicanWebhookLogResource extends Resource
                 Tables\Columns\TextColumn::make('processed_at')
                     ->dateTime()
                     ->sortable()
-                    ->label(__('admin.fields.when')),
+                    ->label(__('admin/_shell.fields.when')),
                 Tables\Columns\TextColumn::make('event_type')
-                    ->label(__('admin.fields.event'))
+                    ->label(__('admin/_shell.fields.event'))
                     ->wrap()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('pelican_model_id')
-                    ->label(__('admin.fields.pelican_id'))
+                    ->label(__('admin/_shell.fields.pelican_id'))
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('response_status')
-                    ->label(__('admin.fields.http'))
+                    ->label(__('admin/_shell.fields.http'))
                     ->badge()
                     ->color(fn (int $state): string => match (true) {
                         $state >= 500 => 'danger',
@@ -89,12 +89,12 @@ class PelicanWebhookLogResource extends Resource
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('error_message')
-                    ->label(__('admin.common.error'))
+                    ->label(__('admin/_shell.common.error'))
                     ->limit(60)
                     ->placeholder('—')
                     ->tooltip(fn ($state): ?string => $state),
                 Tables\Columns\TextColumn::make('idempotency_hash')
-                    ->label(__('admin.fields.hash'))
+                    ->label(__('admin/_shell.fields.hash'))
                     ->limit(12)
                     ->tooltip(fn ($state): ?string => $state)
                     ->copyable()
@@ -102,18 +102,18 @@ class PelicanWebhookLogResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('event_type')
-                    ->label(__('admin.fields.event_type'))
+                    ->label(__('admin/_shell.fields.event_type'))
                     ->options(fn () => PelicanProcessedEvent::query()
                         ->distinct()
                         ->orderBy('event_type')
                         ->pluck('event_type', 'event_type')
                         ->all()),
                 Tables\Filters\SelectFilter::make('response_status')
-                    ->label(__('admin.fields.http_outcome'))
+                    ->label(__('admin/_shell.fields.http_outcome'))
                     ->options([
-                        '2xx' => __('admin.http_filters.accepted'),
-                        '4xx' => __('admin.http_filters.rejected'),
-                        '5xx' => __('admin.http_filters.handler_error'),
+                        '2xx' => __('admin/_shell.http_filters.accepted'),
+                        '4xx' => __('admin/_shell.http_filters.rejected'),
+                        '5xx' => __('admin/_shell.http_filters.handler_error'),
                     ])
                     ->query(function ($query, array $data) {
                         $value = $data['value'] ?? null;
@@ -125,29 +125,29 @@ class PelicanWebhookLogResource extends Resource
                         };
                     }),
                 Tables\Filters\TernaryFilter::make('error_message')
-                    ->label(__('admin.fields.has_error'))
+                    ->label(__('admin/_shell.fields.has_error'))
                     ->nullable(),
             ])
             ->recordActions([
                 Action::make('viewError')
-                    ->label(__('admin.common.view_error'))
+                    ->label(__('admin/_shell.common.view_error'))
                     ->icon('heroicon-o-exclamation-circle')
                     ->color('danger')
                     ->visible(fn (PelicanProcessedEvent $record): bool => ! empty($record->error_message))
-                    ->modalHeading(__('admin.logs.pelican_handler_error'))
+                    ->modalHeading(__('admin/logs.pelican_handler_error'))
                     ->modalContent(fn (PelicanProcessedEvent $record): HtmlString => new HtmlString(
                         '<pre style="font-size: 0.75rem; background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 0.375rem; overflow: auto; max-height: 60vh; white-space: pre-wrap; word-break: break-all;">'
                         . e((string) $record->error_message)
                         . '</pre>'
                     ))
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel(__('admin.common.close')),
+                    ->modalCancelActionLabel(__('admin/_shell.common.close')),
             ])
             ->toolbarActions([])
             ->defaultSort('processed_at', 'desc')
             ->emptyStateIcon('heroicon-o-bolt')
-            ->emptyStateHeading(__('admin.resources.pelican_webhook_logs.plural'))
-            ->emptyStateDescription(__('admin.common.empty_states.logs'));
+            ->emptyStateHeading(__('admin/logs.pelican_webhook.resource.plural'))
+            ->emptyStateDescription(__('admin/_shell.common.empty_states.logs'));
     }
 
     public static function getPages(): array

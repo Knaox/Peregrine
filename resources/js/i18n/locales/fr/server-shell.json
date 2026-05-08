@@ -1,0 +1,64 @@
+{
+    "not_found": "Serveur introuvable.",
+    "sidebar": {
+        "principal": "Principal",
+        "management": "Gestion",
+        "collapse": "Réduire la barre latérale",
+        "expand": "Développer la barre latérale",
+        "open": "Ouvrir le menu",
+        "close": "Fermer le menu"
+    },
+    "detail": {
+        "overview": "Vue d'ensemble",
+        "console": "Console",
+        "files": "Fichiers",
+        "sftp": "SFTP",
+        "databases": "Bases de données",
+        "backups": "Sauvegardes",
+        "schedules": "Planification",
+        "network": "Réseau",
+        "info": "Informations du serveur",
+        "game": "Egg",
+        "plan": "Plan",
+        "allocated": "Ressources allouées",
+        "created": "Date de création",
+        "not_found": "Serveur introuvable.",
+        "back": "Retour aux serveurs"
+    },
+    "resources": {
+        "cpu": "CPU",
+        "memory": "Mémoire",
+        "disk": "Disque",
+        "network": "Réseau",
+        "download": "Téléchargement",
+        "upload": "Envoi"
+    },
+    "variables": {
+        "title": "Configuration du serveur",
+        "count": "{{count}} variable(s)",
+        "saved": "Variable enregistrée.",
+        "save": "Enregistrer",
+        "not_editable": "Non modifiable",
+        "advanced": "Configuration avancée",
+        "advanced_count": "{{count}} fichier(s)"
+    },
+    "settings": {
+        "title": "Actions serveur",
+        "rename": "Renommer",
+        "reinstall": "Réinstaller",
+        "rename_title": "Renommer le serveur",
+        "rename_help": "Choisissez un nouveau nom d'affichage. Cela met à jour le nom dans Pelican et dans le panel.",
+        "rename_confirm": "Enregistrer le nouveau nom",
+        "rename_error": "Échec du renommage. Veuillez réessayer dans un instant.",
+        "reinstall_title": "Réinstaller le serveur",
+        "reinstall_warning": "La réinstallation relance le script d'installation de l'egg. Elle peut écraser des fichiers de configuration et, selon l'egg, effacer des données. Cette action est irréversible.",
+        "reinstall_warning_wipe": "Tous les fichiers de /mnt/server seront supprimés définitivement avant l'exécution du script d'installation de l'egg. Mondes, configs, plugins, mods — tout. Action irréversible. Sauvegardez d'abord ce que vous voulez conserver.",
+        "reinstall_wipe_label": "Supprimer toutes les données et réinstaller",
+        "reinstall_wipe_help": "Vide /mnt/server d'abord, puis lance la réinstallation — résultat identique à un serveur fraîchement créé.",
+        "reinstall_confirm_help": "Tapez le nom du serveur « {{name}} » pour confirmer.",
+        "reinstall_confirm": "Réinstaller maintenant",
+        "reinstall_confirm_wipe": "Tout effacer et réinstaller",
+        "reinstall_name_mismatch": "Le nom saisi ne correspond pas.",
+        "reinstall_error": "Échec de la réinstallation. Veuillez réessayer dans un instant."
+    }
+}

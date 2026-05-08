@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface ThemeResetDialogProps {
     /** Whether the dialog is visible. */
@@ -41,6 +42,7 @@ export function ThemeResetDialog({
     onCancel,
     onConfirm,
 }: ThemeResetDialogProps) {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
     const [typed, setTyped] = useState('');
 
@@ -82,20 +84,18 @@ export function ThemeResetDialog({
                             id="theme-reset-dialog-title"
                             className="text-base font-semibold text-[var(--color-danger)]"
                         >
-                            {t('theme_studio.reset_dialog.title', 'Reset the entire theme?')}
+                            {t('theme-studio:reset_dialog.title', 'Reset the entire theme?')}
                         </h3>
 
                         <p className="text-xs text-[var(--color-text-muted)]">
-                            {t(
-                                'theme_studio.reset_dialog.body',
+                            {t('theme-studio:reset_dialog.body',
                                 'Every theme setting goes back to factory defaults. This cannot be undone — export a backup first if you want to keep this version (php artisan theme:export).',
                             )}
                         </p>
 
                         {customCssLength > 100 && (
                             <div className="rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-3 py-2 text-xs text-[var(--color-danger)]">
-                                {t(
-                                    'theme_studio.reset_dialog.warning_custom_css',
+                                {t('theme-studio:reset_dialog.warning_custom_css',
                                     'You have {{length}} characters of custom CSS that will be discarded.',
                                     { length: customCssLength },
                                 )}
@@ -104,8 +104,7 @@ export function ThemeResetDialog({
 
                         {hasCustomUploads && (
                             <div className="rounded-[var(--radius)] border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 px-3 py-2 text-xs text-[var(--color-warning)]">
-                                {t(
-                                    'theme_studio.reset_dialog.warning_uploads',
+                                {t('theme-studio:reset_dialog.warning_uploads',
                                     'Login background uploads will be unlinked. Files stay on disk until the weekly cleanup runs.',
                                 )}
                             </div>
@@ -116,8 +115,7 @@ export function ThemeResetDialog({
                                 htmlFor="theme-reset-confirm"
                                 className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5"
                             >
-                                {t(
-                                    'theme_studio.reset_dialog.type_to_confirm',
+                                {t('theme-studio:reset_dialog.type_to_confirm',
                                     'Type RESET to confirm',
                                 )}
                             </label>
@@ -142,7 +140,7 @@ export function ThemeResetDialog({
                                 onClick={onCancel}
                                 disabled={isResetting}
                             >
-                                {t('common.cancel', 'Cancel')}
+                                {t('common:cancel', 'Cancel')}
                             </Button>
                             <Button
                                 variant="danger"
@@ -151,7 +149,7 @@ export function ThemeResetDialog({
                                 disabled={!ready}
                                 isLoading={isResetting}
                             >
-                                {t('theme_studio.reset_dialog.confirm_button', 'Reset to defaults')}
+                                {t('theme-studio:reset_dialog.confirm_button', 'Reset to defaults')}
                             </Button>
                         </div>
                     </m.div>

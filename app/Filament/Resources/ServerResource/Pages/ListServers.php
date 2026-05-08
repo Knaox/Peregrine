@@ -26,14 +26,14 @@ class ListServers extends ListRecords
         return [
             Actions\CreateAction::make(),
             Actions\Action::make('syncServers')
-                ->label(__('admin.resource_pages.sync_servers.label'))
+                ->label(__('admin/servers.sync.label'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
                 ->disabled($blockReason !== null)
                 ->tooltip($blockReason)
                 ->requiresConfirmation()
-                ->modalHeading(__('admin.resource_pages.sync_servers.modal_heading'))
-                ->modalDescription(__('admin.resource_pages.sync_servers.modal_description'))
+                ->modalHeading(__('admin/servers.sync.modal_heading'))
+                ->modalDescription(__('admin/servers.sync.modal_description'))
                 ->action(function (): void {
                     $syncService = app(SyncService::class);
                     $comparison = $syncService->compareServers();
@@ -41,7 +41,7 @@ class ListServers extends ListRecords
 
                     if ($newCount === 0) {
                         Notification::make()
-                            ->title(__('admin.resource_pages.sync_servers.no_new'))
+                            ->title(__('admin/servers.sync.no_new'))
                             ->info()
                             ->send();
 
@@ -64,7 +64,7 @@ class ListServers extends ListRecords
                     $imported = $syncService->importServers($imports);
 
                     Notification::make()
-                        ->title(__('admin.resource_pages.sync_servers_imported', ['count' => $imported]))
+                        ->title(__('admin/servers.sync.imported', ['count' => $imported]))
                         ->success()
                         ->send();
                 }),

@@ -1,0 +1,15 @@
+{
+    "title": "Sign In",
+    "button": "Sign In",
+    "oauth_button": "Sign in with {{provider}}",
+    "or": "or",
+    "email": "Email Address",
+    "password": "Password",
+    "remember": "Remember me",
+    "forgot_password": "Forgot your password?",
+    "no_account": "Don't have an account?",
+    "create_account": "Create one",
+    "create_account_canonical": "Create one on {{provider}}",
+    "create_account_local": "or locally",
+    "error": "Invalid email or password."
+}

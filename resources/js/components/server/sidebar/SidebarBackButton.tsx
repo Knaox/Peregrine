@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface SidebarBackButtonProps {
     /** Collapse the label on narrow screens; icon-only. */
@@ -15,6 +16,7 @@ interface SidebarBackButtonProps {
  * Ensures a minimum 44×44pt touch target and a visible focus ring.
  */
 export function SidebarBackButton({ compact = false, variant = 'glass' }: SidebarBackButtonProps) {
+    useNamespace(["server-shell"] as const);
     const { t } = useTranslation();
     const navigate = useNavigate();
 
@@ -24,8 +26,8 @@ export function SidebarBackButton({ compact = false, variant = 'glass' }: Sideba
         <button
             type="button"
             onClick={() => navigate('/dashboard')}
-            title={t('servers.detail.back')}
-            aria-label={t('servers.detail.back')}
+            title={t('server-shell:detail.back')}
+            aria-label={t('server-shell:detail.back')}
             className={clsx(
                 'inline-flex items-center gap-2 min-h-[44px] cursor-pointer transition-all duration-150',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]',
@@ -44,7 +46,7 @@ export function SidebarBackButton({ compact = false, variant = 'glass' }: Sideba
             <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            {!compact && <span className="hidden sm:inline">{t('servers.detail.back')}</span>}
+            {!compact && <span className="hidden sm:inline">{t('server-shell:detail.back')}</span>}
         </button>
     );
 }

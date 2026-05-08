@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { SelectField } from './fields/SelectField';
 import { SliderField } from './fields/SliderField';
 import type { ThemeDraft } from '@/types/themeStudio.types';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface ThemeRefinementsSectionProps {
     draft: ThemeDraft;
@@ -45,41 +46,42 @@ const APP_PATTERN_OPTIONS = [
  * variable consumed across components.
  */
 export function ThemeRefinementsSection({ draft, onField }: ThemeRefinementsSectionProps) {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
 
     const animationOptions = ANIMATION_OPTIONS.map((o) => ({
         value: o.value,
-        label: t(`theme_studio.animation_speed.${o.value}`, o.label),
+        label: t(`theme-studio:animation_speed.${o.value}`, o.label),
     }));
     const hoverOptions = HOVER_OPTIONS.map((o) => ({
         value: o.value,
-        label: t(`theme_studio.hover_scale.${o.value}`, o.label),
+        label: t(`theme-studio:hover_scale.${o.value}`, o.label),
     }));
     const fontSizeOptions = FONT_SIZE_OPTIONS.map((o) => ({
         value: o.value,
-        label: t(`theme_studio.font_size_scale.${o.value}`, o.label),
+        label: t(`theme-studio:font_size_scale.${o.value}`, o.label),
     }));
     const appPatternOptions = APP_PATTERN_OPTIONS.map((o) => ({
         value: o.value,
-        label: t(`theme_studio.app_pattern.${o.value}`, o.label),
+        label: t(`theme-studio:app_pattern.${o.value}`, o.label),
     }));
 
     return (
         <div className="flex flex-col gap-4">
             <SelectField
-                label={t('theme_studio.fields.theme_animation_speed', 'Animation speed')}
+                label={t('theme-studio:fields.theme_animation_speed', 'Animation speed')}
                 value={draft.theme_animation_speed}
                 options={animationOptions}
                 onChange={(v) => onField('theme_animation_speed', v)}
             />
             <SelectField
-                label={t('theme_studio.fields.theme_hover_scale', 'Hover scale')}
+                label={t('theme-studio:fields.theme_hover_scale', 'Hover scale')}
                 value={draft.theme_hover_scale}
                 options={hoverOptions}
                 onChange={(v) => onField('theme_hover_scale', v)}
             />
             <SliderField
-                label={t('theme_studio.fields.theme_border_width', 'Border width')}
+                label={t('theme-studio:fields.theme_border_width', 'Border width')}
                 value={draft.theme_border_width}
                 min={1}
                 max={3}
@@ -88,7 +90,7 @@ export function ThemeRefinementsSection({ draft, onField }: ThemeRefinementsSect
                 onChange={(v) => onField('theme_border_width', v)}
             />
             <SliderField
-                label={t('theme_studio.fields.theme_glass_blur_global', 'Glass blur (global)')}
+                label={t('theme-studio:fields.theme_glass_blur_global', 'Glass blur (global)')}
                 value={draft.theme_glass_blur_global}
                 min={0}
                 max={48}
@@ -97,18 +99,17 @@ export function ThemeRefinementsSection({ draft, onField }: ThemeRefinementsSect
                 onChange={(v) => onField('theme_glass_blur_global', v)}
             />
             <SelectField
-                label={t('theme_studio.fields.theme_font_size_scale', 'Base font size')}
+                label={t('theme-studio:fields.theme_font_size_scale', 'Base font size')}
                 value={draft.theme_font_size_scale}
                 options={fontSizeOptions}
                 onChange={(v) => onField('theme_font_size_scale', v)}
             />
             <SelectField
-                label={t('theme_studio.fields.theme_app_background_pattern', 'App background')}
+                label={t('theme-studio:fields.theme_app_background_pattern', 'App background')}
                 value={draft.theme_app_background_pattern}
                 options={appPatternOptions}
                 onChange={(v) => onField('theme_app_background_pattern', v)}
-                description={t(
-                    'theme_studio.fields.theme_app_background_pattern_help',
+                description={t('theme-studio:fields.theme_app_background_pattern_help',
                     'Replaces the default animated constellation behind dashboard / profile / etc.',
                 )}
             />

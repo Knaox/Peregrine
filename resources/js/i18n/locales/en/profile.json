@@ -1,0 +1,36 @@
+{
+    "title": "Profile",
+    "info": "Your information",
+    "name": "Name",
+    "email": "Email",
+    "locale": "Language",
+    "save": "Save Changes",
+    "saved": "Profile updated.",
+    "security_card": {
+        "title": "Security",
+        "has_2fa": "Two-factor authentication is active on your account. Manage linked sign-in providers, regenerate recovery codes, or disable 2FA.",
+        "no_2fa": "Add an extra step to your sign-in with a TOTP app (Google Authenticator, Authy, 1Password...). Takes under a minute.",
+        "setup_cta": "Set up 2FA",
+        "manage_cta": "Manage"
+    },
+    "password": {
+        "title": "Change Password",
+        "current": "Current Password",
+        "new": "New Password",
+        "confirm": "Confirm New Password",
+        "changed": "Password changed successfully.",
+        "error": "Could not change password. Please check your current password.",
+        "mismatch": "The new password and confirmation don't match."
+    },
+    "locale_options": {
+        "en": "English",
+        "fr": "Francais"
+    },
+    "theme_mode": {
+        "label": "Appearance",
+        "hint": "Your personal preference — it only affects your account, not other users.",
+        "auto": "System",
+        "light": "Light",
+        "dark": "Dark"
+    }
+}

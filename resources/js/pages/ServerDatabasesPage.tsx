@@ -10,10 +10,12 @@ import { copyToClipboard } from '@/utils/clipboard';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { withServerConflictGate } from '@/components/server/withServerConflictGate';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const INPUT_CLS = 'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none';
 
 function DatabaseIcon({ className }: { className?: string }) {
+    useNamespace(["server-databases","server-overview"] as const);
     return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <ellipse cx="12" cy="5" rx="9" ry="3" />
@@ -88,11 +90,11 @@ function ServerDatabasesPageImpl() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--color-primary)]/10">
                         <DatabaseIcon className="h-5 w-5 text-[var(--color-primary)]" />
                     </div>
-                    <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{t('servers.databases.title')}</h2>
+                    <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{t('server-databases:databases.title')}</h2>
                 </div>
                 {canCreate && (
                     <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
-                        {t('servers.databases.create')}
+                        {t('server-databases:databases.create')}
                     </Button>
                 )}
             </div>
@@ -107,17 +109,17 @@ function ServerDatabasesPageImpl() {
                 >
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                         <div>
-                            <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('servers.databases.name')}</label>
+                            <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('server-databases:databases.name')}</label>
                             <input value={dbName} onChange={(e) => setDbName(e.target.value)} placeholder="s1_mydb" className={INPUT_CLS} />
                         </div>
                         <div>
-                            <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('servers.databases.remote')}</label>
+                            <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('server-databases:databases.remote')}</label>
                             <input value={dbRemote} onChange={(e) => setDbRemote(e.target.value)} placeholder="%" className={INPUT_CLS} />
-                            <p className="mt-1 text-xs text-[var(--color-text-muted)]">{t('servers.databases.remote_help')}</p>
+                            <p className="mt-1 text-xs text-[var(--color-text-muted)]">{t('server-databases:databases.remote_help')}</p>
                         </div>
                         <div className="flex items-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>{t('common.cancel')}</Button>
-                            <Button variant="primary" size="sm" isLoading={create.isPending} onClick={handleCreate}>{t('servers.databases.create')}</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>{t('common:cancel')}</Button>
+                            <Button variant="primary" size="sm" isLoading={create.isPending} onClick={handleCreate}>{t('server-databases:databases.create')}</Button>
                         </div>
                     </div>
                 </m.div>
@@ -129,7 +131,7 @@ function ServerDatabasesPageImpl() {
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-surface)]">
                         <DatabaseIcon className="h-8 w-8 text-[var(--color-text-muted)]" />
                     </div>
-                    <p className="text-sm text-[var(--color-text-muted)]">{t('servers.databases.no_databases')}</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">{t('server-databases:databases.no_databases')}</p>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -162,13 +164,13 @@ function ServerDatabasesPageImpl() {
                                                 onClick={() => togglePassword(db.id)}
                                                 className="cursor-pointer text-xs text-[var(--color-primary)] hover:underline"
                                             >
-                                                {visiblePasswords.has(db.id) ? t('servers.databases.hide_password') : t('servers.databases.show_password')}
+                                                {visiblePasswords.has(db.id) ? t('server-databases:databases.hide_password') : t('server-databases:databases.show_password')}
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => void handleCopyPassword(db.id, db.password as string)}
                                                 className="cursor-pointer rounded-[var(--radius-sm)] p-1 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
-                                                title={t('servers.list.copy_ip')}
+                                                title={t('server-overview:list.copy_ip')}
                                             >
                                                 {copiedId === db.id
                                                     ? <CheckIcon className="h-3.5 w-3.5 text-[var(--color-success)]" />
@@ -181,16 +183,16 @@ function ServerDatabasesPageImpl() {
                                 <div className="flex flex-wrap items-center gap-2">
                                     {canUpdate && (
                                         <Button variant="secondary" size="sm" isLoading={rotate.isPending} onClick={() => rotate.mutate(db.id)}>
-                                            {t('servers.databases.rotate_password')}
+                                            {t('server-databases:databases.rotate_password')}
                                         </Button>
                                     )}
                                     {canDelete && (
                                         <Button variant="danger" size="sm" isLoading={remove.isPending} onClick={() => {
-                                            if (window.confirm(t('servers.databases.confirm_delete', { name: db.name }))) {
+                                            if (window.confirm(t('server-databases:databases.confirm_delete', { name: db.name }))) {
                                                 remove.mutate(db.id);
                                             }
                                         }}>
-                                            {t('servers.databases.delete')}
+                                            {t('server-databases:databases.delete')}
                                         </Button>
                                     )}
                                 </div>

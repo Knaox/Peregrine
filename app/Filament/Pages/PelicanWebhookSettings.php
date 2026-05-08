@@ -56,12 +56,12 @@ class PelicanWebhookSettings extends Page implements HasForms
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.pages.pelican_webhook_settings.navigation');
+        return __('admin/pelican_webhook.page.navigation');
     }
 
     public function getTitle(): string
     {
-        return __('admin.pages.pelican_webhook_settings.title');
+        return __('admin/pelican_webhook.page.title');
     }
 
     public bool $pelican_webhook_enabled = false;
@@ -91,71 +91,71 @@ class PelicanWebhookSettings extends Page implements HasForms
         $docsUrl = url('/docs/pelican-webhook');
 
         return $schema->schema([
-            Section::make(__('admin.webhook_settings.sections.receiver'))
-                ->description(__('admin.webhook_settings.sections.receiver_description'))
+            Section::make(__('admin/pelican_webhook.sections.receiver'))
+                ->description(__('admin/pelican_webhook.sections.receiver_description'))
                 ->icon('heroicon-o-power')
                 ->schema([
                     Toggle::make('pelican_webhook_enabled')
-                        ->label(__('admin.webhook_settings.fields.enabled'))
-                        ->helperText(__('admin.webhook_settings.fields.enabled_helper')),
+                        ->label(__('admin/pelican_webhook.fields.enabled'))
+                        ->helperText(__('admin/pelican_webhook.fields.enabled_helper')),
                 ]),
 
-            Section::make(__('admin.webhook_settings.sections.token'))
-                ->description(__('admin.webhook_settings.sections.token_description'))
+            Section::make(__('admin/pelican_webhook.sections.token'))
+                ->description(__('admin/pelican_webhook.sections.token_description'))
                 ->icon('heroicon-o-key')
                 ->schema([
                     TextInput::make('pelican_webhook_token')
-                        ->label(__('admin.webhook_settings.fields.token'))
+                        ->label(__('admin/pelican_webhook.fields.token'))
                         ->password()
                         ->revealable()
                         ->minLength(32)
-                        ->helperText(__('admin.webhook_settings.fields.token_helper'))
+                        ->helperText(__('admin/pelican_webhook.fields.token_helper'))
                         ->suffixAction(
                             Action::make('generatePelicanToken')
                                 ->icon('heroicon-o-key')
-                                ->tooltip(__('admin.webhook_settings.fields.token_action_tooltip'))
+                                ->tooltip(__('admin/pelican_webhook.fields.token_action_tooltip'))
                                 ->action(function (Set $set): void {
                                     $token = base64_encode(random_bytes(48));
                                     $set('pelican_webhook_token', $token);
                                     Notification::make()
-                                        ->title(__('admin.webhook_settings.notifications.token_generated_title'))
-                                        ->body(__('admin.webhook_settings.notifications.token_generated_body'))
+                                        ->title(__('admin/pelican_webhook.notifications.token_generated_title'))
+                                        ->body(__('admin/pelican_webhook.notifications.token_generated_body'))
                                         ->success()
                                         ->send();
                                 }),
                         ),
                 ]),
 
-            Section::make(__('admin.webhook_settings.sections.configure'))
-                ->description(__('admin.webhook_settings.sections.configure_description'))
+            Section::make(__('admin/pelican_webhook.sections.configure'))
+                ->description(__('admin/pelican_webhook.sections.configure_description'))
                 ->icon('heroicon-o-clipboard-document-list')
                 ->schema([
                     Placeholder::make('pelican_top_fields_display')
-                        ->label(__('admin.webhook_settings.fields.top_fields'))
+                        ->label(__('admin/pelican_webhook.fields.top_fields'))
                         ->content(BridgeSettingsHtmlHelpers::renderKeyValueList([
-                            ['Type',        __('admin.webhook_settings.top_fields.type')],
-                            ['Description', __('admin.webhook_settings.top_fields.description')],
+                            ['Type',        __('admin/pelican_webhook.top_fields.type')],
+                            ['Description', __('admin/pelican_webhook.top_fields.description')],
                             ['Endpoint',    $baseUrl.'/api/pelican/webhook'],
                         ])),
                     Placeholder::make('pelican_headers_display')
-                        ->label(__('admin.webhook_settings.fields.headers'))
+                        ->label(__('admin/pelican_webhook.fields.headers'))
                         ->content(BridgeSettingsHtmlHelpers::renderHeadersList([
-                            ['X-Webhook-Event', '{{event}}', __('admin.webhook_settings.header_descriptions.pelican_default')],
-                            ['Authorization',   __('admin.webhook_settings.header_values.token_placeholder'), __('admin.webhook_settings.header_descriptions.add_row')],
+                            ['X-Webhook-Event', '{{event}}', __('admin/pelican_webhook.header_descriptions.pelican_default')],
+                            ['Authorization',   __('admin/pelican_webhook.header_values.token_placeholder'), __('admin/pelican_webhook.header_descriptions.add_row')],
                         ])),
 
                     Placeholder::make('pelican_events_required')
-                        ->label(__('admin.webhook_settings.fields.events_required'))
+                        ->label(__('admin/pelican_webhook.fields.events_required'))
                         ->content(BridgeSettingsHtmlHelpers::renderTagList([
                             'created: Server',
                             'updated: Server',
                             'deleted: Server',
                             'created: User',
                             'event: Server\\Installed',
-                        ], note: __('admin.webhook_settings.fields.events_required_note'))),
+                        ], note: __('admin/pelican_webhook.fields.events_required_note'))),
 
                     Placeholder::make('pelican_events_recommended')
-                        ->label(__('admin.webhook_settings.fields.events_recommended'))
+                        ->label(__('admin/pelican_webhook.fields.events_recommended'))
                         ->content(BridgeSettingsHtmlHelpers::renderTagList([
                             'updated: User',
                             'deleted: User',
@@ -168,10 +168,10 @@ class PelicanWebhookSettings extends Page implements HasForms
                             'created: EggVariable',
                             'updated: EggVariable',
                             'deleted: EggVariable',
-                        ], note: __('admin.webhook_settings.fields.events_recommended_note'))),
+                        ], note: __('admin/pelican_webhook.fields.events_recommended_note'))),
 
                     Placeholder::make('pelican_events_blocklist')
-                        ->label(__('admin.webhook_settings.fields.events_blocklist'))
+                        ->label(__('admin/pelican_webhook.fields.events_blocklist'))
                         ->content(BridgeSettingsHtmlHelpers::renderTagList([
                             'created: Backup',
                             'updated: Backup',
@@ -202,24 +202,24 @@ class PelicanWebhookSettings extends Page implements HasForms
                             'updated: ApiKey',
                             'created: Webhook',
                             'updated: WebhookConfiguration',
-                        ], note: __('admin.webhook_settings.fields.events_blocklist_note'))),
+                        ], note: __('admin/pelican_webhook.fields.events_blocklist_note'))),
                 ]),
 
-            Section::make(__('admin.webhook_settings.sections.verify'))
-                ->description(__('admin.webhook_settings.sections.verify_description'))
+            Section::make(__('admin/pelican_webhook.sections.verify'))
+                ->description(__('admin/pelican_webhook.sections.verify_description'))
                 ->icon('heroicon-o-check-circle')
                 ->schema([
                     Placeholder::make('pelican_docs_link')
-                        ->label(__('admin.webhook_settings.fields.docs'))
-                        ->content(BridgeSettingsHtmlHelpers::renderDocLink($docsUrl, __('admin.webhook_settings.fields.docs_note'))),
+                        ->label(__('admin/pelican_webhook.fields.docs'))
+                        ->content(BridgeSettingsHtmlHelpers::renderDocLink($docsUrl, __('admin/pelican_webhook.fields.docs_note'))),
                     Placeholder::make('pelican_audit_link')
-                        ->label(__('admin.webhook_settings.fields.audit'))
+                        ->label(__('admin/pelican_webhook.fields.audit'))
                         ->content(new HtmlString(
                             '<a href="'.e($auditLogUrl).'" '
                             .'style="color: rgb(var(--primary-400)); text-decoration: underline;">'
                             .'/admin/pelican-webhook-logs ↗</a>'
                             .'<p style="margin-top: 0.25rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">'
-                            .e(__('admin.webhook_settings.fields.audit_note'))
+                            .e(__('admin/pelican_webhook.fields.audit_note'))
                             .'</p>'
                         )),
                 ]),
@@ -242,7 +242,7 @@ class PelicanWebhookSettings extends Page implements HasForms
             $settings->forget('bridge_pelican_webhook_token');
         }
 
-        Notification::make()->title(__('admin.webhook_settings.notifications.saved'))->success()->send();
+        Notification::make()->title(__('admin/pelican_webhook.notifications.saved'))->success()->send();
 
         $this->pelican_webhook_token = '';
     }
@@ -253,7 +253,7 @@ class PelicanWebhookSettings extends Page implements HasForms
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label(__('admin.actions.save_settings'))->submit('save'),
+            Action::make('save')->label(__('admin/_shell.actions.save_settings'))->submit('save'),
         ];
     }
 }

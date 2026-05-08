@@ -1,0 +1,27 @@
+{
+    "network": {
+        "title": "Network",
+        "ip": "IP Address",
+        "port": "Port",
+        "notes": "Notes",
+        "notes_placeholder": "Minecraft server",
+        "primary": "Primary",
+        "set_primary": "Set as Primary",
+        "primary_set": "Primary allocation updated.",
+        "notes_updated": "Notes updated.",
+        "delete": "Remove Allocation",
+        "confirm_delete": "Are you sure you want to remove this allocation?",
+        "deleted": "Allocation removed.",
+        "added": "New allocation assigned.",
+        "add": "Add Allocation",
+        "add_error": "No allocations available on this node. Contact your administrator.",
+        "add_rate_limited": "Too many requests. Please wait a moment before trying again.",
+        "add_limit_reached": "Allocation limit reached for this server.",
+        "no_allocations": "No network allocations.",
+        "no_allocations_hint": "Add an allocation to assign an IP and port to this server.",
+        "selected_count": "{{count}} selected",
+        "deselect_all": "Deselect all",
+        "bulk_delete": "Remove selected",
+        "bulk_confirm": "Remove {{count}} allocation(s)?"
+    }
+}

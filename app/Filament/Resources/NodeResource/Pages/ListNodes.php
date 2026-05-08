@@ -22,7 +22,7 @@ class ListNodes extends ListRecords
     {
         return [
             Actions\Action::make('syncNodes')
-                ->label(__('admin.resource_pages.sync_nodes.label'))
+                ->label(__('admin/nodes.sync.label'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
                 ->action(function (): void {
@@ -30,7 +30,7 @@ class ListNodes extends ListRecords
                     $count = $syncService->syncNodes();
 
                     Notification::make()
-                        ->title(__('admin.resource_pages.sync_nodes.success', ['count' => $count]))
+                        ->title(__('admin/nodes.sync.success', ['count' => $count]))
                         ->success()
                         ->send();
                 }),

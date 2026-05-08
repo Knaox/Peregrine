@@ -27,11 +27,11 @@ final class ResourceDeleteAction
     public static function row(?string $cascadeWarning = null): DeleteAction
     {
         return DeleteAction::make()
-            ->modalHeading(__('admin.actions.delete_resource'))
+            ->modalHeading(__('admin/_shell.actions.delete_resource'))
             ->modalDescription(static::description($cascadeWarning))
             ->modalIcon('heroicon-o-trash')
             ->modalIconColor('danger')
-            ->modalSubmitActionLabel(__('admin.actions.delete'))
+            ->modalSubmitActionLabel(__('admin/_shell.actions.delete'))
             ->schema(static::strategySchema())
             ->fillForm(fn (): array => ['strategy' => ResourceDeletionService::STRATEGY_BOTH])
             ->action(function (Model $record, array $data): void {
@@ -45,13 +45,13 @@ final class ResourceDeleteAction
     public static function bulk(?string $cascadeWarning = null): BulkAction
     {
         return BulkAction::make('delete')
-            ->label(__('admin.actions.delete_selected'))
+            ->label(__('admin/_shell.actions.delete_selected'))
             ->icon('heroicon-o-trash')
             ->color('danger')
             ->requiresConfirmation()
-            ->modalHeading(__('admin.actions.delete_resources'))
+            ->modalHeading(__('admin/_shell.actions.delete_resources'))
             ->modalDescription(static::description($cascadeWarning))
-            ->modalSubmitActionLabel(__('admin.actions.delete'))
+            ->modalSubmitActionLabel(__('admin/_shell.actions.delete'))
             ->schema(static::strategySchema())
             ->fillForm(fn (): array => ['strategy' => ResourceDeletionService::STRATEGY_BOTH])
             ->deselectRecordsAfterCompletion()
@@ -67,11 +67,11 @@ final class ResourceDeleteAction
     {
         return [
             Radio::make('strategy')
-                ->label(__('admin.actions.deletion_target'))
+                ->label(__('admin/_shell.actions.deletion_target'))
                 ->options([
-                    ResourceDeletionService::STRATEGY_PEREGRINE => __('admin.actions.deletion_target_options.peregrine_only'),
-                    ResourceDeletionService::STRATEGY_PELICAN => __('admin.actions.deletion_target_options.pelican_only'),
-                    ResourceDeletionService::STRATEGY_BOTH => __('admin.actions.deletion_target_options.both'),
+                    ResourceDeletionService::STRATEGY_PEREGRINE => __('admin/_shell.actions.deletion_target_options.peregrine_only'),
+                    ResourceDeletionService::STRATEGY_PELICAN => __('admin/_shell.actions.deletion_target_options.pelican_only'),
+                    ResourceDeletionService::STRATEGY_BOTH => __('admin/_shell.actions.deletion_target_options.both'),
                 ])
                 ->default(ResourceDeletionService::STRATEGY_BOTH)
                 ->required(),
@@ -80,7 +80,7 @@ final class ResourceDeleteAction
 
     private static function description(?string $cascadeWarning): string
     {
-        $base = __('admin.actions.deletion_target_help');
+        $base = __('admin/_shell.actions.deletion_target_help');
 
         return $cascadeWarning
             ? $base . "\n\n" . $cascadeWarning
@@ -112,8 +112,8 @@ final class ResourceDeleteAction
         if ($failed === 0) {
             Notification::make()
                 ->title($ok === 1
-                    ? __('admin.actions.resource_deleted')
-                    : __('admin.actions.resources_deleted', ['n' => $ok]))
+                    ? __('admin/_shell.actions.resource_deleted')
+                    : __('admin/_shell.actions.resources_deleted', ['n' => $ok]))
                 ->success()
                 ->send();
 
@@ -121,8 +121,8 @@ final class ResourceDeleteAction
         }
 
         Notification::make()
-            ->title(__('admin.actions.resources_deleted_partial_title', ['ok' => $ok, 'failed' => $failed]))
-            ->body(__('admin.actions.resources_deleted_partial_body'))
+            ->title(__('admin/_shell.actions.resources_deleted_partial_title', ['ok' => $ok, 'failed' => $failed]))
+            ->body(__('admin/_shell.actions.resources_deleted_partial_body'))
             ->danger()
             ->send();
     }

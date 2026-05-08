@@ -1,0 +1,15 @@
+{
+    "servers": {
+        "title": "All servers",
+        "subtitle": "Every server on the panel. Open a server to manage it — your actions are logged in the audit trail.",
+        "mode_toggle": "Admin view",
+        "search_placeholder": "Search by name, identifier, user...",
+        "filter": {
+            "any_status": "Any status"
+        },
+        "count": "{{count}} server",
+        "count_plural": "{{count}} servers",
+        "empty": "No server matches these filters.",
+        "owner_label": "Owner"
+    }
+}

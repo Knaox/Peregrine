@@ -1,0 +1,131 @@
+{
+    "title": "Peregrine Setup",
+    "subtitle": "Configure your game server panel",
+    "steps": {
+        "language": "Language",
+        "database": "Database",
+        "admin": "Admin Account",
+        "pelican": "Pelican",
+        "backfill": "Import",
+        "webhook": "Webhook",
+        "auth": "Authentication",
+        "bridge": "Bridge",
+        "summary": "Summary"
+    },
+    "language": {
+        "title": "Choose Your Language",
+        "description": "Select the language for the setup wizard and default panel language."
+    },
+    "database": {
+        "title": "Database Configuration",
+        "description": "Configure the connection to your MySQL database.",
+        "host": "Database Host",
+        "host_placeholder": "localhost",
+        "port": "Port",
+        "port_placeholder": "3306",
+        "name": "Database Name",
+        "name_placeholder": "peregrine",
+        "username": "Username",
+        "username_placeholder": "root",
+        "password": "Password",
+        "password_placeholder": "Enter database password",
+        "test_success": "Successfully connected to the database.",
+        "test_failed": "Could not connect to the database: {{error}}",
+        "docker_detected": "Docker environment detected. Database fields have been pre-filled.",
+        "docker_db_ready": "Docker database is already configured and ready. You can proceed to the next step.",
+        "fresh": "Fresh install — drop every existing table in this database before migrating",
+        "fresh_hint": "Tick this if you hit \"Table already exists\" — the selected database will be wiped. All data in it is lost."
+    },
+    "admin": {
+        "title": "Admin Account",
+        "description": "Create the first administrator account.",
+        "name": "Full Name",
+        "name_placeholder": "John Doe",
+        "email": "Email Address",
+        "email_placeholder": "admin@example.com",
+        "password": "Password",
+        "password_placeholder": "Minimum 8 characters",
+        "password_confirmation": "Confirm Password",
+        "password_confirmation_placeholder": "Repeat password"
+    },
+    "pelican": {
+        "title": "Pelican Panel",
+        "description": "Connect Peregrine to your Pelican panel.",
+        "url": "Pelican URL",
+        "url_placeholder": "https://pelican.example.com",
+        "api_key": "Admin API Key (Application API)",
+        "api_key_placeholder": "papp_...",
+        "api_key_help": "Generate an Application API key (papp_...) in your Pelican admin panel under API Keys.",
+        "client_api_key": "Client API Key",
+        "client_api_key_placeholder": "pacc_...",
+        "client_api_key_help": "Generate a Client API key (pacc_...) from your admin account in Pelican. This key is used to proxy server actions (console, files, power) for all users.",
+        "test_success": "Successfully connected to Pelican.",
+        "test_failed": "Could not connect to Pelican: {{error}}"
+    },
+    "auth": {
+        "title": "Authentication",
+        "description": "Pick the default sign-in behaviour. Everything else is configurable post-install.",
+        "allow_local_registration": {
+            "label": "Allow local registration",
+            "help": "When enabled, new users can create an account with email + password at /register. Turn off if users must come through an OAuth provider only."
+        },
+        "post_install_note": "OAuth providers (Shop, Paymenter, WHMCS, Google, Discord, LinkedIn) and two-factor authentication are configured after installation in Settings → Auth & Security."
+    },
+    "bridge": {
+        "title": "Bridge Module",
+        "description": "Automatically provision servers when customers purchase through Stripe.",
+        "enable": "Enable Bridge",
+        "disabled_note": "You can enable this later in the admin settings.",
+        "stripe_webhook_secret": "Stripe Webhook Secret",
+        "stripe_webhook_secret_placeholder": "whsec_...",
+        "stripe_webhook_secret_help": "Create a webhook endpoint in your Stripe dashboard pointing to {{url}} and paste the signing secret here."
+    },
+    "summary": {
+        "title": "Review Configuration",
+        "description": "Review your settings before installing Peregrine.",
+        "section_database": "Database",
+        "section_admin": "Admin Account",
+        "section_pelican": "Pelican Panel",
+        "section_auth": "Authentication",
+        "auth_registration_on": "Local email/password registration enabled",
+        "auth_registration_off": "Local email/password registration closed",
+        "section_bridge": "Bridge Module",
+        "install_button": "Install Peregrine",
+        "installing_migrations": "Running database migrations...",
+        "installing_admin": "Creating admin account...",
+        "installing_config": "Writing configuration...",
+        "install_complete": "Installation complete! Redirecting to login..."
+    },
+    "backfill": {
+        "title": "Initial synchronization",
+        "subtitle": "Peregrine is importing existing servers, users, eggs and nodes from Pelican. You can keep going through the wizard while it runs.",
+        "starting": "Starting…",
+        "continue_anyway": "Continue (sync in background)",
+        "resources": {
+            "servers": "Servers",
+            "users": "Users",
+            "eggs": "Eggs",
+            "nodes": "Nodes"
+        }
+    },
+    "webhook": {
+        "verify_failed": "The receiver isn't responding correctly. Retry or continue.",
+        "title": "Enable real-time sync",
+        "subtitle": "Configure Pelican to notify Peregrine live (recommended). You can skip this step — Peregrine will still sync once a day.",
+        "generate": "Generate webhook token",
+        "howto_intro": "In Pelican, go to /admin/webhooks → Create Webhook and fill in exactly as below.",
+        "type_label": "Type (Pelican field)",
+        "endpoint_label": "Endpoint (Pelican field)",
+        "headers_label": "Headers (Pelican section — click \"Add row\" to add Authorization)",
+        "headers_hint": "The 1st row (X-Webhook-Event = {{event}}) is the Pelican default — leave it. The 2nd row (Authorization) must be ADDED manually via \"Add row\".",
+        "copy_warning": "Copy the token now — it won't be shown in plain text after this step.",
+        "events_to_tick": "Events to tick (search for them in the Pelican list)",
+        "installed_note": "optional, on Pelican 0.46+ stable",
+        "do_not_tick": "DO NOT tick (flood / loops): event: ActivityLogged, Schedule, Task, ApiKey, Webhook, WebhookConfiguration.",
+        "verifying": "Verifying…",
+        "verify": "Verify configuration",
+        "verified": "Receiver ready.",
+        "finish": "Finish",
+        "skip": "Skip and finish (daily sync)"
+    }
+}

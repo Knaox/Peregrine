@@ -12,6 +12,7 @@ import { ThemeResetDialog } from '@/components/admin/theme-studio/ThemeResetDial
 import { ThemeStudioMobileGuard } from '@/components/admin/theme-studio/ThemeStudioMobileGuard';
 import { ThemeStudioErrorScreen } from '@/components/admin/theme-studio/ThemeStudioErrorScreen';
 import type { ThemeDraft } from '@/types/themeStudio.types';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const Icon = ({ d, size = 14 }: { d: string; size?: number }) => (
     <svg
@@ -56,6 +57,7 @@ const PRESET_KEYS: ReadonlyArray<keyof ThemeDraft> = [
 ];
 
 export function ThemeStudioPage() {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { user, isLoading: authLoading, loadUser } = useAuthStore();
@@ -95,8 +97,7 @@ export function ThemeStudioPage() {
         if (!studio.isDirty || studio.isSaving) return;
         e.preventDefault();
         const ok = window.confirm(
-            t(
-                'theme_studio.unsaved_leave_confirm',
+            t('theme-studio:unsaved_leave_confirm',
                 'You have unpublished theme changes. Leave anyway and lose them?',
             ),
         );
@@ -152,10 +153,10 @@ export function ThemeStudioPage() {
                 : 'var(--color-warning)';
     const statusLabel =
         statusVariant === 'saving'
-            ? t('theme_studio.saving', 'Saving…')
+            ? t('theme-studio:saving', 'Saving…')
             : statusVariant === 'dirty'
-                ? t('theme_studio.unsaved', 'Unsaved changes')
-                : t('theme_studio.saved', 'Up to date');
+                ? t('theme-studio:unsaved', 'Unsaved changes')
+                : t('theme-studio:saved', 'Up to date');
 
     return (
         <div className="flex h-screen flex-col bg-[var(--color-background)] text-[var(--color-text-primary)]">
@@ -165,13 +166,13 @@ export function ThemeStudioPage() {
                         to="/dashboard"
                         onClick={handleBack}
                         className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
-                        aria-label={t('theme_studio.back', 'Back to dashboard')}
+                        aria-label={t('theme-studio:back', 'Back to dashboard')}
                     >
                         <Icon d={ARROW_LEFT} size={16} />
                     </Link>
                     <div className="flex items-center gap-3">
                         <h1 className="text-[13px] font-semibold tracking-tight">
-                            {t('theme_studio.title', 'Theme Studio')}
+                            {t('theme-studio:title', 'Theme Studio')}
                         </h1>
                         <span
                             className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)]/50 bg-[var(--color-surface-hover)]/40 px-2 py-0.5 text-[11px] font-medium text-[var(--color-text-secondary)]"
@@ -201,7 +202,7 @@ export function ThemeStudioPage() {
                         onClick={studio.discard}
                     >
                         <Icon d={UNDO_ICON} />
-                        {t('theme_studio.discard', 'Discard')}
+                        {t('theme-studio:discard', 'Discard')}
                     </Button>
                     <Button
                         variant="ghost"
@@ -210,7 +211,7 @@ export function ThemeStudioPage() {
                         onClick={() => setResetOpen(true)}
                     >
                         <Icon d={RESET_ICON} />
-                        {t('theme_studio.reset', 'Reset to defaults')}
+                        {t('theme-studio:reset', 'Reset to defaults')}
                     </Button>
                     <span className="mx-1 h-5 w-px bg-[var(--color-border)]/50" aria-hidden />
                     <Button
@@ -221,7 +222,7 @@ export function ThemeStudioPage() {
                         onClick={() => void studio.save()}
                     >
                         <Icon d={SAVE_ICON} />
-                        {t('theme_studio.publish', 'Publish')}
+                        {t('theme-studio:publish', 'Publish')}
                     </Button>
                 </div>
             </header>
@@ -229,11 +230,10 @@ export function ThemeStudioPage() {
             {studio.saveError && (
                 <div className="border-b border-[var(--color-danger)] bg-[var(--color-danger-glow)] px-5 py-2 text-xs text-[var(--color-danger)]">
                     {studio.saveError === 'theme.stale_revision'
-                        ? t(
-                              'theme_studio.conflict.stale',
+                        ? t('theme-studio:conflict.stale',
                               'Another admin published a theme change while you were editing. The studio refreshed — review your changes and publish again.',
                           )
-                        : `${t('theme_studio.save_error', 'Save failed:')} ${studio.saveError}`}
+                        : `${t('theme-studio:save_error', 'Save failed:')} ${studio.saveError}`}
                 </div>
             )}
 

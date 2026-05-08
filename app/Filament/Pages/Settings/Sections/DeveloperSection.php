@@ -9,13 +9,13 @@ final class DeveloperSection
 {
     public static function make(): Section
     {
-        return Section::make(__('admin.settings_form.developer.section'))
-            ->description(__('admin.settings_form.developer.description'))
+        return Section::make(__('admin/settings.form.developer.section'))
+            ->description(__('admin/settings.form.developer.description'))
             ->icon('heroicon-o-bug-ant')
             ->schema([
                 Toggle::make('app_debug')
-                    ->label(__('admin.settings_form.developer.debug'))
-                    ->helperText(__('admin.settings_form.developer.debug_helper')),
+                    ->label(__('admin/settings.form.developer.debug'))
+                    ->helperText(__('admin/settings.form.developer.debug_helper')),
             ])->columns(1);
     }
 }

@@ -1,0 +1,82 @@
+{
+    "list": {
+        "title": "Mes serveurs",
+        "empty": "Vous n'avez pas encore de serveurs.",
+        "search": "Rechercher des serveurs...",
+        "search_empty": "Aucun serveur ne correspond à votre recherche.",
+        "stats_unavailable": "Statistiques indisponibles",
+        "uncategorized": "Non catégorisé",
+        "select_mode": "Sélectionner",
+        "selected_count": "{{count}} serveur(s) sélectionné(s)",
+        "deselect_all": "Tout désélectionner",
+        "copy_ip": "Copier l'adresse",
+        "copied": "Copié !",
+        "add_category": "Nouvelle catégorie",
+        "category_placeholder": "Nom de la catégorie...",
+        "delete_category_confirm": "Supprimer cette catégorie ? Les serveurs seront déplacés vers Non classé.",
+        "drop_here": "Déposez les serveurs ici",
+        "reset_layout": "Réinitialiser la disposition",
+        "address": "Adresse",
+        "stats": "Stats live",
+        "config": "Configuration",
+        "egg": "Egg",
+        "plan": "Plan",
+        "uptime": "Temps en ligne",
+        "open": "Ouvrir le serveur"
+    },
+    "bulk": {
+        "start_all": "Tout démarrer",
+        "stop_all": "Tout arrêter",
+        "restart_all": "Tout redémarrer"
+    },
+    "status": {
+        "active": "Actif",
+        "suspended": "Suspendu",
+        "terminated": "Résilié",
+        "running": "En cours",
+        "starting": "Démarrage",
+        "stopping": "En cours d'arrêt",
+        "stopped": "Arrêté",
+        "offline": "Hors ligne",
+        "provisioning": "Installation",
+        "provisioning_failed": "Installation échouée"
+    },
+    "install": {
+        "in_progress_title": "Installation en cours",
+        "in_progress_description": "Wings prépare votre serveur. Les autres pages sont indisponibles tant que l'installation n'est pas terminée — seule la console est accessible en direct.",
+        "completed_title": "Installation terminée",
+        "completed_description": "Votre serveur est prêt. Le tableau de bord passera à la vue normale dans un instant.",
+        "view_console": "Ouvrir la console en direct",
+        "live_log_label": "Dernières lignes d'installation",
+        "waiting_for_output": "En attente des premières lignes d'installation depuis Wings…",
+        "console_only_notice": "Ce serveur est encore en installation. Seules la console et la page d'accueil sont accessibles tant que Wings n'a pas confirmé la fin de l'installation."
+    },
+    "suspended": {
+        "badge": "Serveur suspendu",
+        "title": "Ce serveur est actuellement suspendu.",
+        "description": "Votre hébergeur a mis ce serveur en pause. Les fichiers, sauvegardes et configurations sont préservés — seules les commandes de démarrage, la console et les actions en direct sont bloquées.",
+        "info_title": "Ce que cela signifie",
+        "info_kept": "Vos données, configurations et sauvegardes sont conservées intactes et seront restaurées telles quelles à la réactivation du serveur.",
+        "info_no_power": "Démarrer / arrêter / redémarrer et la console en direct sont désactivés tant que le serveur est suspendu — Wings rejette toutes les commandes.",
+        "info_reactivate": "Contactez votre hébergeur ou réactivez votre abonnement pour rétablir l'accès."
+    },
+    "conflict": {
+        "go_overview": "Retour à l'aperçu",
+        "failed_title": "L'installation a échoué",
+        "failed_description": "Un opérateur peut relancer l'installation depuis l'aperçu. Cette page reste indisponible tant que l'installation n'est pas terminée."
+    },
+    "operations": {
+        "completion": {
+            "install": "Installation terminée. Le serveur est prêt.",
+            "unsuspend": "Le serveur a été réactivé.",
+            "modpack": "Modpack {{name}} installé avec succès.",
+            "modpack_uninstall": "Modpack désinstallé. Le serveur est revenu en vanilla.",
+            "dismiss": "Fermer"
+        },
+        "banner": {
+            "modpack_installing": "Installation du modpack {{name}} en cours…",
+            "modpack_uninstalling": "Désinstallation du modpack en cours…",
+            "server_installing": "Installation du serveur en cours…"
+        }
+    }
+}

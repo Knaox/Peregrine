@@ -24,12 +24,12 @@ class About extends Page
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.pages.about.navigation');
+        return __('admin/about.page.navigation');
     }
 
     public function getTitle(): string
     {
-        return __('admin.pages.about.title');
+        return __('admin/about.page.title');
     }
 
     public string $currentVersion = '';
@@ -59,11 +59,11 @@ class About extends Page
 
         Notification::make()
             ->title($this->updateAvailable
-                ? __('admin.about.update_notification_title.available')
-                : __('admin.about.update_notification_title.up_to_date'))
+                ? __('admin/about.update_notification_title.available')
+                : __('admin/about.update_notification_title.up_to_date'))
             ->body($this->updateAvailable
-                ? __('admin.about.update_notification_body.available', ['version' => $this->latestVersion])
-                : __('admin.about.update_notification_body.up_to_date', ['version' => $this->currentVersion]))
+                ? __('admin/about.update_notification_body.available', ['version' => $this->latestVersion])
+                : __('admin/about.update_notification_body.up_to_date', ['version' => $this->currentVersion]))
             ->success()
             ->send();
     }
@@ -169,13 +169,13 @@ class About extends Page
         if ($this->isDocker) {
             return [
                 [
-                    'title' => __('admin.about.commands.docker_pull.title'),
-                    'description' => __('admin.about.commands.docker_pull.description'),
+                    'title' => __('admin/about.commands.docker_pull.title'),
+                    'description' => __('admin/about.commands.docker_pull.description'),
                     'command' => 'docker compose pull && docker compose up -d',
                 ],
                 [
-                    'title' => __('admin.about.commands.docker_migrate.title'),
-                    'description' => __('admin.about.commands.docker_migrate.description'),
+                    'title' => __('admin/about.commands.docker_migrate.title'),
+                    'description' => __('admin/about.commands.docker_migrate.description'),
                     'command' => 'docker compose exec app php artisan migrate --force',
                 ],
             ];
@@ -183,23 +183,23 @@ class About extends Page
 
         return [
             [
-                'title' => __('admin.about.commands.git_pull.title'),
-                'description' => __('admin.about.commands.git_pull.description'),
+                'title' => __('admin/about.commands.git_pull.title'),
+                'description' => __('admin/about.commands.git_pull.description'),
                 'command' => 'git pull',
             ],
             [
-                'title' => __('admin.about.commands.install_deps.title'),
-                'description' => __('admin.about.commands.install_deps.description'),
+                'title' => __('admin/about.commands.install_deps.title'),
+                'description' => __('admin/about.commands.install_deps.description'),
                 'command' => 'composer install --no-dev --optimize-autoloader && pnpm install',
             ],
             [
-                'title' => __('admin.about.commands.build.title'),
-                'description' => __('admin.about.commands.build.description'),
+                'title' => __('admin/about.commands.build.title'),
+                'description' => __('admin/about.commands.build.description'),
                 'command' => 'pnpm run build',
             ],
             [
-                'title' => __('admin.about.commands.migrate.title'),
-                'description' => __('admin.about.commands.migrate.description'),
+                'title' => __('admin/about.commands.migrate.title'),
+                'description' => __('admin/about.commands.migrate.description'),
                 'command' => 'php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan queue:restart',
             ],
         ];

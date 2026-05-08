@@ -20,8 +20,10 @@ import { DashboardCategoryList } from '@/components/server/DashboardCategoryList
 import { CommandBarLayout } from '@/components/server/layouts/CommandBarLayout';
 import { BentoMosaicLayout } from '@/components/server/layouts/BentoMosaicLayout';
 import { PulseGridLayout } from '@/components/server/layouts/PulseGridLayout';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function DashboardPage() {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
     const { user } = useAuthStore();
     const { data, isLoading } = useServers();
@@ -105,7 +107,7 @@ export function DashboardPage() {
 
                         {hasSearch && filteredServers.length === 0 ? (
                             <div className="rounded-[var(--radius-lg)] p-6 sm:p-12 text-center glass-card-enhanced">
-                                <p className="text-[var(--color-text-muted)]">{t('servers.list.search_empty')}</p>
+                                <p className="text-[var(--color-text-muted)]">{t('server-overview:list.search_empty')}</p>
                             </div>
                         ) : isAlternativeVariant ? (
                             <div className="pl-0 sm:pl-6">

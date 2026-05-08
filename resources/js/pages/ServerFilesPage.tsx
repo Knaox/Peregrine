@@ -19,8 +19,10 @@ import { FileEditor } from '@/components/files/FileEditor';
 import { FileBulkBar } from '@/components/files/FileBulkBar';
 import { FilePullModal } from '@/components/files/FilePullModal';
 import { withServerConflictGate } from '@/components/server/withServerConflictGate';
+import { useNamespace } from '@/i18n/useNamespace';
 
 function ServerFilesPageImpl() {
+    useNamespace(["server-files"] as const);
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
@@ -83,37 +85,37 @@ function ServerFilesPageImpl() {
     const handleOpenFile = (path: string) => { editor.openFile(serverId, path); };
     const handleRename = (name: string) => {
         if (!canUpdate) return;
-        const newName = window.prompt(t('servers.files.create_name'), name);
+        const newName = window.prompt(t('server-files:files.create_name'), name);
         if (!newName || newName === name) return;
         renameMutation.mutate({ from: name, to: newName });
     };
     const handleDelete = (name: string) => {
         if (!canDeleteFiles) return;
-        if (window.confirm(t('servers.files.confirm_delete', { name }))) deleteMutation.mutate([name]);
+        if (window.confirm(t('server-files:files.confirm_delete', { name }))) deleteMutation.mutate([name]);
     };
     const handleCompress = (name: string) => { if (canArchive) compressMutation.mutate([name]); };
     const handleDecompress = (name: string) => { if (canArchive) decompressMutation.mutate(name); };
     const handleChmod = (name: string) => {
         if (!canUpdate) return;
-        const mode = window.prompt(t('servers.files.chmod_prompt'), '755');
+        const mode = window.prompt(t('server-files:files.chmod_prompt'), '755');
         if (!mode || !/^[0-7]{3,4}$/.test(mode.trim())) return;
         chmodMutation.mutate({ name, mode: mode.trim() });
     };
     const handleBulkDelete = () => {
         if (!canDeleteFiles) return;
         const names = Array.from(selectedFiles);
-        if (window.confirm(t('servers.files.confirm_delete', { name: `${names.length} files` }))) deleteMutation.mutate(names);
+        if (window.confirm(t('server-files:files.confirm_delete', { name: `${names.length} files` }))) deleteMutation.mutate(names);
     };
     const handleBulkCompress = () => { if (canArchive) compressMutation.mutate(Array.from(selectedFiles)); };
     const handleNewFile = () => {
         if (!canCreate) return;
-        const name = window.prompt(t('servers.files.create_name'));
+        const name = window.prompt(t('server-files:files.create_name'));
         if (!name) return;
         writeFile(serverId, currentDirectory === '/' ? `/${name}` : `${currentDirectory}/${name}`, '').then(refresh);
     };
     const handleNewFolder = () => {
         if (!canCreate) return;
-        const name = window.prompt(t('servers.files.create_name'));
+        const name = window.prompt(t('server-files:files.create_name'));
         if (!name) return;
         createFolder(serverId, currentDirectory, name).then(refresh);
     };
@@ -137,7 +139,7 @@ function ServerFilesPageImpl() {
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-4 pb-16">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{t('servers.files.title')}</h2>
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{t('server-files:files.title')}</h2>
                 <FileToolbar
                     onNewFile={handleNewFile} onNewFolder={handleNewFolder} onRefresh={refresh}
                     onPull={canCreate ? () => setPullOpen(true) : undefined}
@@ -171,15 +173,15 @@ function ServerFilesPageImpl() {
                                 <svg className="mx-auto mb-2 h-10 w-10 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                                 </svg>
-                                <p className="text-[var(--color-primary)] font-medium">{t('servers.files.drop_here')}</p>
+                                <p className="text-[var(--color-primary)] font-medium">{t('server-files:files.drop_here')}</p>
                             </div>
                         </m.div>
                     )}
                 </AnimatePresence>
 
                 {/* Status messages */}
-                {isUploading && <div className="mb-3 rounded-[var(--radius)] bg-[var(--color-primary)]/10 px-3 py-2 text-sm text-[var(--color-primary)]">{progress || t('servers.files.uploading')}</div>}
-                {uploadError && <div className="mb-3 rounded-[var(--radius)] bg-[var(--color-danger)]/10 px-3 py-2 text-sm text-[var(--color-danger)]">{t('servers.files.upload_error')}: {uploadError}</div>}
+                {isUploading && <div className="mb-3 rounded-[var(--radius)] bg-[var(--color-primary)]/10 px-3 py-2 text-sm text-[var(--color-primary)]">{progress || t('server-files:files.uploading')}</div>}
+                {uploadError && <div className="mb-3 rounded-[var(--radius)] bg-[var(--color-danger)]/10 px-3 py-2 text-sm text-[var(--color-danger)]">{t('server-files:files.upload_error')}: {uploadError}</div>}
                 {editor.error && <div className="mb-3 rounded-[var(--radius)] bg-[var(--color-danger)]/10 px-3 py-2 text-sm text-[var(--color-danger)]">{editor.error}</div>}
 
                 <FileList

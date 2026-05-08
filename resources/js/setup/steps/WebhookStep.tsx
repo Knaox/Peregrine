@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next';
 import type { StepProps } from '../types';
 import { generateWebhookToken, getWebhookHeartbeat, finalizeSetup } from '../services/setupApi';
 import { clearPersistedStep } from '../hooks/useSetupWizard';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function WebhookStep(_: StepProps) {
+    useNamespace(["setup"] as const);
     const { t } = useTranslation();
     const [token, setToken] = useState<string | null>(null);
     const [endpoint, setEndpoint] = useState<string>('');
@@ -31,7 +33,7 @@ export function WebhookStep(_: StepProps) {
             if (status.enabled && status.token_configured) {
                 setVerified(true);
             } else {
-                setError(t('setup.webhook.verify_failed', { defaultValue: 'Le récepteur ne répond pas correctement. Réessaie ou continue.' }));
+                setError(t('setup:webhook.verify_failed', { defaultValue: 'Le récepteur ne répond pas correctement. Réessaie ou continue.' }));
             }
         } catch (e: unknown) {
             setError(e instanceof Error ? e.message : String(e));
@@ -47,10 +49,10 @@ export function WebhookStep(_: StepProps) {
         <div className="space-y-6">
             <div>
                 <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
-                    {t('setup.webhook.title', { defaultValue: 'Activer la synchronisation temps réel' })}
+                    {t('setup:webhook.title', { defaultValue: 'Activer la synchronisation temps réel' })}
                 </h2>
                 <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                    {t('setup.webhook.subtitle', { defaultValue: 'Configure Pelican pour notifier Peregrine en direct (recommandé). Tu peux passer cette étape — Peregrine se synchronisera quand même tous les jours.' })}
+                    {t('setup:webhook.subtitle', { defaultValue: 'Configure Pelican pour notifier Peregrine en direct (recommandé). Tu peux passer cette étape — Peregrine se synchronisera quand même tous les jours.' })}
                 </p>
             </div>
 
@@ -60,7 +62,7 @@ export function WebhookStep(_: StepProps) {
                     onClick={generate}
                     className="w-full rounded-lg bg-[var(--color-primary)] px-5 py-3 text-sm font-medium text-white"
                 >
-                    {t('setup.webhook.generate', { defaultValue: 'Générer le token webhook' })}
+                    {t('setup:webhook.generate', { defaultValue: 'Générer le token webhook' })}
                 </button>
             )}
 
@@ -68,14 +70,14 @@ export function WebhookStep(_: StepProps) {
                 <div className="space-y-5">
                     <div className="rounded-lg border border-[var(--color-primary)]/40 bg-[var(--color-primary)]/5 p-4 text-sm">
                         <p className="font-medium text-[var(--color-text-primary)]">
-                            {t('setup.webhook.howto_intro', { defaultValue: 'Dans Pelican, va dans /admin/webhooks → Create Webhook et remplis exactement comme ci-dessous.' })}
+                            {t('setup:webhook.howto_intro', { defaultValue: 'Dans Pelican, va dans /admin/webhooks → Create Webhook et remplis exactement comme ci-dessous.' })}
                         </p>
                     </div>
 
                     {/* === Pelican form: Type === */}
                     <div>
                         <label className="text-xs font-medium uppercase text-[var(--color-text-secondary)]">
-                            {t('setup.webhook.type_label', { defaultValue: 'Type (champ Pelican)' })}
+                            {t('setup:webhook.type_label', { defaultValue: 'Type (champ Pelican)' })}
                         </label>
                         <input
                             type="text"
@@ -89,7 +91,7 @@ export function WebhookStep(_: StepProps) {
                     {/* === Pelican form: Endpoint === */}
                     <div>
                         <label className="text-xs font-medium uppercase text-[var(--color-text-secondary)]">
-                            {t('setup.webhook.endpoint_label', { defaultValue: 'Endpoint (champ Pelican)' })}
+                            {t('setup:webhook.endpoint_label', { defaultValue: 'Endpoint (champ Pelican)' })}
                         </label>
                         <input
                             type="text"
@@ -103,7 +105,7 @@ export function WebhookStep(_: StepProps) {
                     {/* === Pelican form: Headers (2 rows) === */}
                     <div>
                         <label className="text-xs font-medium uppercase text-[var(--color-text-secondary)]">
-                            {t('setup.webhook.headers_label', { defaultValue: 'Headers (section Pelican — clique sur "Add row" pour ajouter Authorization)' })}
+                            {t('setup:webhook.headers_label', { defaultValue: 'Headers (section Pelican — clique sur "Add row" pour ajouter Authorization)' })}
                         </label>
                         <div className="mt-1 overflow-hidden rounded-lg border border-[var(--color-glass-border)]">
                             <div className="grid grid-cols-2 gap-px bg-[var(--color-glass-border)] text-xs uppercase tracking-wide">
@@ -146,19 +148,19 @@ export function WebhookStep(_: StepProps) {
                             </div>
                         </div>
                         <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
-                            {t('setup.webhook.headers_hint', { defaultValue: 'La 1ère ligne (X-Webhook-Event = {{event}}) est le défaut Pelican — laisse-la. La 2ème ligne (Authorization) est à AJOUTER manuellement via "Add row".' })}
+                            {t('setup:webhook.headers_hint', { defaultValue: 'La 1ère ligne (X-Webhook-Event = {{event}}) est le défaut Pelican — laisse-la. La 2ème ligne (Authorization) est à AJOUTER manuellement via "Add row".' })}
                         </p>
                         <p className="mt-1 text-xs text-amber-500">
-                            {t('setup.webhook.copy_warning', { defaultValue: 'Copie le token maintenant — il ne sera plus affiché en clair après cette étape.' })}
+                            {t('setup:webhook.copy_warning', { defaultValue: 'Copie le token maintenant — il ne sera plus affiché en clair après cette étape.' })}
                         </p>
                     </div>
 
                     {/* === Events to tick === */}
                     <div className="rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass)] p-4 text-sm">
-                        <p className="font-medium">{t('setup.webhook.events_to_tick', { defaultValue: 'Events à cocher (recherche-les dans la liste Pelican)' })}</p>
+                        <p className="font-medium">{t('setup:webhook.events_to_tick', { defaultValue: 'Events à cocher (recherche-les dans la liste Pelican)' })}</p>
                         <ul className="mt-2 list-inside list-disc space-y-1 text-[var(--color-text-secondary)]">
                             <li><code>created: Server</code> · <code>updated: Server</code> · <code>deleted: Server</code></li>
-                            <li><code>event: Server\Installed</code> <span className="text-xs">— {t('setup.webhook.installed_note', { defaultValue: 'optionnel, sur Pelican 0.46+ stable' })}</span></li>
+                            <li><code>event: Server\Installed</code> <span className="text-xs">— {t('setup:webhook.installed_note', { defaultValue: 'optionnel, sur Pelican 0.46+ stable' })}</span></li>
                             <li><code>created: User</code> · <code>updated: User</code> · <code>deleted: User</code></li>
                             <li><code>created/updated/deleted: Node</code></li>
                             <li><code>created/updated/deleted: Egg</code> · <code>EggVariable</code></li>
@@ -169,7 +171,7 @@ export function WebhookStep(_: StepProps) {
                             <li><code>event: Server\SubUserAdded</code> · <code>event: Server\SubUserRemoved</code></li>
                         </ul>
                         <p className="mt-3 text-xs text-rose-500">
-                            {t('setup.webhook.do_not_tick', { defaultValue: 'NE PAS cocher (flood / boucles) : event: ActivityLogged, Schedule, Task, ApiKey, Webhook, WebhookConfiguration.' })}
+                            {t('setup:webhook.do_not_tick', { defaultValue: 'NE PAS cocher (flood / boucles) : event: ActivityLogged, Schedule, Task, ApiKey, Webhook, WebhookConfiguration.' })}
                         </p>
                     </div>
 
@@ -180,11 +182,11 @@ export function WebhookStep(_: StepProps) {
                         className="w-full rounded-lg border border-[var(--color-glass-border)] px-5 py-2 text-sm hover:bg-[var(--color-glass)] disabled:opacity-50"
                     >
                         {verifying
-                            ? t('setup.webhook.verifying', { defaultValue: 'Vérification…' })
-                            : t('setup.webhook.verify', { defaultValue: 'Vérifier la configuration' })}
+                            ? t('setup:webhook.verifying', { defaultValue: 'Vérification…' })
+                            : t('setup:webhook.verify', { defaultValue: 'Vérifier la configuration' })}
                     </button>
                     {verified && (
-                        <p className="text-sm text-emerald-500">✓ {t('setup.webhook.verified', { defaultValue: 'Récepteur prêt.' })}</p>
+                        <p className="text-sm text-emerald-500">✓ {t('setup:webhook.verified', { defaultValue: 'Récepteur prêt.' })}</p>
                     )}
                 </div>
             )}
@@ -214,8 +216,8 @@ export function WebhookStep(_: StepProps) {
                     className="rounded-lg bg-[var(--color-primary)] px-5 py-2 text-sm font-medium text-white"
                 >
                     {token
-                        ? t('setup.webhook.finish', { defaultValue: 'Terminer' })
-                        : t('setup.webhook.skip', { defaultValue: 'Passer et terminer (sync quotidienne)' })}
+                        ? t('setup:webhook.finish', { defaultValue: 'Terminer' })
+                        : t('setup:webhook.skip', { defaultValue: 'Passer et terminer (sync quotidienne)' })}
                 </button>
             </div>
         </div>

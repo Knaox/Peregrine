@@ -13,6 +13,7 @@ import type { CardConfig } from '@/hooks/useCardConfig';
 import type { PowerSignal } from '@/types/PowerSignal';
 import type { Server } from '@/types/Server';
 import type { ServerStats } from '@/types/ServerStats';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export type BentoTileSize = 'featured' | 'wide' | 'standard';
 
@@ -31,6 +32,7 @@ interface BentoTileProps {
 function BentoTileImpl({
     server, stats, cardConfig, size, isSelectionMode, isSelected, onSelect, onPower, isPowerPending,
 }: BentoTileProps) {
+    useNamespace(["server-overview"] as const);
     const navigate = useNavigate();
     const { t } = useTranslation();
     const queryClient = useQueryClient();
@@ -110,7 +112,7 @@ function BentoTileImpl({
             {isInactive && (
                 <span className="absolute top-3 right-3 z-10 rounded-[var(--radius-full)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
                     style={{ background: `${health.color}D9`, color: 'white' }}>
-                    {t(`servers.status.${state}`, state)}
+                    {t(`server-overview:status.${state}`, state)}
                 </span>
             )}
 
@@ -164,7 +166,7 @@ function BentoTileImpl({
                                     <rect x="9" y="9" width="13" height="13" rx="2" />
                                     <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                                 </svg>
-                                {copied ? t('servers.list.copied') : address}
+                                {copied ? t('server-overview:list.copied') : address}
                             </button>
                         )}
                         {cardConfig.show_quick_actions && !isInactive && (
@@ -196,7 +198,7 @@ function BentoTileImpl({
             {isWide && cardConfig.show_ip_port && address && (
                 <button type="button" onClick={handleCopy}
                     className="absolute top-2 right-2 z-20 inline-flex items-center gap-1 rounded-[var(--radius-full)] bg-black/55 px-2 py-0.5 font-mono text-[10px] text-white/95 hover:bg-black/75 backdrop-blur-md cursor-pointer max-w-[calc(50%-0.5rem)] truncate opacity-0 group-hover:opacity-100 transition-opacity">
-                    {copied ? t('servers.list.copied') : address}
+                    {copied ? t('server-overview:list.copied') : address}
                 </button>
             )}
 

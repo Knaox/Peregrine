@@ -34,12 +34,12 @@ class EmailTemplates extends Page implements HasForms
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.pages.email_templates.navigation');
+        return __('admin/email_templates.page.navigation');
     }
 
     public function getTitle(): string
     {
-        return __('admin.pages.email_templates.title');
+        return __('admin/email_templates.page.title');
     }
 
     // Invitation template fields — legacy layout kept as-is for backward compat
@@ -89,14 +89,14 @@ class EmailTemplates extends Page implements HasForms
     public function form(Schema $schema): Schema
     {
         $sections = [
-            Section::make(__('admin.email_templates.global_section'))
-                ->description(__('admin.email_templates.global_description'))
+            Section::make(__('admin/email_templates.form.global_section'))
+                ->description(__('admin/email_templates.form.global_description'))
                 ->icon('heroicon-o-cog-6-tooth')
                 ->collapsible()
                 ->schema([
                     TextInput::make('email_footer_text')
-                        ->label(__('admin.email_templates.footer'))
-                        ->helperText(__('admin.email_templates.footer_helper')),
+                        ->label(__('admin/email_templates.form.footer'))
+                        ->helperText(__('admin/email_templates.form.footer_helper')),
                 ]),
         ];
 
@@ -114,24 +114,24 @@ class EmailTemplates extends Page implements HasForms
 
         // Only show invitation templates if the invitations plugin is active
         if ($this->isPluginActive('invitations')) {
-            $sections[] = Section::make(__('admin.email_templates.invitation_en'))
-                ->description(__('admin.email_templates.invitation_en_description'))
+            $sections[] = Section::make(__('admin/email_templates.form.invitation_en'))
+                ->description(__('admin/email_templates.form.invitation_en_description'))
                 ->icon('heroicon-o-envelope')
                 ->collapsible()
                 ->collapsed()
                 ->schema([
-                    TextInput::make('invitation_subject_en')->label(__('admin.email_templates.subject')),
-                    Textarea::make('invitation_body_en')->label(__('admin.email_templates.body'))->rows(12),
+                    TextInput::make('invitation_subject_en')->label(__('admin/email_templates.form.subject')),
+                    Textarea::make('invitation_body_en')->label(__('admin/email_templates.form.body'))->rows(12),
                 ]);
 
-            $sections[] = Section::make(__('admin.email_templates.invitation_fr'))
-                ->description(__('admin.email_templates.invitation_fr_description'))
+            $sections[] = Section::make(__('admin/email_templates.form.invitation_fr'))
+                ->description(__('admin/email_templates.form.invitation_fr_description'))
                 ->icon('heroicon-o-envelope')
                 ->collapsible()
                 ->collapsed()
                 ->schema([
-                    TextInput::make('invitation_subject_fr')->label(__('admin.email_templates.subject')),
-                    Textarea::make('invitation_body_fr')->label(__('admin.email_templates.body'))->rows(12),
+                    TextInput::make('invitation_subject_fr')->label(__('admin/email_templates.form.subject')),
+                    Textarea::make('invitation_body_fr')->label(__('admin/email_templates.form.body'))->rows(12),
                 ]);
         }
 
@@ -151,10 +151,10 @@ class EmailTemplates extends Page implements HasForms
             ->collapsible()
             ->collapsed()
             ->schema([
-                TextInput::make("template_values.{$tpl['id']}.subject_en")->label(__('admin.email_templates.subject_en')),
-                TextInput::make("template_values.{$tpl['id']}.subject_fr")->label(__('admin.email_templates.subject_fr')),
-                Textarea::make("template_values.{$tpl['id']}.body_en")->label(__('admin.email_templates.body_en'))->rows(10),
-                Textarea::make("template_values.{$tpl['id']}.body_fr")->label(__('admin.email_templates.body_fr'))->rows(10),
+                TextInput::make("template_values.{$tpl['id']}.subject_en")->label(__('admin/email_templates.form.subject_en')),
+                TextInput::make("template_values.{$tpl['id']}.subject_fr")->label(__('admin/email_templates.form.subject_fr')),
+                Textarea::make("template_values.{$tpl['id']}.body_en")->label(__('admin/email_templates.form.body_en'))->rows(10),
+                Textarea::make("template_values.{$tpl['id']}.body_fr")->label(__('admin/email_templates.form.body_fr'))->rows(10),
             ]);
     }
 
@@ -212,15 +212,15 @@ class EmailTemplates extends Page implements HasForms
 
         $settings->clearCache();
 
-        Notification::make()->title(__('admin.notifications.email_templates_saved'))->success()->send();
+        Notification::make()->title(__('admin/_shell.notifications.email_templates_saved'))->success()->send();
     }
 
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label(__('admin.actions.save_templates'))->submit('save'),
+            Action::make('save')->label(__('admin/_shell.actions.save_templates'))->submit('save'),
             Action::make('reset')
-                ->label(__('admin.actions.reset_defaults'))
+                ->label(__('admin/_shell.actions.reset_defaults'))
                 ->color('gray')
                 ->requiresConfirmation()
                 ->action(fn () => $this->resetToDefaults()),
@@ -248,7 +248,7 @@ class EmailTemplates extends Page implements HasForms
         $settings->clearCache();
         $this->mount();
 
-        Notification::make()->title(__('admin.notifications.email_templates_reset'))->success()->send();
+        Notification::make()->title(__('admin/_shell.notifications.email_templates_reset'))->success()->send();
     }
 
     private function defaultBodyEn(): string

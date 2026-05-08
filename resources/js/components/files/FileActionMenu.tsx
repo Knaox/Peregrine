@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { type FileActionMenuProps } from '@/components/files/FileActionMenu.props';
 import { IconButton } from '@/components/ui/IconButton';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function FileActionMenu({
     name: _name,
@@ -19,6 +20,7 @@ export function FileActionMenu({
     canArchive = true,
     canDownload = true,
 }: FileActionMenuProps) {
+    useNamespace(["server-files"] as const);
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     // The menu used to render with `absolute` inside the file row, but the
@@ -93,7 +95,7 @@ export function FileActionMenu({
                         <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
-                        {t('servers.files.rename')}
+                        {t('server-files:files.rename')}
                     </button>
                 )}
 
@@ -106,7 +108,7 @@ export function FileActionMenu({
                         <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
-                        {t('servers.files.download', { defaultValue: 'Download' })}
+                        {t('server-files:files.download', { defaultValue: 'Download' })}
                     </button>
                 )}
 
@@ -119,7 +121,7 @@ export function FileActionMenu({
                         <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
-                        {t('servers.files.compress')}
+                        {t('server-files:files.compress')}
                     </button>
                 )}
 
@@ -132,7 +134,7 @@ export function FileActionMenu({
                         <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
-                        {t('servers.files.decompress')}
+                        {t('server-files:files.decompress')}
                     </button>
                 )}
 
@@ -145,7 +147,7 @@ export function FileActionMenu({
                         <svg className="w-4 h-4 text-[var(--color-text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
-                        {t('servers.files.chmod')}
+                        {t('server-files:files.chmod')}
                     </button>
                 )}
 
@@ -162,7 +164,7 @@ export function FileActionMenu({
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                        {t('servers.files.delete')}
+                        {t('server-files:files.delete')}
                     </button>
                 )}
             </div>,

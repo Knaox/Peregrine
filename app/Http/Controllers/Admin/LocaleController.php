@@ -31,7 +31,7 @@ class LocaleController extends Controller
         app()->setLocale($locale);
 
         Notification::make()
-            ->title(__('admin.profile.language_switched', ['locale' => $locale === 'fr' ? 'Français' : 'English']))
+            ->title(__('admin/_shell.profile.language_switched', ['locale' => $locale === 'fr' ? 'Français' : 'English']))
             ->success()
             ->send();
 

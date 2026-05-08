@@ -9,10 +9,12 @@ import { formatBytes, formatDate } from '@/utils/format';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { withServerConflictGate } from '@/components/server/withServerConflictGate';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const INPUT_CLS = 'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none';
 
 function ArchiveIcon({ className }: { className?: string }) {
+    useNamespace(["server-backups"] as const);
     return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 8v13H3V8" />
@@ -47,7 +49,7 @@ function StatusBadge({ isSuccessful, completedAt }: { isSuccessful: boolean; com
         return (
             <span className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] bg-[var(--color-success)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--color-success)]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
-                {t('servers.backups.status_completed')}
+                {t('server-backups:backups.status_completed')}
             </span>
         );
     }
@@ -56,7 +58,7 @@ function StatusBadge({ isSuccessful, completedAt }: { isSuccessful: boolean; com
         return (
             <span className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] bg-[var(--color-danger)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--color-danger)]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-danger)]" />
-                {t('servers.backups.status_failed')}
+                {t('server-backups:backups.status_failed')}
             </span>
         );
     }
@@ -64,7 +66,7 @@ function StatusBadge({ isSuccessful, completedAt }: { isSuccessful: boolean; com
     return (
         <span className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] bg-[var(--color-warning)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--color-warning)]">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-warning)]" />
-            {t('servers.backups.status_creating')}
+            {t('server-backups:backups.status_creating')}
         </span>
     );
 }
@@ -101,11 +103,11 @@ function ServerBackupsPageImpl() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--color-primary)]/10">
                         <ArchiveIcon className="h-5 w-5 text-[var(--color-primary)]" />
                     </div>
-                    <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{t('servers.backups.title')}</h2>
+                    <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{t('server-backups:backups.title')}</h2>
                 </div>
                 {canCreate && (
                     <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
-                        {t('servers.backups.create')}
+                        {t('server-backups:backups.create')}
                     </Button>
                 )}
             </div>
@@ -120,17 +122,17 @@ function ServerBackupsPageImpl() {
                 >
                     <div className="space-y-4">
                         <div>
-                            <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('servers.backups.name')}</label>
-                            <input value={bkName} onChange={(e) => setBkName(e.target.value)} placeholder={t('servers.backups.name_placeholder')} className={INPUT_CLS} />
+                            <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('server-backups:backups.name')}</label>
+                            <input value={bkName} onChange={(e) => setBkName(e.target.value)} placeholder={t('server-backups:backups.name_placeholder')} className={INPUT_CLS} />
                         </div>
                         <div>
-                            <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('servers.backups.ignored_files')}</label>
+                            <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('server-backups:backups.ignored_files')}</label>
                             <textarea value={bkIgnored} onChange={(e) => setBkIgnored(e.target.value)} rows={3} placeholder="*.log" className={INPUT_CLS} />
-                            <p className="mt-1 text-xs text-[var(--color-text-muted)]">{t('servers.backups.ignored_help')}</p>
+                            <p className="mt-1 text-xs text-[var(--color-text-muted)]">{t('server-backups:backups.ignored_help')}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>{t('common.cancel')}</Button>
-                            <Button variant="primary" size="sm" isLoading={create.isPending} onClick={handleCreate}>{t('servers.backups.create')}</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>{t('common:cancel')}</Button>
+                            <Button variant="primary" size="sm" isLoading={create.isPending} onClick={handleCreate}>{t('server-backups:backups.create')}</Button>
                         </div>
                     </div>
                 </m.div>
@@ -142,7 +144,7 @@ function ServerBackupsPageImpl() {
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-surface)]">
                         <ArchiveIcon className="h-8 w-8 text-[var(--color-text-muted)]" />
                     </div>
-                    <p className="text-sm text-[var(--color-text-muted)]">{t('servers.backups.no_backups')}</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">{t('server-backups:backups.no_backups')}</p>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -162,7 +164,7 @@ function ServerBackupsPageImpl() {
                                         {bk.is_locked && (
                                             <span className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] bg-[var(--color-warning)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--color-warning)]">
                                                 <LockIcon className="h-3 w-3" />
-                                                {t('servers.backups.locked')}
+                                                {t('server-backups:backups.locked')}
                                             </span>
                                         )}
                                     </div>
@@ -177,29 +179,29 @@ function ServerBackupsPageImpl() {
                                 <div className="flex flex-wrap items-center gap-2">
                                     {bk.is_successful && canDownload && (
                                         <Button variant="secondary" size="sm" onClick={() => void download(bk.uuid)}>
-                                            {t('servers.backups.download')}
+                                            {t('server-backups:backups.download')}
                                         </Button>
                                     )}
                                     {bk.is_successful && canRestore && (
                                         <Button variant="secondary" size="sm" isLoading={restore.isPending} onClick={() => {
-                                            if (window.confirm(t('servers.backups.restore_confirm'))) restore.mutate({ backupId: bk.uuid });
+                                            if (window.confirm(t('server-backups:backups.restore_confirm'))) restore.mutate({ backupId: bk.uuid });
                                         }}>
-                                            {t('servers.backups.restore')}
+                                            {t('server-backups:backups.restore')}
                                         </Button>
                                     )}
                                     {canDelete && (
                                         <Button variant="ghost" size="sm" isLoading={lock.isPending} onClick={() => lock.mutate(bk.uuid)}>
                                             {bk.is_locked
-                                                ? <><UnlockIcon className="h-3.5 w-3.5" /> {t('servers.backups.unlock')}</>
-                                                : <><LockIcon className="h-3.5 w-3.5" /> {t('servers.backups.lock')}</>
+                                                ? <><UnlockIcon className="h-3.5 w-3.5" /> {t('server-backups:backups.unlock')}</>
+                                                : <><LockIcon className="h-3.5 w-3.5" /> {t('server-backups:backups.lock')}</>
                                             }
                                         </Button>
                                     )}
                                     {!bk.is_locked && canDelete && (
                                         <Button variant="danger" size="sm" isLoading={remove.isPending} onClick={() => {
-                                            if (window.confirm(t('servers.backups.confirm_delete', { name: bk.name }))) remove.mutate(bk.uuid);
+                                            if (window.confirm(t('server-backups:backups.confirm_delete', { name: bk.name }))) remove.mutate(bk.uuid);
                                         }}>
-                                            {t('servers.backups.delete')}
+                                            {t('server-backups:backups.delete')}
                                         </Button>
                                     )}
                                 </div>

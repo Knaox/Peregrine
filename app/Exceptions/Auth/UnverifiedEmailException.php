@@ -17,8 +17,8 @@ class UnverifiedEmailException extends SocialAuthException
     public function errorKey(): string
     {
         return $this->provider === 'shop'
-            ? 'auth.social.email_not_verified_shop'
-            : 'auth.social.email_not_verified';
+            ? 'auth-social:email_not_verified_shop'
+            : 'auth-social:email_not_verified';
     }
 
     public function statusCode(): int

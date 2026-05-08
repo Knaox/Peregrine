@@ -123,15 +123,15 @@ export function AppLayout() {
                                 <NavHeaderLinks links={links} mobile />
                                 <hr className="border-[var(--color-border)]/50" />
                                 <Link to="/profile" className="block rounded-[var(--radius)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-200 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
-                                    {t('nav.profile')}
+                                    {t('common:nav.profile')}
                                 </Link>
                                 {user?.is_admin && (
                                     <a href="/admin" className="block rounded-[var(--radius)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-200 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
-                                        {t('nav.settings_admin')}
+                                        {t('common:nav.settings_admin')}
                                     </a>
                                 )}
                                 <button type="button" onClick={handleLogout} className="block w-full cursor-pointer rounded-[var(--radius)] px-3 py-2 text-left text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-200 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
-                                    {t('nav.logout')}
+                                    {t('common:nav.logout')}
                                 </button>
                             </div>
                         </m.div>

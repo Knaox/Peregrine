@@ -1,0 +1,42 @@
+{
+    "next": "Suivant",
+    "previous": "Précédent",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "copy": "Copier",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "success": "Succès",
+    "test_connection": "Tester la connexion",
+    "connection_success": "Connexion réussie",
+    "connection_failed": "Échec de la connexion",
+    "required": "Ce champ est requis",
+    "optional": "Optionnel",
+    "install": "Installer",
+    "installing": "Installation en cours...",
+    "coming_soon": "Bientôt disponible",
+    "back": "Retour",
+    "close": "Fermer",
+    "errors": {
+        "no_permission": "Vous n'avez pas la permission d'afficher cette page."
+    },
+    "nav": {
+        "dashboard": "Tableau de bord",
+        "servers": "Serveurs",
+        "settings": "Paramètres",
+        "settings_admin": "Paramètres admin",
+        "profile": "Profil",
+        "logout": "Déconnexion",
+        "user_menu": "Menu utilisateur",
+        "greeting_morning": "Bonjour, {{name}}",
+        "greeting_afternoon": "Bon après-midi, {{name}}",
+        "greeting_evening": "Bonsoir, {{name}}",
+        "greeting_night": "Bonne nuit, {{name}}",
+        "primary": "Primary navigation",
+        "close": "Close menu",
+        "open": "Open menu"
+    }
+}

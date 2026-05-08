@@ -6,6 +6,7 @@ import {
     type PreviewMode,
     type PreviewScene,
 } from '@/types/themeStudio.types';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface ThemePreviewToolbarProps {
     scene: PreviewScene;
@@ -19,23 +20,23 @@ interface ThemePreviewToolbarProps {
 }
 
 const USER_SCENES: ReadonlyArray<{ key: PreviewScene; labelKey: string }> = [
-    { key: 'dashboard', labelKey: 'theme_studio.scenes.dashboard' },
-    { key: 'login', labelKey: 'theme_studio.scenes.login' },
-    { key: 'profile', labelKey: 'theme_studio.scenes.profile' },
-    { key: 'security', labelKey: 'theme_studio.scenes.security' },
+    { key: 'dashboard', labelKey: 'theme-studio:scenes.dashboard' },
+    { key: 'login', labelKey: 'theme-studio:scenes.login' },
+    { key: 'profile', labelKey: 'theme-studio:scenes.profile' },
+    { key: 'security', labelKey: 'theme-studio:scenes.security' },
 ];
 
 const SERVER_SCENES: ReadonlyArray<{ key: PreviewScene; labelKey: string }> = [
-    { key: 'server_overview', labelKey: 'theme_studio.scenes.server_overview' },
-    { key: 'server_console', labelKey: 'theme_studio.scenes.server_console' },
-    { key: 'server_files', labelKey: 'theme_studio.scenes.server_files' },
-    { key: 'server_databases', labelKey: 'theme_studio.scenes.server_databases' },
+    { key: 'server_overview', labelKey: 'theme-studio:scenes.server_overview' },
+    { key: 'server_console', labelKey: 'theme-studio:scenes.server_console' },
+    { key: 'server_files', labelKey: 'theme-studio:scenes.server_files' },
+    { key: 'server_databases', labelKey: 'theme-studio:scenes.server_databases' },
 ];
 
 const BREAKPOINTS: ReadonlyArray<{ key: PreviewBreakpoint; labelKey: string }> = [
-    { key: 'mobile', labelKey: 'theme_studio.breakpoints.mobile' },
-    { key: 'tablet', labelKey: 'theme_studio.breakpoints.tablet' },
-    { key: 'desktop', labelKey: 'theme_studio.breakpoints.desktop' },
+    { key: 'mobile', labelKey: 'theme-studio:breakpoints.mobile' },
+    { key: 'tablet', labelKey: 'theme-studio:breakpoints.tablet' },
+    { key: 'desktop', labelKey: 'theme-studio:breakpoints.desktop' },
 ];
 
 export function ThemePreviewToolbar({
@@ -47,15 +48,16 @@ export function ThemePreviewToolbar({
     onMode,
     onBreakpoint,
 }: ThemePreviewToolbarProps) {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
     const serverScenesDisabled = sampleServerId === null;
     const disabledTooltip = serverScenesDisabled
-        ? t('theme_studio.server_scenes_disabled')
+        ? t('theme-studio:server_scenes_disabled')
         : undefined;
 
     return (
         <div className="flex flex-wrap items-center gap-5 border-b border-[var(--color-border)]/60 bg-[var(--color-surface-elevated)]/80 px-6 py-3.5 backdrop-blur-sm">
-            <SegmentedGroup label={t('theme_studio.toolbar.scene', 'Scene')}>
+            <SegmentedGroup label={t('theme-studio:toolbar.scene', 'Scene')}>
                 {USER_SCENES.map((s) => (
                     <SegmentedButton
                         key={s.key}
@@ -86,16 +88,16 @@ export function ThemePreviewToolbar({
                 })}
             </SegmentedGroup>
 
-            <SegmentedGroup label={t('theme_studio.toolbar.mode', 'Mode')}>
+            <SegmentedGroup label={t('theme-studio:toolbar.mode', 'Mode')}>
                 <SegmentedButton active={mode === 'dark'} onClick={() => onMode('dark')}>
-                    {t('theme_studio.modes.dark', 'Dark')}
+                    {t('theme-studio:modes.dark', 'Dark')}
                 </SegmentedButton>
                 <SegmentedButton active={mode === 'light'} onClick={() => onMode('light')}>
-                    {t('theme_studio.modes.light', 'Light')}
+                    {t('theme-studio:modes.light', 'Light')}
                 </SegmentedButton>
             </SegmentedGroup>
 
-            <SegmentedGroup label={t('theme_studio.toolbar.breakpoint', 'Breakpoint')}>
+            <SegmentedGroup label={t('theme-studio:toolbar.breakpoint', 'Breakpoint')}>
                 {BREAKPOINTS.map((b) => (
                     <SegmentedButton
                         key={b.key}

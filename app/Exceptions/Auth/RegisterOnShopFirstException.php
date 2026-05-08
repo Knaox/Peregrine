@@ -15,7 +15,7 @@ class RegisterOnShopFirstException extends SocialAuthException
 {
     public function errorKey(): string
     {
-        return 'auth.social.register_on_canonical_first';
+        return 'auth-social:register_on_canonical_first';
     }
 
     public function statusCode(): int

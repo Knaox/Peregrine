@@ -8,6 +8,7 @@ import { formatDate } from '@/utils/format';
 import { Button } from '@/components/ui/Button';
 import { AddTaskForm, actionIcon } from '@/components/server/AddTaskForm';
 import type { Schedule } from '@/types/Schedule';
+import { useNamespace } from '@/i18n/useNamespace';
 
 /* Inline SVG icons */
 function ClockIconSmall() {
@@ -44,6 +45,7 @@ interface ScheduleCardProps {
 }
 
 export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
+    useNamespace(["server-schedules"] as const);
     const { t } = useTranslation();
     const { execute, remove, removeTask } = useSchedules(serverId);
     const { data: server } = useServer(serverId);
@@ -54,9 +56,9 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
     const [showAddTask, setShowAddTask] = useState(false);
 
     const actionLabel = (action: string) => {
-        if (action === 'command') return t('servers.schedules.task_command');
-        if (action === 'power') return t('servers.schedules.task_power');
-        return t('servers.schedules.task_backup');
+        if (action === 'command') return t('server-schedules:schedules.task_command');
+        if (action === 'power') return t('server-schedules:schedules.task_power');
+        return t('server-schedules:schedules.task_backup');
     };
 
     const cronStr = `${schedule.minute} ${schedule.hour} ${schedule.day_of_month} ${schedule.month} ${schedule.day_of_week}`;
@@ -70,7 +72,7 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                         <ClockIconSmall />
                         <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">{schedule.name}</p>
                         <span className={`shrink-0 rounded-[var(--radius-sm)] px-1.5 py-0.5 text-[10px] font-medium ${schedule.is_active ? 'bg-[var(--color-success)]/15 text-[var(--color-success)]' : 'bg-[var(--color-text-muted)]/15 text-[var(--color-text-muted)]'}`}>
-                            {schedule.is_active ? t('servers.schedules.active') : 'Inactive'}
+                            {schedule.is_active ? t('server-schedules:schedules.active') : 'Inactive'}
                         </span>
                     </div>
                     {/* Cron expression in subtle highlighted box */}
@@ -83,8 +85,8 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                         </code>
                     </div>
                     <p className="text-xs text-[var(--color-text-muted)]">
-                        {schedule.next_run_at && <>{t('servers.schedules.next_run')}: {formatDate(schedule.next_run_at)}</>}
-                        {schedule.last_run_at && <> &middot; {t('servers.schedules.last_run')}: {formatDate(schedule.last_run_at)}</>}
+                        {schedule.next_run_at && <>{t('server-schedules:schedules.next_run')}: {formatDate(schedule.next_run_at)}</>}
+                        {schedule.last_run_at && <> &middot; {t('server-schedules:schedules.last_run')}: {formatDate(schedule.last_run_at)}</>}
                     </p>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -93,18 +95,18 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                         onClick={() => setExpanded(!expanded)}
                         className="inline-flex cursor-pointer items-center gap-1.5 rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] transition-all hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-border-hover)]"
                     >
-                        {t('servers.schedules.tasks')} ({taskCount})
+                        {t('server-schedules:schedules.tasks')} ({taskCount})
                         <ChevronIcon expanded={expanded} />
                     </button>
                     {canUpdate && (
                         <Button variant="secondary" size="sm" isLoading={execute.isPending} onClick={() => execute.mutate(schedule.id)}>
-                            {t('servers.schedules.run_now')}
+                            {t('server-schedules:schedules.run_now')}
                         </Button>
                     )}
                     {canDelete && (
                         <Button variant="danger" size="sm" isLoading={remove.isPending} onClick={() => {
-                            if (window.confirm(t('servers.schedules.confirm_delete', { name: schedule.name }))) remove.mutate(schedule.id);
-                        }}>{t('servers.schedules.delete')}</Button>
+                            if (window.confirm(t('server-schedules:schedules.confirm_delete', { name: schedule.name }))) remove.mutate(schedule.id);
+                        }}>{t('server-schedules:schedules.delete')}</Button>
                     )}
                 </div>
             </div>
@@ -132,7 +134,7 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                                     </div>
                                     {canUpdate && (
                                         <Button variant="ghost" size="sm" isLoading={removeTask.isPending} onClick={() => removeTask.mutate({ scheduleId: schedule.id, taskId: task.id })}>
-                                            {t('servers.schedules.task_delete')}
+                                            {t('server-schedules:schedules.task_delete')}
                                         </Button>
                                     )}
                                 </div>
@@ -145,7 +147,7 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                                     ) : (
                                         <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                                             <Button variant="secondary" size="sm" onClick={() => setShowAddTask(true)}>
-                                                + {t('servers.schedules.add_task')}
+                                                + {t('server-schedules:schedules.add_task')}
                                             </Button>
                                         </m.div>
                                     )}

@@ -45,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->userMenuItems([
                 MenuItem::make()
-                    ->label(fn () => __('admin.navigation.player_panel'))
+                    ->label(fn () => __('admin/_shell.navigation.player_panel'))
                     ->url('/')
                     ->icon('heroicon-o-arrow-left'),
                 MenuItem::make('switch-to-fr')
@@ -62,7 +62,7 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->navigationItems([
                 NavigationItem::make('player-panel')
-                    ->label(fn () => __('admin.navigation.player_panel'))
+                    ->label(fn () => __('admin/_shell.navigation.player_panel'))
                     ->url('/')
                     ->icon('heroicon-o-arrow-left')
                     ->sort(100),
@@ -76,13 +76,13 @@ class AdminPanelProvider extends PanelProvider
             // English key 'Servers' coming from the Resource.
             ->navigationGroups([
                 'Servers' => NavigationGroup::make()
-                    ->label(fn () => __('admin.navigation.groups.servers'))
+                    ->label(fn () => __('admin/_shell.navigation.groups.servers'))
                     ->icon('heroicon-o-server-stack'),
                 'Integrations' => NavigationGroup::make()
-                    ->label(fn () => __('admin.navigation.groups.integrations'))
+                    ->label(fn () => __('admin/_shell.navigation.groups.integrations'))
                     ->icon('heroicon-o-link'),
                 'Settings' => NavigationGroup::make()
-                    ->label(fn () => __('admin.navigation.groups.settings'))
+                    ->label(fn () => __('admin/_shell.navigation.groups.settings'))
                     ->icon('heroicon-o-cog-6-tooth'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

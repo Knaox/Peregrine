@@ -3,6 +3,7 @@ import { SelectField } from './fields/SelectField';
 import { SliderField } from './fields/SliderField';
 import { ToggleField } from './fields/ToggleField';
 import type { CardConfig } from '@/hooks/useCardConfig';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface ThemeCardsSectionProps {
     card: CardConfig;
@@ -98,6 +99,7 @@ const VISIBILITY_FIELDS: ReadonlyArray<keyof CardConfig> = [
  * Filament Cards tab so the studio is the single source of truth.
  */
 export function ThemeCardsSection({ card, onField }: ThemeCardsSectionProps) {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
 
     const opt = (
@@ -106,7 +108,7 @@ export function ThemeCardsSection({ card, onField }: ThemeCardsSectionProps) {
     ) =>
         items.map((o) => ({
             value: o.value,
-            label: t(`theme_studio.${prefix}.${o.value}`, o.label),
+            label: t(`theme-studio:.${prefix}.${o.value}`, o.label),
         }));
 
     const isClassic = card.card_layout_variant === 'classic';
@@ -114,63 +116,62 @@ export function ThemeCardsSection({ card, onField }: ThemeCardsSectionProps) {
     return (
         <div className="flex flex-col gap-4">
             <SelectField
-                label={t('theme_studio.fields.card_layout_variant', 'Dashboard layout')}
+                label={t('theme-studio:fields.card_layout_variant', 'Dashboard layout')}
                 value={card.card_layout_variant}
                 options={opt(LAYOUT_VARIANT_OPTIONS, 'card_layout_variant')}
                 onChange={(v) => onField('card_layout_variant', v as CardConfig['card_layout_variant'])}
             />
             {!isClassic && (
                 <p className="-mt-2 rounded-[var(--radius-md)] border border-[var(--color-border)]/40 bg-[var(--color-surface)]/60 px-3 py-2 text-[11px] leading-relaxed text-[var(--color-text-muted)]">
-                    {t(
-                        'theme_studio.fields.card_layout_variant_help',
+                    {t('theme-studio:fields.card_layout_variant_help',
                         'Visibility toggles (egg name, IP, stats) and quick actions still apply, but card-specific style fields below (header, accent, border, hover) only affect the Classic variant.',
                     )}
                 </p>
             )}
             <SelectField
-                label={t('theme_studio.fields.card_style', 'Card style')}
+                label={t('theme-studio:fields.card_style', 'Card style')}
                 value={card.card_style}
                 options={opt(STYLE_OPTIONS, 'card_style')}
                 onChange={(v) => onField('card_style', v)}
             />
             <SelectField
-                label={t('theme_studio.fields.card_density', 'Density')}
+                label={t('theme-studio:fields.card_density', 'Density')}
                 value={card.card_density}
                 options={opt(DENSITY_OPTIONS, 'card_density')}
                 onChange={(v) => onField('card_density', v as CardConfig['card_density'])}
             />
             <SelectField
-                label={t('theme_studio.fields.card_header_style', 'Header style')}
+                label={t('theme-studio:fields.card_header_style', 'Header style')}
                 value={card.card_header_style}
                 options={opt(HEADER_STYLE_OPTIONS, 'card_header_style')}
                 onChange={(v) => onField('card_header_style', v as CardConfig['card_header_style'])}
             />
             <SelectField
-                label={t('theme_studio.fields.card_border_style', 'Border')}
+                label={t('theme-studio:fields.card_border_style', 'Border')}
                 value={card.card_border_style}
                 options={opt(BORDER_STYLE_OPTIONS, 'card_border_style')}
                 onChange={(v) => onField('card_border_style', v as CardConfig['card_border_style'])}
             />
             <SelectField
-                label={t('theme_studio.fields.card_status_position', 'Status indicator position')}
+                label={t('theme-studio:fields.card_status_position', 'Status indicator position')}
                 value={card.card_status_position}
                 options={opt(STATUS_POSITION_OPTIONS, 'card_status_position')}
                 onChange={(v) => onField('card_status_position', v as CardConfig['card_status_position'])}
             />
             <SelectField
-                label={t('theme_studio.fields.card_accent_strength', 'Accent / glow')}
+                label={t('theme-studio:fields.card_accent_strength', 'Accent / glow')}
                 value={card.card_accent_strength}
                 options={opt(ACCENT_OPTIONS, 'card_accent_strength')}
                 onChange={(v) => onField('card_accent_strength', v as CardConfig['card_accent_strength'])}
             />
             <SelectField
-                label={t('theme_studio.fields.card_hover_effect', 'Hover effect')}
+                label={t('theme-studio:fields.card_hover_effect', 'Hover effect')}
                 value={card.card_hover_effect}
                 options={opt(HOVER_EFFECT_OPTIONS, 'card_hover_effect')}
                 onChange={(v) => onField('card_hover_effect', v as CardConfig['card_hover_effect'])}
             />
             <SelectField
-                label={t('theme_studio.fields.card_quick_actions_layout', 'Quick actions layout')}
+                label={t('theme-studio:fields.card_quick_actions_layout', 'Quick actions layout')}
                 value={card.card_quick_actions_layout}
                 options={opt(QUICK_ACTIONS_OPTIONS, 'card_quick_actions_layout')}
                 onChange={(v) =>
@@ -179,7 +180,7 @@ export function ThemeCardsSection({ card, onField }: ThemeCardsSectionProps) {
             />
             <div className="grid grid-cols-3 gap-3">
                 <SliderField
-                    label={t('theme_studio.fields.cols_desktop', 'Desktop')}
+                    label={t('theme-studio:fields.cols_desktop', 'Desktop')}
                     value={card.columns.desktop}
                     min={1}
                     max={4}
@@ -187,7 +188,7 @@ export function ThemeCardsSection({ card, onField }: ThemeCardsSectionProps) {
                     onChange={(v) => onField('columns', { ...card.columns, desktop: v })}
                 />
                 <SliderField
-                    label={t('theme_studio.fields.cols_tablet', 'Tablet')}
+                    label={t('theme-studio:fields.cols_tablet', 'Tablet')}
                     value={card.columns.tablet}
                     min={1}
                     max={3}
@@ -195,7 +196,7 @@ export function ThemeCardsSection({ card, onField }: ThemeCardsSectionProps) {
                     onChange={(v) => onField('columns', { ...card.columns, tablet: v })}
                 />
                 <SliderField
-                    label={t('theme_studio.fields.cols_mobile', 'Mobile')}
+                    label={t('theme-studio:fields.cols_mobile', 'Mobile')}
                     value={card.columns.mobile}
                     min={1}
                     max={2}
@@ -204,26 +205,26 @@ export function ThemeCardsSection({ card, onField }: ThemeCardsSectionProps) {
                 />
             </div>
             <SelectField
-                label={t('theme_studio.fields.sort_default', 'Default sort')}
+                label={t('theme-studio:fields.sort_default', 'Default sort')}
                 value={card.sort_default}
                 options={opt(SORT_OPTIONS, 'card_sort')}
                 onChange={(v) => onField('sort_default', v)}
             />
             <SelectField
-                label={t('theme_studio.fields.group_by', 'Group by')}
+                label={t('theme-studio:fields.group_by', 'Group by')}
                 value={card.group_by}
                 options={opt(GROUP_OPTIONS, 'card_group')}
                 onChange={(v) => onField('group_by', v)}
             />
             <div className="border-t border-[var(--color-border)]/40 pt-3">
                 <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                    {t('theme_studio.fields.card_visibility', 'Show on cards')}
+                    {t('theme-studio:fields.card_visibility', 'Show on cards')}
                 </p>
                 <div className="flex flex-col gap-3">
                     {VISIBILITY_FIELDS.map((key) => (
                         <ToggleField
                             key={key}
-                            label={t(`theme_studio.fields.${String(key)}`, String(key))}
+                            label={t(`theme-studio:fields.${String(key)}`, String(key))}
                             value={card[key] as boolean}
                             onChange={(v) => onField(key, v as CardConfig[typeof key])}
                         />

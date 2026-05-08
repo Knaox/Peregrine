@@ -33,26 +33,26 @@ final class AuthSettingsFormSchema
         return [
             Tabs::make('auth_settings_tabs')
                 ->tabs([
-                    Tab::make(__('admin.auth_form.tabs.general'))
+                    Tab::make(__('admin/auth_settings.form.tabs.general'))
                         ->icon('heroicon-o-home')
                         ->schema([self::general(), self::twoFactor()]),
-                    Tab::make(__('admin.auth_form.tabs.shop'))
+                    Tab::make(__('admin/auth_settings.form.tabs.shop'))
                         ->icon('heroicon-o-shopping-bag')
                         ->schema([self::shop($shopRedirect)]),
-                    Tab::make(__('admin.auth_form.tabs.paymenter'))
+                    Tab::make(__('admin/auth_settings.form.tabs.paymenter'))
                         ->icon('heroicon-o-credit-card')
                         ->schema([self::paymenter($paymenterRedirect)]),
-                    Tab::make(__('admin.auth_form.tabs.whmcs'))
+                    Tab::make(__('admin/auth_settings.form.tabs.whmcs'))
                         ->icon('heroicon-o-banknotes')
                         ->schema([self::whmcs($whmcsRedirect)]),
-                    Tab::make(__('admin.auth_form.tabs.social'))
+                    Tab::make(__('admin/auth_settings.form.tabs.social'))
                         ->icon('heroicon-o-user-group')
                         ->schema([
                             self::socialProvider('google', 'Google', 'heroicon-o-globe-alt', $googleRedirect),
                             self::socialProvider('discord', 'Discord', 'heroicon-o-chat-bubble-left-right', $discordRedirect),
                             self::socialProvider('linkedin', 'LinkedIn', 'heroicon-o-briefcase', $linkedinRedirect),
                         ]),
-                    Tab::make(__('admin.auth_form.tabs.safety'))
+                    Tab::make(__('admin/auth_settings.form.tabs.safety'))
                         ->icon('heroicon-o-exclamation-triangle')
                         ->schema([self::safety()]),
                 ])
@@ -62,31 +62,31 @@ final class AuthSettingsFormSchema
 
     public static function general(): Section
     {
-        return Section::make(__('admin.auth_form.local.section'))
-            ->description(__('admin.auth_form.local.description'))
+        return Section::make(__('admin/auth_settings.form.local.section'))
+            ->description(__('admin/auth_settings.form.local.description'))
             ->icon('heroicon-o-key')
             ->schema([
                 Toggle::make('auth_local_enabled')
-                    ->label(__('admin.auth_form.local.enabled'))
-                    ->helperText(__('admin.auth_form.local.enabled_helper')),
+                    ->label(__('admin/auth_settings.form.local.enabled'))
+                    ->helperText(__('admin/auth_settings.form.local.enabled_helper')),
                 Toggle::make('auth_local_registration_enabled')
-                    ->label(__('admin.auth_form.local.registration'))
-                    ->helperText(__('admin.auth_form.local.registration_helper')),
+                    ->label(__('admin/auth_settings.form.local.registration'))
+                    ->helperText(__('admin/auth_settings.form.local.registration_helper')),
             ]);
     }
 
     public static function twoFactor(): Section
     {
-        return Section::make(__('admin.auth_form.two_factor.section'))
-            ->description(__('admin.auth_form.two_factor.description'))
+        return Section::make(__('admin/auth_settings.form.two_factor.section'))
+            ->description(__('admin/auth_settings.form.two_factor.description'))
             ->icon('heroicon-o-shield-check')
             ->schema([
                 Toggle::make('auth_2fa_enabled')
-                    ->label(__('admin.auth_form.two_factor.enabled'))
-                    ->helperText(__('admin.auth_form.two_factor.enabled_helper')),
+                    ->label(__('admin/auth_settings.form.two_factor.enabled'))
+                    ->helperText(__('admin/auth_settings.form.two_factor.enabled_helper')),
                 Toggle::make('auth_2fa_required_admins')
-                    ->label(__('admin.auth_form.two_factor.required_admins'))
-                    ->helperText(__('admin.auth_form.two_factor.required_admins_helper')),
+                    ->label(__('admin/auth_settings.form.two_factor.required_admins'))
+                    ->helperText(__('admin/auth_settings.form.two_factor.required_admins_helper')),
             ]);
     }
 
@@ -106,30 +106,30 @@ final class AuthSettingsFormSchema
             ->collapsible()
             ->collapsed()
             ->schema([
-                Toggle::make("auth_providers_{$providerId}_enabled")->label(__('admin.auth_form.social.enable', ['provider' => $label])),
+                Toggle::make("auth_providers_{$providerId}_enabled")->label(__('admin/auth_settings.form.social.enable', ['provider' => $label])),
 
                 TextInput::make("auth_providers_{$providerId}_client_id")
-                    ->label(__('admin.auth_form.social.client_id'))
+                    ->label(__('admin/auth_settings.form.social.client_id'))
                     ->maxLength(255)
-                    ->helperText(__('admin.auth_form.social.client_id_helper', ['provider' => $label])),
+                    ->helperText(__('admin/auth_settings.form.social.client_id_helper', ['provider' => $label])),
 
                 TextInput::make("auth_providers_{$providerId}_client_secret")
-                    ->label(__('admin.auth_form.social.client_secret'))
+                    ->label(__('admin/auth_settings.form.social.client_secret'))
                     ->password()
                     ->revealable()
                     ->maxLength(255)
-                    ->helperText(__('admin.auth_form.social.client_secret_helper')),
+                    ->helperText(__('admin/auth_settings.form.social.client_secret_helper')),
 
                 TextInput::make("auth_providers_{$providerId}_redirect_uri")
-                    ->label(__('admin.auth_form.social.redirect'))
+                    ->label(__('admin/auth_settings.form.social.redirect'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder($redirectUri)
-                    ->helperText(__('admin.auth_form.social.redirect_helper', ['provider' => $label]))
+                    ->helperText(__('admin/auth_settings.form.social.redirect_helper', ['provider' => $label]))
                     ->suffixAction(
                         Action::make("reset{$providerId}Redirect")
                             ->icon('heroicon-o-arrow-path')
-                            ->tooltip(__('admin.auth_form.social.reset_tooltip'))
+                            ->tooltip(__('admin/auth_settings.form.social.reset_tooltip'))
                             ->color('gray')
                             ->action(function (Set $set) use ($providerId, $redirectUri): void {
                                 $set("auth_providers_{$providerId}_redirect_uri", $redirectUri);
@@ -150,13 +150,13 @@ final class AuthSettingsFormSchema
 
     public static function safety(): Section
     {
-        return Section::make(__('admin.auth_form.safety.section'))
-            ->description(__('admin.auth_form.safety.description'))
+        return Section::make(__('admin/auth_settings.form.safety.section'))
+            ->description(__('admin/auth_settings.form.safety.description'))
             ->icon('heroicon-o-exclamation-triangle')
             ->schema([
                 Toggle::make('acknowledge_disable_risk')
-                    ->label(__('admin.auth_form.safety.ack'))
-                    ->helperText(__('admin.auth_form.safety.ack_helper')),
+                    ->label(__('admin/auth_settings.form.safety.ack'))
+                    ->helperText(__('admin/auth_settings.form.safety.ack_helper')),
             ]);
     }
 }

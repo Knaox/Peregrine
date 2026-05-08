@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { formatBytes, formatDate } from '@/utils/format';
 import type { ServerInfoCardProps } from '@/components/server/ServerInfoCard.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 function InfoItem({ icon, label, children }: {
     icon: React.ReactNode; label: string; children: React.ReactNode;
@@ -23,6 +24,7 @@ const ResourceIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24
 const CalendarIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>;
 
 export function ServerInfoCard({ server }: ServerInfoCardProps) {
+    useNamespace(["server-shell"] as const);
     const { t } = useTranslation();
 
     // Use plan if available, otherwise fall back to Pelican limits
@@ -43,7 +45,7 @@ export function ServerInfoCard({ server }: ServerInfoCardProps) {
         >
             <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-3">
                 {server.egg && (
-                    <InfoItem icon={EggIcon} label={t('servers.detail.game')}>
+                    <InfoItem icon={EggIcon} label={t('server-shell:detail.game')}>
                         <div className="flex items-center gap-1.5">
                             {server.egg.banner_image && <img src={server.egg.banner_image} alt="" className="h-4 w-4 rounded object-cover" />}
                             {server.egg.name}
@@ -51,18 +53,18 @@ export function ServerInfoCard({ server }: ServerInfoCardProps) {
                     </InfoItem>
                 )}
                 {server.plan && (
-                    <InfoItem icon={PlanIcon} label={t('servers.detail.plan')}>
+                    <InfoItem icon={PlanIcon} label={t('server-shell:detail.plan')}>
                         {server.plan.name}
                     </InfoItem>
                 )}
-                <InfoItem icon={ResourceIcon} label={t('servers.detail.allocated')}>
+                <InfoItem icon={ResourceIcon} label={t('server-shell:detail.allocated')}>
                     <div className="flex gap-1">
                         <span className="rounded px-1.5 py-0.5 text-[10px] font-medium" style={{ background: 'rgba(var(--color-info-rgb), 0.12)', color: 'var(--color-info)' }}>{ramLabel}</span>
                         <span className="rounded px-1.5 py-0.5 text-[10px] font-medium" style={{ background: 'rgba(var(--color-primary-rgb), 0.12)', color: 'var(--color-primary-hover)' }}>{cpuLabel}</span>
                         <span className="rounded px-1.5 py-0.5 text-[10px] font-medium" style={{ background: 'rgba(var(--color-accent-rgb), 0.12)', color: 'var(--color-accent)' }}>{diskLabel}</span>
                     </div>
                 </InfoItem>
-                <InfoItem icon={CalendarIcon} label={t('servers.detail.created')}>
+                <InfoItem icon={CalendarIcon} label={t('server-shell:detail.created')}>
                     <span className="text-xs" style={{ opacity: 0.7 }}>{formatDate(server.created_at)}</span>
                 </InfoItem>
             </div>

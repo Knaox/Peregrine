@@ -2,6 +2,7 @@ import { useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { getCsrfHeaders } from '@/services/http';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface MultiImageUploadFieldProps {
     label: string;
@@ -34,6 +35,7 @@ export function MultiImageUploadField({
     onChange,
     description,
 }: MultiImageUploadFieldProps) {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
     const id = useId();
     const fileRef = useRef<HTMLInputElement>(null);
@@ -99,7 +101,7 @@ export function MultiImageUploadField({
                                 type="button"
                                 onClick={() => swap(idx, idx - 1)}
                                 disabled={idx === 0}
-                                aria-label={t('theme_studio.image_move_left', 'Move left')}
+                                aria-label={t('theme-studio:image_move_left', 'Move left')}
                                 className="text-white/80 px-1 disabled:opacity-30 cursor-pointer hover:text-white"
                             >
                                 ‹
@@ -107,7 +109,7 @@ export function MultiImageUploadField({
                             <button
                                 type="button"
                                 onClick={() => remove(idx)}
-                                aria-label={t('theme_studio.image_clear', 'Remove')}
+                                aria-label={t('theme-studio:image_clear', 'Remove')}
                                 className="text-white/80 px-1 cursor-pointer hover:text-[var(--color-danger)]"
                             >
                                 ×
@@ -116,7 +118,7 @@ export function MultiImageUploadField({
                                 type="button"
                                 onClick={() => swap(idx, idx + 1)}
                                 disabled={idx === value.length - 1}
-                                aria-label={t('theme_studio.image_move_right', 'Move right')}
+                                aria-label={t('theme-studio:image_move_right', 'Move right')}
                                 className="text-white/80 px-1 disabled:opacity-30 cursor-pointer hover:text-white"
                             >
                                 ›
@@ -138,8 +140,8 @@ export function MultiImageUploadField({
                         )}
                     >
                         {isUploading
-                            ? t('theme_studio.image_uploading', 'Uploading…')
-                            : `+ ${t('theme_studio.image_add', 'Add')}`}
+                            ? t('theme-studio:image_uploading', 'Uploading…')
+                            : `+ ${t('theme-studio:image_add', 'Add')}`}
                     </button>
                 )}
             </div>
@@ -156,7 +158,7 @@ export function MultiImageUploadField({
             />
             {error && (
                 <p className="text-[11px] text-[var(--color-danger)]">
-                    {t('theme_studio.image_error', 'Upload failed:')} {error}
+                    {t('theme-studio:image_error', 'Upload failed:')} {error}
                 </p>
             )}
             {!error && description && (

@@ -1,0 +1,53 @@
+{
+    "setup": {
+        "title": "Double authentification",
+        "intro": "Scannez le QR code avec votre application d'authentification (Google Authenticator, Authy, 1Password…), puis saisissez le code à 6 chiffres pour confirmer.",
+        "manual_entry_label": "Impossible de scanner ? Saisissez cette clé manuellement :",
+        "code_label": "Code à 6 chiffres",
+        "verify_button": "Vérifier et activer",
+        "verifying": "Vérification…",
+        "success": "La 2FA a été activée sur votre compte.",
+        "error_invalid": "Code invalide — réessayez.",
+        "recovery_title": "Sauvegardez vos codes de récupération",
+        "recovery_intro": "Chaque code est utilisable une seule fois si vous perdez l'accès à votre application d'authentification. Conservez-les en lieu sûr — ils ne seront plus jamais affichés.",
+        "recovery_download": "Télécharger en .txt",
+        "recovery_acknowledge": "J'ai sauvegardé mes codes",
+        "recovery_done_cta": "Terminer"
+    },
+    "challenge": {
+        "title": "Entrez votre code 2FA",
+        "description": "Ouvrez votre application d'authentification et saisissez le code à 6 chiffres pour ce compte.",
+        "code_label": "Code à 6 chiffres",
+        "submit": "Vérifier",
+        "submitting": "Vérification…",
+        "use_recovery": "Utiliser un code de récupération",
+        "recovery_label": "Code de récupération",
+        "expired": "Votre session a expiré. Veuillez vous reconnecter.",
+        "invalid": "Code invalide. Réessayez."
+    },
+    "disable": {
+        "title": "Désactiver la 2FA",
+        "description": "Saisissez votre mot de passe pour désactiver la double authentification.",
+        "password_label": "Mot de passe",
+        "code_label": "Ou un code 2FA valide",
+        "confirm_button": "Désactiver la 2FA",
+        "success": "2FA désactivée.",
+        "error": "Désactivation impossible — vérifiez votre mot de passe ou votre code."
+    },
+    "recovery": {
+        "regenerate_button": "Régénérer les codes de récupération",
+        "regenerate_confirm": "Générer de nouveaux codes invalide les anciens. Continuer ?",
+        "regenerate_success": "Nouveaux codes de récupération générés."
+    },
+    "status": {
+        "enabled": "Activée",
+        "disabled": "Désactivée",
+        "enabled_on": "Activée le {{date}}"
+    },
+    "setup_page": {
+        "title": "Configurer la double authentification",
+        "subtitle": "Protégez votre compte avec une seconde étape. Moins d'une minute.",
+        "enforced_banner": "Votre administrateur exige la double authentification pour les comptes admin. Vous ne pouvez pas accéder au panel admin tant qu'elle n'est pas configurée.",
+        "skip_for_now": "Ignorer pour le moment"
+    }
+}

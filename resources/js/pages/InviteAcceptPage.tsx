@@ -39,7 +39,7 @@ export function InviteAcceptPage() {
         setError('');
         acceptMutation.mutate(token, {
             onSuccess: (res) => navigate(`/servers/${res.server_id}`),
-            onError: (err) => setError((err as { data?: { error?: string } }).data?.error ?? t('common.error')),
+            onError: (err) => setError((err as { data?: { error?: string } }).data?.error ?? t('common:error')),
         });
     };
 
@@ -50,7 +50,7 @@ export function InviteAcceptPage() {
             { token, data: { name, email: invitation.email, password, password_confirmation: passwordConfirm } },
             {
                 onSuccess: () => navigate('/dashboard'),
-                onError: (err) => setError((err as { data?: { error?: string } }).data?.error ?? t('common.error')),
+                onError: (err) => setError((err as { data?: { error?: string } }).data?.error ?? t('common:error')),
             },
         );
     };

@@ -1,0 +1,28 @@
+{
+    "backups": {
+        "title": "Sauvegardes",
+        "create": "Créer une sauvegarde",
+        "name": "Nom de la sauvegarde",
+        "name_placeholder": "Ma sauvegarde",
+        "ignored_files": "Fichiers ignorés",
+        "ignored_help": "Fichiers ou dossiers à exclure (un par ligne).",
+        "locked": "Verrouillée",
+        "lock": "Verrouiller",
+        "unlock": "Déverrouiller",
+        "download": "Télécharger",
+        "restore": "Restaurer",
+        "restore_confirm": "Êtes-vous sûr ? Le serveur sera restauré à cette sauvegarde.",
+        "restore_truncate": "Supprimer tous les fichiers avant la restauration",
+        "delete": "Supprimer la sauvegarde",
+        "confirm_delete": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ?",
+        "deleted": "Sauvegarde supprimée.",
+        "created": "Création de la sauvegarde lancée.",
+        "restored": "Restauration de la sauvegarde lancée.",
+        "no_backups": "Aucune sauvegarde n'a été créée.",
+        "status_completed": "Terminée",
+        "status_creating": "En cours...",
+        "status_failed": "Échouée",
+        "size": "Taille",
+        "created_at": "Créée le"
+    }
+}

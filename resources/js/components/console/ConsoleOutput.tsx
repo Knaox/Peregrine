@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { AnimatePresence, m } from 'motion/react';
 import clsx from 'clsx';
 import type { ConsoleOutputProps } from '@/components/console/ConsoleOutput.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 function colorize(text: string): { color: string; bold: boolean } {
     if (text.startsWith('[Peregrine]')) return { color: 'var(--color-primary)', bold: true };
@@ -13,6 +14,7 @@ function colorize(text: string): { color: string; bold: boolean } {
 }
 
 export function ConsoleOutput({ messages }: ConsoleOutputProps) {
+    useNamespace(["server-console"] as const);
     const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const [autoScroll, setAutoScroll] = useState(true);
@@ -57,7 +59,7 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
                     <div className="h-3 w-3 rounded-full" style={{ background: '#10b981', opacity: 0.8 }} />
                 </div>
                 <span className="flex-1 text-center text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                    {t('servers.console.title')}
+                    {t('server-console:console.title')}
                 </span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
                     style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
@@ -125,7 +127,7 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
                         <svg className="inline-block h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                         </svg>
-                        {t('servers.console.scroll_to_bottom')}
+                        {t('server-console:console.scroll_to_bottom')}
                     </m.button>
                 )}
             </AnimatePresence>

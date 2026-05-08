@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { useTwoFactorConfirm, useTwoFactorSetup } from '@/hooks/useTwoFactor';
 import { RecoveryCodesDisplay } from '@/components/auth/RecoveryCodesDisplay';
+import { useNamespace } from '@/i18n/useNamespace';
 
 type Step = 'loading' | 'display_qr' | 'show_recovery' | 'done';
 
@@ -12,6 +13,7 @@ interface TwoFactorSetupProps {
 }
 
 export function TwoFactorSetup({ onComplete }: TwoFactorSetupProps) {
+    useNamespace(["auth-2fa"] as const);
     const { t } = useTranslation();
     const setup = useTwoFactorSetup();
     const confirm = useTwoFactorConfirm();
@@ -31,7 +33,7 @@ export function TwoFactorSetup({ onComplete }: TwoFactorSetupProps) {
                 setQrSvg(data.qr_svg_base64);
                 setStep('display_qr');
             },
-            onError: () => setError(t('common.error')),
+            onError: () => setError(t('common:error')),
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -47,13 +49,13 @@ export function TwoFactorSetup({ onComplete }: TwoFactorSetupProps) {
                     setRecoveryCodes(data.recovery_codes);
                     setStep('show_recovery');
                 },
-                onError: () => setError(t('auth.2fa.setup.error_invalid')),
+                onError: () => setError(t('auth-2fa:setup.error_invalid')),
             },
         );
     };
 
     if (step === 'loading') {
-        return <p className="text-sm text-[var(--color-text-muted)]">{t('common.loading')}</p>;
+        return <p className="text-sm text-[var(--color-text-muted)]">{t('common:loading')}</p>;
     }
 
     if (step === 'show_recovery') {
@@ -70,7 +72,7 @@ export function TwoFactorSetup({ onComplete }: TwoFactorSetupProps) {
 
     return (
         <div className="space-y-4">
-            <p className="text-sm text-[var(--color-text-muted)]">{t('auth.2fa.setup.intro')}</p>
+            <p className="text-sm text-[var(--color-text-muted)]">{t('auth-2fa:setup.intro')}</p>
 
             <div className="flex justify-center rounded-[var(--radius)] border border-[var(--color-border)] bg-white p-4">
                 {/* QR image — backend sends a data:image/svg+xml base64 URI. */}
@@ -79,7 +81,7 @@ export function TwoFactorSetup({ onComplete }: TwoFactorSetupProps) {
 
             <details className="rounded-[var(--radius)] border border-[var(--color-border)] p-3 text-sm">
                 <summary className="cursor-pointer text-[var(--color-text-muted)] py-1">
-                    {t('auth.2fa.setup.manual_entry_label')}
+                    {t('auth-2fa:setup.manual_entry_label')}
                 </summary>
                 <code className="mt-2 block break-all text-xs text-[var(--color-text-primary)]">{secret}</code>
             </details>
@@ -96,7 +98,7 @@ export function TwoFactorSetup({ onComplete }: TwoFactorSetupProps) {
                         htmlFor="setup-code"
                         className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)]"
                     >
-                        {t('auth.2fa.setup.code_label')}
+                        {t('auth-2fa:setup.code_label')}
                     </label>
                     <input
                         id="setup-code"
@@ -118,7 +120,7 @@ export function TwoFactorSetup({ onComplete }: TwoFactorSetupProps) {
                         'hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed',
                     )}
                 >
-                    {confirm.isPending ? t('auth.2fa.setup.verifying') : t('auth.2fa.setup.verify_button')}
+                    {confirm.isPending ? t('auth-2fa:setup.verifying') : t('auth-2fa:setup.verify_button')}
                 </button>
             </form>
         </div>

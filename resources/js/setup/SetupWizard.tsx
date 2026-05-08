@@ -12,6 +12,7 @@ import { SummaryStep } from './steps/SummaryStep';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
 import type { StepProps } from './types';
 import type { ComponentType } from 'react';
+import { useNamespace } from '@/i18n/useNamespace';
 
 // Bridge is no longer asked during install — it's configured post-install at
 // /admin/bridge-settings (toggle + HMAC secret + Stripe webhook secret in
@@ -33,6 +34,7 @@ const STEP_COMPONENTS: ComponentType<StepProps>[] = [
 ];
 
 export function SetupWizard() {
+    useNamespace(["setup"] as const);
     const { t } = useTranslation();
     const { currentStep, totalSteps, data, goNext, goPrevious, updateData } = useSetupWizard();
 
@@ -49,10 +51,10 @@ export function SetupWizard() {
                         <img src="/images/logo.webp" alt="Logo" className="h-10 w-10" />
                     </div>
                     <h1 className="text-3xl font-bold">
-                        {t('setup.title')}
+                        {t('setup:title')}
                     </h1>
                     <p className="mt-2 text-[var(--color-text-secondary)]">
-                        {t('setup.subtitle')}
+                        {t('setup:subtitle')}
                     </p>
                 </div>
 

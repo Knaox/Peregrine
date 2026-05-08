@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { SelectField } from './fields/SelectField';
 import { ToggleField } from './fields/ToggleField';
 import type { SidebarConfig, SidebarEntry } from '@/hooks/useSidebarConfig';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface ThemeSidebarNavSectionProps {
     sidebar: SidebarConfig;
@@ -27,15 +28,16 @@ const STYLE_OPTIONS = [
  * 8-entry repeater (drag to reorder + on/off + per-item icon preview).
  */
 export function ThemeSidebarNavSection({ sidebar, onField }: ThemeSidebarNavSectionProps) {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
 
     const positionOptions = POSITION_OPTIONS.map((o) => ({
         value: o.value,
-        label: t(`theme_studio.sidebar_position.${o.value}`, o.label),
+        label: t(`theme-studio:sidebar_position.${o.value}`, o.label),
     }));
     const styleOptions = STYLE_OPTIONS.map((o) => ({
         value: o.value,
-        label: t(`theme_studio.sidebar_style_legacy.${o.value}`, o.label),
+        label: t(`theme-studio:sidebar_style_legacy.${o.value}`, o.label),
     }));
 
     const updateEntry = (index: number, patch: Partial<SidebarEntry>): void => {
@@ -58,31 +60,31 @@ export function ThemeSidebarNavSection({ sidebar, onField }: ThemeSidebarNavSect
     return (
         <div className="flex flex-col gap-4">
             <SelectField
-                label={t('theme_studio.fields.sidebar_position', 'Position')}
+                label={t('theme-studio:fields.sidebar_position', 'Position')}
                 value={sidebar.position}
                 options={positionOptions}
                 onChange={(v) => onField('position', v)}
             />
             <SelectField
-                label={t('theme_studio.fields.sidebar_style_legacy', 'Style')}
+                label={t('theme-studio:fields.sidebar_style_legacy', 'Style')}
                 value={sidebar.style}
                 options={styleOptions}
                 onChange={(v) => onField('style', v)}
             />
             <ToggleField
-                label={t('theme_studio.fields.show_server_status', 'Show server status')}
+                label={t('theme-studio:fields.show_server_status', 'Show server status')}
                 value={sidebar.show_server_status}
                 onChange={(v) => onField('show_server_status', v)}
             />
             <ToggleField
-                label={t('theme_studio.fields.show_server_name', 'Show server name')}
+                label={t('theme-studio:fields.show_server_name', 'Show server name')}
                 value={sidebar.show_server_name}
                 onChange={(v) => onField('show_server_name', v)}
             />
 
             <div className="border-t border-[var(--color-border)]/40 pt-3">
                 <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                    {t('theme_studio.fields.sidebar_entries', 'Navigation entries')}
+                    {t('theme-studio:fields.sidebar_entries', 'Navigation entries')}
                 </p>
                 <ul className="flex flex-col gap-1.5">
                     {sidebar.entries.map((entry, i) => (
@@ -125,8 +127,8 @@ export function ThemeSidebarNavSection({ sidebar, onField }: ThemeSidebarNavSect
                                 )}
                             >
                                 {entry.enabled
-                                    ? t('theme_studio.entry_on', 'On')
-                                    : t('theme_studio.entry_off', 'Off')}
+                                    ? t('theme-studio:entry_on', 'On')
+                                    : t('theme-studio:entry_off', 'Off')}
                             </button>
                         </li>
                     ))}

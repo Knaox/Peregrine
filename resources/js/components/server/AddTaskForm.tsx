@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { m, AnimatePresence } from 'motion/react';
 import { useSchedules } from '@/hooks/useSchedules';
 import { Button } from '@/components/ui/Button';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const INPUT_CLS = 'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none';
 
@@ -32,6 +33,7 @@ function BackupIcon() {
 }
 
 export function actionIcon(action: string) {
+    useNamespace(["server-schedules"] as const);
     if (action === 'command') return <CommandIcon />;
     if (action === 'power') return <PowerIcon />;
     return <BackupIcon />;
@@ -70,19 +72,19 @@ export function AddTaskForm({ serverId, scheduleId, onDone }: AddTaskFormProps) 
                     <svg className="size-4 text-[var(--color-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
                     </svg>
-                    <p className="text-xs font-semibold text-[var(--color-text-secondary)]">{t('servers.schedules.add_task')}</p>
+                    <p className="text-xs font-semibold text-[var(--color-text-secondary)]">{t('server-schedules:schedules.add_task')}</p>
                 </div>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
                     <div>
-                        <label className="mb-1 block text-xs text-[var(--color-text-muted)]">{t('servers.schedules.task_action')}</label>
+                        <label className="mb-1 block text-xs text-[var(--color-text-muted)]">{t('server-schedules:schedules.task_action')}</label>
                         <div className="relative">
                             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
                                 {actionIcon(action)}
                             </span>
                             <select value={action} onChange={(e) => setAction(e.target.value as 'command' | 'power' | 'backup')} className={`${INPUT_CLS} cursor-pointer pl-9`}>
-                                <option value="command">{t('servers.schedules.task_command')}</option>
-                                <option value="power">{t('servers.schedules.task_power')}</option>
-                                <option value="backup">{t('servers.schedules.task_backup')}</option>
+                                <option value="command">{t('server-schedules:schedules.task_command')}</option>
+                                <option value="power">{t('server-schedules:schedules.task_power')}</option>
+                                <option value="backup">{t('server-schedules:schedules.task_backup')}</option>
                             </select>
                         </div>
                     </div>
@@ -95,7 +97,7 @@ export function AddTaskForm({ serverId, scheduleId, onDone }: AddTaskFormProps) 
                                 exit={{ opacity: 0, x: -8 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <label className="mb-1 block text-xs text-[var(--color-text-muted)]">{t('servers.schedules.task_payload')}</label>
+                                <label className="mb-1 block text-xs text-[var(--color-text-muted)]">{t('server-schedules:schedules.task_payload')}</label>
                                 <input
                                     value={payload}
                                     onChange={(e) => setPayload(e.target.value)}
@@ -107,13 +109,13 @@ export function AddTaskForm({ serverId, scheduleId, onDone }: AddTaskFormProps) 
                         )}
                     </AnimatePresence>
                     <div>
-                        <label className="mb-1 block text-xs text-[var(--color-text-muted)]">{t('servers.schedules.task_offset')}</label>
+                        <label className="mb-1 block text-xs text-[var(--color-text-muted)]">{t('server-schedules:schedules.task_offset')}</label>
                         <input type="number" min={0} max={900} value={offset} onChange={(e) => setOffset(Number(e.target.value))} className={INPUT_CLS} />
                     </div>
                 </div>
                 <div className="mt-4 flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={onDone}>{t('common.cancel')}</Button>
-                    <Button variant="primary" size="sm" isLoading={addTask.isPending} onClick={handleSubmit}>{t('servers.schedules.add_task')}</Button>
+                    <Button variant="ghost" size="sm" onClick={onDone}>{t('common:cancel')}</Button>
+                    <Button variant="primary" size="sm" isLoading={addTask.isPending} onClick={handleSubmit}>{t('server-schedules:schedules.add_task')}</Button>
                 </div>
             </div>
         </m.div>

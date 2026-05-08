@@ -29,7 +29,7 @@ export function LoadingScreen() {
                     transition={{ delay: 0.3 }}
                     className="text-[var(--color-text-secondary)] text-sm font-medium"
                 >
-                    {t('common.loading')}
+                    {t('common:loading')}
                 </m.p>
             </m.div>
         </div>

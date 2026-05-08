@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { m, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/Button';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface FileBulkBarProps {
     selectedCount: number;
@@ -14,6 +15,7 @@ interface FileBulkBarProps {
 }
 
 export function FileBulkBar({ selectedCount, onDelete, onCompress, onDeselectAll, isDeleting, isCompressing, canDelete = true, canArchive = true }: FileBulkBarProps) {
+    useNamespace(["server-files"] as const);
     const { t } = useTranslation();
 
     return (
@@ -33,21 +35,21 @@ export function FileBulkBar({ selectedCount, onDelete, onCompress, onDeselectAll
                     }}
                 >
                     <span className="text-sm font-medium text-[var(--color-text-secondary)]">
-                        {t('servers.files.selected_count', { count: selectedCount })}
+                        {t('server-files:files.selected_count', { count: selectedCount })}
                     </span>
                     {canArchive && (
                         <Button variant="secondary" size="sm" isLoading={isCompressing} onClick={onCompress}>
-                            {t('servers.files.compress')}
+                            {t('server-files:files.compress')}
                         </Button>
                     )}
                     {canDelete && (
                         <Button variant="danger" size="sm" isLoading={isDeleting} onClick={onDelete}>
-                            {t('servers.files.delete')}
+                            {t('server-files:files.delete')}
                         </Button>
                     )}
                     <button type="button" onClick={onDeselectAll}
                         className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors cursor-pointer">
-                        {t('servers.files.deselect_all')}
+                        {t('server-files:files.deselect_all')}
                     </button>
                 </m.div>
             )}

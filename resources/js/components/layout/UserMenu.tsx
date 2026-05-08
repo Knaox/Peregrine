@@ -6,8 +6,10 @@ import clsx from 'clsx';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeModeStore, type ThemeMode } from '@/stores/themeModeStore';
 import { updateProfile } from '@/services/userApi';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function UserMenu() {
+    useNamespace(["profile"] as const);
     const { t, i18n } = useTranslation();
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
@@ -86,15 +88,15 @@ export function UserMenu() {
                         className="absolute right-0 mt-2 w-48 overflow-hidden rounded-[var(--radius)] border border-[var(--color-glass-border)] bg-[var(--color-glass)] py-1 shadow-[var(--shadow-lg)] backdrop-blur-xl"
                     >
                         <Link to="/profile" onClick={close} className="block px-4 py-3 sm:py-2 text-sm text-[var(--color-text-secondary)] transition-all duration-[var(--transition-fast)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
-                            {t('nav.profile')}
+                            {t('common:nav.profile')}
                         </Link>
                         {user.is_admin && (
                             <a href="/admin" className="block px-4 py-3 sm:py-2 text-sm text-[var(--color-text-secondary)] transition-all duration-[var(--transition-fast)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
-                                {t('nav.settings_admin')}
+                                {t('common:nav.settings_admin')}
                             </a>
                         )}
                         <div className="flex items-center justify-between px-4 py-2">
-                            <span className="text-xs text-[var(--color-text-muted)]">{t('profile.locale')}</span>
+                            <span className="text-xs text-[var(--color-text-muted)]">{t('profile:locale')}</span>
                             <div className="flex gap-1">
                                 {['en', 'fr'].map((lang) => (
                                     <button
@@ -112,8 +114,8 @@ export function UserMenu() {
                             </div>
                         </div>
                         <div className="flex items-center justify-between px-4 py-2">
-                            <span className="text-xs text-[var(--color-text-muted)]">{t('profile.theme_mode.label')}</span>
-                            <div className="flex gap-1" role="radiogroup" aria-label={t('profile.theme_mode.label')}>
+                            <span className="text-xs text-[var(--color-text-muted)]">{t('profile:theme_mode.label')}</span>
+                            <div className="flex gap-1" role="radiogroup" aria-label={t('profile:theme_mode.label')}>
                                 {(['light', 'auto', 'dark'] as const).map((m) => {
                                     const active = themeMode === m;
                                     const labelKey = `profile.theme_mode.${m}` as const;
@@ -156,7 +158,7 @@ export function UserMenu() {
                         </div>
                         <hr className="my-1 border-[var(--color-border)]" />
                         <button type="button" onClick={handleLogout} className="block w-full px-4 py-2 text-left text-sm text-[var(--color-text-secondary)] transition-all duration-[var(--transition-fast)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
-                            {t('nav.logout')}
+                            {t('common:nav.logout')}
                         </button>
                     </m.div>
                 )}

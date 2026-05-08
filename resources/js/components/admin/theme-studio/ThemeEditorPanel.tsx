@@ -15,6 +15,7 @@ import { ThemeRefinementsSection } from './ThemeRefinementsSection';
 import type { ThemeDraft } from '@/types/themeStudio.types';
 import type { CardConfig } from '@/hooks/useCardConfig';
 import type { SidebarConfig } from '@/hooks/useSidebarConfig';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const COLOR_GROUPS: Array<{
     titleKey: string;
@@ -103,11 +104,12 @@ export function ThemeEditorPanel({
     onSidebarField,
     onApplyPreset,
 }: ThemeEditorPanelProps) {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
 
     return (
         <div className="flex flex-col">
-            <Section title={t('theme_studio.section_preset', 'Preset')}>
+            <Section title={t('theme-studio:section_preset', 'Preset')}>
                 <div className="flex flex-col gap-4">
                     <ThemePresetSelector
                         activePreset={draft.theme_preset}
@@ -115,16 +117,15 @@ export function ThemeEditorPanel({
                         onApply={onApplyPreset}
                     />
                     <SelectField
-                        label={t('theme_studio.fields.theme_mode', 'Default colour mode')}
+                        label={t('theme-studio:fields.theme_mode', 'Default colour mode')}
                         value={draft.theme_mode}
                         options={[
-                            { value: 'auto', label: t('theme_studio.modes.auto', 'Auto (follow system)') },
-                            { value: 'dark', label: t('theme_studio.modes.dark', 'Dark') },
-                            { value: 'light', label: t('theme_studio.modes.light', 'Light') },
+                            { value: 'auto', label: t('theme-studio:modes.auto', 'Auto (follow system)') },
+                            { value: 'dark', label: t('theme-studio:modes.dark', 'Dark') },
+                            { value: 'light', label: t('theme-studio:modes.light', 'Light') },
                         ]}
                         onChange={(v) => onField('theme_mode', v)}
-                        description={t(
-                            'theme_studio.fields.theme_mode_help',
+                        description={t('theme-studio:fields.theme_mode_help',
                             'Default for users who haven’t explicitly picked one in their profile.',
                         )}
                     />
@@ -137,7 +138,7 @@ export function ThemeEditorPanel({
                         {group.fields.map((key) => (
                             <ColorField
                                 key={key}
-                                label={t(`theme_studio.fields.${key}`, key)}
+                                label={t(`theme-studio:fields.${key}`, key)}
                                 value={(draft[key] as string) || '#000000'}
                                 onChange={(v) => onField(key, v as ThemeDraft[typeof key])}
                             />
@@ -146,11 +147,11 @@ export function ThemeEditorPanel({
                 </Section>
             ))}
 
-            <Section title={t('theme_studio.section_layout', 'Layout')}>
+            <Section title={t('theme-studio:section_layout', 'Layout')}>
                 <ThemeLayoutSection draft={draft} onField={onField} />
             </Section>
 
-            <Section title={t('theme_studio.section_sidebar', 'Server sidebar')}>
+            <Section title={t('theme-studio:section_sidebar', 'Server sidebar')}>
                 <ThemeSidebarSection
                     draft={draft}
                     sidebar={sidebarDraft}
@@ -159,55 +160,55 @@ export function ThemeEditorPanel({
             </Section>
 
             {sidebarDraft && (
-                <Section title={t('theme_studio.section_sidebar_nav', 'Server sidebar nav')}>
+                <Section title={t('theme-studio:section_sidebar_nav', 'Server sidebar nav')}>
                     <ThemeSidebarNavSection sidebar={sidebarDraft} onField={onSidebarField} />
                 </Section>
             )}
 
             {cardDraft && (
-                <Section title={t('theme_studio.section_cards', 'Server cards')}>
+                <Section title={t('theme-studio:section_cards', 'Server cards')}>
                     <ThemeCardsSection card={cardDraft} onField={onCardField} />
                 </Section>
             )}
 
-            <Section title={t('theme_studio.section_login', 'Login page')}>
+            <Section title={t('theme-studio:section_login', 'Login page')}>
                 <ThemeLoginSection draft={draft} onField={onField} />
             </Section>
 
-            <Section title={t('theme_studio.section_pages', 'Page overrides')}>
+            <Section title={t('theme-studio:section_pages', 'Page overrides')}>
                 <ThemePagesSection draft={draft} onField={onField} />
             </Section>
 
-            <Section title={t('theme_studio.section_footer', 'Footer')}>
+            <Section title={t('theme-studio:section_footer', 'Footer')}>
                 <ThemeFooterSection draft={draft} onField={onField} />
             </Section>
 
-            <Section title={t('theme_studio.section_refinements', 'Refinements')}>
+            <Section title={t('theme-studio:section_refinements', 'Refinements')}>
                 <ThemeRefinementsSection draft={draft} onField={onField} />
             </Section>
 
-            <Section title={t('theme_studio.section_typography', 'Typography')}>
+            <Section title={t('theme-studio:section_typography', 'Typography')}>
                 <div className="flex flex-col gap-4">
                     <SelectField
-                        label={t('theme_studio.fields.theme_font', 'Font family')}
+                        label={t('theme-studio:fields.theme_font', 'Font family')}
                         value={draft.theme_font}
                         options={FONT_OPTIONS}
                         onChange={(v) => onField('theme_font', v)}
                     />
                     <SelectField
-                        label={t('theme_studio.fields.theme_radius', 'Border radius')}
+                        label={t('theme-studio:fields.theme_radius', 'Border radius')}
                         value={draft.theme_radius}
                         options={RADIUS_OPTIONS}
                         onChange={(v) => onField('theme_radius', v)}
                     />
                     <SelectField
-                        label={t('theme_studio.fields.theme_density', 'Density')}
+                        label={t('theme-studio:fields.theme_density', 'Density')}
                         value={draft.theme_density}
                         options={DENSITY_OPTIONS}
                         onChange={(v) => onField('theme_density', v)}
                     />
                     <SliderField
-                        label={t('theme_studio.fields.theme_shadow_intensity', 'Shadow intensity')}
+                        label={t('theme-studio:fields.theme_shadow_intensity', 'Shadow intensity')}
                         value={draft.theme_shadow_intensity}
                         min={0}
                         max={100}
@@ -218,18 +219,16 @@ export function ThemeEditorPanel({
                 </div>
             </Section>
 
-            <Section title={t('theme_studio.section_custom_css', 'Custom CSS')}>
+            <Section title={t('theme-studio:section_custom_css', 'Custom CSS')}>
                 <TextareaField
-                    label={t('theme_studio.fields.theme_custom_css', 'Inline CSS overrides')}
+                    label={t('theme-studio:fields.theme_custom_css', 'Inline CSS overrides')}
                     value={draft.theme_custom_css}
                     onChange={(v) => onField('theme_custom_css', v)}
                     rows={8}
-                    placeholder={t(
-                        'theme_studio.custom_css_placeholder',
+                    placeholder={t('theme-studio:custom_css_placeholder',
                         'body { background: var(--color-background); }',
                     )}
-                    description={t(
-                        'theme_studio.custom_css_help',
+                    description={t('theme-studio:custom_css_help',
                         'Injected as-is into a <style> tag on every page.',
                     )}
                 />

@@ -8,6 +8,7 @@ import {
 import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
 import { RecoveryCodesDisplay } from '@/components/auth/RecoveryCodesDisplay';
 import { LinkedAccountsList } from '@/components/auth/LinkedAccountsList';
+import { useNamespace } from '@/i18n/useNamespace';
 
 /**
  * User-facing 2FA management sub-page. Reached from Profile. The user can:
@@ -21,6 +22,7 @@ import { LinkedAccountsList } from '@/components/auth/LinkedAccountsList';
  * follow-up session will surface the column on UserResource.
  */
 export function SecurityPage() {
+    useNamespace(["auth-2fa","settings-security"] as const);
     const { t } = useTranslation();
     const { user, loadUser } = useAuthStore();
     const disable = useTwoFactorDisable();
@@ -48,13 +50,13 @@ export function SecurityPage() {
                     setPassword('');
                     void loadUser();
                 },
-                onError: () => setDisableError(t('auth.2fa.disable.error')),
+                onError: () => setDisableError(t('auth-2fa:disable.error')),
             },
         );
     };
 
     const handleRegenerate = (): void => {
-        if (!window.confirm(t('auth.2fa.recovery.regenerate_confirm'))) return;
+        if (!window.confirm(t('auth-2fa:recovery.regenerate_confirm'))) return;
         regenerate.mutate(undefined, {
             onSuccess: (data) => setRegeneratedCodes(data.recovery_codes),
         });
@@ -64,19 +66,19 @@ export function SecurityPage() {
         <div className="max-w-2xl space-y-6 p-6">
             <header>
                 <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-                    {t('settings.security.title')}
+                    {t('settings-security:security.title')}
                 </h1>
-                <p className="mt-1 text-sm text-[var(--color-text-muted)]">{t('settings.security.subtitle')}</p>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">{t('settings-security:security.subtitle')}</p>
             </header>
 
             <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 space-y-4">
                 <div className="flex items-start justify-between gap-4">
                     <div>
                         <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
-                            {t('settings.security.two_factor_section_title')}
+                            {t('settings-security:security.two_factor_section_title')}
                         </h2>
                         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                            {t('settings.security.two_factor_section_description')}
+                            {t('settings-security:security.two_factor_section_description')}
                         </p>
                     </div>
                     <span
@@ -86,7 +88,7 @@ export function SecurityPage() {
                                 : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]'
                         }`}
                     >
-                        {enabled ? t('auth.2fa.status.enabled') : t('auth.2fa.status.disabled')}
+                        {enabled ? t('auth-2fa:status.enabled') : t('auth-2fa:status.disabled')}
                     </span>
                 </div>
 
@@ -100,7 +102,7 @@ export function SecurityPage() {
                         onClick={() => setShowSetup(true)}
                         className="rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-2.5 sm:py-2 text-sm font-semibold text-white cursor-pointer hover:bg-[var(--color-primary-hover)]"
                     >
-                        {t('auth.2fa.setup.title')}
+                        {t('auth-2fa:setup.title')}
                     </button>
                 )}
 
@@ -121,15 +123,15 @@ export function SecurityPage() {
                             disabled={regenerate.isPending}
                             className="rounded-[var(--radius)] border border-[var(--color-border)] px-4 py-2.5 sm:py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] cursor-pointer disabled:opacity-50"
                         >
-                            {t('auth.2fa.recovery.regenerate_button')}
+                            {t('auth-2fa:recovery.regenerate_button')}
                         </button>
 
                         <div className="rounded-[var(--radius)] border border-[var(--color-border)] p-4 space-y-3">
                             <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                                {t('auth.2fa.disable.title')}
+                                {t('auth-2fa:disable.title')}
                             </h3>
                             <p className="text-xs text-[var(--color-text-muted)]">
-                                {t('auth.2fa.disable.description')}
+                                {t('auth-2fa:disable.description')}
                             </p>
                             {disableError !== '' && (
                                 <div className="rounded-[var(--radius)] bg-[var(--color-danger)]/10 px-3 py-2 text-xs text-[var(--color-danger)]">
@@ -140,7 +142,7 @@ export function SecurityPage() {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder={t('auth.2fa.disable.password_label')}
+                                placeholder={t('auth-2fa:disable.password_label')}
                                 className="w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 sm:py-2 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:border-[var(--color-primary)]"
                             />
                             <button
@@ -149,7 +151,7 @@ export function SecurityPage() {
                                 disabled={disable.isPending || password === ''}
                                 className="rounded-[var(--radius)] bg-[var(--color-danger)] px-4 py-2.5 sm:py-2 text-sm font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {t('auth.2fa.disable.confirm_button')}
+                                {t('auth-2fa:disable.confirm_button')}
                             </button>
                         </div>
                     </div>
@@ -159,10 +161,10 @@ export function SecurityPage() {
             <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 space-y-4">
                 <div>
                     <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
-                        {t('settings.security.linked_accounts_title')}
+                        {t('settings-security:security.linked_accounts_title')}
                     </h2>
                     <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                        {t('settings.security.linked_accounts_description')}
+                        {t('settings-security:security.linked_accounts_description')}
                     </p>
                 </div>
                 <LinkedAccountsList />

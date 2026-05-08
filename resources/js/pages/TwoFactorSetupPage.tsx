@@ -5,6 +5,7 @@ import { m } from 'motion/react';
 import { useAuthStore } from '@/stores/authStore';
 import { useBranding } from '@/hooks/useBranding';
 import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
+import { useNamespace } from '@/i18n/useNamespace';
 
 /**
  * Full-screen 2FA setup page at /2fa/setup.
@@ -20,6 +21,7 @@ import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
  * this page is the standalone, focused setup experience.
  */
 export function TwoFactorSetupPage() {
+    useNamespace(["auth-2fa"] as const);
     const { t } = useTranslation();
     const navigate = useNavigate();
     const branding = useBranding();
@@ -62,16 +64,16 @@ export function TwoFactorSetupPage() {
                         style={{ height: branding.logo_height ?? 48, maxHeight: 64 }}
                     />
                     <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">
-                        {t('auth.2fa.setup_page.title')}
+                        {t('auth-2fa:setup_page.title')}
                     </h1>
                     <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                        {t('auth.2fa.setup_page.subtitle')}
+                        {t('auth-2fa:setup_page.subtitle')}
                     </p>
                 </div>
 
                 {enforced && (
                     <div className="mb-4 rounded-[var(--radius)] border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 px-4 py-3 text-sm text-[var(--color-warning)]">
-                        {t('auth.2fa.setup_page.enforced_banner')}
+                        {t('auth-2fa:setup_page.enforced_banner')}
                     </div>
                 )}
 
@@ -93,7 +95,7 @@ export function TwoFactorSetupPage() {
                             onClick={() => navigate('/dashboard', { replace: true })}
                             className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors cursor-pointer"
                         >
-                            {t('auth.2fa.setup_page.skip_for_now')}
+                            {t('auth-2fa:setup_page.skip_for_now')}
                         </button>
                     </div>
                 )}

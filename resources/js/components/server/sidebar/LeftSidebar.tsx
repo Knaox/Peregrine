@@ -9,6 +9,7 @@ import { useCollapsedSidebar } from '@/hooks/useCollapsedSidebar';
 import { NavLinks } from '@/components/server/sidebar/NavLinks';
 import type { useSidebarConfig } from '@/hooks/useSidebarConfig';
 import type { ServerSidebarProps } from '@/components/server/ServerSidebar.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 type LeftSidebarProps = ServerSidebarProps & { config: ReturnType<typeof useSidebarConfig> };
 
@@ -22,6 +23,7 @@ type LeftSidebarProps = ServerSidebarProps & { config: ReturnType<typeof useSide
  *   survives refreshes without changing the admin preset.
  */
 export function LeftSidebar({ server, config }: LeftSidebarProps) {
+    useNamespace(["server-shell"] as const);
     const { t } = useTranslation();
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
@@ -43,8 +45,8 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
             <button
                 type="button"
                 onClick={() => navigate('/dashboard')}
-                title={isRail ? t('servers.detail.back') : undefined}
-                aria-label={t('servers.detail.back')}
+                title={isRail ? t('server-shell:detail.back') : undefined}
+                aria-label={t('server-shell:detail.back')}
                 className={clsx(
                     'flex items-center min-h-[44px] cursor-pointer transition-all duration-150 hover:bg-[var(--surface-overlay-hover)]',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-inset',
@@ -55,7 +57,7 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
                 <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                {!isRail && t('servers.detail.back')}
+                {!isRail && t('server-shell:detail.back')}
             </button>
 
             {/* Server identity block */}
@@ -97,14 +99,14 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
             {!isRail && (
                 <div className="px-5 mt-6 mb-2">
                     <span style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' as const, opacity: 0.6, color: 'var(--color-text-secondary)', fontWeight: 600 }}>
-                        {t('servers.sidebar.principal')}
+                        {t('server-shell:sidebar.principal')}
                     </span>
                 </div>
             )}
 
             <nav
                 role="navigation"
-                aria-label={t('servers.sidebar.principal')}
+                aria-label={t('server-shell:sidebar.principal')}
                 className={clsx('flex-1 overflow-y-auto overflow-x-hidden space-y-1', isRail ? 'px-2 mt-3' : 'px-3')}
             >
                 <NavLinks
@@ -147,8 +149,8 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
                                 <button
                                     type="button"
                                     onClick={handleLogout}
-                                    title={t('nav.logout')}
-                                    aria-label={t('nav.logout')}
+                                    title={t('common:nav.logout')}
+                                    aria-label={t('common:nav.logout')}
                                     className="flex h-11 w-11 items-center justify-center cursor-pointer transition-colors duration-150 hover:text-[var(--color-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
                                     style={{ borderRadius: 'var(--radius)', color: 'var(--color-text-muted)' }}
                                 >
@@ -163,8 +165,8 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
                         <button
                             type="button"
                             onClick={handleLogout}
-                            title={t('nav.logout')}
-                            aria-label={t('nav.logout')}
+                            title={t('common:nav.logout')}
+                            aria-label={t('common:nav.logout')}
                             className="mt-2 flex min-h-[44px] w-full items-center justify-center cursor-pointer transition-colors duration-150 hover:text-[var(--color-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
                             style={{ borderRadius: 'var(--radius)', color: 'var(--color-text-muted)' }}
                         >
@@ -184,7 +186,7 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
             <button
                 type="button"
                 onClick={() => setMobileOpen(!mobileOpen)}
-                aria-label={mobileOpen ? t('servers.sidebar.close', { defaultValue: 'Close menu' }) : t('servers.sidebar.open', { defaultValue: 'Open menu' })}
+                aria-label={mobileOpen ? t('server-shell:sidebar.close', { defaultValue: 'Close menu' }) : t('server-shell:sidebar.open', { defaultValue: 'Open menu' })}
                 aria-expanded={mobileOpen}
                 className="fixed left-3 top-3 z-40 h-11 w-11 flex items-center justify-center md:hidden cursor-pointer transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
                 style={{ borderRadius: 'var(--radius)', background: 'var(--color-glass)', backdropFilter: 'blur(12px)', border: '1px solid var(--color-glass-border)', color: 'var(--color-text-secondary)' }}
@@ -229,8 +231,8 @@ export function LeftSidebar({ server, config }: LeftSidebarProps) {
                     <button
                         type="button"
                         onClick={toggleCollapsed}
-                        title={collapsed ? t('servers.sidebar.expand', { defaultValue: 'Expand sidebar' }) : t('servers.sidebar.collapse', { defaultValue: 'Collapse sidebar' })}
-                        aria-label={collapsed ? t('servers.sidebar.expand', { defaultValue: 'Expand sidebar' }) : t('servers.sidebar.collapse', { defaultValue: 'Collapse sidebar' })}
+                        title={collapsed ? t('server-shell:sidebar.expand', { defaultValue: 'Expand sidebar' }) : t('server-shell:sidebar.collapse', { defaultValue: 'Collapse sidebar' })}
+                        aria-label={collapsed ? t('server-shell:sidebar.expand', { defaultValue: 'Expand sidebar' }) : t('server-shell:sidebar.collapse', { defaultValue: 'Collapse sidebar' })}
                         className="server-sidebar-collapse-toggle scale-on-hover absolute -right-3 top-4 z-10 h-7 w-7 items-center justify-center rounded-full cursor-pointer transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] hidden md:flex"
                         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border-hover)', boxShadow: 'var(--shadow-sm)', color: 'var(--color-text-secondary)' }}
                     >

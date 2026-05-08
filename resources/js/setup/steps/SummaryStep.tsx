@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StepProps } from '../types';
 import { install } from '../services/setupApi';
+import { useNamespace } from '@/i18n/useNamespace';
 
 type InstallStatus = 'idle' | 'installing' | 'success' | 'error';
 
 export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
+    useNamespace(["setup"] as const);
     const { t } = useTranslation();
     const [status, setStatus] = useState<InstallStatus>('idle');
     const [error, setError] = useState<string>('');
@@ -23,11 +25,11 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
                 setTimeout(() => onNext(), 2000);
             } else {
                 setStatus('error');
-                setError(response.error ?? t('common.error'));
+                setError(response.error ?? t('common:error'));
             }
         } catch (err: unknown) {
             setStatus('error');
-            const message = err instanceof Error ? err.message : t('common.error');
+            const message = err instanceof Error ? err.message : t('common:error');
             setError(message);
         }
     };
@@ -36,10 +38,10 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
         <div className="space-y-6">
             <div>
                 <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
-                    {t('setup.summary.title')}
+                    {t('setup:summary.title')}
                 </h2>
                 <p className="text-[var(--color-text-secondary)] text-sm mt-1">
-                    {t('setup.summary.description')}
+                    {t('setup:summary.description')}
                 </p>
             </div>
 
@@ -47,7 +49,7 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
                 {/* Database */}
                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)]">
                     <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-                        {t('setup.summary.section_database')}
+                        {t('setup:summary.section_database')}
                     </h3>
                     <p className="text-sm text-[var(--color-text-primary)] font-mono">
                         {data.database.host}:{data.database.port}/{data.database.database}
@@ -60,7 +62,7 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
                 {/* Admin */}
                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)]">
                     <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-                        {t('setup.summary.section_admin')}
+                        {t('setup:summary.section_admin')}
                     </h3>
                     <p className="text-sm text-[var(--color-text-primary)]">{data.admin.name}</p>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">{data.admin.email}</p>
@@ -69,7 +71,7 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
                 {/* Pelican */}
                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)]">
                     <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-                        {t('setup.summary.section_pelican')}
+                        {t('setup:summary.section_pelican')}
                     </h3>
                     <p className="text-sm text-[var(--color-text-primary)] font-mono">{data.pelican.url}</p>
                 </div>
@@ -77,12 +79,12 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
                 {/* Auth */}
                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)]">
                     <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
-                        {t('setup.summary.section_auth')}
+                        {t('setup:summary.section_auth')}
                     </h3>
                     <p className="text-sm text-[var(--color-text-primary)]">
                         {data.auth.allow_local_registration
-                            ? t('setup.summary.auth_registration_on')
-                            : t('setup.summary.auth_registration_off')}
+                            ? t('setup:summary.auth_registration_on')
+                            : t('setup:summary.auth_registration_off')}
                     </p>
                 </div>
             </div>
@@ -95,7 +97,7 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
                     <span className="text-sm text-[var(--color-primary)]">
-                        {t('common.installing')}
+                        {t('common:installing')}
                     </span>
                 </div>
             )}
@@ -106,7 +108,7 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="text-sm text-[var(--color-success)]">
-                        {t('setup.summary.install_complete')}
+                        {t('setup:summary.install_complete')}
                     </span>
                 </div>
             )}
@@ -127,7 +129,7 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
                     disabled={status === 'installing' || status === 'success'}
                     className="px-6 py-3 sm:py-2 bg-[var(--color-surface-hover)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-[var(--radius)] text-sm font-medium transition-all duration-[var(--transition-fast)] ring-1 ring-[var(--color-border)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {t('common.previous')}
+                    {t('common:previous')}
                 </button>
                 <button
                     type="button"
@@ -141,12 +143,12 @@ export function SummaryStep({ data, onNext, onPrevious }: StepProps) {
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                             </svg>
-                            {t('common.installing')}
+                            {t('common:installing')}
                         </span>
                     ) : status === 'success' ? (
-                        t('common.next', { defaultValue: 'Suivant' })
+                        t('common:next', { defaultValue: 'Suivant' })
                     ) : (
-                        t('setup.summary.install_button')
+                        t('setup:summary.install_button')
                     )}
                 </button>
             </div>

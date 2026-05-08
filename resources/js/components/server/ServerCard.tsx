@@ -15,6 +15,7 @@ import { ServerCardStatusPill } from '@/components/server/ServerCardStatusPill';
 import { ServerCardHeader } from '@/components/server/ServerCardHeader';
 import { buildServerCardClassName, buildServerCardStyle } from '@/components/server/serverCardStyles';
 import type { ServerCardProps } from '@/components/server/ServerCard.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 function AnimStat({ icon, value, formatter, animate }: {
     icon: React.ReactNode; value: number; formatter: (v: number) => string; animate: boolean;
@@ -36,6 +37,7 @@ function ServerCardImpl({
     server, stats, onPower, isPowerPending,
     isSelectable = false, isSelected = false, onSelect, isDragging = false,
 }: ServerCardProps) {
+    useNamespace(["server-overview"] as const);
     const navigate = useNavigate();
     const { t } = useTranslation();
     const queryClient = useQueryClient();
@@ -171,7 +173,7 @@ function ServerCardImpl({
                             ) : (
                                 <svg className="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
                             )}
-                            <span>{copied ? t('servers.list.copied') : address}</span>
+                            <span>{copied ? t('server-overview:list.copied') : address}</span>
                         </button>
                     )}
 

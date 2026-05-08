@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { m } from 'motion/react';
 import type { Server } from '@/types/Server';
 import type { ServerConflictKind } from '@/utils/serverConflictState';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface ServerConflictScreenProps {
     server: Server;
@@ -24,6 +25,7 @@ interface ServerConflictScreenProps {
  * the gate, matching Pelican's `Console::mount()` AlertBanner pattern).
  */
 export function ServerConflictScreen({ server, kind }: ServerConflictScreenProps) {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
 
     const palette = paletteFor(kind);
@@ -95,7 +97,7 @@ export function ServerConflictScreen({ server, kind }: ServerConflictScreenProps
                                 }}
                             >
                                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: palette.pillFg }} />
-                                {t(`servers.status.${kind}`)}
+                                {t(`server-overview:status.${kind}`)}
                             </p>
                             <p className="mx-auto mt-3 max-w-lg text-sm sm:text-base font-medium text-[var(--color-text-secondary)]">
                                 {t(titleKeyFor(kind))}
@@ -114,7 +116,7 @@ export function ServerConflictScreen({ server, kind }: ServerConflictScreenProps
                                     color: 'var(--color-primary-fg, white)',
                                 }}
                             >
-                                {t('servers.conflict.go_overview')}
+                                {t('server-overview:conflict.go_overview')}
                             </Link>
                             {kind === 'provisioning' ? (
                                 <Link
@@ -126,7 +128,7 @@ export function ServerConflictScreen({ server, kind }: ServerConflictScreenProps
                                         border: '1px solid var(--color-border)',
                                     }}
                                 >
-                                    {t('servers.install.view_console')}
+                                    {t('server-overview:install.view_console')}
                                 </Link>
                             ) : null}
                         </div>
@@ -177,15 +179,15 @@ function paletteFor(kind: Exclude<ServerConflictKind, null>): Palette {
 }
 
 function titleKeyFor(kind: Exclude<ServerConflictKind, null>): string {
-    if (kind === 'suspended') return 'servers.suspended.title';
-    if (kind === 'provisioning_failed') return 'servers.conflict.failed_title';
-    return 'servers.install.in_progress_title';
+    if (kind === 'suspended') return 'server-overview:suspended.title';
+    if (kind === 'provisioning_failed') return 'server-overview:conflict.failed_title';
+    return 'server-overview:install.in_progress_title';
 }
 
 function descriptionKeyFor(kind: Exclude<ServerConflictKind, null>): string {
-    if (kind === 'suspended') return 'servers.suspended.description';
-    if (kind === 'provisioning_failed') return 'servers.conflict.failed_description';
-    return 'servers.install.console_only_notice';
+    if (kind === 'suspended') return 'server-overview:suspended.description';
+    if (kind === 'provisioning_failed') return 'server-overview:conflict.failed_description';
+    return 'server-overview:install.console_only_notice';
 }
 
 // ---------------------------------------------------------------------

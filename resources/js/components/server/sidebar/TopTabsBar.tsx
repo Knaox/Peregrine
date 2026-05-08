@@ -5,6 +5,7 @@ import { ServerContextPill } from '@/components/server/sidebar/ServerContextPill
 import { SidebarUserMenu } from '@/components/server/sidebar/SidebarUserMenu';
 import type { useSidebarConfig } from '@/hooks/useSidebarConfig';
 import type { ServerSidebarProps } from '@/components/server/ServerSidebar.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 type TopTabsBarProps = ServerSidebarProps & { config: ReturnType<typeof useSidebarConfig> };
 
@@ -17,6 +18,7 @@ type TopTabsBarProps = ServerSidebarProps & { config: ReturnType<typeof useSideb
  * Row 2: Scrollable nav tabs.
  */
 export function TopTabsBar({ server, config }: TopTabsBarProps) {
+    useNamespace(["server-shell"] as const);
     const { t } = useTranslation();
 
     return (
@@ -47,7 +49,7 @@ export function TopTabsBar({ server, config }: TopTabsBarProps) {
             {/* Row 2 — navigation tabs */}
             <nav
                 role="navigation"
-                aria-label={t('servers.sidebar.principal')}
+                aria-label={t('server-shell:sidebar.principal')}
                 className="flex items-center gap-2 overflow-x-auto px-3 sm:px-4"
             >
                 <NavLinks entries={config.entries} serverId={server.id} style={config.style} isTop />

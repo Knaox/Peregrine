@@ -1,0 +1,13 @@
+{
+    "title": "Create Account",
+    "button": "Create Account",
+    "name": "Full Name",
+    "email": "Email Address",
+    "password": "Password",
+    "password_confirmation": "Confirm Password",
+    "has_account": "Already have an account?",
+    "sign_in": "Sign in",
+    "disabled": "Registration is disabled. Please sign in with your existing account.",
+    "redirect_canonical": "Accounts are created on {{provider}}. Sign up there, then come back here to sign in.",
+    "create_on_canonical": "Create my account on {{provider}}"
+}

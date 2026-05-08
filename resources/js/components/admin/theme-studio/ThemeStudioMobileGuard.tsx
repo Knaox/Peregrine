@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useNamespace } from '@/i18n/useNamespace';
 
 /**
  * Friendly fallback shown when an admin opens /theme-studio on a screen
@@ -12,16 +13,16 @@ import { useTranslation } from 'react-i18next';
  * 300-line cap.
  */
 export function ThemeStudioMobileGuard() {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
     return (
         <div className="flex min-h-screen items-center justify-center bg-[var(--color-background)] px-4 text-[var(--color-text-primary)]">
             <div className="max-w-md text-center space-y-3">
                 <h1 className="text-lg font-semibold">
-                    {t('theme_studio.mobile_not_supported_title', 'Theme Studio requires a larger screen')}
+                    {t('theme-studio:mobile_not_supported_title', 'Theme Studio requires a larger screen')}
                 </h1>
                 <p className="text-sm text-[var(--color-text-muted)]">
-                    {t(
-                        'theme_studio.mobile_not_supported_body',
+                    {t('theme-studio:mobile_not_supported_body',
                         'Open this page on a tablet landscape, laptop or desktop with at least 1200 px width.',
                     )}
                 </p>
@@ -29,7 +30,7 @@ export function ThemeStudioMobileGuard() {
                     to="/dashboard"
                     className="inline-flex rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-2 text-sm text-white"
                 >
-                    {t('theme_studio.back_to_dashboard', 'Back to Dashboard')}
+                    {t('theme-studio:back_to_dashboard', 'Back to Dashboard')}
                 </Link>
             </div>
         </div>

@@ -22,10 +22,12 @@ import { InstallationOverview } from '@/components/server/InstallationOverview';
 import { SuspendedOverview } from '@/components/server/SuspendedOverview';
 import { formatUptime } from '@/utils/format';
 import type { SidebarEntry } from '@/hooks/useSidebarConfig';
+import { useNamespace } from '@/i18n/useNamespace';
 
 type ServerState = 'running' | 'active' | 'stopped' | 'offline' | 'suspended' | 'terminated' | 'starting';
 
 export function ServerOverviewPage() {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -58,16 +60,16 @@ export function ServerOverviewPage() {
         if (!completedOp) return null;
         switch (completedOp.operationType) {
             case 'modpack':
-                return t('servers.operations.completion.modpack', {
+                return t('server-overview:operations.completion.modpack', {
                     name: completedOp.operationName ?? '',
                 });
             case 'modpack_uninstall':
-                return t('servers.operations.completion.modpack_uninstall');
+                return t('server-overview:operations.completion.modpack_uninstall');
             case 'unsuspend':
-                return t('servers.operations.completion.unsuspend');
+                return t('server-overview:operations.completion.unsuspend');
             case 'install':
             default:
-                return t('servers.operations.completion.install');
+                return t('server-overview:operations.completion.install');
         }
     }, [completedOp, t]);
     // Subscribe to console output too — when the server is installing we
@@ -175,7 +177,7 @@ export function ServerOverviewPage() {
     // which `ServerPowerControls` doesn't treat as stopped, leaving the
     // "Force stop" button visible on a server that's already off.
     const state = (isConnected || wsState !== 'offline' ? wsState : server.status) as ServerState;
-    const statusLabel = t(`servers.status.${state}`);
+    const statusLabel = t(`server-overview:status.${state}`);
     const address = server.allocation ? `${server.allocation.ip}:${server.allocation.port}` : null;
     const isRunningState = state === 'running' || state === 'active';
     const uptime = resources?.uptime;
@@ -208,9 +210,9 @@ export function ServerOverviewPage() {
                             type="button"
                             onClick={() => setOpAlertVisible(false)}
                             className="text-xs opacity-70 transition-opacity hover:opacity-100"
-                            aria-label={t('servers.operations.completion.dismiss')}
+                            aria-label={t('server-overview:operations.completion.dismiss')}
                         >
-                            {t('servers.operations.completion.dismiss')}
+                            {t('server-overview:operations.completion.dismiss')}
                         </button>
                     </div>
                 </Alert>
@@ -276,7 +278,7 @@ export function ServerOverviewPage() {
                                         onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.6)'; }}
                                         onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; }}>
                                         <svg className="h-3.5 w-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></svg>
-                                        <span>{copied ? t('servers.list.copied') : address}</span>
+                                        <span>{copied ? t('server-overview:list.copied') : address}</span>
                                     </button>
                                 )}
                                 {server.egg && (

@@ -21,6 +21,7 @@ import { ServerBackupsPage } from '@/pages/ServerBackupsPage';
 import { ServerSchedulesPage } from '@/pages/ServerSchedulesPage';
 import { ServerNetworkPage } from '@/pages/ServerNetworkPage';
 import type { SidebarEntry } from '@/hooks/useSidebarConfig';
+import { useNamespace } from '@/i18n/useNamespace';
 
 /** Map sidebar entry IDs to page components (core pages only) */
 const PAGE_COMPONENTS: Record<string, React.ComponentType> = {
@@ -66,6 +67,7 @@ function buildRoutes(
 }
 
 export function ServerDetailPage() {
+    useNamespace(["server-shell"] as const);
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const location = useLocation();
@@ -182,13 +184,13 @@ export function ServerDetailPage() {
             <div className="flex h-[100dvh] flex-col items-center justify-center gap-4">
                 <GlassCard className="px-8 py-6 text-center">
                     <p className="text-[var(--color-text-secondary)]">
-                        {t('servers.detail.not_found')}
+                        {t('server-shell:detail.not_found')}
                     </p>
                     <Link
                         to="/dashboard"
                         className="mt-3 inline-block text-sm text-[var(--color-primary)] transition-colors duration-[var(--transition-fast)] hover:text-[var(--color-primary-hover)]"
                     >
-                        {t('servers.detail.back')}
+                        {t('server-shell:detail.back')}
                     </Link>
                 </GlassCard>
             </div>

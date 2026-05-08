@@ -15,7 +15,7 @@ class RecentServersWidget extends BaseWidget
 
     public function getHeading(): string
     {
-        return __('admin.widgets.recent_servers');
+        return __('admin/widgets.recent_servers');
     }
 
     public function table(Table $table): Table
@@ -29,15 +29,15 @@ class RecentServersWidget extends BaseWidget
             )
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->label(__('admin.fields.name'))
+                    ->label(__('admin/_shell.fields.name'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label(__('admin.fields.owner')),
+                    ->label(__('admin/_shell.fields.owner')),
                 Tables\Columns\TextColumn::make('status')
-                    ->label(__('admin.fields.status'))
+                    ->label(__('admin/_shell.fields.status'))
                     ->badge()
                     ->formatStateUsing(function (string $state): string {
-                        $key = 'admin.statuses.'.$state;
+                        $key = 'admin/_shell.statuses.'.$state;
                         $tr = __($key);
                         return $tr === $key ? $state : $tr;
                     })
@@ -49,7 +49,7 @@ class RecentServersWidget extends BaseWidget
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label(__('admin.fields.created_at'))
+                    ->label(__('admin/_shell.fields.created_at'))
                     ->dateTime()
                     ->sortable(),
             ])

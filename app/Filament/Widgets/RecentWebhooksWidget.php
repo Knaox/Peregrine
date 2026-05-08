@@ -31,7 +31,7 @@ class RecentWebhooksWidget extends BaseWidget
 
     public function getHeading(): string
     {
-        return __('admin.widgets.recent_webhooks');
+        return __('admin/widgets.recent_webhooks');
     }
 
     public function table(Table $table): Table
@@ -44,17 +44,17 @@ class RecentWebhooksWidget extends BaseWidget
             )
             ->columns([
                 Tables\Columns\TextColumn::make('processed_at')
-                    ->label(__('admin.fields.when'))
+                    ->label(__('admin/_shell.fields.when'))
                     ->dateTime()
                     ->since(),
                 Tables\Columns\TextColumn::make('event_type')
-                    ->label(__('admin.fields.event'))
+                    ->label(__('admin/_shell.fields.event'))
                     ->color('gray'),
                 Tables\Columns\TextColumn::make('pelican_model_id')
-                    ->label(__('admin.fields.pelican_id'))
+                    ->label(__('admin/_shell.fields.pelican_id'))
                     ->numeric(),
                 Tables\Columns\TextColumn::make('response_status')
-                    ->label(__('admin.fields.http'))
+                    ->label(__('admin/_shell.fields.http'))
                     ->badge()
                     ->color(fn (int $state): string => match (true) {
                         $state >= 500 => 'danger',
@@ -63,7 +63,7 @@ class RecentWebhooksWidget extends BaseWidget
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('error_message')
-                    ->label(__('admin.common.error'))
+                    ->label(__('admin/_shell.common.error'))
                     ->limit(40)
                     ->placeholder('—')
                     ->tooltip(fn ($state): ?string => $state),

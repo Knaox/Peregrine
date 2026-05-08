@@ -19,76 +19,76 @@ final class ShopProviderSection
 {
     public static function make(string $redirectUri): Section
     {
-        return Section::make(__('admin.auth_form.shop.section'))
-            ->description(__('admin.auth_form.shop.description'))
+        return Section::make(__('admin/auth_settings.form.shop.section'))
+            ->description(__('admin/auth_settings.form.shop.description'))
             ->icon('heroicon-o-shopping-bag')
             ->schema([
-                Toggle::make('auth_shop_enabled')->label(__('admin.auth_form.shop.enable')),
+                Toggle::make('auth_shop_enabled')->label(__('admin/auth_settings.form.shop.enable')),
 
                 TextInput::make('auth_shop_client_id')
-                    ->label(__('admin.auth_form.shop.client_id'))
+                    ->label(__('admin/auth_settings.form.shop.client_id'))
                     ->maxLength(255)
                     ->placeholder('019dc559-4759-71ea-a12b-7826b714dd9c')
-                    ->helperText(__('admin.auth_form.shop.client_id_helper')),
+                    ->helperText(__('admin/auth_settings.form.shop.client_id_helper')),
 
                 TextInput::make('auth_shop_client_secret')
-                    ->label(__('admin.auth_form.shop.client_secret'))
+                    ->label(__('admin/auth_settings.form.shop.client_secret'))
                     ->password()
                     ->revealable()
                     ->maxLength(255)
-                    ->helperText(__('admin.auth_form.shop.client_secret_helper')),
+                    ->helperText(__('admin/auth_settings.form.shop.client_secret_helper')),
 
                 TextInput::make('auth_shop_authorize_url')
-                    ->label(__('admin.auth_form.shop.authorize_url'))
+                    ->label(__('admin/auth_settings.form.shop.authorize_url'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder('https://shop.example.com/oauth/authorize')
-                    ->helperText(__('admin.auth_form.shop.authorize_url_helper')),
+                    ->helperText(__('admin/auth_settings.form.shop.authorize_url_helper')),
 
                 TextInput::make('auth_shop_token_url')
-                    ->label(__('admin.auth_form.shop.token_url'))
+                    ->label(__('admin/auth_settings.form.shop.token_url'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder('https://shop.example.com/oauth/token')
-                    ->helperText(__('admin.auth_form.shop.token_url_helper')),
+                    ->helperText(__('admin/auth_settings.form.shop.token_url_helper')),
 
                 TextInput::make('auth_shop_user_url')
-                    ->label(__('admin.auth_form.shop.user_url'))
+                    ->label(__('admin/auth_settings.form.shop.user_url'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder('https://shop.example.com/api/user')
-                    ->helperText(__('admin.auth_form.shop.user_url_helper')),
+                    ->helperText(__('admin/auth_settings.form.shop.user_url_helper')),
 
                 TextInput::make('auth_shop_redirect_uri')
-                    ->label(__('admin.auth_form.shop.redirect'))
+                    ->label(__('admin/auth_settings.form.shop.redirect'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder($redirectUri)
-                    ->helperText(__('admin.auth_form.shop.redirect_helper'))
+                    ->helperText(__('admin/auth_settings.form.shop.redirect_helper'))
                     ->suffixAction(
                         Action::make('resetShopRedirect')
                             ->icon('heroicon-o-arrow-path')
-                            ->tooltip(__('admin.auth_form.shop.reset_tooltip'))
+                            ->tooltip(__('admin/auth_settings.form.shop.reset_tooltip'))
                             ->color('gray')
                             ->action(function (Set $set) use ($redirectUri): void {
                                 $set('auth_shop_redirect_uri', $redirectUri);
                                 Notification::make()
-                                    ->title(__('admin.auth_form.shop.reset_notification_title'))
-                                    ->body(__('admin.auth_form.shop.reset_notification_body'))
+                                    ->title(__('admin/auth_settings.form.shop.reset_notification_title'))
+                                    ->body(__('admin/auth_settings.form.shop.reset_notification_body'))
                                     ->success()
                                     ->send();
                             }),
                     ),
 
                 TextInput::make('auth_shop_register_url')
-                    ->label(__('admin.auth_form.shop.register_url'))
+                    ->label(__('admin/auth_settings.form.shop.register_url'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder('https://shop.example.com/register')
-                    ->helperText(__('admin.auth_form.shop.register_url_helper')),
+                    ->helperText(__('admin/auth_settings.form.shop.register_url_helper')),
 
                 FileUpload::make('auth_shop_logo_path')
-                    ->label(__('admin.auth_form.shop.logo'))
+                    ->label(__('admin/auth_settings.form.shop.logo'))
                     ->image()
                     ->directory('branding/oauth')
                     ->disk('public')
@@ -101,7 +101,7 @@ final class ShopProviderSection
                         'image/vnd.microsoft.icon',
                     ])
                     ->maxSize(1024)
-                    ->helperText(__('admin.auth_form.shop.logo_helper')),
+                    ->helperText(__('admin/auth_settings.form.shop.logo_helper')),
             ]);
     }
 }

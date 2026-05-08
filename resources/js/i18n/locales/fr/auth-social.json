@@ -1,0 +1,16 @@
+{
+    "providers": {
+        "shop": "Shop",
+        "google": "Google",
+        "discord": "Discord",
+        "linkedin": "LinkedIn",
+        "paymenter": "Paymenter",
+        "whmcs": "WHMCS"
+    },
+    "register_on_canonical_first": "Aucun compte trouvé. Inscrivez-vous d'abord sur {{provider}}, puis revenez vous connecter ici.",
+    "email_not_verified": "Le fournisseur n'a pas vérifié cet e-mail. Connectez-vous avec votre méthode principale puis liez ce compte depuis votre profil.",
+    "email_not_verified_shop": "Votre e-mail Shop n'est pas vérifié. Ouvrez l'e-mail de vérification envoyé par le Shop, confirmez votre adresse, puis réessayez.",
+    "cannot_unlink_last_method": "C'est votre seule méthode de connexion — définissez un mot de passe ou liez un autre fournisseur avant de délier.",
+    "provider_disabled": "Ce fournisseur de connexion n'est pas disponible.",
+    "oauth_failed": "Échec de la connexion. Veuillez réessayer."
+}

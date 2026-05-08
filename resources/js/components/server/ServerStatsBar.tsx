@@ -3,8 +3,10 @@ import { StatBar } from '@/components/ui/StatBar';
 import { Spinner } from '@/components/ui/Spinner';
 import { formatBytes, formatCpu } from '@/utils/format';
 import type { ServerStatsBarProps } from '@/components/server/ServerStatsBar.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function ServerStatsBar({ stats, isLoading }: ServerStatsBarProps) {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
 
     if (isLoading) {
@@ -18,7 +20,7 @@ export function ServerStatsBar({ stats, isLoading }: ServerStatsBarProps) {
     if (!stats) {
         return (
             <p className="text-xs text-[var(--color-text-muted)] py-2">
-                {t('servers.list.stats_unavailable')}
+                {t('server-overview:list.stats_unavailable')}
             </p>
         );
     }

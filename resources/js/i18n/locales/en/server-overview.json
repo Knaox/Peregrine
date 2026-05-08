@@ -1,0 +1,82 @@
+{
+    "list": {
+        "title": "My Servers",
+        "empty": "You don't have any servers yet.",
+        "search": "Search servers...",
+        "search_empty": "No servers match your search.",
+        "stats_unavailable": "Stats unavailable",
+        "uncategorized": "Uncategorized",
+        "select_mode": "Select",
+        "selected_count": "{{count}} server(s) selected",
+        "deselect_all": "Deselect all",
+        "copy_ip": "Copy address",
+        "copied": "Copied!",
+        "add_category": "New category",
+        "category_placeholder": "Category name...",
+        "delete_category_confirm": "Delete this category? Servers will move to Uncategorized.",
+        "drop_here": "Drop servers here",
+        "reset_layout": "Reset layout",
+        "address": "Address",
+        "stats": "Live stats",
+        "config": "Configuration",
+        "egg": "Egg",
+        "plan": "Plan",
+        "uptime": "Uptime",
+        "open": "Open server"
+    },
+    "bulk": {
+        "start_all": "Start all",
+        "stop_all": "Stop all",
+        "restart_all": "Restart all"
+    },
+    "status": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "terminated": "Terminated",
+        "running": "Running",
+        "starting": "Starting",
+        "stopping": "Stopping",
+        "stopped": "Stopped",
+        "offline": "Offline",
+        "provisioning": "Installing",
+        "provisioning_failed": "Install failed"
+    },
+    "install": {
+        "in_progress_title": "Installation in progress",
+        "in_progress_description": "Wings is preparing your server. Other panels are unavailable until the install completes — only the live console is accessible.",
+        "completed_title": "Installation completed",
+        "completed_description": "Your server is ready. The dashboard will switch to the regular overview shortly.",
+        "view_console": "Open the live console",
+        "live_log_label": "Latest install output",
+        "waiting_for_output": "Waiting for the first install lines from Wings…",
+        "console_only_notice": "This server is still installing. Only the console and the overview are accessible until Wings reports the install as completed."
+    },
+    "suspended": {
+        "badge": "Server suspended",
+        "title": "This server is currently suspended.",
+        "description": "Your hosting provider has paused this server. Files, backups and configuration are preserved — only power, console and live actions are blocked.",
+        "info_title": "What this means",
+        "info_kept": "Your data, configuration and backups are kept intact and will be restored as-is when the server is reactivated.",
+        "info_no_power": "Start / stop / restart and the live console are disabled while the server is suspended — Wings rejects every command.",
+        "info_reactivate": "Contact your hosting provider or reactivate your subscription to restore access."
+    },
+    "conflict": {
+        "go_overview": "Back to overview",
+        "failed_title": "Install failed",
+        "failed_description": "An operator can retry the install from the overview. This page stays unavailable until the install completes."
+    },
+    "operations": {
+        "completion": {
+            "install": "Installation complete. The server is ready.",
+            "unsuspend": "The server has been reactivated.",
+            "modpack": "Modpack {{name}} installed successfully.",
+            "modpack_uninstall": "Modpack uninstalled. The server is back to vanilla.",
+            "dismiss": "Dismiss"
+        },
+        "banner": {
+            "modpack_installing": "Installing modpack {{name}}…",
+            "modpack_uninstalling": "Removing modpack…",
+            "server_installing": "Server installation in progress…"
+        }
+    }
+}

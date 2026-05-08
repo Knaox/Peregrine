@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import type { Server } from '@/types/Server';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface SuspendedOverviewProps {
     server: Server;
@@ -19,6 +20,7 @@ interface SuspendedOverviewProps {
  * we'd render here would either be stale or trigger a server-side error.
  */
 export function SuspendedOverview({ server }: SuspendedOverviewProps) {
+    useNamespace(["server-overview"] as const);
     const { t } = useTranslation();
 
     return (
@@ -116,13 +118,13 @@ export function SuspendedOverview({ server }: SuspendedOverviewProps) {
                                 }}
                             >
                                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--color-warning)' }} />
-                                {t('servers.suspended.badge')}
+                                {t('server-overview:suspended.badge')}
                             </p>
                             <p className="mx-auto mt-3 max-w-lg text-sm sm:text-base font-medium text-[var(--color-text-secondary)]">
-                                {t('servers.suspended.title')}
+                                {t('server-overview:suspended.title')}
                             </p>
                             <p className="mx-auto max-w-lg text-xs sm:text-sm text-[var(--color-text-muted)]">
-                                {t('servers.suspended.description')}
+                                {t('server-overview:suspended.description')}
                             </p>
                         </div>
                     </div>
@@ -142,20 +144,20 @@ export function SuspendedOverview({ server }: SuspendedOverviewProps) {
                         <circle cx="12" cy="12" r="10" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4M12 8h.01" />
                     </svg>
-                    {t('servers.suspended.info_title')}
+                    {t('server-overview:suspended.info_title')}
                 </h2>
                 <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
                     <li className="flex items-start gap-2">
                         <span className="mt-1 h-1 w-1 rounded-full bg-[var(--color-text-muted)] flex-shrink-0" />
-                        <span>{t('servers.suspended.info_kept')}</span>
+                        <span>{t('server-overview:suspended.info_kept')}</span>
                     </li>
                     <li className="flex items-start gap-2">
                         <span className="mt-1 h-1 w-1 rounded-full bg-[var(--color-text-muted)] flex-shrink-0" />
-                        <span>{t('servers.suspended.info_no_power')}</span>
+                        <span>{t('server-overview:suspended.info_no_power')}</span>
                     </li>
                     <li className="flex items-start gap-2">
                         <span className="mt-1 h-1 w-1 rounded-full bg-[var(--color-text-muted)] flex-shrink-0" />
-                        <span>{t('servers.suspended.info_reactivate')}</span>
+                        <span>{t('server-overview:suspended.info_reactivate')}</span>
                     </li>
                 </ul>
             </div>

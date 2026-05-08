@@ -40,17 +40,17 @@ class ServerPlanResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.resources.server_plans.navigation');
+        return __('admin/server_plans.resource.navigation');
     }
 
     public static function getModelLabel(): string
     {
-        return __('admin.resources.server_plans.label');
+        return __('admin/server_plans.resource.label');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('admin.resources.server_plans.plural');
+        return __('admin/server_plans.resource.plural');
     }
 
     public static function shouldRegisterNavigation(): bool

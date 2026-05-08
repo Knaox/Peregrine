@@ -27,17 +27,17 @@ class SyncLogResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.resources.sync_logs.navigation');
+        return __('admin/logs.sync.resource.navigation');
     }
 
     public static function getModelLabel(): string
     {
-        return __('admin.resources.sync_logs.label');
+        return __('admin/logs.sync.resource.label');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('admin.resources.sync_logs.plural');
+        return __('admin/logs.sync.resource.plural');
     }
 
     public static function canCreate(): bool
@@ -50,18 +50,18 @@ class SyncLogResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->label(__('admin.fields.id'))
+                    ->label(__('admin/_shell.fields.id'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('type')
-                    ->label(__('admin.fields.event_type'))
+                    ->label(__('admin/_shell.fields.event_type'))
                     ->badge()
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
-                    ->label(__('admin.fields.status'))
+                    ->label(__('admin/_shell.fields.status'))
                     ->badge()
                     ->formatStateUsing(function (string $state): string {
-                        $key = 'admin.statuses.'.$state;
+                        $key = 'admin/_shell.statuses.'.$state;
                         $tr = __($key);
                         return $tr === $key ? $state : $tr;
                     })
@@ -74,7 +74,7 @@ class SyncLogResource extends Resource
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('summary')
-                    ->label(__('admin.fields.summary'))
+                    ->label(__('admin/_shell.fields.summary'))
                     ->formatStateUsing(function ($state): string {
                         if (! is_array($state)) {
                             return (string) $state;
@@ -85,14 +85,14 @@ class SyncLogResource extends Resource
                     ->limit(60)
                     ->color('gray'),
                 Tables\Columns\TextColumn::make('started_at')
-                    ->label(__('admin.fields.started'))
+                    ->label(__('admin/_shell.fields.started'))
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('completed_at')
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('duration')
-                    ->label(__('admin.fields.duration'))
+                    ->label(__('admin/_shell.fields.duration'))
                     ->getStateUsing(function (SyncLog $record): ?string {
                         if (! $record->started_at || ! $record->completed_at) {
                             return null;
@@ -110,39 +110,39 @@ class SyncLogResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
-                    ->label(__('admin.fields.event_type'))
+                    ->label(__('admin/_shell.fields.event_type'))
                     ->options(fn () => SyncLog::query()
                         ->distinct()
                         ->pluck('type', 'type')
                         ->all()),
                 Tables\Filters\SelectFilter::make('status')
-                    ->label(__('admin.fields.status'))
+                    ->label(__('admin/_shell.fields.status'))
                     ->options([
-                        'pending' => __('admin.statuses.pending'),
-                        'running' => __('admin.statuses.running'),
-                        'completed' => __('admin.statuses.completed'),
-                        'failed' => __('admin.statuses.failed'),
+                        'pending' => __('admin/_shell.statuses.pending'),
+                        'running' => __('admin/_shell.statuses.running'),
+                        'completed' => __('admin/_shell.statuses.completed'),
+                        'failed' => __('admin/_shell.statuses.failed'),
                     ]),
             ])
             ->recordActions([
                 Action::make('viewPayload')
-                    ->label(__('admin.common.view_payload'))
+                    ->label(__('admin/_shell.common.view_payload'))
                     ->icon('heroicon-o-code-bracket')
                     ->color('gray')
-                    ->modalHeading(__('admin.common.payload_modal_title'))
+                    ->modalHeading(__('admin/_shell.common.payload_modal_title'))
                     ->modalContent(fn (SyncLog $record): HtmlString => new HtmlString(
                         '<pre style="font-size: 0.75rem; background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 0.375rem; overflow: auto; max-height: 60vh; white-space: pre-wrap; word-break: break-all;">'
                         . e(is_array($record->summary) ? json_encode($record->summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : (string) $record->summary)
                         . '</pre>'
                     ))
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel(__('admin.common.close')),
+                    ->modalCancelActionLabel(__('admin/_shell.common.close')),
             ])
             ->toolbarActions([])
             ->defaultSort('id', 'desc')
             ->emptyStateIcon('heroicon-o-arrow-path')
-            ->emptyStateHeading(__('admin.resources.sync_logs.plural'))
-            ->emptyStateDescription(__('admin.common.empty_states.logs'));
+            ->emptyStateHeading(__('admin/logs.sync.resource.plural'))
+            ->emptyStateDescription(__('admin/_shell.common.empty_states.logs'));
     }
 
     public static function getPages(): array

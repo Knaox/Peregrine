@@ -1,0 +1,14 @@
+{
+    "security": {
+        "title": "Security",
+        "subtitle": "Manage your password and two-factor authentication.",
+        "two_factor_section_title": "Two-factor authentication",
+        "two_factor_section_description": "Add an extra step to your sign-in using a TOTP app.",
+        "linked_accounts_title": "Linked sign-in providers",
+        "linked_accounts_description": "Social accounts linked to your profile. You can sign in with any of them.",
+        "no_providers_enabled": "No sign-in providers are enabled on this panel.",
+        "not_linked": "Not linked",
+        "link": "Link",
+        "unlink": "Unlink"
+    }
+}

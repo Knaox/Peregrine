@@ -20,61 +20,61 @@ final class PaymenterProviderSection
 {
     public static function make(string $redirectUri): Section
     {
-        return Section::make(__('admin.auth_form.paymenter.section'))
-            ->description(__('admin.auth_form.paymenter.description'))
+        return Section::make(__('admin/auth_settings.form.paymenter.section'))
+            ->description(__('admin/auth_settings.form.paymenter.description'))
             ->icon('heroicon-o-credit-card')
             ->schema([
-                Toggle::make('auth_paymenter_enabled')->label(__('admin.auth_form.paymenter.enable')),
+                Toggle::make('auth_paymenter_enabled')->label(__('admin/auth_settings.form.paymenter.enable')),
 
                 TextInput::make('auth_paymenter_base_url')
-                    ->label(__('admin.auth_form.paymenter.base_url'))
+                    ->label(__('admin/auth_settings.form.paymenter.base_url'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder('https://billing.example.com')
-                    ->helperText(__('admin.auth_form.paymenter.base_url_helper')),
+                    ->helperText(__('admin/auth_settings.form.paymenter.base_url_helper')),
 
                 TextInput::make('auth_paymenter_client_id')
-                    ->label(__('admin.auth_form.paymenter.client_id'))
+                    ->label(__('admin/auth_settings.form.paymenter.client_id'))
                     ->maxLength(255)
-                    ->helperText(__('admin.auth_form.paymenter.client_id_helper')),
+                    ->helperText(__('admin/auth_settings.form.paymenter.client_id_helper')),
 
                 TextInput::make('auth_paymenter_client_secret')
-                    ->label(__('admin.auth_form.paymenter.client_secret'))
+                    ->label(__('admin/auth_settings.form.paymenter.client_secret'))
                     ->password()
                     ->revealable()
                     ->maxLength(255)
-                    ->helperText(__('admin.auth_form.paymenter.client_secret_helper')),
+                    ->helperText(__('admin/auth_settings.form.paymenter.client_secret_helper')),
 
                 TextInput::make('auth_paymenter_redirect_uri')
-                    ->label(__('admin.auth_form.paymenter.redirect'))
+                    ->label(__('admin/auth_settings.form.paymenter.redirect'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder($redirectUri)
-                    ->helperText(__('admin.auth_form.paymenter.redirect_helper'))
+                    ->helperText(__('admin/auth_settings.form.paymenter.redirect_helper'))
                     ->suffixAction(
                         Action::make('resetPaymenterRedirect')
                             ->icon('heroicon-o-arrow-path')
-                            ->tooltip(__('admin.auth_form.paymenter.reset_tooltip'))
+                            ->tooltip(__('admin/auth_settings.form.paymenter.reset_tooltip'))
                             ->color('gray')
                             ->action(function (Set $set) use ($redirectUri): void {
                                 $set('auth_paymenter_redirect_uri', $redirectUri);
                                 Notification::make()
-                                    ->title(__('admin.auth_form.paymenter.reset_notification_title'))
-                                    ->body(__('admin.auth_form.paymenter.reset_notification_body'))
+                                    ->title(__('admin/auth_settings.form.paymenter.reset_notification_title'))
+                                    ->body(__('admin/auth_settings.form.paymenter.reset_notification_body'))
                                     ->success()
                                     ->send();
                             }),
                     ),
 
                 TextInput::make('auth_paymenter_register_url')
-                    ->label(__('admin.auth_form.paymenter.register_url'))
+                    ->label(__('admin/auth_settings.form.paymenter.register_url'))
                     ->url()
                     ->maxLength(255)
                     ->placeholder('https://billing.example.com/register')
-                    ->helperText(__('admin.auth_form.paymenter.register_url_helper')),
+                    ->helperText(__('admin/auth_settings.form.paymenter.register_url_helper')),
 
                 FileUpload::make('auth_paymenter_logo_path')
-                    ->label(__('admin.auth_form.paymenter.logo'))
+                    ->label(__('admin/auth_settings.form.paymenter.logo'))
                     ->image()
                     ->directory('branding/oauth')
                     ->disk('public')
@@ -87,7 +87,7 @@ final class PaymenterProviderSection
                         'image/vnd.microsoft.icon',
                     ])
                     ->maxSize(1024)
-                    ->helperText(__('admin.auth_form.paymenter.logo_helper')),
+                    ->helperText(__('admin/auth_settings.form.paymenter.logo_helper')),
             ]);
     }
 }

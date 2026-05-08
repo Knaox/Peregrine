@@ -7,6 +7,7 @@ import { useBranding } from '@/hooks/useBranding';
 import { ApiError } from '@/services/api';
 import { twoFactorChallenge } from '@/services/authApi';
 import { TwoFactorChallengeForm } from '@/components/auth/TwoFactorChallengeForm';
+import { useNamespace } from '@/i18n/useNamespace';
 
 /**
  * 2FA challenge page — reached after either a password login (authStore holds
@@ -15,6 +16,7 @@ import { TwoFactorChallengeForm } from '@/components/auth/TwoFactorChallengeForm
  * round-trip works even though the store is empty on a fresh page load.
  */
 export function TwoFactorChallengePage() {
+    useNamespace(["auth-2fa"] as const);
     const { t } = useTranslation();
     const navigate = useNavigate();
     const branding = useBranding();
@@ -53,19 +55,19 @@ export function TwoFactorChallengePage() {
         } catch (err) {
             if (err instanceof ApiError) {
                 if (err.status === 410) {
-                    setError(t('auth.2fa.challenge.expired'));
+                    setError(t('auth-2fa:challenge.expired'));
                     setTimeout(() => navigate('/login', { replace: true }), 2500);
                     return;
                 }
                 if (err.status === 429) {
-                    setError(t('auth.2fa.challenge.expired'));
+                    setError(t('auth-2fa:challenge.expired'));
                     setTimeout(() => navigate('/login', { replace: true }), 2500);
                     return;
                 }
-                setError(t('auth.2fa.challenge.invalid'));
+                setError(t('auth-2fa:challenge.invalid'));
                 return;
             }
-            setError(t('common.error'));
+            setError(t('common:error'));
         }
     };
 
@@ -88,10 +90,10 @@ export function TwoFactorChallengePage() {
                         style={{ height: branding.logo_height ?? 48, maxHeight: 64 }}
                     />
                     <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">
-                        {t('auth.2fa.challenge.title')}
+                        {t('auth-2fa:challenge.title')}
                     </h1>
                     <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                        {t('auth.2fa.challenge.description')}
+                        {t('auth-2fa:challenge.description')}
                     </p>
                 </div>
 

@@ -7,6 +7,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { useStartupVariables } from '@/hooks/useStartupVariables';
 import type { ServerVariablesProps } from '@/components/server/ServerVariables.props';
 import type { StartupVariable } from '@/types/StartupVariable';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const LockIcon = (
     <svg className="h-4 w-4 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -74,7 +75,7 @@ function VariableCard({
                     </p>
                 </div>
                 {!variable.is_editable && (
-                    <span title={t('servers.variables.not_editable')}>{LockIcon}</span>
+                    <span title={t('server-shell:variables.not_editable')}>{LockIcon}</span>
                 )}
             </div>
 
@@ -146,7 +147,7 @@ function VariableCard({
                         'hover:opacity-90 disabled:opacity-50',
                     )}
                 >
-                    {isSaving ? <Spinner size="sm" /> : t('servers.variables.save')}
+                    {isSaving ? <Spinner size="sm" /> : t('server-shell:variables.save')}
                 </m.button>
             )}
         </m.div>
@@ -154,6 +155,7 @@ function VariableCard({
 }
 
 export function ServerVariables({ serverId, canEdit = true }: ServerVariablesProps) {
+    useNamespace(["server-files","server-shell"] as const);
     const { t } = useTranslation();
     const { variables, isLoading, updateVariable, isUpdating } = useStartupVariables(serverId);
     const [open, setOpen] = useState(true);
@@ -185,7 +187,7 @@ export function ServerVariables({ serverId, canEdit = true }: ServerVariablesPro
                 )}
             >
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                    {t('servers.variables.title')}
+                    {t('server-shell:variables.title')}
                 </h2>
                 <div className="flex items-center gap-2">
                     {!canEdit && (
@@ -194,11 +196,11 @@ export function ServerVariables({ serverId, canEdit = true }: ServerVariablesPro
                             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
-                            {t('servers.files.read_only')}
+                            {t('server-files:files.read_only')}
                         </span>
                     )}
                     <span className="text-xs text-[var(--color-text-muted)]">
-                        {t('servers.variables.count', { count: variables.length })}
+                        {t('server-shell:variables.count', { count: variables.length })}
                     </span>
                     <m.svg
                         animate={{ rotate: open ? 180 : 0 }}

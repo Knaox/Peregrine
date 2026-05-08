@@ -1,0 +1,25 @@
+{
+    "databases": {
+        "title": "Bases de données",
+        "create": "Créer une base de données",
+        "name": "Nom de la base",
+        "host": "Hôte",
+        "port": "Port",
+        "username": "Utilisateur",
+        "password": "Mot de passe",
+        "remote": "Connexions distantes",
+        "remote_help": "D'où les connexions sont autorisées. Utilisez % pour tout autoriser.",
+        "show_password": "Afficher le mot de passe",
+        "hide_password": "Masquer le mot de passe",
+        "rotate_password": "Changer le mot de passe",
+        "rotate_confirm": "Êtes-vous sûr ? Un nouveau mot de passe aléatoire sera généré.",
+        "rotated": "Mot de passe changé avec succès.",
+        "delete": "Supprimer la base",
+        "confirm_delete": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible.",
+        "deleted": "Base de données supprimée.",
+        "created": "Base de données créée.",
+        "no_databases": "Aucune base de données n'a été créée.",
+        "connections_from": "Connexions depuis",
+        "max_connections": "Connexions max"
+    }
+}

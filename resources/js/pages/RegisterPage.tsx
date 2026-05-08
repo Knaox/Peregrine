@@ -8,8 +8,10 @@ import { useBranding } from '@/hooks/useBranding';
 import { ApiError } from '@/services/api';
 import { LoginParticles } from '@/components/LoginParticles';
 import { useAuthProviders } from '@/hooks/useAuthProviders';
+import { useNamespace } from '@/i18n/useNamespace';
 
 export function RegisterPage() {
+    useNamespace(["auth-register","auth-social"] as const);
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { register } = useAuthStore();
@@ -34,7 +36,7 @@ export function RegisterPage() {
     const canonicalProvider = providers.data?.canonical_provider ?? null;
     const canonicalRegisterUrl = providers.data?.canonical_register_url ?? null;
     const canonicalProviderLabel = canonicalProvider !== null
-        ? t(`auth.providers.${canonicalProvider}`)
+        ? t(`auth-social:providers.${canonicalProvider}`)
         : '';
 
     const handleSubmit = async (e: FormEvent) => {
@@ -48,9 +50,9 @@ export function RegisterPage() {
         } catch (err) {
             if (err instanceof ApiError && err.status === 422) {
                 const ve = err.data.errors as Record<string, string[]> | undefined;
-                if (ve) setErrors(ve); else setGeneralError(t('common.error'));
+                if (ve) setErrors(ve); else setGeneralError(t('common:error'));
             } else {
-                setGeneralError(t('common.error'));
+                setGeneralError(t('common:error'));
             }
         } finally {
             setIsSubmitting(false);
@@ -80,33 +82,33 @@ export function RegisterPage() {
                         {canonicalRegisterUrl ? (
                             <>
                                 <p className="mb-5 text-sm text-[var(--color-text-muted)]">
-                                    {t('auth.register.redirect_canonical', { provider: canonicalProviderLabel })}
+                                    {t('auth-register:redirect_canonical', { provider: canonicalProviderLabel })}
                                 </p>
                                 <a
                                     href={canonicalRegisterUrl}
                                     className="inline-block rounded-[var(--radius)] bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_20px_var(--color-primary-glow)] transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]"
                                 >
-                                    {t('auth.register.create_on_canonical', { provider: canonicalProviderLabel })}
+                                    {t('auth-register:create_on_canonical', { provider: canonicalProviderLabel })}
                                 </a>
                                 <p className="mt-4 text-xs">
                                     <Link
                                         to="/login"
                                         className="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
                                     >
-                                        {t('auth.register.sign_in')}
+                                        {t('auth-register:sign_in')}
                                     </Link>
                                 </p>
                             </>
                         ) : (
                             <>
                                 <p className="mb-5 text-sm text-[var(--color-text-muted)]">
-                                    {t('auth.register.disabled')}
+                                    {t('auth-register:disabled')}
                                 </p>
                                 <Link
                                     to="/login"
                                     className="inline-block rounded-[var(--radius)] bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_20px_var(--color-primary-glow)] transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]"
                                 >
-                                    {t('auth.register.sign_in')}
+                                    {t('auth-register:sign_in')}
                                 </Link>
                             </>
                         )}
@@ -141,7 +143,7 @@ export function RegisterPage() {
                     {branding.show_app_name !== false && (
                         <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">{branding.app_name}</h1>
                     )}
-                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">{t('auth.register.title')}</p>
+                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">{t('auth-register:title')}</p>
                 </m.div>
 
                 <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
@@ -161,17 +163,17 @@ export function RegisterPage() {
                             )}
                         </AnimatePresence>
 
-                        <RegField id="name" type="text" value={name} label={t('auth.register.name')} error={fieldError('name')}
+                        <RegField id="name" type="text" value={name} label={t('auth-register:name')} error={fieldError('name')}
                             onChange={setName} focused={focusedField === 'name'} auto="name"
                             onFocus={() => setFocusedField('name')} onBlur={() => setFocusedField(null)} />
-                        <RegField id="email" type="email" value={email} label={t('auth.register.email')} error={fieldError('email')}
+                        <RegField id="email" type="email" value={email} label={t('auth-register:email')} error={fieldError('email')}
                             onChange={setEmail} focused={focusedField === 'email'} auto="email"
                             onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)} />
-                        <RegField id="password" type="password" value={password} label={t('auth.register.password')} error={fieldError('password')}
+                        <RegField id="password" type="password" value={password} label={t('auth-register:password')} error={fieldError('password')}
                             onChange={setPassword} focused={focusedField === 'password'} auto="new-password"
                             onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)} />
                         <RegField id="password_confirmation" type="password" value={passwordConfirmation}
-                            label={t('auth.register.password_confirmation')}
+                            label={t('auth-register:password_confirmation')}
                             onChange={setPasswordConfirmation} focused={focusedField === 'password_confirmation'} auto="new-password"
                             onFocus={() => setFocusedField('password_confirmation')} onBlur={() => setFocusedField(null)} />
 
@@ -184,15 +186,15 @@ export function RegisterPage() {
                                 'active:scale-[0.98]',
                                 'disabled:opacity-50 disabled:cursor-not-allowed',
                             )}>
-                            {isSubmitting ? t('common.loading') : t('auth.register.button')}
+                            {isSubmitting ? t('common:loading') : t('auth-register:button')}
                         </button>
                     </form>
                 </m.div>
 
                 <p className="mt-5 text-center text-sm text-[var(--color-text-muted)]">
-                    {t('auth.register.has_account')}{' '}
+                    {t('auth-register:has_account')}{' '}
                     <Link to="/login" className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors">
-                        {t('auth.register.sign_in')}
+                        {t('auth-register:sign_in')}
                     </Link>
                 </p>
             </m.div>

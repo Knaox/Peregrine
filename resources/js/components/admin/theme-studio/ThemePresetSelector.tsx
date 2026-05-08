@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { request } from '@/services/http';
 import type { ThemeDraft } from '@/types/themeStudio.types';
+import { useNamespace } from '@/i18n/useNamespace';
 
 interface PresetEntry {
     label: string;
@@ -30,6 +31,7 @@ export function ThemePresetSelector({
     activeMode,
     onApply,
 }: ThemePresetSelectorProps) {
+    useNamespace(["theme-studio"] as const);
     const { t } = useTranslation();
     const { data } = useQuery({
         queryKey: ['admin', 'theme', 'presets'],
@@ -88,7 +90,7 @@ export function ThemePresetSelector({
                             <span className="text-xs font-medium truncate">{preset.label}</span>
                             {isActive && (
                                 <span className="text-[10px] uppercase tracking-wider text-[var(--color-primary)]">
-                                    {t('theme_studio.preset_active', 'Active')}
+                                    {t('theme-studio:preset_active', 'Active')}
                                 </span>
                             )}
                         </div>

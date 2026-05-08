@@ -10,7 +10,7 @@
     @endphp
 
     @include('filament.pages.partials.settings-shell', [
-        'subtitle' => __('admin.pages.pelican_webhook_settings.subtitle'),
+        'subtitle' => __('admin/pelican_webhook.page.subtitle'),
         'badges' => $badges,
         'form' => $this->form,
         'actions' => $this->getFormActions(),

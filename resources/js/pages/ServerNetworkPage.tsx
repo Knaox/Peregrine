@@ -9,8 +9,10 @@ import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { AllocationCard } from '@/components/network/AllocationCard';
 import { withServerConflictGate } from '@/components/server/withServerConflictGate';
+import { useNamespace } from '@/i18n/useNamespace';
 
 function GlobeIcon({ className }: { className?: string }) {
+    useNamespace(["server-network"] as const);
     return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10" />
@@ -36,10 +38,10 @@ function EmptyState() {
                 <GlobeIcon className="h-10 w-10 text-[var(--color-text-muted)]" />
             </div>
             <p className="text-sm font-medium text-[var(--color-text-secondary)]">
-                {t('servers.network.no_allocations')}
+                {t('server-network:network.no_allocations')}
             </p>
             <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                {t('servers.network.no_allocations_hint')}
+                {t('server-network:network.no_allocations_hint')}
             </p>
         </div>
     );
@@ -83,7 +85,7 @@ function ServerNetworkPageImpl() {
 
     const handleBulkDelete = () => {
         if (!canDelete) return;
-        if (!window.confirm(t('servers.network.bulk_confirm', { count: selected.size }))) return;
+        if (!window.confirm(t('server-network:network.bulk_confirm', { count: selected.size }))) return;
         const ids = Array.from(selected);
         ids.forEach((allocId) => remove.mutate(allocId));
         deselectAll();
@@ -107,13 +109,13 @@ function ServerNetworkPageImpl() {
                         <GlobeIcon className="h-5 w-5 text-[var(--color-primary)]" />
                     </div>
                     <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
-                        {t('servers.network.title')}
+                        {t('server-network:network.title')}
                     </h2>
                 </div>
                 {canCreate && (
                     <Button variant="primary" size="sm" isLoading={add.isPending} onClick={() => add.mutate()}>
                         <PlusIcon className="h-4 w-4" />
-                        {t('servers.network.add')}
+                        {t('server-network:network.add')}
                     </Button>
                 )}
             </div>
@@ -121,7 +123,7 @@ function ServerNetworkPageImpl() {
             {/* Error banner */}
             {add.isError && (
                 <div className="rounded-[var(--radius)] bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20 px-4 py-2.5 text-sm text-[var(--color-danger)]">
-                    {t('servers.network.add_error')}
+                    {t('server-network:network.add_error')}
                 </div>
             )}
 
@@ -151,7 +153,7 @@ function ServerNetworkPageImpl() {
                                 onSetPrimary={() => setPrimary.mutate(alloc.id)}
                                 isPrimaryPending={setPrimary.isPending}
                                 onDelete={() => {
-                                    if (window.confirm(t('servers.network.confirm_delete'))) {
+                                    if (window.confirm(t('server-network:network.confirm_delete'))) {
                                         remove.mutate(alloc.id);
                                     }
                                 }}
@@ -181,17 +183,17 @@ function ServerNetworkPageImpl() {
                     >
                         <div className="glass-card-enhanced flex items-center gap-3 sm:gap-4 rounded-[var(--radius-lg)] px-3 sm:px-5 py-3 shadow-[var(--shadow-lg)]">
                             <span className="text-sm font-medium text-[var(--color-text-secondary)]">
-                                {t('servers.network.selected_count', { count: selected.size })}
+                                {t('server-network:network.selected_count', { count: selected.size })}
                             </span>
                             <Button variant="danger" size="sm" isLoading={remove.isPending} onClick={handleBulkDelete}>
-                                {t('servers.network.bulk_delete')}
+                                {t('server-network:network.bulk_delete')}
                             </Button>
                             <button
                                 type="button"
                                 onClick={deselectAll}
                                 className="cursor-pointer text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
                             >
-                                {t('servers.network.deselect_all')}
+                                {t('server-network:network.deselect_all')}
                             </button>
                         </div>
                     </m.div>

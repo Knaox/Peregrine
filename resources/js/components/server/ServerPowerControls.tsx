@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { usePowerAction } from '@/hooks/usePowerAction';
 import type { PowerSignal } from '@/types/PowerSignal';
 import type { ServerPowerControlsProps } from '@/components/server/ServerPowerControls.props';
+import { useNamespace } from '@/i18n/useNamespace';
 
 function PowerButton({ label, onClick, disabled, variant }: {
     label: string;
@@ -38,6 +39,7 @@ function PowerButton({ label, onClick, disabled, variant }: {
 }
 
 export function ServerPowerControls({ serverId, state, canStart = true, canStop = true, canRestart = true }: ServerPowerControlsProps) {
+    useNamespace(["server-console"] as const);
     const { t } = useTranslation();
     const { sendPower, isPending } = usePowerAction();
 
@@ -46,7 +48,7 @@ export function ServerPowerControls({ serverId, state, canStart = true, canStop 
 
     function handlePower(signal: PowerSignal) {
         if (signal === 'kill') {
-            const confirmed = window.confirm(t('servers.power.confirm_kill'));
+            const confirmed = window.confirm(t('server-console:power.confirm_kill'));
             if (!confirmed) return;
         }
         sendPower({ serverId, signal });
@@ -55,16 +57,16 @@ export function ServerPowerControls({ serverId, state, canStart = true, canStop 
     return (
         <div className="flex flex-wrap items-center gap-2">
             {isStopped && canStart && (
-                <PowerButton label={t('servers.actions.start')} variant="start" disabled={isPending} onClick={() => handlePower('start')} />
+                <PowerButton label={t('server-console:actions.start')} variant="start" disabled={isPending} onClick={() => handlePower('start')} />
             )}
             {isRunning && canRestart && (
-                <PowerButton label={t('servers.actions.restart')} variant="restart" disabled={isPending} onClick={() => handlePower('restart')} />
+                <PowerButton label={t('server-console:actions.restart')} variant="restart" disabled={isPending} onClick={() => handlePower('restart')} />
             )}
             {isRunning && canStop && (
-                <PowerButton label={t('servers.actions.stop')} variant="stop" disabled={isPending} onClick={() => handlePower('stop')} />
+                <PowerButton label={t('server-console:actions.stop')} variant="stop" disabled={isPending} onClick={() => handlePower('stop')} />
             )}
             {!isStopped && canStop && (
-                <PowerButton label={t('servers.actions.kill')} variant="kill" disabled={isPending} onClick={() => handlePower('kill')} />
+                <PowerButton label={t('server-console:actions.kill')} variant="kill" disabled={isPending} onClick={() => handlePower('kill')} />
             )}
         </div>
     );

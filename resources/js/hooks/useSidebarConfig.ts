@@ -23,15 +23,37 @@ const DEFAULTS: SidebarConfig = {
     show_server_status: true,
     show_server_name: true,
     entries: [
-        { id: 'overview', label_key: 'servers.detail.overview', icon: 'home', enabled: true, route_suffix: '', order: 0 },
-        { id: 'console', label_key: 'servers.detail.console', icon: 'terminal', enabled: true, route_suffix: '/console', order: 1 },
-        { id: 'files', label_key: 'servers.detail.files', icon: 'folder', enabled: true, route_suffix: '/files', order: 2 },
-        { id: 'databases', label_key: 'servers.detail.databases', icon: 'database', enabled: true, route_suffix: '/databases', order: 3 },
-        { id: 'backups', label_key: 'servers.detail.backups', icon: 'archive', enabled: true, route_suffix: '/backups', order: 4 },
-        { id: 'schedules', label_key: 'servers.detail.schedules', icon: 'clock', enabled: true, route_suffix: '/schedules', order: 5 },
-        { id: 'network', label_key: 'servers.detail.network', icon: 'globe', enabled: true, route_suffix: '/network', order: 6 },
-        { id: 'sftp', label_key: 'servers.detail.sftp', icon: 'key', enabled: true, route_suffix: '/sftp', order: 7 },
+        { id: 'overview', label_key: 'server-shell:detail.overview', icon: 'home', enabled: true, route_suffix: '', order: 0 },
+        { id: 'console', label_key: 'server-shell:detail.console', icon: 'terminal', enabled: true, route_suffix: '/console', order: 1 },
+        { id: 'files', label_key: 'server-shell:detail.files', icon: 'folder', enabled: true, route_suffix: '/files', order: 2 },
+        { id: 'databases', label_key: 'server-shell:detail.databases', icon: 'database', enabled: true, route_suffix: '/databases', order: 3 },
+        { id: 'backups', label_key: 'server-shell:detail.backups', icon: 'archive', enabled: true, route_suffix: '/backups', order: 4 },
+        { id: 'schedules', label_key: 'server-shell:detail.schedules', icon: 'clock', enabled: true, route_suffix: '/schedules', order: 5 },
+        { id: 'network', label_key: 'server-shell:detail.network', icon: 'globe', enabled: true, route_suffix: '/network', order: 6 },
+        { id: 'sftp', label_key: 'server-shell:detail.sftp', icon: 'key', enabled: true, route_suffix: '/sftp', order: 7 },
     ],
+};
+
+/**
+ * Map legacy translation keys (pre-i18n-refactor format) to the new
+ * namespaced shape so existing rows in `theme_settings.sidebar_config`
+ * keep rendering translated labels without a forced DB migration. The
+ * keys used to live in the default `translation` namespace as
+ * `servers.detail.<id>`; they now live in `server-shell:detail.<id>`.
+ *
+ * The mapping is also future-proof against admins who hand-edited the
+ * sidebar config JSON before the refactor — they get the new label
+ * automatically next time their theme loads.
+ */
+const LEGACY_LABEL_KEY_MAP: Record<string, string> = {
+    'servers.detail.overview': 'server-shell:detail.overview',
+    'servers.detail.console': 'server-shell:detail.console',
+    'servers.detail.files': 'server-shell:detail.files',
+    'servers.detail.databases': 'server-shell:detail.databases',
+    'servers.detail.backups': 'server-shell:detail.backups',
+    'servers.detail.schedules': 'server-shell:detail.schedules',
+    'servers.detail.network': 'server-shell:detail.network',
+    'servers.detail.sftp': 'server-shell:detail.sftp',
 };
 
 /**
@@ -47,8 +69,13 @@ export function useSidebarConfig(): SidebarConfig {
     const config = theme.sidebar_config;
     const sortedEntries = [...config.entries]
         .filter((e) => e.enabled)
-        // Normalize: old rows or hand-edited JSON may have route_suffix=null
-        .map((e) => ({ ...e, route_suffix: e.route_suffix ?? '' }))
+        .map((e) => ({
+            ...e,
+            // Normalize: old rows or hand-edited JSON may have route_suffix=null
+            route_suffix: e.route_suffix ?? '',
+            // Migrate legacy label keys on read so persisted configs keep working
+            label_key: LEGACY_LABEL_KEY_MAP[e.label_key] ?? e.label_key,
+        }))
         .sort((a, b) => a.order - b.order);
 
     return { ...config, entries: sortedEntries };

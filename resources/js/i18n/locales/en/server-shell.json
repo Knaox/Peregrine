@@ -1,0 +1,64 @@
+{
+    "not_found": "Server not found.",
+    "sidebar": {
+        "principal": "Main",
+        "management": "Management",
+        "collapse": "Collapse sidebar",
+        "expand": "Expand sidebar",
+        "open": "Open menu",
+        "close": "Close menu"
+    },
+    "detail": {
+        "overview": "Overview",
+        "console": "Console",
+        "files": "Files",
+        "sftp": "SFTP",
+        "databases": "Databases",
+        "backups": "Backups",
+        "schedules": "Schedules",
+        "network": "Network",
+        "info": "Server Information",
+        "game": "Egg",
+        "plan": "Plan",
+        "allocated": "Allocated Resources",
+        "created": "Created",
+        "not_found": "Server not found.",
+        "back": "Back to servers"
+    },
+    "resources": {
+        "cpu": "CPU",
+        "memory": "Memory",
+        "disk": "Disk",
+        "network": "Network",
+        "download": "Download",
+        "upload": "Upload"
+    },
+    "variables": {
+        "title": "Server Configuration",
+        "count": "{{count}} variable(s)",
+        "saved": "Variable saved.",
+        "save": "Save",
+        "not_editable": "Not editable",
+        "advanced": "Advanced Configuration",
+        "advanced_count": "{{count}} file(s)"
+    },
+    "settings": {
+        "title": "Server actions",
+        "rename": "Rename",
+        "reinstall": "Reinstall",
+        "rename_title": "Rename server",
+        "rename_help": "Pick a new display name. This updates the name in Pelican and in the panel.",
+        "rename_confirm": "Save new name",
+        "rename_error": "The rename request failed. Try again in a moment.",
+        "reinstall_title": "Reinstall server",
+        "reinstall_warning": "Reinstall will re-run the egg install script. It can overwrite configuration files and, depending on the egg, wipe data. This action cannot be undone.",
+        "reinstall_warning_wipe": "Every file in /mnt/server will be permanently deleted before the egg's install script runs. Worlds, configs, plugins, mods — everything. This action is irreversible. Back up first if you need to keep anything.",
+        "reinstall_wipe_label": "Delete all server data and reinstall",
+        "reinstall_wipe_help": "Wipes /mnt/server first, then triggers the reinstall — same end state as a freshly created server.",
+        "reinstall_confirm_help": "Type the server name \"{{name}}\" to confirm.",
+        "reinstall_confirm": "Reinstall now",
+        "reinstall_confirm_wipe": "Wipe & reinstall",
+        "reinstall_name_mismatch": "The server name you typed doesn't match.",
+        "reinstall_error": "The reinstall request failed. Try again in a moment."
+    }
+}

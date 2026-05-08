@@ -1,0 +1,36 @@
+{
+    "title": "Profil",
+    "info": "Vos informations",
+    "name": "Nom",
+    "email": "E-mail",
+    "locale": "Langue",
+    "save": "Enregistrer",
+    "saved": "Profil mis à jour.",
+    "security_card": {
+        "title": "Sécurité",
+        "has_2fa": "La double authentification est active sur votre compte. Gérez vos fournisseurs liés, régénérez des codes de récupération ou désactivez la 2FA.",
+        "no_2fa": "Ajoutez une étape supplémentaire à votre connexion avec une application TOTP (Google Authenticator, Authy, 1Password…). Moins d'une minute.",
+        "setup_cta": "Configurer la 2FA",
+        "manage_cta": "Gérer"
+    },
+    "password": {
+        "title": "Changer le mot de passe",
+        "current": "Mot de passe actuel",
+        "new": "Nouveau mot de passe",
+        "confirm": "Confirmer le nouveau mot de passe",
+        "changed": "Mot de passe changé avec succès.",
+        "error": "Impossible de changer le mot de passe. Vérifie ton mot de passe actuel.",
+        "mismatch": "Le nouveau mot de passe et la confirmation ne correspondent pas."
+    },
+    "locale_options": {
+        "en": "English",
+        "fr": "Français"
+    },
+    "theme_mode": {
+        "label": "Apparence",
+        "hint": "Préférence personnelle — n'affecte que votre compte, pas les autres utilisateurs.",
+        "auto": "Système",
+        "light": "Clair",
+        "dark": "Sombre"
+    }
+}

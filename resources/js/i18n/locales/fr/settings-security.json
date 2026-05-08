@@ -1,0 +1,14 @@
+{
+    "security": {
+        "title": "Sécurité",
+        "subtitle": "Gérez votre mot de passe et la double authentification.",
+        "two_factor_section_title": "Double authentification",
+        "two_factor_section_description": "Ajoutez une étape supplémentaire à votre connexion via une application TOTP.",
+        "linked_accounts_title": "Fournisseurs de connexion liés",
+        "linked_accounts_description": "Comptes sociaux liés à votre profil. Vous pouvez vous connecter avec n'importe lequel.",
+        "no_providers_enabled": "Aucun fournisseur de connexion n'est activé sur ce panel.",
+        "not_linked": "Non lié",
+        "link": "Lier",
+        "unlink": "Délier"
+    }
+}

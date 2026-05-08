@@ -33,12 +33,12 @@ class Settings extends Page implements HasForms
 
     public static function getNavigationLabel(): string
     {
-        return __('admin.pages.settings.navigation');
+        return __('admin/settings.page.navigation');
     }
 
     public function getTitle(): string
     {
-        return __('admin.pages.settings.title');
+        return __('admin/settings.page.title');
     }
 
     // Appearance
@@ -199,8 +199,8 @@ class Settings extends Page implements HasForms
         );
         $persister->persist($this->form->getState());
 
-        Notification::make()->title(__('admin.notifications.settings_saved_title'))
-            ->body(__('admin.notifications.settings_saved_body'))
+        Notification::make()->title(__('admin/_shell.notifications.settings_saved_title'))
+            ->body(__('admin/_shell.notifications.settings_saved_body'))
             ->success()->send();
     }
 
@@ -210,7 +210,7 @@ class Settings extends Page implements HasForms
         $result = (new TestSmtpConfigAction())->execute($userEmail);
 
         $notification = Notification::make()
-            ->title($result['ok'] ? __('admin.notifications.smtp_ok') : __('admin.notifications.smtp_failed'))
+            ->title($result['ok'] ? __('admin/_shell.notifications.smtp_ok') : __('admin/_shell.notifications.smtp_failed'))
             ->body($result['message']);
 
         $result['ok'] ? $notification->success()->send() : $notification->danger()->send();
@@ -219,7 +219,7 @@ class Settings extends Page implements HasForms
     protected function getFormActions(): array
     {
         return [
-            Action::make('save')->label(__('admin.actions.save_settings'))->submit('save'),
+            Action::make('save')->label(__('admin/_shell.actions.save_settings'))->submit('save'),
         ];
     }
 
@@ -227,13 +227,13 @@ class Settings extends Page implements HasForms
     {
         return [
             Action::make('testSmtp')
-                ->label(__('admin.actions.test_smtp'))
+                ->label(__('admin/_shell.actions.test_smtp'))
                 ->color('gray')
                 ->icon('heroicon-o-envelope')
                 ->requiresConfirmation()
-                ->modalHeading(__('admin.actions.test_smtp_modal_heading'))
-                ->modalDescription(__('admin.actions.test_smtp_modal_description'))
-                ->modalSubmitActionLabel(__('admin.actions.test_smtp_send'))
+                ->modalHeading(__('admin/_shell.actions.test_smtp_modal_heading'))
+                ->modalDescription(__('admin/_shell.actions.test_smtp_modal_description'))
+                ->modalSubmitActionLabel(__('admin/_shell.actions.test_smtp_send'))
                 ->action(fn () => $this->testSmtp()),
         ];
     }

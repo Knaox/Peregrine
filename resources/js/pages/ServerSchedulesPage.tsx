@@ -9,6 +9,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { ScheduleCard } from '@/components/server/ScheduleCard';
 import { withServerConflictGate } from '@/components/server/withServerConflictGate';
+import { useNamespace } from '@/i18n/useNamespace';
 
 const INPUT_CLS = 'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none';
 
@@ -16,6 +17,7 @@ const stagger = { animate: { transition: { staggerChildren: 0.07 } } };
 
 /* Inline SVG icons */
 function ClockIcon({ className = 'size-5' }: { className?: string }) {
+    useNamespace(["server-schedules"] as const);
     return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
@@ -72,10 +74,10 @@ function ServerSchedulesPageImpl() {
         task?: { action: string; payload: string; time_offset: number };
     }
     const PRESETS: Record<string, PresetDef> = {
-        restart_daily: { name: t('servers.schedules.preset_restart_daily'), minute: '0', hour: '4', day_of_month: '*', month: '*', day_of_week: '*', task: { action: 'power', payload: 'restart', time_offset: 0 } },
-        restart_12h: { name: t('servers.schedules.preset_restart_12h'), minute: '0', hour: '*/12', day_of_month: '*', month: '*', day_of_week: '*', task: { action: 'power', payload: 'restart', time_offset: 0 } },
-        backup_daily: { name: t('servers.schedules.preset_backup_daily'), minute: '0', hour: '3', day_of_month: '*', month: '*', day_of_week: '*', task: { action: 'backup', payload: '', time_offset: 0 } },
-        backup_weekly: { name: t('servers.schedules.preset_backup_weekly'), minute: '0', hour: '3', day_of_month: '*', month: '*', day_of_week: '0', task: { action: 'backup', payload: '', time_offset: 0 } },
+        restart_daily: { name: t('server-schedules:schedules.preset_restart_daily'), minute: '0', hour: '4', day_of_month: '*', month: '*', day_of_week: '*', task: { action: 'power', payload: 'restart', time_offset: 0 } },
+        restart_12h: { name: t('server-schedules:schedules.preset_restart_12h'), minute: '0', hour: '*/12', day_of_month: '*', month: '*', day_of_week: '*', task: { action: 'power', payload: 'restart', time_offset: 0 } },
+        backup_daily: { name: t('server-schedules:schedules.preset_backup_daily'), minute: '0', hour: '3', day_of_month: '*', month: '*', day_of_week: '*', task: { action: 'backup', payload: '', time_offset: 0 } },
+        backup_weekly: { name: t('server-schedules:schedules.preset_backup_weekly'), minute: '0', hour: '3', day_of_month: '*', month: '*', day_of_week: '0', task: { action: 'backup', payload: '', time_offset: 0 } },
     };
 
     const applyPreset = (key: string) => {
@@ -120,10 +122,10 @@ function ServerSchedulesPageImpl() {
                     <div className="flex size-9 items-center justify-center rounded-[var(--radius)] bg-[var(--color-primary)]/10">
                         <ClockIcon className="size-5 text-[var(--color-primary)]" />
                     </div>
-                    <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{t('servers.schedules.title')}</h2>
+                    <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{t('server-schedules:schedules.title')}</h2>
                 </div>
                 {canCreate && (
-                    <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>{t('servers.schedules.create')}</Button>
+                    <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>{t('server-schedules:schedules.create')}</Button>
                 )}
             </div>
 
@@ -140,13 +142,13 @@ function ServerSchedulesPageImpl() {
                         <div className="space-y-4">
                             {/* Name */}
                             <div>
-                                <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('servers.schedules.name')}</label>
-                                <input value={form.name} onChange={(e) => updateForm('name', e.target.value)} placeholder={t('servers.schedules.name_placeholder')} className={INPUT_CLS} />
+                                <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('server-schedules:schedules.name')}</label>
+                                <input value={form.name} onChange={(e) => updateForm('name', e.target.value)} placeholder={t('server-schedules:schedules.name_placeholder')} className={INPUT_CLS} />
                             </div>
 
                             {/* Preset selector with icons */}
                             <div>
-                                <label className="mb-2 block text-sm text-[var(--color-text-secondary)]">{t('servers.schedules.preset_label')}</label>
+                                <label className="mb-2 block text-sm text-[var(--color-text-secondary)]">{t('server-schedules:schedules.preset_label')}</label>
                                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
                                     {Object.entries(PRESETS).map(([key]) => (
                                         <button
@@ -160,7 +162,7 @@ function ServerSchedulesPageImpl() {
                                             }`}
                                         >
                                             {presetIcon(key)}
-                                            {t(`servers.schedules.preset_${key}`)}
+                                            {t(`server-schedules:schedules.preset_${key}`)}
                                         </button>
                                     ))}
                                     <button
@@ -173,7 +175,7 @@ function ServerSchedulesPageImpl() {
                                         }`}
                                     >
                                         <SettingsIcon />
-                                        {t('servers.schedules.preset_custom')}
+                                        {t('server-schedules:schedules.preset_custom')}
                                     </button>
                                 </div>
                             </div>
@@ -181,7 +183,7 @@ function ServerSchedulesPageImpl() {
                             {/* Toggle to show advanced cron fields */}
                             {!showAdvanced && preset !== 'custom' && (
                                 <button type="button" onClick={() => setShowAdvanced(true)} className="cursor-pointer text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors">
-                                    {t('servers.schedules.preset_custom')} &rarr;
+                                    {t('server-schedules:schedules.preset_custom')} &rarr;
                                 </button>
                             )}
 
@@ -199,7 +201,7 @@ function ServerSchedulesPageImpl() {
                                             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-5">
                                                 {(['minute', 'hour', 'day_of_month', 'month', 'day_of_week'] as const).map((field) => (
                                                     <div key={field}>
-                                                        <label className="mb-1 block text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]">{t(`servers.schedules.${field}`)}</label>
+                                                        <label className="mb-1 block text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]">{t(`server-schedules:schedules.${field}`)}</label>
                                                         <input value={form[field]} onChange={(e) => updateForm(field, e.target.value)} className={INPUT_CLS} style={{ fontFamily: 'var(--font-mono)', fontSize: 13 }} />
                                                     </div>
                                                 ))}
@@ -212,14 +214,14 @@ function ServerSchedulesPageImpl() {
                             {/* Toggles + submit */}
                             <div className="flex flex-wrap items-center gap-4">
                                 <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-                                    <input type="checkbox" checked={form.is_active} onChange={(e) => updateForm('is_active', e.target.checked)} /> {t('servers.schedules.active')}
+                                    <input type="checkbox" checked={form.is_active} onChange={(e) => updateForm('is_active', e.target.checked)} /> {t('server-schedules:schedules.active')}
                                 </label>
                                 <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-                                    <input type="checkbox" checked={form.only_when_online} onChange={(e) => updateForm('only_when_online', e.target.checked)} /> {t('servers.schedules.only_when_online')}
+                                    <input type="checkbox" checked={form.only_when_online} onChange={(e) => updateForm('only_when_online', e.target.checked)} /> {t('server-schedules:schedules.only_when_online')}
                                 </label>
                                 <div className="ml-auto flex gap-2">
-                                    <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>{t('common.cancel')}</Button>
-                                    <Button variant="primary" size="sm" isLoading={create.isPending} onClick={handleCreate}>{t('servers.schedules.create')}</Button>
+                                    <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>{t('common:cancel')}</Button>
+                                    <Button variant="primary" size="sm" isLoading={create.isPending} onClick={handleCreate}>{t('server-schedules:schedules.create')}</Button>
                                 </div>
                             </div>
                         </div>
@@ -238,7 +240,7 @@ function ServerSchedulesPageImpl() {
                     <div className="flex size-14 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--color-surface)]" style={{ border: '1px solid var(--color-border)' }}>
                         <ClockIcon className="size-7 text-[var(--color-text-muted)]" />
                     </div>
-                    <p className="text-sm text-[var(--color-text-muted)]">{t('servers.schedules.no_schedules')}</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">{t('server-schedules:schedules.no_schedules')}</p>
                 </m.div>
             ) : (
                 <m.div variants={stagger} initial="initial" animate="animate" className="space-y-3">
