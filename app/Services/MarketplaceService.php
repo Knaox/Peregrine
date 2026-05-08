@@ -320,16 +320,22 @@ class MarketplaceService
     {
         $pluginPath = base_path("plugins/{$pluginId}");
 
-        // Bundled plugin → resync DB to disk, no download/extract.
-        // forceResync preserves is_active + settings (it just bumps the
-        // version column). We still need to flush the cache so any
-        // singletons the OLD version cached are refreshed.
-        if ($this->files->isDirectory($pluginPath) && $this->isBundled($pluginPath)) {
-            $this->pluginManager->forceResync($pluginId);
-            Cache::flush();
-            return;
-        }
-
+        // No more bundled fast-path. Until 2026-05-08 this method had a
+        // dedicated branch for `bundled: true` plugins that skipped the
+        // ZIP download entirely and just resynced the DB row with
+        // whatever was on disk — meaning a click on the "Update" button
+        // for `invitations` (the bundled plugin) was a no-op : the
+        // marketplace registry's new version was written into the
+        // `plugins.version` column, but the actual files on disk + the
+        // compiled JS bundle stayed at whatever the Docker image
+        // shipped. The admin saw "Upgraded to latest" while running
+        // OLD plugin code (broken i18n keys, missing routes, etc.).
+        //
+        // Fix : every plugin — bundled or not — now follows the same
+        // path : delete the existing dir, re-download from the registry
+        // ZIP, extract over the now-empty path, run migrations. Bundled
+        // is now purely about WHAT SHIPS WITH FRESH PEREGRINE INSTALLS,
+        // not about update flow.
         if ($this->files->isDirectory($pluginPath)) {
             $deleted = $this->files->deleteDirectory($pluginPath);
             if (! $deleted || $this->files->isDirectory($pluginPath)) {
@@ -343,10 +349,21 @@ class MarketplaceService
             }
         }
 
-        // Re-install (will re-throw if anything goes wrong). Cache flush
-        // happens inside install() — same path applies for both fresh
-        // install and update-via-reinstall.
+        // Re-install : downloads + extracts + writes DB row preserving
+        // is_active + settings (see install() since 2026-05-08). Will
+        // re-throw if any step fails ; the dir is already gone at this
+        // point so a half-failure leaves the plugin uninstalled, which
+        // the admin can recover by clicking Install again.
         $this->install($pluginId);
+
+        // Run any new migrations the upgraded version shipped + recreate
+        // the public symlink (Docker redeploys nuke /public/plugins/).
+        // forceResync preserves is_active so the plugin keeps booting if
+        // the admin had it activated before the update. Without this
+        // call, migration files newly added in the upgraded version
+        // would only run on the next Activate cycle — leaving the
+        // plugin running against a stale schema until then.
+        $this->pluginManager->forceResync($pluginId);
     }
 
     /**
