@@ -221,11 +221,6 @@
             }
         }
     },
-    "modpacks": {
-        "tab": {
-            "label": "Modpacks"
-        }
-    },
     "servers": {
         "list": {
             "title": "Mes serveurs",
