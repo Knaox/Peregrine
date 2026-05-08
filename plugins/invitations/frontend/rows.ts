@@ -77,19 +77,23 @@ interface InvitationRowArgs {
     inv: Inv;
     onEdit: (inv: Inv) => void;
     onRevoke: (id: number) => void;
+    onResend: (id: number) => void;
     revokeDisabled: boolean;
+    resendDisabled: boolean;
     canEdit: boolean;
     canRevoke: boolean;
+    canResend: boolean;
     labels: {
         pending: string;
         expires: string;
         revoke: string;
         edit: string;
+        resend: string;
     };
 }
 
 export function renderInvitationRow(args: InvitationRowArgs): ReturnType<typeof h> {
-    const { inv, onEdit, onRevoke, revokeDisabled, canEdit, canRevoke, labels } = args;
+    const { inv, onEdit, onRevoke, onResend, revokeDisabled, resendDisabled, canEdit, canRevoke, canResend, labels } = args;
 
     return h('div', { key: inv.id, style: { ...C.card, ...C.userRow } as React.CSSProperties }, [
         h('div', { key: 'info', style: C.userInfo }, [
@@ -112,6 +116,13 @@ export function renderInvitationRow(args: InvitationRowArgs): ReturnType<typeof 
         ]),
         h('div', { key: 'ac', style: C.actions }, [
             h('span', { key: 'pc', style: C.permBadge }, `${inv.permissions.length} perms`),
+            canResend
+                ? h('button', {
+                    key: 'rs', type: 'button', onClick: () => onResend(inv.id),
+                    disabled: resendDisabled,
+                    style: { ...C.btnSecondary, opacity: resendDisabled ? 0.5 : 1 },
+                }, labels.resend)
+                : null,
             canEdit
                 ? h('button', {
                     key: 'ed', type: 'button', onClick: () => onEdit(inv),

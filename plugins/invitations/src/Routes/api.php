@@ -70,6 +70,31 @@ Route::middleware('auth')->group(function () {
         return response()->json(['message' => 'Invitation revoked.']);
     });
 
+    // Re-send the email of a pending invitation.
+    //
+    // Resendable iff the invitation is still in flight (not accepted,
+    // not revoked). Token is rotated on every resend so any older mail
+    // still sitting in a mailbox is invalidated — same security posture
+    // as a Laravel password reset. Throttled at 5 / min / user via the
+    // `invitation-resend` rate limiter (registered in
+    // InvitationsServiceProvider) so one operator can't spam an invitee.
+    Route::post('invitations/{id}/resend', function (int $id, Request $request): JsonResponse {
+        $invitation = Invitation::with('server')->findOrFail($id);
+        $server = $invitation->server;
+
+        if (! $server || ! $request->user()->hasServerPermission($server, 'user.create')) {
+            abort(403);
+        }
+
+        try {
+            app(InvitationService::class)->resend($invitation);
+        } catch (\RuntimeException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['message' => 'Invitation resent.', 'data' => $invitation->fresh()]);
+    })->middleware('throttle:invitation-resend');
+
     // Update a pending invitation's permissions (before it is accepted)
     Route::patch('invitations/{id}', function (int $id, Request $request): JsonResponse {
         $invitation = Invitation::with('server')->findOrFail($id);

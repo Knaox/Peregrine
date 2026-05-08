@@ -6,7 +6,7 @@ export const S = (window as unknown as Record<string, unknown>).__PEREGRINE_SHAR
     React: typeof import('react');
     ReactQuery: typeof import('@tanstack/react-query');
     ReactRouterDom: typeof import('react-router-dom');
-    useTranslation: () => { t: (k: string, o?: Record<string, unknown>) => string };
+    useTranslation: (ns?: string) => { t: (k: string, o?: Record<string, unknown>) => string };
 };
 
 export const P = (window as unknown as Record<string, unknown>).__PEREGRINE_PLUGINS__ as {

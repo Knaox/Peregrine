@@ -142,6 +142,59 @@ class InvitationService
     }
 
     /**
+     * Re-send an existing pending invitation to its original email.
+     *
+     * Use case : the recipient lost / never received the original mail
+     * (spam folder, misclicked URL, mailbox down at the time, …) and
+     * the inviter wants to trigger another delivery without going
+     * through "revoke + create new" — which would lose the original
+     * timestamp + permission set.
+     *
+     * Token rotation : the original plaintext token is gone (we only
+     * keep its sha256 hash in DB), so we MUST mint a fresh token,
+     * persist its new hash, and ship the new token in the new mail.
+     * This is also a security upgrade — any old mail still sitting in
+     * an intercepted mailbox is invalidated by the rotation. Mirrors
+     * Laravel's password-reset behaviour.
+     *
+     * Expiration is reset to a fresh window so the recipient gets the
+     * full configured expiry from the moment they receive the new
+     * mail (otherwise an invitation resent on day 6 of a 7-day
+     * window would be useful for ~1 day, defeating the resend).
+     *
+     * Throws when the invitation is no longer in a resendable state
+     * (already accepted, already revoked) — the caller surfaces a
+     * clean 422 to the operator.
+     *
+     * @throws \RuntimeException
+     */
+    public function resend(Invitation $invitation, ?int $expiresInDays = null): void
+    {
+        if ($invitation->accepted_at !== null) {
+            throw new \RuntimeException('Invitation already accepted.');
+        }
+        if ($invitation->revoked_at !== null) {
+            throw new \RuntimeException('Invitation has been revoked.');
+        }
+
+        $expiresInDays ??= (int) $this->pluginManager->getSetting('invitations', 'invitation_expiry_days', 7);
+
+        // Mint a fresh token + reset the expiry window. The previous
+        // hashed token is overwritten — the URL inside any older mail
+        // immediately stops working, which is the desired security
+        // posture for a re-send.
+        $plainToken = Str::random(64);
+        $hashedToken = hash('sha256', $plainToken);
+
+        $invitation->update([
+            'token' => $hashedToken,
+            'expires_at' => now()->addDays($expiresInDays),
+        ]);
+
+        $this->send($invitation, $plainToken);
+    }
+
+    /**
      * Cleanup expired invitations older than 30 days.
      */
     public function cleanup(): int

@@ -4,13 +4,13 @@
         {
             "id": "invitations",
             "name": "Server Invitations",
-            "version": "1.1.0",
-            "description": "Invite users to your servers by email with granular Pelican permissions. Edit permissions of active subusers and pending invitations. Ships with Peregrine by default. Admin-aware — panel admins can manage invitations / subusers on any server. Other plugins can register their own permission groups via the shared PermissionRegistry singleton. v1.1.0 adds an optional `availableForServer` filter on `registerGroup()` so foreign plugins can hide their permission group on servers where it doesn't apply (e.g. egg-config-editor hides itself when no covering EggConfigFile exists, modpack-installer hides itself on ineligible eggs).",
+            "version": "1.3.0",
+            "description": "Invite users to your servers by email with granular Pelican permissions. Edit permissions of active subusers and pending invitations. Ships with Peregrine by default. Admin-aware — panel admins can manage invitations / subusers on any server. Other plugins can register their own permission groups via the shared PermissionRegistry singleton with an optional `availableForServer` filter so they can hide their group on servers where it doesn't apply. v1.3.0 ships : (1) a Resend button on pending invitations — token rotates on each resend so older mails are invalidated, throttled at 5 / min / user ; (2) a critical fix for permission edits — plugin-specific permissions (modpack.*, arkmods.*, etc.) are now correctly persisted on the local pivot ; previously Pelican would 422 the call when given unknown perm prefixes, the new logic strips plugin perms before the Pelican call and stores them locally so the SPA can read them via the merge in listSubusers ; (3) all 47 frontend strings migrated from the core Peregrine i18n bundle into the plugin's own `frontend/i18n/`, removing the cross-cutting pollution.",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.4",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.4/invitations-1.1.0.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.4/invitations-1.3.0.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/invitations",
             "tags": ["users", "permissions", "collaboration", "default"]
         },
