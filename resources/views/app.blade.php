@@ -31,9 +31,16 @@
     {{-- Reverb config consumed by `resources/js/services/echo.ts` to
          drive live mirror-update broadcasts on /server/{id}/* pages.
          Empty values disable the Echo client gracefully — the SPA
-         continues to work with its default TanStack staleTime. --}}
+         continues to work with its default TanStack staleTime.
+
+         REVERB_HOST default = the current request's hostname so a panel
+         accessed via several URLs (localhost during dev, LAN IP from a
+         laptop, ngrok tunnel for sharing, …) never dials a stale literal
+         "localhost" — that would resolve to the BROWSER's machine, not
+         the server's, and silently kill every WebSocket subscription.
+         echo.ts has a second JS-side guard for the same situation. --}}
     <meta name="reverb-key" content="{{ config('broadcasting.connections.reverb.key', '') }}">
-    <meta name="reverb-host" content="{{ env('REVERB_HOST', '') }}">
+    <meta name="reverb-host" content="{{ env('REVERB_HOST') ?: request()->getHost() }}">
     <meta name="reverb-port" content="{{ env('REVERB_PORT', '443') }}">
     <meta name="reverb-scheme" content="{{ env('REVERB_SCHEME', 'https') }}">
     <title>{{ $appName }}</title>

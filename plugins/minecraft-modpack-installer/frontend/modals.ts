@@ -36,7 +36,13 @@ export interface InstallModalProps {
 
 export function renderInstallModal(p: InstallModalProps): ReturnType<typeof h> | null {
     if (!p.open) return null;
-    return h(InstallModalInner, p);
+    // `key` is required because this modal is rendered as a sibling
+    // alongside the page's other top-level fragments (header, current
+    // card, filters, results, uninstall modal) — React's reconciler
+    // warns if any sibling in an array lacks a key. The host page
+    // already keys its own slots ; this one does the same with a
+    // stable literal so React can match instances across renders.
+    return h(InstallModalInner, { ...p, key: 'mp-install-modal' });
 }
 
 function InstallModalInner(p: InstallModalProps & { t: (k: string, o?: Record<string, unknown>) => string }) {
@@ -163,10 +169,24 @@ function InstallModalInner(p: InstallModalProps & { t: (k: string, o?: Record<st
                         style: C.badge('rgba(var(--color-primary-rgb),0.12)', 'var(--color-primary)'),
                     }, `MC ${selected.minecraft_versions.join(', ')}`)
                     : null,
-                ...selected.loaders.map(l => h('span', {
-                    key: `ld-${l}`,
-                    style: C.badge('rgba(var(--color-info-rgb,59 130 246),0.10)', 'var(--color-info, #3b82f6)'),
-                }, l)),
+                // Loader badges live inside their own keyed wrapper instead
+                // of being spread into the parent children array. The
+                // earlier `...selected.loaders.map(…)` form mixed dynamic
+                // mapped elements with statically-keyed siblings (`mc`,
+                // `rt`), and React's reconciler can't track keys reliably
+                // across that boundary — surfaces as `Each child in a
+                // list should have a unique "key" prop` whenever the
+                // user picks a different version with a different loader
+                // count.
+                selected.loaders.length > 0
+                    ? h('span', {
+                        key: 'loaders',
+                        style: { display: 'inline-flex', flexWrap: 'wrap' as const, gap: '0.25rem' },
+                    }, selected.loaders.map(l => h('span', {
+                        key: `ld-${l}`,
+                        style: C.badge('rgba(var(--color-info-rgb,59 130 246),0.10)', 'var(--color-info, #3b82f6)'),
+                    }, l)))
+                    : null,
                 h('span', { key: 'rt', style: { color: 'var(--color-text-muted)' } }, selected.release_type),
             ])
             : null,
@@ -267,7 +287,13 @@ function renderVersionRow(
                         },
                     }, `MC ${v.minecraft_versions.join(', ')}`)
                     : h('span', { key: 'mc', style: { fontStyle: 'italic' as const } }, t('modpacks.install_modal.mc_unknown')),
-                ...v.loaders.map(l => h('span', { key: `ld-${l}` }, `· ${l}`)),
+                // Same wrapping pattern as the install-modal selection
+                // summary above — keep loader badges in a keyed parent
+                // span instead of spreading into the row's children list.
+                v.loaders.length > 0
+                    ? h('span', { key: 'loaders', style: { display: 'inline-flex', gap: '0.25rem' } },
+                        v.loaders.map(l => h('span', { key: `ld-${l}` }, `· ${l}`)))
+                    : null,
             ]),
         ]),
     ]);
@@ -306,7 +332,11 @@ export function renderUninstallModal(p: UninstallModalProps): ReturnType<typeof 
     if (!p.open) return null;
     const { t } = p;
 
+    // `key` matches the install-modal pattern — keeps React's sibling
+    // reconciler from warning when this modal sits next to other keyed
+    // top-level slots in the page render array.
     return h('div', {
+        key: 'mp-uninstall-modal',
         style: C.modalScrim,
         onClick: p.onCancel,
         className: 'mp-modal-scrim',

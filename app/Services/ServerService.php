@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\Mirror\ServerMirrorChanged;
 use App\Models\Server;
 use App\Services\Pelican\DTOs\ServerResources;
 use App\Services\Pelican\DTOs\WebsocketCredentials;
@@ -64,6 +65,7 @@ class ServerService
     {
         $this->applicationService->suspendServer($this->server->pelican_server_id);
         $this->server->update(['status' => 'suspended']);
+        $this->broadcastMirrorChange();
     }
 
     /**
@@ -73,6 +75,37 @@ class ServerService
     {
         $this->applicationService->unsuspendServer($this->server->pelican_server_id);
         $this->server->update(['status' => 'active']);
+        $this->broadcastMirrorChange();
+    }
+
+    /**
+     * Push the local row's new status onto Reverb so the dashboard /
+     * detail page / admin mirror flip the suspended badge + sidebar
+     * gates within ~100 ms instead of waiting on the 5-min React
+     * Query staleTime. Identical shape to
+     * `BroadcastsServerMirror::broadcastServerMirrorChanged()` ; we
+     * inline it here because this service isn't a Job (where the
+     * trait lives) and pulling Eloquent / Broadcast at the trait
+     * layer would force every Service consumer to wire the dispatcher.
+     *
+     * Best-effort : a Reverb outage or misconfiguration MUST NOT
+     * regress the underlying suspend/unsuspend mutation, so any throw
+     * is swallowed — the next 5-min cron sweep (SyncServerStatusJob's
+     * runtime sync) will eventually surface the change.
+     */
+    private function broadcastMirrorChange(): void
+    {
+        try {
+            event(new ServerMirrorChanged(
+                serverId: (int) $this->server->id,
+                resource: ServerMirrorChanged::RESOURCE_SERVER,
+                action: ServerMirrorChanged::ACTION_UPSERT,
+                resourceId: (int) $this->server->id,
+                accessUserIds: $this->server->accessUsers()->pluck('users.id')->all(),
+            ));
+        } catch (\Throwable) {
+            // intentionally silent — see method-level comment
+        }
     }
 
     // -------------------------------------------------------------------------

@@ -102,12 +102,21 @@ class PelicanClient
      * Values here must satisfy the installer egg's validation rules; we use
      * the rules' permissive minimums (provider → modrinth, ids → '_', etc.).
      */
-    public function scrubInstallerEnvironment(int $pelicanServerId, int $installerEggId, string $startupCommand): void
-    {
+    public function scrubInstallerEnvironment(
+        int $pelicanServerId,
+        int $installerEggId,
+        string $startupCommand,
+        string $image,
+    ): void {
         $this->http->request()
             ->patch("/api/application/servers/{$pelicanServerId}/startup", [
                 'egg' => $installerEggId,
-                'image' => 'ghcr.io/pelican-eggs/yolks:java_21',
+                // Caller picks the image (resolved via JavaCompatibilityMatrix
+                // → never hardcoded). Scrubbing only mutates env vars and
+                // skip_scripts — the image is included so Pelican's PATCH
+                // doesn't surprise us by zeroing the field, not because the
+                // scrub itself depends on the runtime.
+                'image' => $image,
                 'startup' => $startupCommand,
                 'environment' => [
                     'BB_MODPACK_PROVIDER' => 'modrinth',

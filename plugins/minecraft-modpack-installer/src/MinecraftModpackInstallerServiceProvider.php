@@ -15,8 +15,10 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Plugins\MinecraftModpackInstaller\Console\ImportEgg;
 use Plugins\MinecraftModpackInstaller\Console\ReconcileStaleInstallations;
+use Plugins\MinecraftModpackInstaller\Models\ModpackConfig;
 use Plugins\MinecraftModpackInstaller\Pelican\PelicanClient;
 use Plugins\MinecraftModpackInstaller\Services\EligibilityService;
+use Plugins\MinecraftModpackInstaller\Services\JavaCompatibilityMatrix;
 use Plugins\MinecraftModpackInstaller\Services\ModpackProviderRegistry;
 use Plugins\MinecraftModpackInstaller\Services\Providers\AtlauncherProvider;
 use Plugins\MinecraftModpackInstaller\Services\Providers\CurseForgeProvider;
@@ -46,7 +48,26 @@ class MinecraftModpackInstallerServiceProvider extends ServiceProvider
 
     public function register(): void
     {
+        // Plugin-bundled defaults for the Java compatibility matrix —
+        // rules / images / default_java. The Filament admin page can
+        // override any of these per-row in `modpack_configs`.
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/java-compatibility.php',
+            'modpack-installer.java',
+        );
+
         $this->app->singleton(PelicanClient::class);
+
+        // Resolve `ModpackConfig::current()` lazily so the matrix sees
+        // a fresh singleton row per request / queue handle. Each job
+        // invocation builds a new container, so cache lifetime here is
+        // safely bounded.
+        $this->app->bind(JavaCompatibilityMatrix::class, function (Application $app): JavaCompatibilityMatrix {
+            return new JavaCompatibilityMatrix(
+                ModpackConfig::current(),
+                $app['config'],
+            );
+        });
 
         $this->app->singleton(ModpackProviderRegistry::class, function (Application $app): ModpackProviderRegistry {
             // Per provider ToS (notably Modrinth), every outbound request

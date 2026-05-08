@@ -57,8 +57,26 @@ export async function sendCommand(id: number, command: string): Promise<void> {
     });
 }
 
-export async function fetchWebSocketCredentials(id: number): Promise<WebSocketCredentials> {
-    const { data } = await request<{ data: WebSocketCredentials }>(`/api/servers/${id}/websocket`);
+/**
+ * Fetch a Wings JWT + WebSocket URL.
+ *
+ * Peregrine caches the response server-side for ~5 min so multiple
+ * subscribers (multi-tab, React StrictMode, rapid reconnects) share a
+ * single round-trip to Pelican Panel. When the existing token is
+ * about to expire (Wings broadcasts a `token expiring` event ~60 s
+ * before its `exp` claim fires), pass `force=true` to bypass the
+ * Peregrine cache and pull a fresh signed JWT from Pelican — without
+ * this flag, the renewal path could land on a near-expired cached
+ * token and Wings would close the socket within seconds.
+ */
+export async function fetchWebSocketCredentials(
+    id: number,
+    options: { force?: boolean } = {},
+): Promise<WebSocketCredentials> {
+    const url = options.force === true
+        ? `/api/servers/${id}/websocket?fresh=1`
+        : `/api/servers/${id}/websocket`;
+    const { data } = await request<{ data: WebSocketCredentials }>(url);
     return data;
 }
 

@@ -28,6 +28,14 @@ class ModpackConfig extends Model
         'modpacks_per_page',
         'install_timeout_minutes',
         'cache_ttl_seconds',
+        // Java compatibility — overrides over the bundled
+        // `config/java-compatibility.php`. All three are nullable: when null
+        // / empty the JavaCompatibilityMatrix falls back to the plugin's
+        // default config file. See `javaRules()`, `javaImages()`,
+        // `defaultJava()` for the merge semantics.
+        'java_rules',
+        'java_images',
+        'default_java',
     ];
 
     /** @return array<string, string> */
@@ -39,6 +47,9 @@ class ModpackConfig extends Model
             'modpacks_per_page' => 'integer',
             'install_timeout_minutes' => 'integer',
             'cache_ttl_seconds' => 'integer',
+            'java_rules' => 'array',
+            'java_images' => 'array',
+            'default_java' => 'integer',
         ];
     }
 
@@ -53,9 +64,12 @@ class ModpackConfig extends Model
                 'default_sort' => 'relevance',
                 'page_label' => null,
                 'page_route' => '/modpacks',
-                'modpacks_per_page' => 12,
+                'modpacks_per_page' => 25,
                 'install_timeout_minutes' => 30,
                 'cache_ttl_seconds' => 3600,
+                'java_rules' => null,
+                'java_images' => null,
+                'default_java' => null,
             ],
         );
     }
@@ -76,9 +90,14 @@ class ModpackConfig extends Model
 
     public function modpacksPerPage(): int
     {
-        $value = (int) ($this->modpacks_per_page ?: 12);
+        $value = (int) ($this->modpacks_per_page ?: 25);
 
-        return in_array($value, [6, 12, 24], true) ? $value : 12;
+        // Page-size whitelist bumped from [6, 12, 24] to [10, 25, 50] on
+        // 2026-05-08 to match operator demand for denser modpack listings.
+        // Legacy stored values fall back to the new default 25 instead of
+        // returning their old (now-invalid) value, so the SPA never shows
+        // a page size the admin form can't display.
+        return in_array($value, [10, 25, 50], true) ? $value : 25;
     }
 
     public function installTimeoutMinutes(): int

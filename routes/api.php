@@ -151,9 +151,18 @@ Route::middleware('auth')->group(function () {
         Route::post('servers/{server}/reinstall', [ServerController::class, 'reinstall']);
     });
 
-    // Server console & resources
-    Route::get('servers/{server}/websocket', [ServerConsoleController::class, 'websocket']);
-    Route::get('servers/{server}/resources', [ServerConsoleController::class, 'resources']);
+    // Server console & resources — proxied to Pelican Client API. Capped
+    // by the operator-tunable `pelican-proxy` bucket (defined in
+    // AppServiceProvider, default 600/min/user, configurable via
+    // /admin/settings → Network) so a runaway SPA retry loop can't
+    // saturate Pelican's upstream throttle. Genuine 429s coming from
+    // Pelican are still forwarded as-is by ServerConsoleController and
+    // tagged with the `servers.websocket.pelican_throttled` error code
+    // so the operator can tell the two sources apart.
+    Route::middleware('throttle:pelican-proxy')->group(function () {
+        Route::get('servers/{server}/websocket', [ServerConsoleController::class, 'websocket']);
+        Route::get('servers/{server}/resources', [ServerConsoleController::class, 'resources']);
+    });
 
     // Server files
     Route::prefix('servers/{server}/files')->group(function () {

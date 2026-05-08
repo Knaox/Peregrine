@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Plugin-local PHPUnit config. The Peregrine root phpunit.xml only scans
+    `tests/Unit` and `tests/Feature` at the project level, so plugin tests
+    are NOT auto-discovered. Run them with:
+
+        ./vendor/bin/phpunit -c plugins/minecraft-modpack-installer/phpunit.xml.dist
+
+    or, from inside the plugin directory:
+
+        ../../vendor/bin/phpunit
+
+    The bootstrap loads only Composer's autoloader — these tests are pure
+    unit tests against the JavaCompatibilityMatrix's static helpers and
+    do not need a Laravel application or a database.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../../vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>src/Services</directory>
+        </include>
+    </source>
+</phpunit>

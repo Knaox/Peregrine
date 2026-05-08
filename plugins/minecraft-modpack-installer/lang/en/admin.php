@@ -79,6 +79,35 @@ return [
         ],
     ],
 
+    'java' => [
+        'section' => 'Java compatibility',
+        'description' => 'Controls how the installer picks the Java version and Docker image for each modpack. Every field is optional — leave blank to use the plugin defaults shipped in config/java-compatibility.php.',
+        'default_java' => [
+            'label' => 'Default Java',
+            'placeholder' => 'Use plugin default (Java 17)',
+            'help' => 'Used when no compatibility rule matches the modpack (unknown MC version, exotic loader). Overrides the value declared in the plugin config.',
+        ],
+        'images' => [
+            'label' => 'Docker images per Java major',
+            'key_label' => 'Java major',
+            'value_label' => 'Docker image',
+            'add' => 'Add image override',
+            'help' => 'Per-key override of the bundled image map. Add an entry only for the Java majors you want to redirect (e.g. point java_21 at a private mirror); the others fall back to plugin defaults.',
+        ],
+        'rules' => [
+            'label' => 'Compatibility rules',
+            'help' => 'Rules are evaluated top-down — first match wins. Loader-specific rules MUST come before generic (no loader) ones. Setting any rule here REPLACES the entire bundled rule list. Leave the table empty to keep the plugin defaults.',
+            'add' => 'Add rule',
+            'fields' => [
+                'loader' => 'Loader',
+                'loader_any' => 'Any loader (Vanilla too)',
+                'mc_min' => 'Min Minecraft version',
+                'mc_max' => 'Max Minecraft version',
+                'java' => 'Java major',
+            ],
+        ],
+    ],
+
     'actions' => [
         'save' => 'Save',
         'import_egg' => [

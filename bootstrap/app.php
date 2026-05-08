@@ -15,7 +15,17 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
-        channels: __DIR__.'/../routes/channels.php',
+        // `channels:` intentionally NOT passed here — Laravel's
+        // auto-registration would attach `/broadcasting/auth` with
+        // bare `web` middleware (no throttle). We register the
+        // route + load `channels.php` manually in
+        // `AppServiceProvider::boot()` so we can attach a
+        // configurable `throttle:broadcasting-auth` middleware
+        // (cap stored in settings, default 240/min). Without that,
+        // an Echo reconnect fanning out across N private channels
+        // can spam /broadcasting/auth and trigger 429s upstream
+        // (Cloudflare, reverse proxy, …) which silently bricks
+        // every live update on the panel.
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {

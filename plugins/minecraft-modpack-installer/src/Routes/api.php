@@ -64,6 +64,40 @@ Route::middleware('auth')->group(function () {
             return null;
         }
 
+        // Lazy backfill for installations that were persisted before the
+        // provider's `getModpack()` could resolve real metadata — typically
+        // because a transient API failure poisoned the meta-cache, leaving
+        // `modpack_name` stuck on the raw modpack id (e.g. CurseForge
+        // numeric `285109` → header reads "285109" with no icon). Now that
+        // providers don't cache nulls anymore, a single retry is enough to
+        // fill the row in. Throttled to once per hour per installation so
+        // we don't hammer the provider API on the 4 s polling cycle.
+        if (
+            $installation->icon_url === null
+            && $installation->modpack_name === $installation->modpack_id
+        ) {
+            $cacheKey = "modpacks:install:meta-refresh:{$installation->id}";
+            if (! Cache::has($cacheKey)) {
+                Cache::put($cacheKey, true, 3600);
+                try {
+                    /** @var ModpackProviderRegistry $registry */
+                    $registry = app(ModpackProviderRegistry::class);
+                    $provider = $registry->get($installation->provider);
+                    $summary = $provider->getModpack($installation->modpack_id);
+                    if ($summary !== null) {
+                        $installation->forceFill([
+                            'modpack_name' => $summary->name,
+                            'icon_url' => $summary->iconUrl,
+                            'external_url' => $summary->externalUrl ?? $installation->external_url,
+                        ])->save();
+                    }
+                } catch (\Throwable) {
+                    // best-effort — leave the stale row in place rather
+                    // than break the response over a metadata refresh
+                }
+            }
+        }
+
         return [
             'id' => $installation->id,
             'provider' => $installation->provider->value,
@@ -102,7 +136,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get(
         'servers/{serverIdentifier}/modpacks/providers',
-        function (string $serverIdentifier, Request $request, ModpackProviderRegistry $registry, EligibilityService $eligibility) use ($resolveServer, $requirePerm, $serializeProvider): JsonResponse {
+        function (string $serverIdentifier, Request $request, ModpackProviderRegistry $registry, EligibilityService $eligibility, ModpackSettingsService $settings) use ($resolveServer, $requirePerm, $serializeProvider): JsonResponse {
             $server = $resolveServer($serverIdentifier, $request);
             $requirePerm($request, $server, 'modpack.read');
 
@@ -118,7 +152,26 @@ Route::middleware('auth')->group(function () {
                 $data[] = $serializeProvider($providerCase, $registry);
             }
 
-            return response()->json(['data' => $data]);
+            // `default_provider` mirrors the admin's `/admin/modpack-configs`
+            // selection so the SPA defaults the dropdown to the operator's
+            // preferred listing source instead of "first configured" (which
+            // was previously hardcoded in `frontend/index.tsx` and silently
+            // ignored the admin setting). The frontend falls back to the
+            // first configured provider only when the admin's choice isn't
+            // configured (e.g. CurseForge picked but no API key set yet).
+            $defaultProvider = $settings->defaultProvider();
+            $defaultProviderId = $registry->has($defaultProvider) && $registry->get($defaultProvider)->isConfigured()
+                ? $defaultProvider->value
+                : null;
+
+            return response()->json([
+                'data' => $data,
+                'meta' => [
+                    'default_provider' => $defaultProviderId,
+                    'default_sort' => $settings->defaultSort(),
+                    'default_page_size' => $settings->modpacksPerPage(),
+                ],
+            ]);
         },
     );
 
@@ -202,7 +255,7 @@ Route::middleware('auth')->group(function () {
                 'mc' => ['nullable', 'string', 'max:32'],
                 'loader' => ['nullable', 'string', 'in:forge,fabric,quilt,neoforge'],
                 'page' => ['nullable', 'integer', 'min:1', 'max:200'],
-                'size' => ['nullable', 'integer', 'in:6,12,24'],
+                'size' => ['nullable', 'integer', 'in:10,25,50'],
                 'sort' => ['nullable', 'string', 'in:relevance,popular,downloads,updated,newest,name,follows,plays,featured'],
                 'category' => ['nullable', 'string', 'max:64'],
             ]);
@@ -241,32 +294,59 @@ Route::middleware('auth')->group(function () {
                 category: $category,
             );
 
+            // Cache search responses for `cache_ttl_seconds` (default 1 h,
+            // tunable in /admin/modpack-configs). Modpack listings move at
+            // human pace (CurseForge / Modrinth update once a day at most)
+            // so cache hits feel real-time and divide upstream API load by
+            // ~100× on a busy panel. Cache key includes every criterion so
+            // two distinct filter sets never collide.
+            //
+            // We cache the FINAL response array — never the intermediate
+            // SearchResult / ModpackHit objects — because Laravel 11's
+            // `cache.serializable_classes=false` default makes
+            // `unserialize()` strip every non-allowed class to
+            // `__PHP_Incomplete_Class`. Plain arrays survive intact.
+            $cacheTtl = $settings->cacheTtlSeconds();
+            $cacheKey = sprintf(
+                'modpacks:%s:search:%s:%s:%s:%s:%s:rev1:%d:%d',
+                $providerEnum->value,
+                hash('xxh128', (string) ($criteria->query ?? '')),
+                (string) ($criteria->minecraftVersion ?? ''),
+                $criteria->loader?->value ?? '',
+                (string) ($criteria->sort ?? ''),
+                (string) ($criteria->category ?? ''),
+                $criteria->page,
+                $criteria->pageSize,
+            );
+
             try {
-                $result = $provider->search($criteria);
+                $payload = Cache::remember($cacheKey, $cacheTtl, function () use ($provider, $criteria): array {
+                    $result = $provider->search($criteria);
+
+                    return [
+                        'data' => array_map(static fn ($hit) => [
+                            'provider' => $hit->provider->value,
+                            'modpack_id' => $hit->modpackId,
+                            'name' => $hit->name,
+                            'slug' => $hit->slug,
+                            'description' => $hit->description,
+                            'icon_url' => $hit->iconUrl,
+                            'external_url' => $hit->externalUrl,
+                            'is_server_compatible' => $hit->isServerCompatible,
+                        ], $result->hits),
+                        'meta' => [
+                            'current_page' => $result->currentPage,
+                            'last_page' => $result->lastPage(),
+                            'per_page' => $result->perPage,
+                            'total' => $result->total,
+                        ],
+                    ];
+                });
             } catch (ProviderRequestException $e) {
                 return response()->json(['error' => 'modpacks.errors.provider_unreachable', 'detail' => $providerEnum->value], 502);
             }
 
-            $hits = array_map(static fn ($hit) => [
-                'provider' => $hit->provider->value,
-                'modpack_id' => $hit->modpackId,
-                'name' => $hit->name,
-                'slug' => $hit->slug,
-                'description' => $hit->description,
-                'icon_url' => $hit->iconUrl,
-                'external_url' => $hit->externalUrl,
-                'is_server_compatible' => $hit->isServerCompatible,
-            ], $result->hits);
-
-            return response()->json([
-                'data' => $hits,
-                'meta' => [
-                    'current_page' => $result->currentPage,
-                    'last_page' => $result->lastPage(),
-                    'per_page' => $result->perPage,
-                    'total' => $result->total,
-                ],
-            ]);
+            return response()->json($payload);
         },
     );
 

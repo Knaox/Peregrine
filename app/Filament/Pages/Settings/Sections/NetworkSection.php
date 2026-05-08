@@ -6,6 +6,7 @@ use App\Filament\Pages\Settings\CloudflareIps;
 use App\Filament\Pages\Settings\DockerPrivateRanges;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -60,10 +61,43 @@ final class NetworkSection
             ])
             ->schema([
                 TagsInput::make('trusted_proxies')
-                    ->label('')
+                    ->label(__('admin.settings_form.network.trusted_proxies_label'))
                     ->placeholder(__('admin.settings_form.network.placeholder'))
                     ->reorderable()
                     ->helperText(__('admin.settings_form.network.helper')),
+                // /broadcasting/auth rate cap. Echo POSTs once per
+                // private channel subscription ; on a fresh tab open
+                // an admin sees server + user + admin-mirror = 3 / load
+                // baseline, but a noisy reconnect (network blip,
+                // sleep / wake) can re-auth every channel in a burst.
+                // Default 240 / min (4 / sec) is generous for any
+                // single user ; the operator can lift further if
+                // they have many users behind one Cloudflare IP.
+                TextInput::make('broadcasting_auth_rate_limit_per_minute')
+                    ->label(__('admin.settings_form.network.broadcasting_auth_label'))
+                    ->helperText(__('admin.settings_form.network.broadcasting_auth_helper'))
+                    ->numeric()
+                    ->minValue(30)
+                    ->maxValue(10000)
+                    ->step(10)
+                    ->default(240)
+                    ->required(),
+                // Pelican-proxy cap (websocket creds + runtime resources).
+                // Set HIGH (default 600/min/user) on purpose : the SPA's
+                // useWingsWebSocket reconnect-on-network-blip can spike
+                // these endpoints, and a too-low cap would force "give up"
+                // before the ws actually recovers. Lower this only if you
+                // run a many-tenant Peregrine and want to protect Pelican
+                // from a misbehaving client.
+                TextInput::make('pelican_proxy_rate_limit_per_minute')
+                    ->label(__('admin.settings_form.network.pelican_proxy_label'))
+                    ->helperText(__('admin.settings_form.network.pelican_proxy_helper'))
+                    ->numeric()
+                    ->minValue(60)
+                    ->maxValue(100000)
+                    ->step(100)
+                    ->default(6000)
+                    ->required(),
             ])->columns(1);
     }
 }

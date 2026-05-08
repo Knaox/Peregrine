@@ -22,8 +22,8 @@ import { renderInstallModal, renderUninstallModal } from './modals';
 const { useState, useMemo, useEffect, useRef } = S.React;
 const { useQuery, useMutation, useQueryClient } = S.ReactQuery;
 
-const PAGE_SIZES = [6, 12, 24] as const;
-const DEFAULT_PAGE_SIZE = 12;
+const PAGE_SIZES = [10, 25, 50] as const;
+const DEFAULT_PAGE_SIZE = 25;
 
 interface SearchResponse {
     data: ModpackHit[];
@@ -63,13 +63,20 @@ function ModpacksPage() {
     // ---------------------------------------------------------------------
     // Providers
     // ---------------------------------------------------------------------
+    interface ProvidersMeta {
+        default_provider: string | null;
+        default_sort: string;
+        default_page_size: number;
+    }
     const providersQ = useQuery({
         queryKey: ['mp', identifier, 'providers'],
-        queryFn: () => api<{ data: Provider[] }>(`${BASE}/servers/${identifier}/modpacks/providers`),
+        queryFn: () => api<{ data: Provider[]; meta?: ProvidersMeta }>(`${BASE}/servers/${identifier}/modpacks/providers`),
         enabled: !!identifier && eligible,
         staleTime: 5 * 60_000,
     });
-    const providers: Provider[] = (providersQ.data as { data?: Provider[] } | undefined)?.data ?? [];
+    const providersResp = providersQ.data as { data?: Provider[]; meta?: ProvidersMeta } | undefined;
+    const providers: Provider[] = providersResp?.data ?? [];
+    const providersMeta = providersResp?.meta;
 
     // ---------------------------------------------------------------------
     // Filters state
@@ -84,13 +91,40 @@ function ModpacksPage() {
     const [sort, setSort] = useState<string>('');     // '' = provider default
     const [category, setCategory] = useState<string>('');
 
-    // Initialise providerId from the providers list once it lands.
+    // Initialise providerId from the providers list once it lands. Order
+    // of preference :
+    //   1. Admin-configured `default_provider` if it's actually configured
+    //      (e.g. CurseForge selected as default but no API key → skip).
+    //      The API only returns it in meta when both conditions hold.
+    //   2. First configured provider on the list.
+    //   3. First provider on the list (always populated client-side fallback).
+    //
+    // Without (1), the admin's `default_provider` setting in
+    // /admin/modpack-configs was completely ignored — the page always
+    // landed on Modrinth (alphabetically first configured) regardless of
+    // what the operator picked.
     if (providerId === '' && providers.length > 0) {
-        // Prefer first configured provider; fallback to first.
+        const adminDefaultId = providersMeta?.default_provider ?? null;
+        const adminDefault = adminDefaultId !== null
+            ? providers.find(p => p.id === adminDefaultId && p.configured)
+            : null;
         const firstConfigured = providers.find(p => p.configured) ?? providers[0];
-        if (firstConfigured) {
+        const chosen = adminDefault ?? firstConfigured;
+        if (chosen) {
             // setState in render is allowed for one-shot init when using current values.
-            queueMicrotask(() => setProviderId(firstConfigured.id));
+            queueMicrotask(() => setProviderId(chosen.id));
+        }
+    }
+
+    // Honor the admin-configured page size on first render. Without this,
+    // the SPA always opens with the hardcoded DEFAULT_PAGE_SIZE constant,
+    // ignoring whatever the operator picked in /admin/modpack-configs.
+    const initialPageSizeRef = useRef<boolean>(false);
+    if (!initialPageSizeRef.current && providersMeta && providersMeta.default_page_size > 0 && providersMeta.default_page_size !== pageSize) {
+        initialPageSizeRef.current = true;
+        const adminPageSize = providersMeta.default_page_size;
+        if (PAGE_SIZES.includes(adminPageSize as typeof PAGE_SIZES[number])) {
+            queueMicrotask(() => setPageSize(adminPageSize));
         }
     }
 
@@ -238,6 +272,50 @@ function ModpacksPage() {
             setUninstallError(errKey ? t(errKey) : t('modpacks.errors.unknown'));
         },
     });
+
+    // ---------------------------------------------------------------------
+    // Live updates via Reverb
+    // ---------------------------------------------------------------------
+    // Subscribe to the server's mirror channel so install / uninstall
+    // completion (PollInstallStatusJob → setLocalServerStatus → broadcasts
+    // ServerMirrorChanged) lands in <100 ms instead of waiting on the 4 s
+    // polling cycle. Without this hook the page only catches the change
+    // through the polling tick — which itself stops as soon as
+    // `installation.is_active` flips, so a borderline race could leave the
+    // UI stuck on the "in progress" card until the user clicks elsewhere.
+    //
+    // Echo is OPTIONAL : `S.getEcho` is undefined on host shells that
+    // pre-date the bridge export, and it can return null when the admin
+    // never set up Reverb. In both cases we silently fall back to the
+    // existing polling (no crash, no warning spam).
+    useEffect(() => {
+        if (serverId <= 0 || identifier === '') return;
+        const echo = S.getEcho?.();
+        if (!echo) return;
+
+        const channel = echo.private(`server.${serverId}`);
+        const handler = () => {
+            // Server-level mirror changes (status / egg flips) coincide
+            // with every modpack op transition point — invalidate the
+            // plugin's queries so the UI repaints with fresh data.
+            // Eligibility is invalidated too because changing the server
+            // egg can flip eligibility on/off.
+            void qc.invalidateQueries({ queryKey: ['mp', identifier, 'installation'] });
+            void qc.invalidateQueries({ queryKey: ['mp', identifier, 'eligibility'] });
+        };
+        channel.listen('.mirror.changed', handler);
+
+        return () => {
+            try {
+                channel.stopListening('.mirror.changed');
+                echo.leave(`server.${serverId}`);
+            } catch {
+                // Tearing down a half-broken channel can throw — safe
+                // to ignore, the next subscriber will rebuild from
+                // scratch via the lazy `getEcho()` cache.
+            }
+        };
+    }, [serverId, identifier, qc]);
 
     // Watch the installation state and notify the shell when a plugin-managed
     // operation transitions from active → done. Also force-invalidate the

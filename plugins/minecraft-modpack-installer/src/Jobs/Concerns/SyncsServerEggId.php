@@ -46,7 +46,22 @@ trait SyncsServerEggId
             return;
         }
 
-        if ($localEggId === null || (int) $server->egg_id === $localEggId) {
+        if ($localEggId === null) {
+            // Logging at warning level (was a silent return) so the
+            // operator notices when the modpack-installer egg never made
+            // it into Peregrine's local mirror — that's the failure mode
+            // where the UI keeps showing the original egg throughout an
+            // install while Pelican has already swapped to the installer
+            // egg. EggResolver tries one auto-sync on miss; if that fell
+            // through we surface it here rather than swallow.
+            $logger->warning('modpack: local egg_id resolution returned null after auto-sync — UI will show stale egg until next reconcile', [
+                'server_id' => $server->id,
+                'pelican_egg_id' => $pelicanEggId,
+            ]);
+
+            return;
+        }
+        if ((int) $server->egg_id === $localEggId) {
             return;
         }
 

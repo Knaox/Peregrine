@@ -18,6 +18,8 @@ use Throwable;
 
 final class VoidsWrathProvider implements ModpackProviderInterface
 {
+    use \Plugins\MinecraftModpackInstaller\Services\Providers\Concerns\ResolvesVersionByListing;
+
     private const CATALOG_URL = 'https://raw.githubusercontent.com/astrooom/minecraft-modpack-index/main/voidswrath-modpacks.json';
 
     public function __construct(
@@ -143,28 +145,35 @@ final class VoidsWrathProvider implements ModpackProviderInterface
     /** @return list<array<string, mixed>> */
     private function loadCatalog(): array
     {
-        return $this->cache->remember(
-            'modpacks:voidswrath:catalog',
-            24 * 3600,
-            function (): array {
-                try {
-                    $response = $this->http
-                        ->withHeaders(['User-Agent' => $this->userAgent])
-                        ->timeout(20)
-                        ->retry(2, 300)
-                        ->get(self::CATALOG_URL)
-                        ->throw()
-                        ->json();
-                } catch (Throwable $e) {
-                    throw new ProviderRequestException($this->id(), 'catalog fetch failed: '.$e->getMessage(), $e);
-                }
+        // Cache successes only — the previous `cache->remember` form
+        // would happily pin an empty catalog for 24h if a single fetch
+        // returned a malformed payload, leaving every modpack lookup
+        // returning null until the TTL expired.
+        $key = 'modpacks:voidswrath:catalog';
+        $cached = $this->cache->get($key);
+        if (is_array($cached) && $cached !== []) {
+            return $cached;
+        }
 
-                if (! is_array($response)) {
-                    return [];
-                }
+        try {
+            $response = $this->http
+                ->withHeaders(['User-Agent' => $this->userAgent])
+                ->timeout(20)
+                ->retry(2, 300)
+                ->get(self::CATALOG_URL)
+                ->throw()
+                ->json();
+        } catch (Throwable $e) {
+            throw new ProviderRequestException($this->id(), 'catalog fetch failed: '.$e->getMessage(), $e);
+        }
 
-                return array_values($response);
-            },
-        );
+        if (! is_array($response) || $response === []) {
+            return [];
+        }
+
+        $catalog = array_values($response);
+        $this->cache->put($key, $catalog, 24 * 3600);
+
+        return $catalog;
     }
 }

@@ -8,6 +8,7 @@ import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { AllocationCard } from '@/components/network/AllocationCard';
+import { withServerConflictGate } from '@/components/server/withServerConflictGate';
 
 function GlobeIcon({ className }: { className?: string }) {
     return (
@@ -44,7 +45,7 @@ function EmptyState() {
     );
 }
 
-export function ServerNetworkPage() {
+function ServerNetworkPageImpl() {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
@@ -199,3 +200,6 @@ export function ServerNetworkPage() {
         </m.div>
     );
 }
+
+// Conflict-state gate — see ServerFilesPage for the pattern.
+export const ServerNetworkPage = withServerConflictGate(ServerNetworkPageImpl);

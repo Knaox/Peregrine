@@ -95,8 +95,28 @@ export function resetEcho(): void {
 
 function readConfig(): ReverbConfig | null {
     const key = readMeta('reverb-key');
-    const host = readMeta('reverb-host');
-    if (key === '' || host === '') {
+    if (key === '') {
+        return null;
+    }
+
+    let host = readMeta('reverb-host');
+    // Loopback-host guard. If the meta says "localhost" / "127.0.0.1" but
+    // the page itself was loaded from a non-loopback origin (typical when
+    // accessing the panel via a LAN IP, ngrok tunnel, or staging domain
+    // while REVERB_HOST in .env still points at "localhost"), we'd dial
+    // the BROWSER's loopback instead of the server's — and every channel
+    // subscription would silently fail with no console error. Override
+    // with `window.location.hostname` so the WS lands on the same host
+    // that just served us the HTML. The Blade template already does the
+    // server-side equivalent fallback to `request()->getHost()`; this is
+    // the belt-and-suspenders for cached HTML / stale env values.
+    const pageHost = window.location.hostname;
+    const hostIsLoopback = host === '' || host === 'localhost' || host === '127.0.0.1';
+    const pageIsLoopback = pageHost === 'localhost' || pageHost === '127.0.0.1';
+    if (hostIsLoopback && !pageIsLoopback) {
+        host = pageHost;
+    }
+    if (host === '') {
         return null;
     }
 
@@ -106,7 +126,15 @@ function readConfig(): ReverbConfig | null {
         return null;
     }
 
-    const schemeRaw = readMeta('reverb-scheme').toLowerCase();
+    // Mixed-content guard. A page served over HTTPS cannot open a plain
+    // ws:// — the browser blocks it before the handshake even starts.
+    // Coerce the scheme up to wss:// when the page is HTTPS so the panel
+    // doesn't silently lose live updates after an HTTPS deploy without a
+    // matching REVERB_SCHEME flip.
+    let schemeRaw = readMeta('reverb-scheme').toLowerCase();
+    if (window.location.protocol === 'https:' && schemeRaw === 'http') {
+        schemeRaw = 'https';
+    }
     const scheme: 'http' | 'https' = schemeRaw === 'http' ? 'http' : 'https';
 
     return { key, host, port, scheme };

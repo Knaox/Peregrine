@@ -150,5 +150,27 @@ final class SettingsPersister
             ? array_values(array_filter(array_map('trim', $proxies), fn ($v): bool => $v !== ''))
             : [];
         $this->settings->set('trusted_proxies', empty($proxies) ? '*' : implode(',', $proxies));
+
+        // /broadcasting/auth throttle cap (Reverb private-channel auth).
+        // Floor at 30 / min so an operator can't accidentally lock the
+        // panel out of live updates entirely. The closure in
+        // AppServiceProvider re-reads this value on every auth request,
+        // so a save here takes effect on the very next channel
+        // subscription without an artisan cache:clear.
+        if (array_key_exists('broadcasting_auth_rate_limit_per_minute', $data)) {
+            $cap = (int) $data['broadcasting_auth_rate_limit_per_minute'];
+            $cap = max($cap, 30);
+            $this->settings->set('broadcasting_auth_rate_limit_per_minute', (string) $cap);
+        }
+
+        // Pelican proxy throttle cap (websocket creds + runtime resources).
+        // Floor 60/min so the panel itself stays usable even if the
+        // operator types a typo. Same hot-reload semantics as the
+        // broadcasting cap : applies on the very next request.
+        if (array_key_exists('pelican_proxy_rate_limit_per_minute', $data)) {
+            $cap = (int) $data['pelican_proxy_rate_limit_per_minute'];
+            $cap = max($cap, 60);
+            $this->settings->set('pelican_proxy_rate_limit_per_minute', (string) $cap);
+        }
     }
 }

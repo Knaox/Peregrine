@@ -5,6 +5,7 @@ import { useServer } from '@/hooks/useServer';
 import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { SftpCredentials } from '@/components/server/SftpCredentials';
 import { Spinner } from '@/components/ui/Spinner';
+import { withServerConflictGate } from '@/components/server/withServerConflictGate';
 
 function KeyIcon({ className }: { className?: string }) {
     return (
@@ -14,7 +15,7 @@ function KeyIcon({ className }: { className?: string }) {
     );
 }
 
-export function ServerSftpPage() {
+function ServerSftpPageImpl() {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
@@ -68,3 +69,6 @@ export function ServerSftpPage() {
         </m.div>
     );
 }
+
+// Conflict-state gate — see ServerFilesPage for the pattern.
+export const ServerSftpPage = withServerConflictGate(ServerSftpPageImpl);

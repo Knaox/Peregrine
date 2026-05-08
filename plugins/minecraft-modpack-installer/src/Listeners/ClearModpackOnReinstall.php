@@ -8,6 +8,7 @@ use App\Events\ServerReinstallStarting;
 use Plugins\MinecraftModpackInstaller\Events\UninstallationCompleted;
 use Plugins\MinecraftModpackInstaller\Models\ModpackInstallation;
 use Plugins\MinecraftModpackInstaller\Pelican\PelicanClient;
+use Plugins\MinecraftModpackInstaller\Services\JavaCompatibilityMatrix;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -31,6 +32,7 @@ class ClearModpackOnReinstall
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly PelicanClient $pelican,
+        private readonly JavaCompatibilityMatrix $javaMatrix,
     ) {}
 
     public function handle(ServerReinstallStarting $event): void
@@ -100,7 +102,12 @@ class ClearModpackOnReinstall
 
             $this->pelican->updateServerStartup((int) $server->pelican_server_id, [
                 'egg' => $attrs['egg'] ?? null,
-                'image' => (string) ($container['image'] ?? 'ghcr.io/pelican-eggs/yolks:java_17'),
+                // Live container image is what we want to keep (we're only
+                // toggling skip_scripts). Fall through to the matrix's
+                // default-Java image only when Pelican returned no image —
+                // never hardcoded.
+                'image' => (string) ($container['image']
+                    ?? $this->javaMatrix->imageForJava($this->javaMatrix->defaultJava())),
                 'startup' => (string) ($container['startup_command'] ?? 'java -jar {{SERVER_JARFILE}}'),
                 'environment' => is_array($container['environment'] ?? null)
                     ? $container['environment']

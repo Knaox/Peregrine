@@ -125,6 +125,31 @@ class PluginBootstrap
                 $iconUrl = "/plugins/{$plugin->plugin_id}/icon.svg";
             }
 
+            // Content-aware ETag of the i18n folder. Hashed from the file
+            // mtimes so it flips the moment any locale JSON is edited — even
+            // if the plugin's `version` field stays put. Without this,
+            // `loadPluginI18n` would only bust the browser's HTTP cache when
+            // the operator bumped `plugin.json`, leaving older translations
+            // pinned for `max-age=3600` after every i18n hotfix.
+            $i18nEtag = null;
+            if ($pluginPath !== null) {
+                $i18nDir = $pluginPath.'/frontend/i18n';
+                if (is_dir($i18nDir)) {
+                    $files = glob($i18nDir.'/*.json') ?: [];
+                    sort($files);
+                    $parts = [];
+                    foreach ($files as $f) {
+                        $mtime = @filemtime($f);
+                        if ($mtime !== false) {
+                            $parts[] = basename($f).':'.$mtime;
+                        }
+                    }
+                    if ($parts !== []) {
+                        $i18nEtag = substr(sha1(implode('|', $parts)), 0, 10);
+                    }
+                }
+            }
+
             $assembled = [
                 'id' => $manifest['id'],
                 'name' => $manifest['name'] ?? $manifest['id'],
@@ -137,6 +162,7 @@ class PluginBootstrap
                 'settings' => $plugin->settings ?? [],
                 'bundle_url' => $bundleUrl,
                 'icon_url' => $iconUrl,
+                'i18n_etag' => $i18nEtag,
             ];
 
             // Plugins can register an enricher closure during boot to inject

@@ -44,6 +44,13 @@ class EggImporter
             $cachedFingerprint = $this->cache->get(self::PAYLOAD_FINGERPRINT_KEY);
             if ((is_int($cachedId) || (is_string($cachedId) && ctype_digit($cachedId)))
                 && $cachedFingerprint === $fingerprint) {
+                // Even on the cache-hot path, double-check the local
+                // mirror — the egg id is in Pelican but might not be in
+                // Peregrine's `eggs` table yet (cache survives DB wipes,
+                // operator re-installed Peregrine, …). Cheap indexed
+                // lookup; the heavy syncEggs() only fires on a true miss.
+                $this->ensureLocalMirror((int) $cachedId);
+
                 return (int) $cachedId;
             }
         }
@@ -52,26 +59,93 @@ class EggImporter
         // the import endpoint, check whether Pelican already has an egg
         // matching our UUID — re-importing a UUID that already exists raises
         // HTTP 500 UniqueConstraintViolationException because Pelican's
-        // import service does a blind `Egg::create()`. When the egg is
-        // already there, we trust the existing row and just refresh our
-        // local cache so the next install reuses it without scanning Pelican
-        // again. Operators who need to push genuine egg-template changes
-        // should delete the egg in the Pelican admin UI; the next ensure()
-        // call will then re-import cleanly.
+        // import service does a blind `Egg::create()`.
+        //
+        // Two paths from here :
+        //  - $force = false : trust the existing row, refresh our cache and
+        //    move on. Cheap and idempotent ; what every install job hits.
+        //  - $force = true  : we're deliberately pushing fresh script bytes
+        //    (admin clicked "Importer l'egg" or someone ran the artisan
+        //    command with --force after editing the .sh). Delete the egg
+        //    first so the import below succeeds — without this step the
+        //    button silently looked like it worked while Pelican kept
+        //    serving the old script forever.
         $existingId = $this->pelican->findEggIdByUuid(self::EGG_UUID);
         if ($existingId !== null) {
-            $this->cache->forever(self::CACHE_KEY, $existingId);
-            $this->cache->forever(self::PAYLOAD_FINGERPRINT_KEY, $fingerprint);
+            if (! $force) {
+                $this->cache->forever(self::CACHE_KEY, $existingId);
+                $this->cache->forever(self::PAYLOAD_FINGERPRINT_KEY, $fingerprint);
+                $this->ensureLocalMirror($existingId);
 
-            return $existingId;
+                return $existingId;
+            }
+
+            try {
+                $this->pelican->deleteEgg($existingId);
+            } catch (\Throwable $e) {
+                // Most likely cause: a server is currently using this egg
+                // (mid-install). Surface the exact reason so the operator
+                // can wait for the install to complete or clean up by
+                // hand instead of staring at a silent failure.
+                throw new RuntimeException(
+                    "force re-import requires deleting Pelican egg #{$existingId} "
+                    .'(UUID '.self::EGG_UUID.'), which Pelican refused: '.$e->getMessage(),
+                    previous: $e,
+                );
+            }
+
+            // Drop our local cache too — the egg id we just deleted will
+            // not be reused by Pelican on the re-import below, so callers
+            // must not see the stale id even if the import step throws
+            // before we update the cache.
+            $this->cache->forget(self::CACHE_KEY);
+            $this->cache->forget(self::PAYLOAD_FINGERPRINT_KEY);
         }
 
         $pelicanEggId = $this->pelican->importEgg($payload);
 
         $this->cache->forever(self::CACHE_KEY, $pelicanEggId);
         $this->cache->forever(self::PAYLOAD_FINGERPRINT_KEY, $fingerprint);
+        $this->ensureLocalMirror($pelicanEggId);
 
         return $pelicanEggId;
+    }
+
+    /**
+     * Make sure Peregrine's local `eggs` mirror has a row for the given
+     * Pelican egg id. Called on every import path so the moment
+     * `ensureImported()` returns, downstream code (Filament admin egg
+     * picker, InstallModpackJob's `syncLocalEggId`, manifest enrichers,
+     * …) can resolve `pelican_egg_id → eggs.id` without going through
+     * EggResolver's lazy retry path.
+     *
+     * Cheap indexed lookup first; the full `InfrastructureSync::syncEggs`
+     * (which fetches every egg from Pelican) only fires on a true miss.
+     * Failures are swallowed — best effort — because the EggResolver path
+     * still catches the egg on first use, so a transient outage here
+     * just delays the local mirror by one install cycle.
+     */
+    private function ensureLocalMirror(int $pelicanEggId): void
+    {
+        if ($pelicanEggId <= 0) {
+            return;
+        }
+        if (\App\Models\Egg::where('pelican_egg_id', $pelicanEggId)->exists()) {
+            return;
+        }
+        try {
+            app(\App\Services\Sync\InfrastructureSync::class)->syncEggs();
+        } catch (\Throwable $e) {
+            // Best-effort: the EggResolver fallback path will catch this
+            // on first lookup. Log via the framework logger if available
+            // so an operator running the import command still sees it.
+            if (function_exists('logger')) {
+                logger()->info('modpack: ensureLocalMirror sync failed (will retry on first egg-id resolve)', [
+                    'pelican_egg_id' => $pelicanEggId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     /** @param  array<string, mixed>  $payload */
@@ -201,8 +275,83 @@ class EggImporter
         if ($existing !== self::SCRIPT_PLACEHOLDER) {
             throw new RuntimeException('Egg template script placeholder missing or has been replaced.');
         }
-        $decoded['scripts']['installation']['script'] = $script;
+
+        // Pelican stores `eggs.script_install` as a MySQL `TEXT` column,
+        // which silently truncates anything past 65,535 bytes. Our raw
+        // .sh weighs ~66 KB once the multi-loader / multi-provider /
+        // robust-cascade logic landed, so the persisted script ended
+        // mid-function and the install failed at startup with
+        // `syntax error: unexpected end of file`. Strip pure comment
+        // lines and blank lines on the wire ONLY — the on-disk source
+        // stays fully commented for development. Heredoc bodies are
+        // tracked so the EULA template's `# ...` lines (literal text)
+        // aren't accidentally removed.
+        $decoded['scripts']['installation']['script'] = $this->minifyForPelican($script);
 
         return $decoded;
+    }
+
+    /**
+     * Strip purely cosmetic content from a bash script before persisting
+     * it to Pelican: empty lines and full-line `#` comments. Keeps the
+     * shebang and any in-line trailing comments (those are never on a
+     * line by themselves, so the regex doesn't match them) and skips
+     * anything between a `<<MARK` opener and its matching `MARK` closer
+     * so heredoc bodies pass through verbatim.
+     *
+     * Output is always still valid bash; the only invariant lost is
+     * formatting / readability inside the install container.
+     */
+    private function minifyForPelican(string $script): string
+    {
+        $lines = preg_split("/\r\n|\n|\r/", $script) ?: [];
+        $out = [];
+        $heredocCloser = null;
+        $first = true;
+
+        foreach ($lines as $line) {
+            // Preserve the shebang verbatim (always the first line).
+            if ($first) {
+                $first = false;
+                if (str_starts_with($line, '#!')) {
+                    $out[] = $line;
+
+                    continue;
+                }
+            }
+
+            // Inside a heredoc → pass through, looking for the closer.
+            if ($heredocCloser !== null) {
+                $out[] = $line;
+                if (rtrim($line) === $heredocCloser) {
+                    $heredocCloser = null;
+                }
+                continue;
+            }
+
+            // Heredoc opener — match `<<EOF`, `<<'EOF'`, `<<"EOF"`,
+            // `<<-EOF`, with optional trailing redirections (we only
+            // care about the marker name itself).
+            if (preg_match('/<<-?\s*[\'"]?([A-Za-z_][A-Za-z0-9_]*)[\'"]?\s*(?:\|[^|]*)?\s*$/', $line, $m)) {
+                $out[] = $line;
+                $heredocCloser = $m[1];
+
+                continue;
+            }
+
+            // Pure comment line — strip.
+            if (preg_match('/^\s*#/', $line)) {
+                continue;
+            }
+
+            // Blank line — strip.
+            if (trim($line) === '') {
+                continue;
+            }
+
+            $out[] = $line;
+        }
+
+        return implode("\n", $out);
     }
 }

@@ -18,6 +18,8 @@ use Throwable;
 
 final class TechnicProvider implements ModpackProviderInterface
 {
+    use \Plugins\MinecraftModpackInstaller\Services\Providers\Concerns\ResolvesVersionByListing;
+
     private const BASE_URL = 'https://api.technicpack.net';
 
     private const FALLBACK_BUILD = '746';
@@ -111,40 +113,48 @@ final class TechnicProvider implements ModpackProviderInterface
 
     public function getModpack(string $modpackId): ?ModpackSummary
     {
+        // Cache successes only — see CurseForgeProvider::getModpack.
         $key = 'modpacks:technic:meta:'.sha1($modpackId);
+        $cached = $this->cache->get($key);
+        if ($cached instanceof ModpackSummary) {
+            return $cached;
+        }
+
         $build = $this->launcherBuild();
 
-        return $this->cache->remember($key, 24 * 3600, function () use ($modpackId, $build): ?ModpackSummary {
-            try {
-                $response = $this->client()
-                    ->get(self::BASE_URL.'/modpack/'.rawurlencode($modpackId), ['build' => $build])
-                    ->throw()
-                    ->json();
-            } catch (Throwable) {
-                return null;
-            }
+        try {
+            $response = $this->client()
+                ->get(self::BASE_URL.'/modpack/'.rawurlencode($modpackId), ['build' => $build])
+                ->throw()
+                ->json();
+        } catch (Throwable) {
+            return null;
+        }
 
-            if (! is_array($response) || empty($response['name'])) {
-                return null;
-            }
+        if (! is_array($response) || empty($response['name'])) {
+            return null;
+        }
 
-            $slug = (string) ($response['name'] ?? $modpackId);
+        $slug = (string) ($response['name'] ?? $modpackId);
 
-            return new ModpackSummary(
-                provider: $this->id(),
-                modpackId: $slug,
-                name: (string) ($response['displayName'] ?? $response['display_name'] ?? $slug),
-                slug: $slug,
-                description: $response['description'] ?? null,
-                iconUrl: $response['icon']['url']
-                    ?? $response['logo']['url']
-                    ?? $response['icon']
-                    ?? $response['logo']
-                    ?? null,
-                externalUrl: $response['url'] ?? "https://www.technicpack.net/modpack/{$slug}",
-                isServerCompatible: null,
-            );
-        });
+        $summary = new ModpackSummary(
+            provider: $this->id(),
+            modpackId: $slug,
+            name: (string) ($response['displayName'] ?? $response['display_name'] ?? $slug),
+            slug: $slug,
+            description: $response['description'] ?? null,
+            iconUrl: $response['icon']['url']
+                ?? $response['logo']['url']
+                ?? $response['icon']
+                ?? $response['logo']
+                ?? null,
+            externalUrl: $response['url'] ?? "https://www.technicpack.net/modpack/{$slug}",
+            isServerCompatible: null,
+        );
+
+        $this->cache->put($key, $summary, 24 * 3600);
+
+        return $summary;
     }
 
     /** @return list<ModpackVersion> */

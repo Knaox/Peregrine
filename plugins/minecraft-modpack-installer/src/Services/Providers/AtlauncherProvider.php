@@ -18,6 +18,8 @@ use Throwable;
 
 final class AtlauncherProvider implements ModpackProviderInterface
 {
+    use \Plugins\MinecraftModpackInstaller\Services\Providers\Concerns\ResolvesVersionByListing;
+
     private const ENDPOINT = 'https://api.atlauncher.com/v2/graphql';
 
     public function __construct(
@@ -121,44 +123,51 @@ final class AtlauncherProvider implements ModpackProviderInterface
 
     public function getModpack(string $modpackId): ?ModpackSummary
     {
+        // Cache successes only — see CurseForgeProvider::getModpack.
         $key = 'modpacks:atlauncher:meta:'.sha1($modpackId);
+        $cached = $this->cache->get($key);
+        if ($cached instanceof ModpackSummary) {
+            return $cached;
+        }
 
-        return $this->cache->remember($key, 24 * 3600, function () use ($modpackId): ?ModpackSummary {
-            $query = <<<'GQL'
-            query Pack($safe: String!) {
-                packBySafeName(safeName: $safe) {
-                    id
-                    name
-                    safeName
-                    description
-                }
+        $query = <<<'GQL'
+        query Pack($safe: String!) {
+            packBySafeName(safeName: $safe) {
+                id
+                name
+                safeName
+                description
             }
-            GQL;
+        }
+        GQL;
 
-            try {
-                $response = $this->graphql($query, ['safe' => $modpackId]);
-            } catch (Throwable) {
-                return null;
-            }
+        try {
+            $response = $this->graphql($query, ['safe' => $modpackId]);
+        } catch (Throwable) {
+            return null;
+        }
 
-            $node = $response['data']['packBySafeName'] ?? null;
-            if (! is_array($node) || empty($node['id'])) {
-                return null;
-            }
+        $node = $response['data']['packBySafeName'] ?? null;
+        if (! is_array($node) || empty($node['id'])) {
+            return null;
+        }
 
-            $safeName = (string) ($node['safeName'] ?? $modpackId);
+        $safeName = (string) ($node['safeName'] ?? $modpackId);
 
-            return new ModpackSummary(
-                provider: $this->id(),
-                modpackId: $safeName,
-                name: (string) ($node['name'] ?? $modpackId),
-                slug: $safeName,
-                description: $node['description'] ?? null,
-                iconUrl: "https://cdn.atlauncher.com/launcher/images/{$safeName}.png",
-                externalUrl: "https://atlauncher.com/pack/{$safeName}",
-                isServerCompatible: null,
-            );
-        });
+        $summary = new ModpackSummary(
+            provider: $this->id(),
+            modpackId: $safeName,
+            name: (string) ($node['name'] ?? $modpackId),
+            slug: $safeName,
+            description: $node['description'] ?? null,
+            iconUrl: "https://cdn.atlauncher.com/launcher/images/{$safeName}.png",
+            externalUrl: "https://atlauncher.com/pack/{$safeName}",
+            isServerCompatible: null,
+        );
+
+        $this->cache->put($key, $summary, 24 * 3600);
+
+        return $summary;
     }
 
     /** @return list<ModpackVersion> */

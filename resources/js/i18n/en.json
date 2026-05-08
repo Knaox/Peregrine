@@ -288,6 +288,11 @@
             "info_no_power": "Start / stop / restart and the live console are disabled while the server is suspended — Wings rejects every command.",
             "info_reactivate": "Contact your hosting provider or reactivate your subscription to restore access."
         },
+        "conflict": {
+            "go_overview": "Back to overview",
+            "failed_title": "Install failed",
+            "failed_description": "An operator can retry the install from the overview. This page stays unavailable until the install completes."
+        },
         "actions": {
             "start": "Start",
             "stop": "Stop",

@@ -227,36 +227,97 @@ final class CurseForgeProvider implements ModpackProviderInterface
             return null;
         }
 
+        // Cache hits short-circuit. Misses are NEVER cached — `null` here
+        // means the lookup failed (transient HTTP error, rate limit, key
+        // briefly invalid…) and persisting that for 24h would poison
+        // every subsequent install of the same modpack with the raw
+        // numeric id as its display name (cf. the RLCraft 285109 →
+        // "285109" header that prompted this fix). `cache->remember`
+        // does not distinguish, so we cache misses by hand on success.
         $key = 'modpacks:curseforge:meta:'.sha1($modpackId);
+        $cached = $this->cache->get($key);
+        if ($cached instanceof ModpackSummary) {
+            return $cached;
+        }
 
-        return $this->cache->remember($key, 24 * 3600, function () use ($modpackId): ?ModpackSummary {
-            try {
-                $response = $this->client()
-                    ->get(self::BASE_URL.'/mods/'.rawurlencode($modpackId))
-                    ->throw()
-                    ->json();
-            } catch (Throwable) {
-                return null;
-            }
+        try {
+            $response = $this->client()
+                ->get(self::BASE_URL.'/mods/'.rawurlencode($modpackId))
+                ->throw()
+                ->json();
+        } catch (Throwable) {
+            return null;
+        }
 
-            $entry = $response['data'] ?? null;
-            if (! is_array($entry) || empty($entry['id'])) {
-                return null;
-            }
+        $entry = $response['data'] ?? null;
+        if (! is_array($entry) || empty($entry['id'])) {
+            return null;
+        }
 
-            return new ModpackSummary(
-                provider: $this->id(),
-                modpackId: (string) $entry['id'],
-                name: (string) ($entry['name'] ?? $modpackId),
-                slug: $entry['slug'] ?? null,
-                description: $entry['summary'] ?? null,
-                iconUrl: $entry['logo']['thumbnailUrl']
-                    ?? $entry['logo']['url']
-                    ?? null,
-                externalUrl: $entry['links']['websiteUrl'] ?? null,
-                isServerCompatible: $this->detectServerCompatibility($entry),
-            );
-        });
+        $summary = new ModpackSummary(
+            provider: $this->id(),
+            modpackId: (string) $entry['id'],
+            name: (string) ($entry['name'] ?? $modpackId),
+            slug: $entry['slug'] ?? null,
+            description: $entry['summary'] ?? null,
+            iconUrl: $entry['logo']['thumbnailUrl']
+                ?? $entry['logo']['url']
+                ?? null,
+            externalUrl: $entry['links']['websiteUrl'] ?? null,
+            isServerCompatible: $this->detectServerCompatibility($entry),
+        );
+
+        $this->cache->put($key, $summary, 24 * 3600);
+
+        return $summary;
+    }
+
+    /**
+     * Direct fetch of one file's metadata via CurseForge's
+     * `/v1/mods/{modId}/files/{fileId}` endpoint. One HTTP round-trip,
+     * unlike `listVersions()` which paginates through every release of
+     * the pack — RLCraft has 80+ files which used to push the orchestrator
+     * past `max_execution_time` and 500 the install POST.
+     *
+     * Cache successes for 30 min (versions don't change after release;
+     * shorter than `getModpack` because release notes / changelog can
+     * be edited and we'd rather pick those up sooner). Misses are
+     * never cached — same rationale as `getModpack`.
+     */
+    public function getVersion(string $modpackId, string $versionId): ?ModpackVersion
+    {
+        if (! $this->isConfigured()) {
+            return null;
+        }
+
+        $key = 'modpacks:curseforge:version:'.sha1($modpackId.'|'.$versionId);
+        $cached = $this->cache->get($key);
+        if ($cached instanceof ModpackVersion) {
+            return $cached;
+        }
+
+        try {
+            $response = $this->client()
+                ->get(self::BASE_URL."/mods/{$modpackId}/files/{$versionId}")
+                ->throw()
+                ->json();
+        } catch (Throwable) {
+            return null;
+        }
+
+        $entry = $response['data'] ?? null;
+        if (! is_array($entry) || empty($entry['id'])) {
+            return null;
+        }
+
+        $version = $this->mapFileEntryToVersion($entry);
+        if ($version === null) {
+            return null;
+        }
+
+        $this->cache->put($key, $version, 30 * 60);
+
+        return $version;
     }
 
     /**
@@ -304,16 +365,10 @@ final class CurseForgeProvider implements ModpackProviderInterface
                 }
                 $seen[$fileId] = true;
 
-                $loaders = $this->extractLoadersFromGameVersions($entry['gameVersions'] ?? []);
-                $minecraftVersions = $this->extractMinecraftVersions($entry['gameVersions'] ?? []);
-
-                $versions[] = new ModpackVersion(
-                    versionId: $fileId,
-                    label: (string) ($entry['displayName'] ?? $entry['fileName'] ?? ''),
-                    minecraftVersions: $minecraftVersions,
-                    loaders: $loaders,
-                    releaseType: $this->mapReleaseType((int) ($entry['releaseType'] ?? 1)),
-                );
+                $version = $this->mapFileEntryToVersion($entry);
+                if ($version !== null) {
+                    $versions[] = $version;
+                }
             }
 
             $total = (int) ($response['pagination']['totalCount'] ?? 0);
@@ -439,6 +494,31 @@ final class CurseForgeProvider implements ModpackProviderInterface
             3 => 'alpha',
             default => 'unknown',
         };
+    }
+
+    /**
+     * Build a ModpackVersion DTO from a CurseForge file entry. Shared
+     * between `listVersions()` (paginated bulk fetch) and `getVersion()`
+     * (direct single fetch by id) so both surfaces produce identical
+     * shape — the version_label / loaders / minecraft_versions a caller
+     * gets shouldn't depend on which path the orchestrator took.
+     *
+     * @param  array<string, mixed>  $entry
+     */
+    private function mapFileEntryToVersion(array $entry): ?ModpackVersion
+    {
+        $fileId = (string) ($entry['id'] ?? '');
+        if ($fileId === '') {
+            return null;
+        }
+
+        return new ModpackVersion(
+            versionId: $fileId,
+            label: (string) ($entry['displayName'] ?? $entry['fileName'] ?? ''),
+            minecraftVersions: $this->extractMinecraftVersions($entry['gameVersions'] ?? []),
+            loaders: $this->extractLoadersFromGameVersions($entry['gameVersions'] ?? []),
+            releaseType: $this->mapReleaseType((int) ($entry['releaseType'] ?? 1)),
+        );
     }
 
     private function client()

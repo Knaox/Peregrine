@@ -7,6 +7,8 @@ namespace Plugins\MinecraftModpackInstaller\Filament\Resources;
 use App\Models\Egg;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -124,8 +126,8 @@ class ModpackConfigResource extends Resource
                     Select::make('modpacks_per_page')
                         ->label(__('minecraft-modpack-installer::admin.fields.modpacks_per_page.label'))
                         ->required()
-                        ->options([6 => '6', 12 => '12', 24 => '24'])
-                        ->default(12)
+                        ->options([10 => '10', 25 => '25', 50 => '50'])
+                        ->default(25)
                         ->helperText(__('minecraft-modpack-installer::admin.fields.modpacks_per_page.help')),
                 ])
                 ->columns(3),
@@ -151,6 +153,77 @@ class ModpackConfigResource extends Resource
                         ->helperText(__('minecraft-modpack-installer::admin.fields.cache_ttl_seconds.help')),
                 ])
                 ->columns(2),
+
+            // ── Java compatibility ────────────────────────────────────────
+            // Every field here is OPTIONAL. Leave blank to keep the bundled
+            // plugin defaults from `config/java-compatibility.php`. Filling
+            // a field overrides it: the rules list is replaced wholesale,
+            // the images map is merged per-key, and the default Java is
+            // a single value override.
+            Section::make(__('minecraft-modpack-installer::admin.java.section'))
+                ->description(__('minecraft-modpack-installer::admin.java.description'))
+                ->schema([
+                    Select::make('default_java')
+                        ->label(__('minecraft-modpack-installer::admin.java.default_java.label'))
+                        ->options([
+                            8 => 'Java 8',
+                            11 => 'Java 11',
+                            16 => 'Java 16',
+                            17 => 'Java 17',
+                            21 => 'Java 21',
+                        ])
+                        ->placeholder(__('minecraft-modpack-installer::admin.java.default_java.placeholder'))
+                        ->helperText(__('minecraft-modpack-installer::admin.java.default_java.help')),
+
+                    KeyValue::make('java_images')
+                        ->label(__('minecraft-modpack-installer::admin.java.images.label'))
+                        ->keyLabel(__('minecraft-modpack-installer::admin.java.images.key_label'))
+                        ->valueLabel(__('minecraft-modpack-installer::admin.java.images.value_label'))
+                        ->reorderable(false)
+                        ->addActionLabel(__('minecraft-modpack-installer::admin.java.images.add'))
+                        ->helperText(__('minecraft-modpack-installer::admin.java.images.help')),
+
+                    Repeater::make('java_rules')
+                        ->label(__('minecraft-modpack-installer::admin.java.rules.label'))
+                        ->helperText(__('minecraft-modpack-installer::admin.java.rules.help'))
+                        ->addActionLabel(__('minecraft-modpack-installer::admin.java.rules.add'))
+                        ->reorderableWithDragAndDrop()
+                        ->columns(4)
+                        ->schema([
+                            Select::make('loader')
+                                ->label(__('minecraft-modpack-installer::admin.java.rules.fields.loader'))
+                                ->options([
+                                    'forge' => 'Forge',
+                                    'neoforge' => 'NeoForge',
+                                    'fabric' => 'Fabric',
+                                    'quilt' => 'Quilt',
+                                ])
+                                ->placeholder(__('minecraft-modpack-installer::admin.java.rules.fields.loader_any'))
+                                ->native(false),
+
+                            TextInput::make('mc_min')
+                                ->label(__('minecraft-modpack-installer::admin.java.rules.fields.mc_min'))
+                                ->placeholder('1.18')
+                                ->regex('/^\d+\.\d+(\.\d+)?$/'),
+
+                            TextInput::make('mc_max')
+                                ->label(__('minecraft-modpack-installer::admin.java.rules.fields.mc_max'))
+                                ->placeholder('1.20.4')
+                                ->regex('/^\d+\.\d+(\.\d+)?$/'),
+
+                            Select::make('java')
+                                ->label(__('minecraft-modpack-installer::admin.java.rules.fields.java'))
+                                ->options([
+                                    8 => '8',
+                                    11 => '11',
+                                    16 => '16',
+                                    17 => '17',
+                                    21 => '21',
+                                ])
+                                ->required(),
+                        ]),
+                ])
+                ->collapsed(),
         ]);
     }
 

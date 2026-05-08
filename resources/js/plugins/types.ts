@@ -67,6 +67,15 @@ export interface PluginManifest {
      */
     settings?: Record<string, unknown>;
     bundle_url?: string;
+    /**
+     * Short content-aware hash of the plugin's `frontend/i18n/*.json` files,
+     * computed server-side from their mtimes. Used as an extra cache-bust
+     * query param on the i18n endpoint so an operator can ship translation
+     * fixes by editing the JSON alone — without bumping `plugin.json` and
+     * without lowering the 1-hour `Cache-Control: max-age` set by the
+     * plugin i18n controller. `null` when the plugin ships no i18n folder.
+     */
+    i18n_etag?: string | null;
 }
 
 export interface PluginApiResponse {

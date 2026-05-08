@@ -52,4 +52,20 @@ interface ModpackProviderInterface
      * @return list<ModpackVersion>
      */
     public function listVersions(string $modpackId, ?string $minecraftVersion): array;
+
+    /**
+     * Direct fetch of one specific version by id — used by the install
+     * orchestrator after the user has already picked a version, so we
+     * don't have to paginate the entire history again. Providers with a
+     * `GET /…/version/{id}` style endpoint should hit it directly (one
+     * round-trip, fast); everyone else can fall back to
+     * `ResolvesVersionByListing` which scans `listVersions()` output —
+     * correct but slow on big packs (RLCraft 80+ files routinely push
+     * the orchestrator past PHP's max_execution_time).
+     *
+     * Returns null when the version can't be resolved (deleted file,
+     * unknown id, …) so the orchestrator can store the row without a
+     * loader hint and let the egg's install script auto-detect later.
+     */
+    public function getVersion(string $modpackId, string $versionId): ?ModpackVersion;
 }

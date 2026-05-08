@@ -79,6 +79,35 @@ return [
         ],
     ],
 
+    'java' => [
+        'section' => 'Compatibilité Java',
+        'description' => 'Contrôle comment l\'installeur choisit la version de Java et l\'image Docker pour chaque modpack. Tous les champs sont optionnels — laissez vide pour utiliser les valeurs par défaut livrées dans config/java-compatibility.php.',
+        'default_java' => [
+            'label' => 'Java par défaut',
+            'placeholder' => 'Valeur par défaut du plugin (Java 17)',
+            'help' => 'Utilisé quand aucune règle de compatibilité ne s\'applique (version MC inconnue, loader exotique). Remplace la valeur déclarée dans la config du plugin.',
+        ],
+        'images' => [
+            'label' => 'Images Docker par version Java',
+            'key_label' => 'Version Java',
+            'value_label' => 'Image Docker',
+            'add' => 'Ajouter une image',
+            'help' => 'Surcharge clé par clé de la carte d\'images livrée. N\'ajoutez une entrée que pour les versions Java que vous voulez rediriger (ex : pointer java_21 sur un miroir privé) ; les autres restent sur les valeurs par défaut.',
+        ],
+        'rules' => [
+            'label' => 'Règles de compatibilité',
+            'help' => 'Les règles sont évaluées de haut en bas — la première qui correspond gagne. Les règles avec un loader spécifique DOIVENT être placées avant les règles génériques (sans loader). Si vous remplissez ce tableau, il REMPLACE intégralement la liste de règles livrée. Laissez vide pour garder les valeurs par défaut.',
+            'add' => 'Ajouter une règle',
+            'fields' => [
+                'loader' => 'Loader',
+                'loader_any' => 'N\'importe quel loader (y compris Vanilla)',
+                'mc_min' => 'Version Minecraft min.',
+                'mc_max' => 'Version Minecraft max.',
+                'java' => 'Version Java',
+            ],
+        ],
+    ],
+
     'actions' => [
         'save' => 'Enregistrer',
         'import_egg' => [

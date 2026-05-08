@@ -27,6 +27,8 @@ use Throwable;
  */
 final class FtbProvider implements ModpackProviderInterface
 {
+    use \Plugins\MinecraftModpackInstaller\Services\Providers\Concerns\ResolvesVersionByListing;
+
     private const BASE_URL = 'https://api.modpacks.ch';
 
     /** Per-page cap requested from the various list endpoints. */
@@ -295,44 +297,50 @@ final class FtbProvider implements ModpackProviderInterface
 
     private function fetchDetail(int $id): ?ModpackSummary
     {
-        return $this->cache->remember(
-            "modpacks:ftb:detail:{$id}",
-            900,
-            function () use ($id): ?ModpackSummary {
-                try {
-                    $response = $this->client()
-                        ->get(self::BASE_URL."/public/modpack/{$id}")
-                        ->throw()
-                        ->json();
-                } catch (Throwable) {
-                    return null;
-                }
+        // Cache hits short-circuit, but miss results (null) are NEVER
+        // cached — see CurseForgeProvider::getModpack for the rationale.
+        $key = "modpacks:ftb:detail:{$id}";
+        $cached = $this->cache->get($key);
+        if ($cached instanceof ModpackSummary) {
+            return $cached;
+        }
 
-                if (is_array($response) && ($response['status'] ?? null) === 'error') {
-                    return null;
-                }
+        try {
+            $response = $this->client()
+                ->get(self::BASE_URL."/public/modpack/{$id}")
+                ->throw()
+                ->json();
+        } catch (Throwable) {
+            return null;
+        }
 
-                $art = null;
-                foreach ($response['art'] ?? [] as $entry) {
-                    if (($entry['type'] ?? '') === 'square') {
-                        $art = (string) $entry['url'];
-                        break;
-                    }
-                }
-                $art ??= ($response['art'][0]['url'] ?? null);
+        if (is_array($response) && ($response['status'] ?? null) === 'error') {
+            return null;
+        }
 
-                return new ModpackSummary(
-                    provider: ModpackProvider::Ftb,
-                    modpackId: (string) ($response['id'] ?? $id),
-                    name: (string) ($response['name'] ?? ''),
-                    slug: null,
-                    description: $response['synopsis'] ?? null,
-                    iconUrl: $art,
-                    externalUrl: 'https://feed-the-beast.com/modpacks/'.($response['id'] ?? $id),
-                    isServerCompatible: true,
-                );
-            },
+        $art = null;
+        foreach ($response['art'] ?? [] as $entry) {
+            if (($entry['type'] ?? '') === 'square') {
+                $art = (string) $entry['url'];
+                break;
+            }
+        }
+        $art ??= ($response['art'][0]['url'] ?? null);
+
+        $summary = new ModpackSummary(
+            provider: ModpackProvider::Ftb,
+            modpackId: (string) ($response['id'] ?? $id),
+            name: (string) ($response['name'] ?? ''),
+            slug: null,
+            description: $response['synopsis'] ?? null,
+            iconUrl: $art,
+            externalUrl: 'https://feed-the-beast.com/modpacks/'.($response['id'] ?? $id),
+            isServerCompatible: true,
         );
+
+        $this->cache->put($key, $summary, 900);
+
+        return $summary;
     }
 
     /** @return array<string, mixed>|null */

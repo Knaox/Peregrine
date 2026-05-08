@@ -288,6 +288,11 @@
             "info_no_power": "Démarrer / arrêter / redémarrer et la console en direct sont désactivés tant que le serveur est suspendu — Wings rejette toutes les commandes.",
             "info_reactivate": "Contactez votre hébergeur ou réactivez votre abonnement pour rétablir l'accès."
         },
+        "conflict": {
+            "go_overview": "Retour à l'aperçu",
+            "failed_title": "L'installation a échoué",
+            "failed_description": "Un opérateur peut relancer l'installation depuis l'aperçu. Cette page reste indisponible tant que l'installation n'est pas terminée."
+        },
         "actions": {
             "start": "Démarrer",
             "stop": "Arrêter",

@@ -8,6 +8,7 @@ import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { ScheduleCard } from '@/components/server/ScheduleCard';
+import { withServerConflictGate } from '@/components/server/withServerConflictGate';
 
 const INPUT_CLS = 'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none';
 
@@ -52,7 +53,7 @@ function presetIcon(key: string) {
     return <SettingsIcon />;
 }
 
-export function ServerSchedulesPage() {
+function ServerSchedulesPageImpl() {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
@@ -247,3 +248,6 @@ export function ServerSchedulesPage() {
         </m.div>
     );
 }
+
+// Conflict-state gate — see ServerFilesPage for the pattern.
+export const ServerSchedulesPage = withServerConflictGate(ServerSchedulesPageImpl);

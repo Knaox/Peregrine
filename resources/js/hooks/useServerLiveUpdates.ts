@@ -34,7 +34,17 @@ interface MirrorChangedPayload {
  * variant ; TanStack Query is a no-op when the key isn't registered.
  */
 const RESOURCE_TO_QUERY_KEYS: Record<string, ReadonlyArray<readonly (string | number)[]>> = {
-    server: [['servers', 'ID', 'server']],
+    // `useServer(id)` (resources/js/hooks/useServer.ts) keys its query as
+    // `['servers', id]` — bare, no `'server'` suffix. Earlier this map only
+    // listed `[['servers', 'ID', 'server']]`, which never matched anything
+    // — the conflict gate, the sidebar status check and `withServerConflictGate`
+    // all read `useServer` and silently kept rendering stale data on every
+    // suspended/provisioning transition. Invalidate BOTH keys here so any
+    // future consumer that picks the longer `'server'` suffix still works.
+    server: [
+        ['servers', 'ID'],
+        ['servers', 'ID', 'server'],
+    ],
     allocation: [['servers', 'ID', 'network']],
     backup: [['servers', 'ID', 'backups']],
     database: [['servers', 'ID', 'databases']],

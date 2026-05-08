@@ -22,12 +22,22 @@ class ModpackInstallation extends Model
         'modpack_slug',
         'version_id',
         'version_label',
+        // Loader extracted from the modpack manifest at startInstall —
+        // forge / fabric / neoforge / quilt. Persisted on the row because
+        // the queue job only carries an installation id, and re-resolving
+        // the loader from the provider would mean another remote call.
+        'loader',
         'icon_url',
         'external_url',
         'status',
         'status_message',
         'purge_files',
+        // `java_version` is the *post-install* MCJars-detected Java major;
+        // `predicted_java_version` is the *pre-install* matrix prediction
+        // from (loader, mc_version). The job uses the prediction during
+        // phase 1, then refines with java_version in finalizeInstall.
         'java_version',
+        'predicted_java_version',
         'pelican_egg_snapshot_id',
         'pelican_image_snapshot',
         'pelican_startup_snapshot',
@@ -48,6 +58,7 @@ class ModpackInstallation extends Model
             'status' => ModpackInstallationStatus::class,
             'purge_files' => 'boolean',
             'java_version' => 'integer',
+            'predicted_java_version' => 'integer',
             'pelican_egg_snapshot_id' => 'integer',
             'pelican_environment_snapshot' => 'array',
             'started_at' => 'datetime',

@@ -6,7 +6,7 @@
 
 - **Discovery** — search across **Modrinth**, **CurseForge**, **ATLauncher**, **Feed The Beast**, **Technic** and **VoidsWrath**. The UI adapts to each provider's declared capabilities (some support pagination + filters, some don't).
 - **Install / update / remove** — asynchronous, observable from a per-server "Modpacks" tab.
-- **Auto Java detection** — once the install script finishes, the plugin fingerprints the resulting server jar via [MCJars](https://versions.mcjars.app/) and picks the matching public Java image (`ghcr.io/pelican-eggs/yolks:java_*`). Falls back to a sensible default on miss.
+- **Auto Java detection** — *before* the install starts, the plugin reads the modpack manifest's Minecraft version and loader and picks the matching Java major from a configurable compatibility matrix (`config/java-compatibility.php`). *After* the install, MCJars (`versions.mcjars.app`) refines the choice from the actual server jar's SHA-256. Both sources are admin-overridable from the Filament settings page (per-key Docker image overrides + full rule list override).
 - **Egg-swap install flow** — uses the Pelican Application API (`PATCH /servers/{id}/startup` + `POST /reinstall`) to swap the server onto a dedicated installer egg, run the bash installer in the install container, then swap back to the original egg with the right Java image. No Wings patch required.
 - **Optional integration** with the **Server Invitations** plugin: when present, three sub-user permissions (`modpack.read`, `modpack.install`, `modpack.uninstall`) appear automatically in the permission picker — only on servers whose egg is whitelisted by the admin.
 
@@ -82,6 +82,34 @@ I18n keys live in `frontend/i18n/{en,fr}.json` and are loaded by the core via `G
 | `modpack.uninstall` | Remove the installed modpack. |
 
 Owners of a server have all three implicitly. Sub-users only see the permissions in the picker (and on their server) when the server's egg is whitelisted by the admin.
+
+## Java compatibility matrix
+
+The Minecraft → Java mapping and the Docker image map are **fully data-driven** and **never hardcoded** in PHP source code. They live in two layers:
+
+1. **Plugin defaults** — `config/java-compatibility.php`, shipped with the plugin and versioned in Git. Edit this file when you need to add a new Minecraft version, a new loader, or change the bundled defaults across all installs.
+2. **Runtime override** — `modpack_configs` row, edited via the Filament admin page (section "Compatibilité Java"). Use this to swap a Docker image for a private mirror, pin a specific yolk variant, or tweak rules on a single install without re-deploying the plugin.
+
+Override semantics:
+
+| Field | Empty / null behaviour | Filled behaviour |
+|---|---|---|
+| `default_java` | Plugin default (17) | Replaces the plugin default. |
+| `java_images` | Plugin default map | Merged **per-key** over the defaults — set only the entries you want to override. |
+| `java_rules` | Plugin default rule list | **Replaces** the entire bundled rule list (rules are an ordered sequence; partial merge would silently break loader-specific overrides). |
+
+Pre-install, `Services/JavaCompatibilityMatrix` computes the predicted Java version from the modpack manifest (`mc_version`, `loader`) and persists it on the `modpack_installations` row. Phase 1 install + uninstall wipe phases use this prediction. Phase 2 (post-install finalize) also tries MCJars for refinement; the prediction is the deterministic fallback when MCJars is unavailable.
+
+## Tests
+
+Plugin-local PHPUnit unit tests cover the compatibility matrix:
+
+```bash
+# from the project root
+./vendor/bin/phpunit -c plugins/minecraft-modpack-installer/phpunit.xml.dist
+```
+
+The tests are intentionally **not** wired into the project's root `phpunit.xml` to keep this plugin self-contained. They run as pure unit tests (no DB, no Laravel app) against `JavaCompatibilityMatrix`'s static resolution helpers.
 
 ## Adding a 7th provider
 

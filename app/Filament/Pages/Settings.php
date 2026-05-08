@@ -79,6 +79,10 @@ class Settings extends Page implements HasForms
     /** @var array<int, string> */
     public array $trusted_proxies = [];
 
+    public int $broadcasting_auth_rate_limit_per_minute = 240;
+
+    public int $pelican_proxy_rate_limit_per_minute = 600;
+
     // SMTP
     public ?string $mail_mailer = 'smtp';
     public ?string $mail_host = '';
@@ -127,6 +131,22 @@ class Settings extends Page implements HasForms
             ? []
             : array_values(array_filter(array_map('trim', explode(',', $proxiesRaw))));
 
+        // Default 240/min — generous enough that no honest user ever
+        // hits it, but low enough to absorb a runaway retry loop
+        // before it saturates the queue worker / DB connection pool.
+        $rawLimit = $settings->get('broadcasting_auth_rate_limit_per_minute', '240');
+        $this->broadcasting_auth_rate_limit_per_minute = is_numeric($rawLimit) ? (int) $rawLimit : 240;
+
+        // Default 6000/min/user. Sized to NEVER fire on legitimate use,
+        // including dev-mode double-mounts (React StrictMode) and
+        // rapid F5 spam : a 5-server overview page polling /resources
+        // every 5 s + browser refresh storm tops out at ~150 hits/min,
+        // 40× below the cap. The setting only matters for an operator
+        // running a many-tenant Peregrine who wants to actively cap
+        // Pelican Client-API load from a single misbehaving SPA.
+        $rawProxy = $settings->get('pelican_proxy_rate_limit_per_minute', '6000');
+        $this->pelican_proxy_rate_limit_per_minute = is_numeric($rawProxy) ? (int) $rawProxy : 6000;
+
         $this->mail_mailer = config('mail.default', 'smtp');
         $this->mail_host = config('mail.mailers.smtp.host', '');
         $this->mail_port = (string) config('mail.mailers.smtp.port', '587');
@@ -159,6 +179,8 @@ class Settings extends Page implements HasForms
             'app_debug' => $this->app_debug,
             'app_timezone' => $this->app_timezone,
             'trusted_proxies' => $this->trusted_proxies,
+            'broadcasting_auth_rate_limit_per_minute' => $this->broadcasting_auth_rate_limit_per_minute,
+            'pelican_proxy_rate_limit_per_minute' => $this->pelican_proxy_rate_limit_per_minute,
         ]);
     }
 

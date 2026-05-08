@@ -53,20 +53,34 @@ i18n
  * `useTranslation(pluginId)` so keys live entirely inside the plugin and
  * never pollute the core resource files.
  *
- * The plugin version is included as a query param so the browser HTTP cache
- * is automatically invalidated when the admin updates the plugin. Without
- * this, the 1-hour cache on the i18n endpoint would mask brand new dict
- * entries until the cache expires.
+ * Two cache-bust query params are appended to the URL :
+ *  - `v={plugin.version}`        flips on a formal plugin release
+ *  - `h={i18n_etag}` (optional)  flips on every JSON edit, even without a
+ *                                version bump (computed server-side from
+ *                                the mtime of `frontend/i18n/*.json`)
+ *
+ * Either one changing is enough for the browser to bypass its 1-hour HTTP
+ * cache on the i18n endpoint. Without `h`, fixing a typo in `fr.json` would
+ * stay invisible to anyone who already opened the plugin during the last
+ * hour — which is exactly the bug we hit when shipping a translation patch
+ * without bumping `plugin.json`.
  *
  * Loads the bundle for the currently active language plus English (for
  * fallback). Network failures are swallowed — the plugin still renders, just
  * with raw keys instead of translated labels, which is preferable to
  * blocking the entire SPA on a plugin asset.
  */
-export async function loadPluginI18n(pluginId: string, version?: string): Promise<void> {
+export async function loadPluginI18n(
+    pluginId: string,
+    version?: string,
+    i18nEtag?: string | null,
+): Promise<void> {
     const lang = i18n.language || adminDefault;
     const targets = lang === 'en' ? ['en'] : [lang, 'en'];
-    const cacheBust = version ? `?v=${encodeURIComponent(version)}` : '';
+    const params = new URLSearchParams();
+    if (version) params.set('v', version);
+    if (i18nEtag) params.set('h', i18nEtag);
+    const cacheBust = params.toString() ? `?${params.toString()}` : '';
 
     await Promise.all(targets.map(async (loc) => {
         try {

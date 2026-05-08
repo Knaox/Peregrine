@@ -19,6 +19,8 @@ use Throwable;
 
 final class ModrinthProvider implements ModpackProviderInterface
 {
+    use \Plugins\MinecraftModpackInstaller\Services\Providers\Concerns\ResolvesVersionByListing;
+
     private const BASE_URL = 'https://api.modrinth.com/v2';
 
     /**
@@ -175,35 +177,45 @@ final class ModrinthProvider implements ModpackProviderInterface
 
     public function getModpack(string $modpackId): ?ModpackSummary
     {
+        // Cache successes only — see CurseForgeProvider::getModpack for
+        // the rationale (a transient API failure must not pin a null
+        // result for 24h and downgrade every later install of the same
+        // modpack to its raw id as display name).
         $key = 'modpacks:modrinth:meta:'.sha1($modpackId);
+        $cached = $this->cache->get($key);
+        if ($cached instanceof ModpackSummary) {
+            return $cached;
+        }
 
-        return $this->cache->remember($key, 24 * 3600, function () use ($modpackId): ?ModpackSummary {
-            try {
-                $entry = $this->client()
-                    ->get(self::BASE_URL.'/project/'.rawurlencode($modpackId))
-                    ->throw()
-                    ->json();
-            } catch (Throwable) {
-                return null;
-            }
+        try {
+            $entry = $this->client()
+                ->get(self::BASE_URL.'/project/'.rawurlencode($modpackId))
+                ->throw()
+                ->json();
+        } catch (Throwable) {
+            return null;
+        }
 
-            if (! is_array($entry) || empty($entry['id'])) {
-                return null;
-            }
+        if (! is_array($entry) || empty($entry['id'])) {
+            return null;
+        }
 
-            $slug = $entry['slug'] ?? null;
+        $slug = $entry['slug'] ?? null;
 
-            return new ModpackSummary(
-                provider: $this->id(),
-                modpackId: (string) ($entry['id'] ?? $modpackId),
-                name: (string) ($entry['title'] ?? $modpackId),
-                slug: $slug,
-                description: $entry['description'] ?? null,
-                iconUrl: $entry['icon_url'] ?? null,
-                externalUrl: $slug !== null ? 'https://modrinth.com/modpack/'.$slug : null,
-                isServerCompatible: $this->isServerCompatible($entry['server_side'] ?? null),
-            );
-        });
+        $summary = new ModpackSummary(
+            provider: $this->id(),
+            modpackId: (string) ($entry['id'] ?? $modpackId),
+            name: (string) ($entry['title'] ?? $modpackId),
+            slug: $slug,
+            description: $entry['description'] ?? null,
+            iconUrl: $entry['icon_url'] ?? null,
+            externalUrl: $slug !== null ? 'https://modrinth.com/modpack/'.$slug : null,
+            isServerCompatible: $this->isServerCompatible($entry['server_side'] ?? null),
+        );
+
+        $this->cache->put($key, $summary, 24 * 3600);
+
+        return $summary;
     }
 
     /**

@@ -4,6 +4,7 @@ import * as ReactQuery from '@tanstack/react-query';
 import * as ReactRouterDom from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n/config';
+import { getEcho } from '@/services/echo';
 
 declare global {
     interface Window {
@@ -19,6 +20,13 @@ declare global {
             // `params.<key>.{label,type,...}` rather than just simple
             // string translations).
             i18n: typeof i18n;
+            // Lazy Echo singleton accessor. Exposed so plugin bundles
+            // can subscribe their own queries to `private-server.{id}` /
+            // `private-user.{id}` / `private-admin-mirror` for live
+            // updates instead of falling back to TanStack Query polling.
+            // Returns null when Reverb is unavailable (admin hasn't set
+            // it up, meta tags empty) — plugins must degrade gracefully.
+            getEcho: typeof getEcho;
         };
         __PEREGRINE_PLUGINS__: {
             register: (pluginId: string, component: React.ComponentType) => void;
@@ -55,6 +63,7 @@ window.__PEREGRINE_SHARED__ = {
     ReactRouterDom,
     useTranslation,
     i18n,
+    getEcho,
 };
 
 // Plugin registration bridge — filled by pluginStore

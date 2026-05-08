@@ -296,4 +296,26 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
     {
         return EggResolver::resolveLocalEggId($data, $this->pelicanServerId);
     }
+
+    /**
+     * Snapshot the pivot BEFORE the deletion cascade wipes `server_user`,
+     * so the `mirror.changed` (action=delete) broadcast still fans out on
+     * every owner / subuser channel — without this, the dashboard / detail
+     * page would only learn about the removal at the next 5-min staleTime
+     * refetch (or never if the user stays put). Falls back to the legacy
+     * `user_id` column for pre-pivot servers (same defensive merge as
+     * `BroadcastsServerMirror::broadcastServerMirrorChanged()`).
+     *
+     * @return array<int, int>
+     */
+    private function collectAccessUserIds(Server $server): array
+    {
+        $ids = $server->accessUsers()->pluck('users.id')->all();
+        $legacyOwnerId = (int) ($server->user_id ?? 0);
+        if ($legacyOwnerId > 0 && ! in_array($legacyOwnerId, $ids, true)) {
+            $ids[] = $legacyOwnerId;
+        }
+
+        return $ids;
+    }
 }

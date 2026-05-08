@@ -347,7 +347,11 @@ class PelicanMirrorSyncTest extends TestCase
         $clientMock = Mockery::mock(PelicanClientService::class);
         $this->app->instance(PelicanClientService::class, $clientMock);
 
-        (new SyncServerStatusJob)->handle($clientMock, app(\App\Services\Bridge\PelicanMirrorReconciler::class));
+        (new SyncServerStatusJob)->handle(
+            $clientMock,
+            app(\App\Services\Bridge\PelicanMirrorReconciler::class),
+            $pelicanMock,
+        );
 
         Bus::assertDispatched(SyncServerFromPelicanWebhookJob::class, fn ($j) => $j->pelicanServerId === 555);
     }
@@ -372,7 +376,11 @@ class PelicanMirrorSyncTest extends TestCase
         $clientMock = Mockery::mock(PelicanClientService::class);
         $this->app->instance(PelicanClientService::class, $clientMock);
 
-        (new SyncServerStatusJob)->handle($clientMock, app(\App\Services\Bridge\PelicanMirrorReconciler::class));
+        (new SyncServerStatusJob)->handle(
+            $clientMock,
+            app(\App\Services\Bridge\PelicanMirrorReconciler::class),
+            $pelicanMock,
+        );
 
         $this->assertDatabaseMissing('servers', ['pelican_server_id' => 9999]);
     }

@@ -6,11 +6,36 @@
  * keeps the rest of the codebase free of `window.__PEREGRINE_*__` casts.
  */
 
+/**
+ * Minimal structural type for the Echo singleton handed back by
+ * `S.getEcho()`. We only declare the surface this plugin actually
+ * touches (`private().listen() / stopListening()` and `leave()`);
+ * keeps the plugin free of a hard `laravel-echo` dependency at the
+ * type level so the bundle stays lean.
+ */
+type EchoChannel = {
+    listen: (event: string, handler: (payload: unknown) => void) => EchoChannel;
+    stopListening: (event: string) => EchoChannel;
+};
+type EchoLike = {
+    private: (channel: string) => EchoChannel;
+    leave: (channel: string) => void;
+} | null;
+
 export const S = (window as unknown as Record<string, unknown>).__PEREGRINE_SHARED__ as {
     React: typeof import('react');
     ReactQuery: typeof import('@tanstack/react-query');
     ReactRouterDom: typeof import('react-router-dom');
     useTranslation: (ns?: string) => { t: (k: string, o?: Record<string, unknown>) => string };
+    /**
+     * Lazy Reverb/Echo accessor exposed by the host shell. Returns null
+     * when Reverb is unavailable (admin hasn't set it up, meta tags
+     * empty, …) — every consumer in this plugin MUST degrade gracefully
+     * (the existing 4s installation polling is the natural fallback).
+     * Optional in the type so older host shells that pre-date this
+     * export still load the bundle without a runtime crash.
+     */
+    getEcho?: () => EchoLike;
 };
 
 export const P = (window as unknown as Record<string, unknown>).__PEREGRINE_PLUGINS__ as {

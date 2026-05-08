@@ -18,8 +18,9 @@ import { FileList } from '@/components/files/FileList';
 import { FileEditor } from '@/components/files/FileEditor';
 import { FileBulkBar } from '@/components/files/FileBulkBar';
 import { FilePullModal } from '@/components/files/FilePullModal';
+import { withServerConflictGate } from '@/components/server/withServerConflictGate';
 
-export function ServerFilesPage() {
+function ServerFilesPageImpl() {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
@@ -215,3 +216,9 @@ export function ServerFilesPage() {
         </m.div>
     );
 }
+
+// Gate the Files page behind the server's conflict state. Direct URL
+// navigation to `/servers/:id/files` while suspended / provisioning
+// shows the unified `ServerConflictScreen` instead of an empty file
+// list + permission errors.
+export const ServerFilesPage = withServerConflictGate(ServerFilesPageImpl);

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Events\Bridge\ServerSuspended;
+use App\Events\Mirror\BroadcastsServerMirror;
 use App\Models\Server;
 use App\Services\Pelican\PelicanApplicationService;
 use App\Services\SettingsService;
@@ -35,7 +36,11 @@ use Illuminate\Support\Facades\Log;
  */
 class SuspendServerJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use BroadcastsServerMirror;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public int $tries = 3;
 
@@ -91,7 +96,16 @@ class SuspendServerJob implements ShouldQueue
             $graceDays = (int) $settings->get('bridge_grace_period_days', 14);
             $updates['scheduled_deletion_at'] = now()->addDays(max(0, $graceDays));
         }
+        $statusChanged = $server->status !== 'suspended';
         $server->update($updates);
+
+        // Push the new status out to every subscriber (dashboard list,
+        // server detail page, admin mirror) so the suspended pill / page
+        // gates flip in real time. The trait swallows broadcast errors
+        // so a Reverb outage cannot regress the suspension itself.
+        if ($statusChanged) {
+            $this->broadcastServerMirrorChanged($server);
+        }
 
         Log::info('SuspendServerJob: server suspended', [
             'event_id' => $this->eventId,

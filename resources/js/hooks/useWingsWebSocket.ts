@@ -218,7 +218,14 @@ export function useWingsWebSocket(
                     break;
 
                 case 'token expiring':
-                    fetchWebSocketCredentials(serverId)
+                    // Force-bypass Peregrine's 5 min creds cache here :
+                    // the cached JWT is, by construction, almost as old
+                    // as the live one Wings is now warning about, so
+                    // serving it again would fail seconds later. The
+                    // `?fresh=1` query param tells the controller to
+                    // round-trip to Pelican Panel for a brand-new
+                    // signed JWT and replace the cached entry.
+                    fetchWebSocketCredentials(serverId, { force: true })
                         .then((creds) => {
                             if (ws.readyState === WebSocket.OPEN) {
                                 ws.send(JSON.stringify({ event: 'auth', args: [creds.token] }));

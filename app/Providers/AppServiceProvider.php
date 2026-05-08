@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
@@ -106,9 +107,108 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(240)->by($request->ip());
         });
 
+        // /broadcasting/auth — Echo POSTs here once per private channel
+        // subscription. A typical session opens 1–3 channels (server +
+        // user + admin-mirror) ; an admin tab that lists 30 servers can
+        // burst dozens of auths during a Reverb reconnect. The cap is
+        // operator-tunable via /admin/settings → Network so a fleet of
+        // many concurrent admins behind a single Cloudflare-proxied IP
+        // can lift it without an env redeploy. Floor at 30/min so the
+        // operator can't accidentally lock themselves out.
+        RateLimiter::for('broadcasting-auth', function (Request $request) {
+            $perMinute = self::resolveBroadcastingAuthLimit();
+
+            // Per-user when authenticated (the auth route requires a
+            // session anyway), per-IP otherwise so an unauth retry
+            // storm from a single browser doesn't escape the bucket.
+            return Limit::perMinute(max($perMinute, 30))
+                ->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Pelican Client-API proxy endpoints (websocket creds, server
+        // resources). Default 6000/min/user (≈ 100/sec) — sized to never
+        // fire in practice for legitimate use even with rapid F5 spam in
+        // dev (React StrictMode double-mounts every effect, doubling the
+        // request count). The cap exists as a safety net for a runaway
+        // retry storm (broken hook, infinite re-render) so a single bad
+        // tab can't saturate Pelican's upstream API.
+        //
+        // For context : `useServerResources` polls /resources every 5 s
+        // (12/min/server) ; `useWingsWebSocket` fetches /websocket on
+        // every (re)connect ; React StrictMode multiplies dev-mode
+        // counts by ~2. A page displaying 5 servers refreshed 10 times
+        // in a minute = ~120 hits — well within 6000.
+        //
+        // Operators can dial it any direction via /admin/settings →
+        // Network. Floor 60/min stays in case of a typo so the panel
+        // remains usable.
+        RateLimiter::for('pelican-proxy', function (Request $request) {
+            $perMinute = self::resolvePelicanProxyLimit();
+
+            return Limit::perMinute(max($perMinute, 60))
+                ->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Manual broadcasting route registration : matches Laravel's
+        // default `Broadcast::routes()` shape (GET/POST /broadcasting/auth)
+        // but layers our `throttle:broadcasting-auth` middleware on top of
+        // the default `web` group. We removed `channels:` from
+        // `withRouting()` (bootstrap/app.php) precisely so this manual
+        // registration is the single source of truth — Laravel's
+        // auto-register would otherwise add a second un-throttled route.
+        Broadcast::routes([
+            'middleware' => ['web', 'throttle:broadcasting-auth'],
+        ]);
+        // `channels.php` itself only contains `Broadcast::channel(...)`
+        // authorization callbacks, no routes. Loading it here matches
+        // what `withRouting(channels: ...)` would have done.
+        require __DIR__.'/../../routes/channels.php';
+
         // Boot active plugins
         if (config('panel.installed')) {
             app(\App\Services\PluginManager::class)->bootPlugins();
         }
+    }
+
+    /**
+     * Resolve the configured /broadcasting/auth rate cap from the
+     * `settings` table. Falls back to 240 (≈ 4 / second) when the
+     * setting was never written, the table doesn't exist yet (fresh
+     * install pre-migration), or the stored value isn't numeric.
+     *
+     * Wrapped in try/catch because RateLimiter::for closures fire on
+     * EVERY auth request — a missing settings table (very early boot,
+     * setup wizard) must NOT break broadcasting auth, otherwise the
+     * panel's setup screen itself would 500 trying to live-update.
+     */
+    private static function resolveBroadcastingAuthLimit(): int
+    {
+        try {
+            $value = app(\App\Services\SettingsService::class)
+                ->get('broadcasting_auth_rate_limit_per_minute', 240);
+        } catch (\Throwable) {
+            return 240;
+        }
+
+        return is_numeric($value) ? (int) $value : 240;
+    }
+
+    /**
+     * Resolve the configured Peregrine-side cap on Pelican Client-API
+     * proxy endpoints (websocket / resources / files / etc.) from the
+     * `settings` table. Same defensive try/catch as the broadcasting
+     * cap — never let a missing settings table throw out of a route
+     * middleware closure.
+     */
+    private static function resolvePelicanProxyLimit(): int
+    {
+        try {
+            $value = app(\App\Services\SettingsService::class)
+                ->get('pelican_proxy_rate_limit_per_minute', 6000);
+        } catch (\Throwable) {
+            return 6000;
+        }
+
+        return is_numeric($value) ? (int) $value : 6000;
     }
 }

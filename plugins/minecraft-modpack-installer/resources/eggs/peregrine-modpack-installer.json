@@ -35,7 +35,8 @@
     },
     "scripts": {
         "installation": {
-            "container":  "ghcr.io/parkervcp/installers:debian",
+            "_comment": "java_17 (not :debian) — Forge/NeoForge/Quilt installers shell out via `java -jar`, and the bare debian installer container ships no JRE. parkervcp/installers exposes `java_8/11/17/21/25` tags purpose-built for this; java_17 is the sweet spot (every modern Forge/NeoForge installer runs on it, and the legacy 1.7-1.12 installers run fine too — only the runtime needs Java 8). The runtime egg still picks its own Java version (8/11/17/21) post-install via JavaVersionDetectionService.",
+            "container":  "ghcr.io/parkervcp/installers:java_17",
             "entrypoint": "bash",
             "script":     "@@INSTALL_SCRIPT@@"
         }

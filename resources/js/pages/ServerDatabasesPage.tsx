@@ -9,6 +9,7 @@ import { getDatabaseHostString } from '@/types/Database';
 import { copyToClipboard } from '@/utils/clipboard';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
+import { withServerConflictGate } from '@/components/server/withServerConflictGate';
 
 const INPUT_CLS = 'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none';
 
@@ -39,7 +40,7 @@ function CheckIcon({ className }: { className?: string }) {
     );
 }
 
-export function ServerDatabasesPage() {
+function ServerDatabasesPageImpl() {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
@@ -201,3 +202,7 @@ export function ServerDatabasesPage() {
         </m.div>
     );
 }
+
+// See ServerFilesPage for the rationale: gate by conflict state so a
+// suspended / provisioning server can't render its databases page.
+export const ServerDatabasesPage = withServerConflictGate(ServerDatabasesPageImpl);

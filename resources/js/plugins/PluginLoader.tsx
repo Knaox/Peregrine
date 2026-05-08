@@ -48,10 +48,12 @@ export function PluginLoader() {
         // executes — plugins call useTranslation() at first render and would
         // briefly show raw keys otherwise. We await both groups in parallel
         // (they're independent) but only flip isLoading after both finish.
-        // Pass the manifest version as a cache-bust so brand-new dict
-        // entries land immediately after a plugin update instead of waiting
-        // out the 1-hour HTTP cache.
-        const i18nLoads = manifests.map((m) => loadPluginI18n(m.id, m.version));
+        // Pass both the manifest version and the per-plugin `i18n_etag`
+        // (content hash of frontend/i18n/*.json) as cache-bust so a JSON-only
+        // hotfix lands immediately, even without a `plugin.json` version
+        // bump — the browser's 1-hour cache on the i18n endpoint would
+        // otherwise pin the stale dict.
+        const i18nLoads = manifests.map((m) => loadPluginI18n(m.id, m.version, m.i18n_etag));
         const bundleLoads = manifests
             .filter((m) => m.bundle_url)
             .map((m) => loadScript(m.bundle_url as string));

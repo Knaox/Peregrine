@@ -122,7 +122,11 @@ export function useConsoleWebSocket(serverId: number) {
                     break;
                 }
                 case 'token expiring': {
-                    fetchWebSocketCredentials(serverId)
+                    // Same `?fresh=1` bypass as useWingsWebSocket : the
+                    // 5 min Peregrine cache MUST not serve a near-expired
+                    // JWT on the renewal path or Wings will close the
+                    // socket as soon as the cached token's `exp` ticks.
+                    fetchWebSocketCredentials(serverId, { force: true })
                         .then((creds) => {
                             if (ws.readyState === WebSocket.OPEN) {
                                 const reAuthPayload: WebSocketEvent = {

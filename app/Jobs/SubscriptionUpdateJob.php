@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\Mirror\BroadcastsServerMirror;
 use App\Models\Server;
 use App\Models\ServerPlan;
 use App\Services\Pelican\PelicanApplicationService;
@@ -31,7 +32,11 @@ use Illuminate\Support\Facades\Log;
  */
 class SubscriptionUpdateJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use BroadcastsServerMirror;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public int $tries = 3;
 
@@ -131,6 +136,10 @@ class SubscriptionUpdateJob implements ShouldQueue
                 }
             }
             $server->update(['status' => 'suspended']);
+            // Broadcast so the React shell flips the dashboard pill +
+            // sidebar gates the moment Stripe drops us into past_due,
+            // not on the next 5-minute staleTime refetch.
+            $this->broadcastServerMirrorChanged($server);
         } elseif (in_array($this->newStatus, ['active', 'trialing'], true) && $server->status === 'suspended') {
             // Customer fixed their payment, reactivate.
             if ($server->pelican_server_id !== null) {
@@ -145,6 +154,10 @@ class SubscriptionUpdateJob implements ShouldQueue
                 }
             }
             $server->update(['status' => 'active']);
+            // Broadcast the unsuspend so the user's panel un-greys
+            // (sidebar entries return, dashboard pill drops) without
+            // requiring a refresh after they pay.
+            $this->broadcastServerMirrorChanged($server);
         }
     }
 
