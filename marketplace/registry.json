@@ -17,13 +17,13 @@
         {
             "id": "minecraft-modpack-installer",
             "name": "Minecraft: Modpack - Installer",
-            "version": "1.0.0",
-            "description": "Install, update and remove Minecraft modpacks on a server in a few clicks. Aggregates Modrinth, CurseForge, ATLauncher, Feed The Beast, Technic and VoidsWrath. Auto-detects the required Java version after install and switches the server runtime accordingly. Single-step uninstall, search caching (1 h default, configurable), eligibility filter (admin picks allowed eggs), Filament admin at /admin/modpack-configs. Bundled with Peregrine 1.0.0-alpha.4+.",
+            "version": "1.0.1",
+            "description": "Install, update and remove Minecraft modpacks on a server in a few clicks. Aggregates Modrinth, CurseForge, ATLauncher, Feed The Beast, Technic and VoidsWrath. Auto-detects the required Java version after install and switches the server runtime accordingly. Single-step uninstall, search caching (1 h default, configurable), eligibility filter (admin picks allowed eggs), Filament admin at /admin/modpack-configs. Marketplace install requires Peregrine 1.0.0-alpha.4+. v1.0.1 hardens the optional Invitations integration: gracefully degrades when the host has an older Invitations build (no `availableForServer` parameter) instead of throwing a fatal at boot.",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.4",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.4/minecraft-modpack-installer-1.0.0.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.4/minecraft-modpack-installer-1.0.1.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/minecraft-modpack-installer",
             "tags": ["minecraft", "modpacks", "modrinth", "curseforge", "ftb", "default"]
         },
