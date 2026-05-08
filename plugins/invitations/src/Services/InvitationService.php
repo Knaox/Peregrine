@@ -85,11 +85,11 @@ class InvitationService
         $invitation = Invitation::active()->where('token', $hashedToken)->first();
 
         if (! $invitation) {
-            throw new \RuntimeException('Invitation not found or expired.');
+            throw new \RuntimeException(__('invitations::messages.errors.invitation_not_found'));
         }
 
         if (strtolower($user->email) !== strtolower($invitation->email)) {
-            throw new \RuntimeException('Email does not match the invitation.');
+            throw new \RuntimeException(__('invitations::messages.errors.email_mismatch'));
         }
 
         return DB::transaction(function () use ($invitation, $user) {
@@ -171,10 +171,10 @@ class InvitationService
     public function resend(Invitation $invitation, ?int $expiresInDays = null): void
     {
         if ($invitation->accepted_at !== null) {
-            throw new \RuntimeException('Invitation already accepted.');
+            throw new \RuntimeException(__('invitations::messages.errors.already_accepted'));
         }
         if ($invitation->revoked_at !== null) {
-            throw new \RuntimeException('Invitation has been revoked.');
+            throw new \RuntimeException(__('invitations::messages.errors.already_revoked'));
         }
 
         $expiresInDays ??= (int) $this->pluginManager->getSetting('invitations', 'invitation_expiry_days', 7);

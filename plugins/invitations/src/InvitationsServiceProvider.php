@@ -18,6 +18,15 @@ class InvitationsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Backend translations — loaded under the `invitations` namespace
+        // so routes / services can call `__('invitations::messages.errors.x')`.
+        // The host's SetUserLocale middleware already pinned the right
+        // locale before the request reaches the plugin, so the resolved
+        // string is ready to ship in the JSON response. Mail templates
+        // stay in `views/mail/` — they have their own per-locale blade
+        // file that ServerInvitationMail picks based on the recipient.
+        $this->loadTranslationsFrom(__DIR__ . '/../lang', 'invitations');
+
         // Register permissions as static singleton (container bindings don't persist for dynamic plugins)
         PermissionRegistry::getInstance()->registerPelicanDefaults();
 

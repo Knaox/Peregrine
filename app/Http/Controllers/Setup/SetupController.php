@@ -94,19 +94,36 @@ class SetupController extends Controller
             // also reads it as fallback when no browser preference matches.
             app(SettingsService::class)->set('default_locale', $wizardLocale);
 
-            // 3.5 Activate the default "invitations" plugin (best effort — a
-            // failure here must not break setup). It ships with Peregrine
-            // and runs its own migrations on activate().
+            // 3.5 Auto-activate plugins that opt in via their plugin.json
+            // (`"auto_activate_on_setup": true`). Refactored 2026-05-08 to
+            // remove the previous `'invitations'` hard-coded reference —
+            // the core no longer knows ANY plugin id. Any bundled plugin
+            // that ships with the panel and wants to be enabled out-of-
+            // the-box for fresh installs just declares the flag in its
+            // own manifest.
             //
-            // Other bundled plugins (e.g. egg-config-editor) are preinstalled
-            // on disk but NOT auto-activated — the admin opts in from the
-            // Plugins page when they want them.
+            // Best-effort : a single plugin failure must not abort the
+            // setup wizard ; the admin can always activate manually from
+            // /admin/plugins after install.
             try {
-                if (app(\App\Services\PluginManager::class)->getManifest('invitations')) {
-                    app(\App\Services\PluginManager::class)->activate('invitations');
+                $manager = app(\App\Services\PluginManager::class);
+                foreach ($manager->discover() as $manifest) {
+                    if (! is_array($manifest) || empty($manifest['auto_activate_on_setup'])) {
+                        continue;
+                    }
+                    $pluginId = (string) ($manifest['id'] ?? '');
+                    if ($pluginId === '') {
+                        continue;
+                    }
+                    try {
+                        $manager->activate($pluginId);
+                    } catch (\Throwable) {
+                        // Single-plugin failure is non-fatal — log via
+                        // the next pass and move on.
+                    }
                 }
             } catch (\Throwable) {
-                // ignore — admin can activate it manually from the Plugins page.
+                // ignore — admin can activate plugins manually.
             }
 
             // 3.6 Override the default `auth_local_registration_enabled` if

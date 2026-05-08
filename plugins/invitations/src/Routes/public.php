@@ -21,7 +21,7 @@ Route::middleware('throttle:30,1')->group(function () {
             ->first();
 
         if (! $invitation) {
-            return response()->json(['error' => 'Invitation not found.'], 404);
+            return response()->json(['error' => __('invitations::messages.errors.invalid_token'), 'error_code' => 'invalid_token'], 404);
         }
 
         $locale = request()->header('Accept-Language', 'en');
@@ -67,15 +67,15 @@ Route::middleware('throttle:30,1')->group(function () {
         $invitation = Invitation::active()->where('token', $hashedToken)->first();
 
         if (! $invitation) {
-            return response()->json(['error' => 'Invitation not found or expired.'], 404);
+            return response()->json(['error' => __('invitations::messages.errors.invitation_not_found'), 'error_code' => 'invitation_not_found'], 404);
         }
 
         if (strtolower($validated['email']) !== strtolower($invitation->email)) {
-            return response()->json(['error' => 'Email does not match the invitation.'], 422);
+            return response()->json(['error' => __('invitations::messages.errors.email_mismatch'), 'error_code' => 'email_mismatch'], 422);
         }
 
         if (User::where('email', $validated['email'])->exists()) {
-            return response()->json(['error' => 'An account with this email already exists. Please log in.'], 422);
+            return response()->json(['error' => __('invitations::messages.errors.account_exists'), 'error_code' => 'account_exists'], 422);
         }
 
         $user = User::create([
@@ -88,7 +88,7 @@ Route::middleware('throttle:30,1')->group(function () {
             $service = app(InvitationService::class);
             $service->accept($token, $user);
 
-            return response()->json(['message' => 'Account created and invitation accepted.'], 201);
+            return response()->json(['message' => __('invitations::messages.success.account_created_and_accepted')], 201);
         } catch (\RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }

@@ -61,7 +61,7 @@ class PluginLifecycleHardeningTest extends TestCase
     {
         // Pre-conditions : not active (so we don't hit the "deactivate first"
         // gate before the bundled check).
-        Plugin::create(['plugin_id' => 'invitations', 'is_active' => false, 'version' => '1.3.0']);
+        Plugin::create(['plugin_id' => 'invitations', 'is_active' => false, 'version' => '1.3.1']);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessageMatches('/bundled with Peregrine/');
@@ -90,7 +90,7 @@ class PluginLifecycleHardeningTest extends TestCase
         app(PluginLifecycle::class)->forceResync('invitations');
 
         $row = Plugin::where('plugin_id', 'invitations')->firstOrFail();
-        $this->assertSame('1.3.0', $row->version);
+        $this->assertSame('1.3.1', $row->version);
     }
 
     public function test_force_resync_preserves_is_active_flag(): void
@@ -117,7 +117,7 @@ class PluginLifecycleHardeningTest extends TestCase
 
         $this->assertDatabaseHas('plugins', [
             'plugin_id' => 'invitations',
-            'version' => '1.3.0',
+            'version' => '1.3.1',
             'is_active' => 0,
         ]);
     }
@@ -155,7 +155,7 @@ class PluginLifecycleHardeningTest extends TestCase
 
         $this->assertSame($before, File::get($manifestPath), 'plugin.json must not be modified');
         $this->assertSame($beforeMtime, File::lastModified($manifestPath), 'plugin.json mtime must not change');
-        $this->assertSame('1.3.0', Plugin::where('plugin_id', 'invitations')->value('version'));
+        $this->assertSame('1.3.1', Plugin::where('plugin_id', 'invitations')->value('version'));
     }
 
     // ============================================================
@@ -171,7 +171,7 @@ class PluginLifecycleHardeningTest extends TestCase
             ->expectsOutputToContain('resynced')
             ->assertSuccessful();
 
-        $this->assertSame('1.3.0', Plugin::where('plugin_id', 'invitations')->value('version'));
+        $this->assertSame('1.3.1', Plugin::where('plugin_id', 'invitations')->value('version'));
     }
 
     public function test_force_resync_command_fails_for_unknown_plugin(): void
@@ -197,7 +197,7 @@ class PluginLifecycleHardeningTest extends TestCase
         Cache::put('marketplace.registry', [[
             'id' => $pluginId,
             'name' => $manifest['name'] ?? $pluginId,
-            'version' => $manifest['version'] ?? '1.3.0',
+            'version' => $manifest['version'] ?? '1.3.1',
             'download_url' => 'https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.2/' . $pluginId . '-1.0.0.zip',
         ]], 3600);
 

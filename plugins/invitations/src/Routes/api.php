@@ -44,14 +44,14 @@ Route::middleware('auth')->group(function () {
 
         // Self-invitation blocked.
         if (strtolower($validated['email']) === strtolower($request->user()->email)) {
-            return response()->json(['error' => 'You cannot invite yourself.'], 422);
+            return response()->json(['error' => __('invitations::messages.errors.self_invite'), 'error_code' => 'self_invite'], 422);
         }
 
         try {
             $service = app(InvitationService::class);
             $invitation = $service->create($server, $request->user(), $validated['email'], $validated['permissions']);
 
-            return response()->json(['message' => 'Invitation sent.', 'id' => $invitation->id], 201);
+            return response()->json(['message' => __('invitations::messages.success.invitation_sent'), 'id' => $invitation->id], 201);
         } catch (\RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
@@ -67,7 +67,7 @@ Route::middleware('auth')->group(function () {
 
         app(InvitationService::class)->revoke($invitation);
 
-        return response()->json(['message' => 'Invitation revoked.']);
+        return response()->json(['message' => __('invitations::messages.success.invitation_revoked')]);
     });
 
     // Re-send the email of a pending invitation.
@@ -92,7 +92,7 @@ Route::middleware('auth')->group(function () {
             return response()->json(['error' => $e->getMessage()], 422);
         }
 
-        return response()->json(['message' => 'Invitation resent.', 'data' => $invitation->fresh()]);
+        return response()->json(['message' => __('invitations::messages.success.invitation_resent'), 'data' => $invitation->fresh()]);
     })->middleware('throttle:invitation-resend');
 
     // Update a pending invitation's permissions (before it is accepted)
@@ -104,8 +104,11 @@ Route::middleware('auth')->group(function () {
             abort(403);
         }
 
-        if ($invitation->accepted_at !== null || $invitation->revoked_at !== null) {
-            return response()->json(['error' => 'Invitation is no longer pending.'], 422);
+        if ($invitation->accepted_at !== null) {
+            return response()->json(['error' => __('invitations::messages.errors.already_accepted'), 'error_code' => 'already_accepted'], 422);
+        }
+        if ($invitation->revoked_at !== null) {
+            return response()->json(['error' => __('invitations::messages.errors.already_revoked'), 'error_code' => 'already_revoked'], 422);
         }
 
         $validated = $request->validate([
@@ -115,7 +118,7 @@ Route::middleware('auth')->group(function () {
 
         $invitation->update(['permissions' => $validated['permissions']]);
 
-        return response()->json(['message' => 'Invitation updated.', 'data' => $invitation->fresh()]);
+        return response()->json(['message' => __('invitations::messages.success.invitation_updated'), 'data' => $invitation->fresh()]);
     });
 
     // List existing subusers from Pelican. Each row is marked `is_current_user`
@@ -196,7 +199,7 @@ Route::middleware('auth')->group(function () {
         // Self-protection: a subuser cannot edit their own permissions.
         if ($target && isset($target['email'])
             && strtolower((string) $target['email']) === strtolower($request->user()->email)) {
-            return response()->json(['error' => 'You cannot modify your own permissions.'], 403);
+            return response()->json(['error' => __('invitations::messages.errors.self_modify'), 'error_code' => 'self_modify'], 403);
         }
 
         try {
@@ -213,7 +216,7 @@ Route::middleware('auth')->group(function () {
                 }
             }
 
-            return response()->json(['message' => 'Permissions updated.']);
+            return response()->json(['message' => __('invitations::messages.success.permissions_updated')]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
@@ -232,7 +235,7 @@ Route::middleware('auth')->group(function () {
             if (($sub['uuid'] ?? '') === $subuserUuid
                 && isset($sub['email'])
                 && strtolower((string) $sub['email']) === strtolower($request->user()->email)) {
-                return response()->json(['error' => 'You cannot remove yourself.'], 403);
+                return response()->json(['error' => __('invitations::messages.errors.self_remove'), 'error_code' => 'self_remove'], 403);
             }
         }
 

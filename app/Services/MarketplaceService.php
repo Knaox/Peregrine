@@ -255,17 +255,48 @@ class MarketplaceService
             );
         }
 
-        // Sync with DB
-        \App\Models\Plugin::updateOrCreate(
-            ['plugin_id' => $pluginId],
-            [
+        // Sync with DB.
+        //
+        // Critical : preserve `is_active` AND `settings` AND `installed_at`
+        // when the row already exists. Earlier versions of this method
+        // hard-coded `is_active => false` in the updateOrCreate payload,
+        // which silently DEACTIVATED any plugin that the admin had
+        // activated, every time they ran an update from the marketplace.
+        // Symptoms reported 2026-05-08 : "after marketplace update I have
+        // to manually reactivate the plugin AND re-click save on its
+        // settings before it actually works".
+        //
+        // Now : we look up the existing row first. If found, we only
+        // bump `version` + `installed_at` ; `is_active` and the JSON
+        // `settings` column are left untouched. Fresh installs still
+        // start `is_active=false` so the admin opts in explicitly.
+        $existing = \App\Models\Plugin::where('plugin_id', $pluginId)->first();
+
+        if ($existing !== null) {
+            $existing->update([
+                'version' => $entry['version'] ?? '0.0.0',
+                'installed_at' => now(),
+            ]);
+        } else {
+            \App\Models\Plugin::create([
+                'plugin_id' => $pluginId,
                 'is_active' => false,
                 'version' => $entry['version'] ?? '0.0.0',
                 'installed_at' => now(),
-            ],
-        );
+            ]);
+        }
 
+        // Invalidate every cached singleton the plugin may have built up
+        // before the update. The previous code only cleared the
+        // marketplace registry cache (CACHE_KEY) — the plugin's OWN
+        // caches (provider listings, settings singletons, manifest
+        // enrichers, …) stayed pinned to the old version's data,
+        // forcing the admin to "click save" on the settings page just
+        // to trigger the model observer that flushes them. With a
+        // global flush after each install/update, the new code reads
+        // fresh data from disk + DB on the very next request.
         Cache::forget(self::CACHE_KEY);
+        Cache::flush();
     }
 
     /**
@@ -290,8 +321,12 @@ class MarketplaceService
         $pluginPath = base_path("plugins/{$pluginId}");
 
         // Bundled plugin → resync DB to disk, no download/extract.
+        // forceResync preserves is_active + settings (it just bumps the
+        // version column). We still need to flush the cache so any
+        // singletons the OLD version cached are refreshed.
         if ($this->files->isDirectory($pluginPath) && $this->isBundled($pluginPath)) {
             $this->pluginManager->forceResync($pluginId);
+            Cache::flush();
             return;
         }
 
@@ -308,7 +343,9 @@ class MarketplaceService
             }
         }
 
-        // Re-install (will re-throw if anything goes wrong).
+        // Re-install (will re-throw if anything goes wrong). Cache flush
+        // happens inside install() — same path applies for both fresh
+        // install and update-via-reinstall.
         $this->install($pluginId);
     }
 
