@@ -50,3 +50,9 @@ public/fonts/filament/
 # Claude Code workspace files (kept local only — never committed)
 CLAUDE.md
 .claude/
+
+# One-off migration / refactor scripts. Kept locally as a reference for the
+# next time we need to do the same kind of operation (e.g. another i18n
+# split), but never shipped to GitHub — they're already-applied tooling, not
+# part of the runtime panel.
+/scripts/
