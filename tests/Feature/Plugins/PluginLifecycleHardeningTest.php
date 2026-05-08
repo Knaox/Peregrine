@@ -45,31 +45,31 @@ class PluginLifecycleHardeningTest extends TestCase
 
     public function test_install_rejects_bundled_plugin_already_on_disk(): void
     {
-        // minecraft-modpack-installer is bundled (manifest has "bundled": true) and
+        // invitations is bundled (manifest has "bundled": true) and
         // its directory exists in the repo. The marketplace install path
         // must refuse and direct the admin to plugin:force-resync.
-        $marketplace = $this->mockRegistryWithBundledEntry('minecraft-modpack-installer');
+        $marketplace = $this->mockRegistryWithBundledEntry('invitations');
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessageMatches('/bundled with Peregrine/');
-        $this->expectExceptionMessageMatches('/plugin:force-resync minecraft-modpack-installer/');
+        $this->expectExceptionMessageMatches('/plugin:force-resync invitations/');
 
-        $marketplace->install('minecraft-modpack-installer');
+        $marketplace->install('invitations');
     }
 
     public function test_uninstall_refuses_bundled_plugin(): void
     {
         // Pre-conditions : not active (so we don't hit the "deactivate first"
         // gate before the bundled check).
-        Plugin::create(['plugin_id' => 'minecraft-modpack-installer', 'is_active' => false, 'version' => '1.0.0']);
+        Plugin::create(['plugin_id' => 'invitations', 'is_active' => false, 'version' => '1.0.0']);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessageMatches('/bundled with Peregrine/');
 
-        app(PluginLifecycle::class)->uninstall('minecraft-modpack-installer');
+        app(PluginLifecycle::class)->uninstall('invitations');
 
         // DB row must remain — we refused before deleting anything.
-        $this->assertDatabaseHas('plugins', ['plugin_id' => 'minecraft-modpack-installer']);
+        $this->assertDatabaseHas('plugins', ['plugin_id' => 'invitations']);
     }
 
     // ============================================================
@@ -81,15 +81,15 @@ class PluginLifecycleHardeningTest extends TestCase
         // Simulate a stale DB row (version 0.8.1) while the on-disk
         // manifest is at 1.0.0.
         Plugin::create([
-            'plugin_id' => 'minecraft-modpack-installer',
+            'plugin_id' => 'invitations',
             'is_active' => false,
             'version' => '0.8.1',
             'installed_at' => now()->subDays(10),
         ]);
 
-        app(PluginLifecycle::class)->forceResync('minecraft-modpack-installer');
+        app(PluginLifecycle::class)->forceResync('invitations');
 
-        $row = Plugin::where('plugin_id', 'minecraft-modpack-installer')->firstOrFail();
+        $row = Plugin::where('plugin_id', 'invitations')->firstOrFail();
         $this->assertSame('1.0.0', $row->version);
     }
 
@@ -98,11 +98,11 @@ class PluginLifecycleHardeningTest extends TestCase
         // Active plugin → resync must not deactivate it ; inactive plugin
         // → must not activate it. Two cases in one test : one assert per
         // active, one per inactive (separate Plugin rows).
-        Plugin::create(['plugin_id' => 'minecraft-modpack-installer', 'is_active' => true, 'version' => '0.8.1']);
+        Plugin::create(['plugin_id' => 'invitations', 'is_active' => true, 'version' => '0.8.1']);
 
-        app(PluginLifecycle::class)->forceResync('minecraft-modpack-installer');
+        app(PluginLifecycle::class)->forceResync('invitations');
 
-        $this->assertTrue(Plugin::where('plugin_id', 'minecraft-modpack-installer')->value('is_active'));
+        $this->assertTrue(Plugin::where('plugin_id', 'invitations')->value('is_active'));
     }
 
     public function test_force_resync_creates_db_row_when_missing(): void
@@ -111,12 +111,12 @@ class PluginLifecycleHardeningTest extends TestCase
         // previous install never wrote the metadata. forceResync must
         // create the row from the manifest, defaulting to is_active=false
         // (admin keeps the activation decision).
-        $this->assertDatabaseMissing('plugins', ['plugin_id' => 'minecraft-modpack-installer']);
+        $this->assertDatabaseMissing('plugins', ['plugin_id' => 'invitations']);
 
-        app(PluginLifecycle::class)->forceResync('minecraft-modpack-installer');
+        app(PluginLifecycle::class)->forceResync('invitations');
 
         $this->assertDatabaseHas('plugins', [
-            'plugin_id' => 'minecraft-modpack-installer',
+            'plugin_id' => 'invitations',
             'version' => '1.0.0',
             'is_active' => 0,
         ]);
@@ -138,12 +138,12 @@ class PluginLifecycleHardeningTest extends TestCase
     {
         // Snapshot the manifest content before, run the update, snapshot
         // after — they must be byte-identical (no download, no extract).
-        $manifestPath = base_path('plugins/minecraft-modpack-installer/plugin.json');
+        $manifestPath = base_path('plugins/invitations/plugin.json');
         $before = File::get($manifestPath);
         $beforeMtime = File::lastModified($manifestPath);
 
         Plugin::create([
-            'plugin_id' => 'minecraft-modpack-installer',
+            'plugin_id' => 'invitations',
             'is_active' => true,
             'version' => '0.8.1',
         ]);
@@ -151,11 +151,11 @@ class PluginLifecycleHardeningTest extends TestCase
         // No HTTP fake — if the code tried to download, the test would
         // either fail (no fake) or hit the live registry (slow). The
         // bundled fast-path must skip Http::get entirely.
-        app(MarketplaceService::class)->update('minecraft-modpack-installer');
+        app(MarketplaceService::class)->update('invitations');
 
         $this->assertSame($before, File::get($manifestPath), 'plugin.json must not be modified');
         $this->assertSame($beforeMtime, File::lastModified($manifestPath), 'plugin.json mtime must not change');
-        $this->assertSame('1.0.0', Plugin::where('plugin_id', 'minecraft-modpack-installer')->value('version'));
+        $this->assertSame('1.0.0', Plugin::where('plugin_id', 'invitations')->value('version'));
     }
 
     // ============================================================
@@ -164,14 +164,14 @@ class PluginLifecycleHardeningTest extends TestCase
 
     public function test_force_resync_command_is_registered(): void
     {
-        Plugin::create(['plugin_id' => 'minecraft-modpack-installer', 'is_active' => false, 'version' => '0.8.1']);
+        Plugin::create(['plugin_id' => 'invitations', 'is_active' => false, 'version' => '0.8.1']);
 
-        $this->artisan('plugin:force-resync', ['plugin_id' => 'minecraft-modpack-installer'])
-            ->expectsOutputToContain('Resyncing plugin: minecraft-modpack-installer')
+        $this->artisan('plugin:force-resync', ['plugin_id' => 'invitations'])
+            ->expectsOutputToContain('Resyncing plugin: invitations')
             ->expectsOutputToContain('resynced')
             ->assertSuccessful();
 
-        $this->assertSame('1.0.0', Plugin::where('plugin_id', 'minecraft-modpack-installer')->value('version'));
+        $this->assertSame('1.0.0', Plugin::where('plugin_id', 'invitations')->value('version'));
     }
 
     public function test_force_resync_command_fails_for_unknown_plugin(): void

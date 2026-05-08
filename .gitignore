@@ -27,21 +27,18 @@ public/css/filament/
 public/js/filament/
 public/fonts/filament/
 
-# Installed plugins — only the official bundled plugins (invitations,
-# minecraft-modpack-installer) are part of the upstream repo. Locally
-# installed plugins from the marketplace live in plugins/ but must not
-# be committed. egg-config-editor was removed from the bundle on
-# 2026-05-08 — it'll come back through the marketplace when ready.
+# Installed plugins — only the official bundled plugin `invitations` is
+# part of the upstream repo. Locally installed plugins from the marketplace
+# live in plugins/ but must not be committed. egg-config-editor and
+# minecraft-modpack-installer were removed from the bundle on 2026-05-08;
+# both ship through the marketplace and are downloaded on demand.
 /plugins/*
 !/plugins/autoload.php
 !/plugins/invitations/
 !/plugins/invitations/**
-!/plugins/minecraft-modpack-installer/
-!/plugins/minecraft-modpack-installer/**
-# The built bundles ARE committed (so fresh clones can activate plugins
+# The built bundle IS committed (so fresh clones can activate the plugin
 # without a pnpm build), but node_modules stays ignored.
 /plugins/invitations/frontend/node_modules
-/plugins/minecraft-modpack-installer/frontend/node_modules
 
 # Plugin asset symlinks — created at activation time by PluginManager,
 # never committed (point to absolute host paths).
