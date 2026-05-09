@@ -48,7 +48,7 @@ return [
         'webhook_secret' => 'Utilisé pour vérifier la signature des événements Stripe entrants. Sans ça, /api/stripe/webhook rejette tous les appels. Laisser vide pour conserver la valeur existante ; saisir une nouvelle valeur pour la roter.',
         'api_secret' => 'Utilisé par Peregrine pour appeler Stripe (ex: récupérer l\'URL d\'une invoice pour les emails reçus, créer une session Customer Portal). Optionnel — sans ça, les emails se rabattent sur l\'URL Billing Portal ci-dessous.',
         'billing_portal_url' => 'URL statique de fallback vers ton Stripe Customer Portal. Utilisée dans les emails de lifecycle quand la création de session API échoue ou qu\'aucun secret API n\'est configuré.',
-        'resubscribe_url' => 'Template appliqué dans l\'email "votre serveur est suspendu". Placeholders : {server_id}, {configuration}, {configuration_id}, {ts}, {signature}.',
+        'resubscribe_url' => 'Template appliqué dans l\'email « votre serveur est suspendu ». La signature porte sur {server_id}|{configuration_id}|{ts}, signée avec bridge_shop_shared_secret. Placeholders : {server_id}, {configuration_id}, {ts}, {signature}. Le placeholder {configuration} (internal_name) reste interpolé pour les shops legacy mais ne participe plus à la signature.',
         'grace_period_days' => 'Jours conservés entre l\'annulation d\'une subscription et la suppression effective du serveur. Le client peut se resubscribe pendant cette fenêtre. Défaut : 14 jours.',
     ],
     'placeholders' => [

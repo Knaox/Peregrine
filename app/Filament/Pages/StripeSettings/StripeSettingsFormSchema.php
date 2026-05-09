@@ -104,7 +104,7 @@ final class StripeSettingsFormSchema
                 TextInput::make('bridge_resubscribe_url')
                     ->label(__('admin/stripe_settings.fields.resubscribe_url'))
                     ->maxLength(512)
-                    ->placeholder('https://shop.example.com/resubscribe?server={server_id}&ts={ts}&sig={signature}')
+                    ->placeholder('https://shop.example.com/resubscribe?server_id={server_id}&configuration_id={configuration_id}&ts={ts}&signature={signature}')
                     ->helperText(__('admin/stripe_settings.helpers.resubscribe_url')),
 
                 TextInput::make('bridge_grace_period_days')
