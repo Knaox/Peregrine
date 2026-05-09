@@ -34,7 +34,7 @@ return [
         ],
         'third_party' => [
             'label' => 'Facturation tierce (WHMCS, Paymenter, …)',
-            'body' => 'Si ton système de facturation crée les serveurs directement via l\'API Pelican, fais pointer ses webhooks sortants vers /api/pelican/webhook. Peregrine mirror l\'état Pelican peu importe la configuration des shops.',
+            'body' => 'Si ton système de facturation crée les serveurs directement via l\'API Pelican, fais pointer ses webhooks sortants vers /api/pelican/webhook pour que Peregrine mirror l\'état Pelican. Prérequis : les webhooks Pelican doivent être configurés (secret de signature + URL côté Pelican) — sans ça, /api/pelican/webhook rejette tous les appels :',
         ],
     ],
     'fields' => [

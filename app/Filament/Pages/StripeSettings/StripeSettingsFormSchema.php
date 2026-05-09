@@ -59,7 +59,7 @@ final class StripeSettingsFormSchema
                     ->content(new HtmlString(
                         '<p class="text-sm">'
                         .__('admin/stripe_settings.info.third_party.body')
-                        .'</p>'
+                        .' <a class="text-primary-600 underline" href="'.url('/admin/pelican-webhook-settings').'">/admin/pelican-webhook-settings</a></p>'
                     )),
             ])
             ->columns(1);

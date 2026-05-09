@@ -34,7 +34,7 @@ return [
         ],
         'third_party' => [
             'label' => 'Third-party billing (WHMCS, Paymenter, …)',
-            'body' => 'If your billing system creates servers directly via the Pelican API, point its outgoing webhooks to /api/pelican/webhook. Peregrine mirrors Pelican state regardless of any shop configuration.',
+            'body' => 'If your billing system creates servers directly via the Pelican API, point its outgoing webhooks to /api/pelican/webhook so Peregrine mirrors Pelican state. Prerequisite: the Pelican webhooks must be configured (signing secret + URL on the Pelican side) — without that, /api/pelican/webhook rejects every request:',
         ],
     ],
     'fields' => [
