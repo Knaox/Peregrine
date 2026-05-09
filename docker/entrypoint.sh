@@ -33,12 +33,24 @@ done
 
 # Persistent dirs that must exist on a fresh named volume.
 mkdir -p storage/app/public/branding \
+         storage/app/plugin-uploads \
          storage/framework/cache/data \
          storage/framework/sessions \
          storage/framework/views \
          storage/logs \
          storage/database \
-         bootstrap/cache
+         bootstrap/cache \
+         plugins
+
+# -------------------------------------------------------------------
+# Plugin upload writability — the named volume `peregrine_plugins`
+# can reset ownership on first mount (Docker copies the container
+# layer, but if the volume already exists from an older image it
+# keeps its previous perms). Re-asserting on every boot guarantees
+# admin-uploaded plugins can land in plugins/ regardless of history.
+# -------------------------------------------------------------------
+chown -R www-data:www-data plugins storage/app/plugin-uploads 2>/dev/null || true
+chmod -R u+rwX,g+rwX plugins storage/app/plugin-uploads 2>/dev/null || true
 
 # -------------------------------------------------------------------
 # Persistent .env — survives container restarts (lives in storage/).
