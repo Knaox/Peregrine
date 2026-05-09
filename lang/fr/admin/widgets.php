@@ -16,6 +16,13 @@ return [
         'queue_worker' => 'Worker queue',
         'last_sync' => 'Dernière sync Pelican',
         'bridge_mode' => 'Mode Bridge',
+        'integrations' => [
+            'label' => 'Intégrations',
+            'none' => 'Aucune configurée',
+            'stripe_only' => 'Webhook Stripe configuré',
+            'shops_only' => ':count shop(s) actif(s)',
+            'stripe_and_shops' => 'Stripe + :count shop(s) actif(s)',
+        ],
         'cache' => 'Cache',
         'never' => 'Jamais',
         'healthy' => 'OK',

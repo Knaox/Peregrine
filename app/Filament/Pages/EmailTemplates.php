@@ -102,8 +102,8 @@ class EmailTemplates extends Page implements HasForms
 
         // Templates from the registry — one section per entry. Bridge
         // templates are hidden when the Bridge feature is disabled (matches
-        // the visibility rule used elsewhere : ServerPlanResource navigation,
-        // BridgeSyncLogResource navigation).
+        // the visibility rule used elsewhere : ServerConfigurationResource
+        // navigation, BridgeSyncLogResource navigation).
         $bridgeActive = $this->isBridgeActive();
         foreach (MailTemplateRegistry::all() as $tpl) {
             if ($tpl['group'] === 'Bridge' && ! $bridgeActive) {
@@ -169,10 +169,11 @@ class EmailTemplates extends Page implements HasForms
 
     private function isBridgeActive(): bool
     {
-        // Bridge emails are ONLY relevant in Shop+Stripe mode. In Paymenter
-        // mode, Paymenter sends every customer email itself — we must not
-        // duplicate them.
-        return app(\App\Services\Bridge\BridgeModeService::class)->isShopStripe();
+        // Bridge emails are only relevant when Stripe is wired — third-party
+        // billing orchestrators (Paymenter, WHMCS) send their own customer
+        // emails so we must not duplicate them. The Stripe webhook secret is
+        // the canonical "Peregrine drives the lifecycle here" signal.
+        return app(\App\Services\Integrations\IntegrationStatusService::class)->hasStripeConfigured();
     }
 
     public function save(): void

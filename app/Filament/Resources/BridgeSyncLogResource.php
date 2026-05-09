@@ -15,7 +15,7 @@ use UnitEnum;
 /**
  * Read-only audit page for inbound Bridge calls from the Shop. Each row
  * captures one HTTP exchange (signature outcome, payload, response). Hidden
- * when Bridge is disabled (matches ServerPlanResource gating).
+ * when no Stripe webhook is configured AND no shop is active.
  */
 class BridgeSyncLogResource extends Resource
 {
@@ -47,7 +47,11 @@ class BridgeSyncLogResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return app(\App\Services\Bridge\BridgeModeService::class)->isShopStripe();
+        // Show the audit log when either Stripe is wired (legacy plan-sync
+        // calls still surface here) or there's at least one active shop in
+        // the multi-shop registry.
+        $integrations = app(\App\Services\Integrations\IntegrationStatusService::class);
+        return $integrations->hasStripeConfigured() || $integrations->hasActiveShop();
     }
 
     public static function canCreate(): bool

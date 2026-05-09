@@ -7,6 +7,7 @@ use App\Jobs\Bridge\SyncEggFromPelicanWebhookJob;
 use App\Jobs\Bridge\SyncNodeFromPelicanWebhookJob;
 use App\Jobs\Bridge\SyncServerFromPelicanWebhookJob;
 use App\Jobs\Bridge\SyncUserFromPelicanWebhookJob;
+use App\Services\Integrations\IntegrationStatusService;
 
 /**
  * Maps a classified Pelican webhook event to its sync job dispatch.
@@ -25,7 +26,7 @@ use App\Jobs\Bridge\SyncUserFromPelicanWebhookJob;
 final class PelicanWebhookDispatcher
 {
     public function __construct(
-        private readonly BridgeModeService $bridgeMode,
+        private readonly IntegrationStatusService $integrations,
     ) {}
 
     /**
@@ -74,9 +75,14 @@ final class PelicanWebhookDispatcher
     /** @return array<string, mixed> */
     private function dispatchUserCreated(int $modelId): array
     {
-        if ($this->bridgeMode->isShopStripe()) {
+        // When Stripe is wired (Peregrine drives the lifecycle), users are
+        // created on demand by the checkout handler with the shop-provided
+        // email — Pelican-side user creation events would race with that
+        // and produce duplicate Users. Skip them ; they're recorded for
+        // audit only.
+        if ($this->integrations->hasStripeConfigured()) {
             return [
-                'ignored' => 'user_creation_disabled_in_shop_stripe_mode',
+                'ignored' => 'user_creation_skipped_when_stripe_configured',
                 'pelican_user_id' => $modelId,
             ];
         }

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Pages\BridgeSettings\BridgeSettingsHtmlHelpers;
+use App\Filament\Support\IntegrationsHtmlHelpers;
 use App\Services\SettingsService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -132,21 +132,21 @@ class PelicanWebhookSettings extends Page implements HasForms
                 ->schema([
                     Placeholder::make('pelican_top_fields_display')
                         ->label(__('admin/pelican_webhook.fields.top_fields'))
-                        ->content(BridgeSettingsHtmlHelpers::renderKeyValueList([
+                        ->content(IntegrationsHtmlHelpers::renderKeyValueList([
                             ['Type',        __('admin/pelican_webhook.top_fields.type')],
                             ['Description', __('admin/pelican_webhook.top_fields.description')],
                             ['Endpoint',    $baseUrl.'/api/pelican/webhook'],
                         ])),
                     Placeholder::make('pelican_headers_display')
                         ->label(__('admin/pelican_webhook.fields.headers'))
-                        ->content(BridgeSettingsHtmlHelpers::renderHeadersList([
+                        ->content(IntegrationsHtmlHelpers::renderHeadersList([
                             ['X-Webhook-Event', '{{event}}', __('admin/pelican_webhook.header_descriptions.pelican_default')],
                             ['Authorization',   __('admin/pelican_webhook.header_values.token_placeholder'), __('admin/pelican_webhook.header_descriptions.add_row')],
                         ])),
 
                     Placeholder::make('pelican_events_required')
                         ->label(__('admin/pelican_webhook.fields.events_required'))
-                        ->content(BridgeSettingsHtmlHelpers::renderTagList([
+                        ->content(IntegrationsHtmlHelpers::renderTagList([
                             'created: Server',
                             'updated: Server',
                             'deleted: Server',
@@ -156,7 +156,7 @@ class PelicanWebhookSettings extends Page implements HasForms
 
                     Placeholder::make('pelican_events_recommended')
                         ->label(__('admin/pelican_webhook.fields.events_recommended'))
-                        ->content(BridgeSettingsHtmlHelpers::renderTagList([
+                        ->content(IntegrationsHtmlHelpers::renderTagList([
                             'updated: User',
                             'deleted: User',
                             'created: Node',
@@ -172,7 +172,7 @@ class PelicanWebhookSettings extends Page implements HasForms
 
                     Placeholder::make('pelican_events_blocklist')
                         ->label(__('admin/pelican_webhook.fields.events_blocklist'))
-                        ->content(BridgeSettingsHtmlHelpers::renderTagList([
+                        ->content(IntegrationsHtmlHelpers::renderTagList([
                             'created: Backup',
                             'updated: Backup',
                             'deleted: Backup',
@@ -211,7 +211,7 @@ class PelicanWebhookSettings extends Page implements HasForms
                 ->schema([
                     Placeholder::make('pelican_docs_link')
                         ->label(__('admin/pelican_webhook.fields.docs'))
-                        ->content(BridgeSettingsHtmlHelpers::renderDocLink($docsUrl, __('admin/pelican_webhook.fields.docs_note'))),
+                        ->content(IntegrationsHtmlHelpers::renderDocLink($docsUrl, __('admin/pelican_webhook.fields.docs_note'))),
                     Placeholder::make('pelican_audit_link')
                         ->label(__('admin/pelican_webhook.fields.audit'))
                         ->content(new HtmlString(

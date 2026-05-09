@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\BridgeMode;
 use App\Jobs\Bridge\ReconcilePelicanMirrorJob;
 use App\Jobs\Bridge\SyncServerFromPelicanWebhookJob;
 use App\Jobs\Bridge\SyncUserFromPelicanWebhookJob;
@@ -42,7 +41,7 @@ class PelicanWebhookTest extends TestCase
         // Default these tests to Paymenter mode so user-creation events are
         // still dispatched (shop_stripe explicitly skips them — covered in
         // its own test). The webhook itself is mode-agnostic now.
-        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::Paymenter->value]);
+        Setting::query()->where('key', 'bridge_stripe_webhook_secret')->delete();
         app(SettingsService::class)->clearCache();
     }
 
@@ -76,7 +75,7 @@ class PelicanWebhookTest extends TestCase
     {
         // Whole point of the refactor: webhook now works in any Bridge mode
         // as long as it's enabled.
-        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::ShopStripe->value]);
+        Setting::updateOrCreate(['key' => 'bridge_stripe_webhook_secret'], ['value' => 'whsec_test_seed']);
         app(SettingsService::class)->clearCache();
 
         Bus::fake();
@@ -126,7 +125,7 @@ class PelicanWebhookTest extends TestCase
     {
         // In shop_stripe mode users come from Stripe / OAuth — Pelican must
         // not be allowed to create ghost users out of band.
-        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::ShopStripe->value]);
+        Setting::updateOrCreate(['key' => 'bridge_stripe_webhook_secret'], ['value' => 'whsec_test_seed']);
         app(SettingsService::class)->clearCache();
 
         Bus::fake();

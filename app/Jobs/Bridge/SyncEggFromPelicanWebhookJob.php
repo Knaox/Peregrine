@@ -6,7 +6,7 @@ use App\Enums\PelicanEventKind;
 use App\Models\Egg;
 use App\Models\Nest;
 use App\Models\Server;
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
 use App\Services\Pelican\PelicanApplicationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -116,14 +116,14 @@ class SyncEggFromPelicanWebhookJob implements ShouldQueue
         }
 
         $serverCount = Server::where('egg_id', $egg->id)->count();
-        $planCount = ServerPlan::where('egg_id', $egg->id)->count();
+        $configurationCount = ServerConfiguration::where('egg_id', $egg->id)->count();
 
-        if ($serverCount > 0 || $planCount > 0) {
+        if ($serverCount > 0 || $configurationCount > 0) {
             Log::warning('SyncEggFromPelicanWebhookJob: refusing to delete egg with local references', [
                 'pelican_egg_id' => $this->pelicanEggId,
                 'local_egg_id' => $egg->id,
                 'attached_servers' => $serverCount,
-                'attached_plans' => $planCount,
+                'attached_configurations' => $configurationCount,
             ]);
             return;
         }

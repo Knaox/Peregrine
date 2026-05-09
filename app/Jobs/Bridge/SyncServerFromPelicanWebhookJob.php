@@ -6,7 +6,7 @@ use App\Events\Bridge\ServerInstalled;
 use App\Events\Mirror\ServerMirrorChanged;
 use App\Models\Server;
 use App\Models\User;
-use App\Services\Bridge\BridgeModeService;
+use App\Services\Integrations\IntegrationStatusService;
 use App\Services\Pelican\PelicanApplicationService;
 use App\Services\Sync\EggResolver;
 use App\Services\Sync\ServerStatusResolver;
@@ -45,10 +45,10 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
 
     public function handle(
         PelicanApplicationService $pelican,
-        BridgeModeService $bridgeMode,
+        IntegrationStatusService $integrations,
     ): void {
         if ($this->isDeletionEvent()) {
-            $this->handleDeletion($bridgeMode);
+            $this->handleDeletion($integrations);
             return;
         }
 
@@ -65,12 +65,13 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
         $existing = Server::where('pelican_server_id', $this->pelicanServerId)->first();
 
         if ($existing !== null && $this->isShopOwned($existing)) {
-            $this->updateShopOwned($existing, $apiSnapshot, $bridgeMode);
+            $this->updateShopOwned($existing, $apiSnapshot);
             return;
         }
 
-        // Not Shop-owned (Paymenter mirror or admin-imported) → full upsert.
-        $this->fullUpsert($existing, $apiSnapshot, $bridgeMode);
+        // Not Shop-owned (orchestrator-driven mirror or admin-imported) →
+        // full upsert.
+        $this->fullUpsert($existing, $apiSnapshot, $integrations);
     }
 
     /**
@@ -80,7 +81,6 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
     private function updateShopOwned(
         Server $server,
         ?\App\Services\Pelican\DTOs\PelicanServer $apiSnapshot,
-        BridgeModeService $bridgeMode,
     ): void {
         $previousStatus = (string) $server->status;
 
@@ -108,10 +108,13 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
 
         // STRICT ORDER : status update MUST land before the event — listeners
         // see the row in its final state. Tested in ShopGuardTest.
+        // We've already passed the `isShopOwned()` check at the top of the
+        // dispatcher : the server carries a stripe_subscription_id or a
+        // server_configuration_id, meaning Peregrine drives its lifecycle.
+        // Fire the install-completed email regardless of any global mode.
         if (
             $previousStatus === 'provisioning'
             && ($updates['status'] ?? null) === 'active'
-            && $bridgeMode->isShopStripe()
             && $server->user !== null
         ) {
             event(new ServerInstalled($server->fresh(), $server->user));
@@ -140,10 +143,16 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
     private function fullUpsert(
         ?Server $existing,
         ?\App\Services\Pelican\DTOs\PelicanServer $apiSnapshot,
-        BridgeModeService $bridgeMode,
+        IntegrationStatusService $integrations,
     ): void {
-        if ($existing === null && $bridgeMode->isShopStripe()) {
-            Log::info('SyncServerFromPelicanWebhookJob: skipping unknown server in shop_stripe mode (Shop will create it)', [
+        // When Stripe is wired, server creation is owned by Peregrine's
+        // checkout flow (ProvisionServerJob writes the local row first then
+        // calls Pelican). A "server.created" event arriving for an unknown
+        // pelican_server_id means Pelican fired before our local row landed
+        // — race condition, the next `updated` event will sync it. We
+        // silently skip rather than create a foreign-owned row.
+        if ($existing === null && $integrations->hasStripeConfigured()) {
+            Log::info('SyncServerFromPelicanWebhookJob: skipping unknown server (Stripe-driven flow will own creation)', [
                 'pelican_server_id' => $this->pelicanServerId,
                 'event_type' => $this->eventType,
             ]);
@@ -214,7 +223,7 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
     private function isShopOwned(Server $server): bool
     {
         return $server->stripe_subscription_id !== null
-            || $server->plan_id !== null;
+            || $server->server_configuration_id !== null;
     }
 
     private function resolveInstallStatus(?\App\Services\Pelican\DTOs\PelicanServer $apiSnapshot, string $previousStatus): ?string
@@ -235,16 +244,18 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
         return str_starts_with($normalized, 'deleted:') || str_contains($normalized, 'eloquent.deleted');
     }
 
-    private function handleDeletion(BridgeModeService $bridgeMode): void
+    private function handleDeletion(IntegrationStatusService $integrations): void
     {
         $server = Server::where('pelican_server_id', $this->pelicanServerId)->first();
         if ($server === null) {
             return;
         }
 
-        // Shop-owned deletions belong to PurgeScheduledServerDeletionsJob ;
-        // Pelican-side deletion is drift we log but don't act on.
-        if ($this->isShopOwned($server) && $bridgeMode->isShopStripe()) {
+        // Shop-owned deletions belong to PurgeScheduledServerDeletionsJob.
+        // A Pelican-side deletion arriving for a Stripe-driven server is
+        // drift (someone hand-deleted in the Pelican panel). We refuse to
+        // mirror it locally so the admin can investigate.
+        if ($this->isShopOwned($server) && $integrations->hasStripeConfigured()) {
             Log::warning('SyncServerFromPelicanWebhookJob: Pelican deleted a Shop-owned server, leaving local row in place for admin review', [
                 'pelican_server_id' => $this->pelicanServerId,
                 'local_server_id' => $server->id,

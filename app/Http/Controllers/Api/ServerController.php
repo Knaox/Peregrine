@@ -28,7 +28,7 @@ class ServerController extends Controller
 
         if ($viewAll) {
             $servers = Server::query()
-                ->with(['user:id,name,email', 'egg', 'plan'])
+                ->with(['user:id,name,email', 'egg', 'serverConfiguration'])
                 ->orderBy('name')
                 ->get();
 
@@ -51,7 +51,7 @@ class ServerController extends Controller
 
         $servers = $request->user()
             ->accessibleServers()
-            ->with(['egg', 'plan'])
+            ->with(['egg', 'serverConfiguration'])
             ->orderBy('name')
             ->get();
 
@@ -74,7 +74,7 @@ class ServerController extends Controller
     public function show(Request $request, Server $server): ServerResource
     {
         $this->authorize('view', $server);
-        $server->load(['egg', 'plan']);
+        $server->load(['egg', 'serverConfiguration']);
 
         $allocation = null;
         $sftpDetails = null;

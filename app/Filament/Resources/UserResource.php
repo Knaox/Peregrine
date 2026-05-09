@@ -56,7 +56,7 @@ class UserResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        $isShopStripe = app(\App\Services\Bridge\BridgeModeService::class)->isShopStripe();
+        $isShopStripe = app(\App\Services\Integrations\IntegrationStatusService::class)->hasStripeConfigured();
 
         $integrationFields = [
             Section::make(__('admin/_shell.tabs.pelican_link'))

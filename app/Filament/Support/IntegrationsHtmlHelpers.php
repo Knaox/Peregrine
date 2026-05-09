@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Pages\BridgeSettings;
+namespace App\Filament\Support;
 
 use Illuminate\Support\HtmlString;
 
@@ -14,7 +14,7 @@ use Illuminate\Support\HtmlString;
  * Filament `Placeholder::make(...)->content(...)` calls. No state, no
  * service dependencies.
  */
-final class BridgeSettingsHtmlHelpers
+final class IntegrationsHtmlHelpers
 {
     private const CARD_STYLE = 'border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25); padding: 0.25rem 0.75rem; overflow: hidden;';
 

@@ -6,9 +6,7 @@ use App\Http\Controllers\Api\Auth\SocialAuthController;
 use App\Http\Controllers\Api\Auth\TwoFactorController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Bridge\PelicanWebhookController;
-use App\Http\Controllers\Api\Bridge\PlanSyncController;
 use App\Http\Controllers\Api\Bridge\StripeWebhookController;
-use App\Http\Middleware\VerifyBridgeSignature;
 use App\Http\Middleware\VerifyPelicanWebhookToken;
 use App\Http\Middleware\VerifyStripeSignature;
 use App\Http\Controllers\Api\MarketplaceController;
@@ -68,17 +66,9 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-// Bridge — Shop pushes plan definitions to Peregrine via signed HTTP API.
-// Public routes (no Laravel auth) — protected by HMAC signature middleware.
-// Throttled per-IP to 60/min (Shop is the only legitimate caller).
-Route::prefix('bridge')
-    ->middleware(['throttle:bridge', VerifyBridgeSignature::class])
-    ->group(function () {
-        Route::post('ping', [PlanSyncController::class, 'ping']);
-        Route::post('plans/upsert', [PlanSyncController::class, 'upsert']);
-        Route::delete('plans/{shopPlanId}', [PlanSyncController::class, 'destroy'])
-            ->whereNumber('shopPlanId');
-    });
+// Legacy `/api/bridge/*` routes have been removed. Plan/configuration sync
+// is now driven by `GET /api/v1/configurations` (the shop reads, doesn't
+// push). See /docs/shops for the migration path.
 
 // Stripe webhook receiver. Public route (no Laravel auth) — protected
 // by signature middleware. Tolerant rate limit since Stripe has fixed IPs

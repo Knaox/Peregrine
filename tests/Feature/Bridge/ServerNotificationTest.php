@@ -8,7 +8,7 @@ use App\Listeners\Bridge\SendServerReadyNotification;
 use App\Listeners\Bridge\SendServerSuspendedNotification;
 use App\Models\OAuthIdentity;
 use App\Models\Server;
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
 use App\Models\User;
 use App\Notifications\Bridge\ServerReadyNotification;
 use App\Notifications\Bridge\ServerSuspendedNotification;
@@ -34,7 +34,7 @@ class ServerNotificationTest extends TestCase
         parent::setUp();
         // Bridge listeners are gated to shop_stripe mode — set it for the
         // whole suite, otherwise no notification ever fires.
-        app(SettingsService::class)->set('bridge_mode', 'shop_stripe');
+        app(SettingsService::class)->set('bridge_stripe_webhook_secret', 'whsec_test_seed');
     }
 
     public function test_server_provisioned_event_dispatches_ready_notification(): void
@@ -124,10 +124,11 @@ class ServerNotificationTest extends TestCase
             'pelican_node_id' => mt_rand(1, 9999), 'name' => 'NN',
             'fqdn' => 'n.test', 'scheme' => 'https', 'memory' => 1, 'disk' => 1,
         ]);
-        $plan = ServerPlan::create([
-            'name' => 'Test Plan', 'stripe_price_id' => 'price_'.\Illuminate\Support\Str::random(8),
+        $configuration = ServerConfiguration::create([
+            'internal_name' => 'cfg-'.\Illuminate\Support\Str::random(6),
+            'name_template' => '{user.username}-{configuration.internal_name}',
             'egg_id' => $egg->id, 'nest_id' => $nest->id, 'node_id' => $node->id,
-            'ram' => 1024, 'cpu' => 100, 'disk' => 5000, 'is_active' => true,
+            'ram' => 1024, 'cpu' => 100, 'disk' => 5000,
         ]);
 
         return Server::create([
@@ -137,7 +138,7 @@ class ServerNotificationTest extends TestCase
             'name' => 'srv-test',
             'status' => 'active',
             'egg_id' => $egg->id,
-            'plan_id' => $plan->id,
+            'server_configuration_id' => $configuration->id,
             'scheduled_deletion_at' => now()->addDays(14),
         ]);
     }

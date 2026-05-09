@@ -1,18 +1,16 @@
 <x-filament-panels::page>
     @php
-        $bridgeMode = app(\App\Services\Bridge\BridgeModeService::class)->current();
-        $modeBadgeKey = match ($bridgeMode->value) {
-            'shop_stripe' => 'admin/_shell.badges.bridge_mode.shop_stripe',
-            'paymenter'   => 'admin/_shell.badges.bridge_mode.paymenter',
-            default       => 'admin/_shell.badges.bridge_mode.disabled',
-        };
-        $modeBadgeColor = match ($bridgeMode->value) {
-            'shop_stripe' => 'success',
-            'paymenter'   => 'info',
-            default       => 'gray',
-        };
+        $integrations = app(\App\Services\Integrations\IntegrationStatusService::class);
+        $hasStripe = $integrations->hasStripeConfigured();
+        $hasShop = $integrations->hasActiveShop();
         $badges = [
-            ['label' => __($modeBadgeKey), 'color' => $modeBadgeColor, 'icon' => 'heroicon-o-link'],
+            [
+                'label' => $hasStripe || $hasShop
+                    ? __('admin/_shell.badges.bridge_mode.shop_stripe')
+                    : __('admin/_shell.badges.bridge_mode.disabled'),
+                'color' => $hasStripe || $hasShop ? 'success' : 'gray',
+                'icon' => 'heroicon-o-link',
+            ],
         ];
     @endphp
 

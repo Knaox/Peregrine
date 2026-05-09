@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\ServerResource;
 
-use App\Services\Bridge\BridgeModeService;
+use App\Services\Integrations\IntegrationStatusService;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Tabs;
@@ -19,7 +19,7 @@ final class ServerFormSchemaBuilder
 {
     public static function build(Schema $schema): Schema
     {
-        $isShopStripe = app(BridgeModeService::class)->isShopStripe();
+        $isShopStripe = app(IntegrationStatusService::class)->hasStripeConfigured();
 
         $tabs = [
             Tab::make(__('admin/_shell.tabs.identity'))
@@ -118,13 +118,13 @@ final class ServerFormSchemaBuilder
         ];
 
         if ($isShopStripe) {
-            $fields[] = Select::make('plan_id')
-                ->label(__('admin/_shell.fields.plan'))
-                ->relationship('plan', 'name')
+            $fields[] = Select::make('server_configuration_id')
+                ->label(__('admin/_shell.fields.configuration'))
+                ->relationship('serverConfiguration', 'internal_name')
                 ->searchable()
                 ->preload()
                 ->nullable()
-                ->helperText(__('admin/servers.helpers.plan'));
+                ->helperText(__('admin/servers.helpers.configuration'));
         }
 
         return $fields;

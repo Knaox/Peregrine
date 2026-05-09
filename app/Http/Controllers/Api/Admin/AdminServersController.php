@@ -20,7 +20,7 @@ class AdminServersController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Server::query()->with(['user:id,name,email', 'egg', 'plan']);
+        $query = Server::query()->with(['user:id,name,email', 'egg', 'serverConfiguration']);
 
         if ($search = $request->query('search')) {
             $search = (string) $search;

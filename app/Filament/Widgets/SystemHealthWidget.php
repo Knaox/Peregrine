@@ -2,9 +2,9 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\BridgeMode;
+use App\Models\Shop;
+use App\Services\Integrations\IntegrationStatusService;
 use App\Models\SyncLog;
-use App\Services\Bridge\BridgeModeService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Cache;
@@ -62,13 +62,18 @@ class SystemHealthWidget extends BaseWidget
             };
         }
 
-        // Bridge mode — translate to a colored badge.
-        $bridgeMode = app(BridgeModeService::class)->current();
-        [$bridgeLabel, $bridgeColor] = match ($bridgeMode) {
-            BridgeMode::ShopStripe => [__('admin/_shell.badges.bridge_mode.shop_stripe'), 'success'],
-            BridgeMode::Paymenter => [__('admin/_shell.badges.bridge_mode.paymenter'), 'info'],
-            default => [__('admin/_shell.badges.bridge_mode.disabled'), 'gray'],
+        // Integrations health — Stripe wired + active shops counter. Each
+        // integration is now opt-in independently, no global mode picker.
+        $integrations = app(IntegrationStatusService::class);
+        $stripeOn = $integrations->hasStripeConfigured();
+        $activeShops = Shop::query()->where('status', 'active')->count();
+        $integrationsLabel = match (true) {
+            $stripeOn && $activeShops > 0 => __('admin/widgets.system_health.integrations.stripe_and_shops', ['count' => $activeShops]),
+            $stripeOn => __('admin/widgets.system_health.integrations.stripe_only'),
+            $activeShops > 0 => __('admin/widgets.system_health.integrations.shops_only', ['count' => $activeShops]),
+            default => __('admin/widgets.system_health.integrations.none'),
         };
+        $integrationsColor = ($stripeOn || $activeShops > 0) ? 'success' : 'gray';
 
         // Cache — try a tiny round-trip to detect a broken store.
         try {
@@ -91,9 +96,9 @@ class SystemHealthWidget extends BaseWidget
             Stat::make(__('admin/widgets.system_health.last_sync'), $syncLabel)
                 ->descriptionIcon('heroicon-o-arrow-path')
                 ->color($syncColor),
-            Stat::make(__('admin/widgets.system_health.bridge_mode'), $bridgeLabel)
+            Stat::make(__('admin/widgets.system_health.integrations.label'), $integrationsLabel)
                 ->descriptionIcon('heroicon-o-link')
-                ->color($bridgeColor),
+                ->color($integrationsColor),
             Stat::make(__('admin/widgets.system_health.cache'), $cacheLabel)
                 ->descriptionIcon($cacheOk ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
                 ->color($cacheColor),

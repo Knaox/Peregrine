@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Actions\Pelican\EnsurePelicanAccountAction;
@@ -7,7 +9,7 @@ use App\Events\Bridge\ServerProvisioned;
 use App\Models\Egg;
 use App\Models\Node;
 use App\Models\Server;
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
 use App\Models\User;
 use App\Services\Bridge\EnvironmentResolver;
 use App\Services\Bridge\PortAllocator;
@@ -22,9 +24,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
- * Orchestrates the full provisioning of a Pelican server from a ServerPlan.
- * Used by both the "Create test server" button (debug) and (later) the
- * Stripe webhook handler (P3). Idempotent and crash-safe :
+ * Orchestrates the full provisioning of a Pelican server from a
+ * ServerConfiguration. Triggered by the inbound Stripe checkout flow
+ * (StripeCheckoutHandler) and the "Create test server" admin button.
  *
  *   1. Create local Server row UPFRONT with status='provisioning' and
  *      idempotency_key = unique-per-attempt. The row is visible in
@@ -32,9 +34,10 @@ use Illuminate\Support\Str;
  *   2. Look up egg variable defaults from Pelican (mandatory or Pelican
  *      rejects).
  *   3. Allocate consecutive ports.
- *   4. Resolve env vars (egg defaults overridden by plan env_var_mapping).
+ *   4. Resolve env vars (egg defaults overridden by configuration env_var_mapping).
  *   5. Call createServerAdvanced.
- *   6. On success : update local row with pelican_server_id + status='active'.
+ *   6. On success : update local row with pelican_server_id (status STAYS
+ *      'provisioning' until the Pelican install-completed webhook lands).
  *   7. On any failure : update local row with status='provisioning_failed'
  *      + provisioning_error, then re-throw so Laravel queue retries.
  *
@@ -58,12 +61,13 @@ class ProvisionServerJob implements ShouldQueue
     public int $timeout = 60;
 
     public function __construct(
-        public readonly int $planId,
+        public readonly int $serverConfigurationId,
         public readonly int $userId,
         public readonly string $idempotencyKey,
         public readonly ?string $serverNameOverride = null,
         public readonly ?string $stripeSubscriptionId = null,
         public readonly ?string $paymentIntentId = null,
+        public readonly ?string $externalOrderId = null,
     ) {}
 
     public function handle(
@@ -81,16 +85,20 @@ class ProvisionServerJob implements ShouldQueue
             return;
         }
 
-        $plan = ServerPlan::find($this->planId);
+        $configuration = ServerConfiguration::find($this->serverConfigurationId);
         $user = User::find($this->userId);
 
-        if ($plan === null || $user === null) {
-            $this->fail(new \RuntimeException("Plan #{$this->planId} or user #{$this->userId} not found"));
+        if ($configuration === null || $user === null) {
+            $this->fail(new \RuntimeException(
+                "ServerConfiguration #{$this->serverConfigurationId} or user #{$this->userId} not found"
+            ));
             return;
         }
 
-        if (! $plan->isReadyToProvision()) {
-            $this->fail(new \RuntimeException("Plan #{$plan->id} is not ready to provision"));
+        if (! $configuration->isReadyToProvision()) {
+            $this->fail(new \RuntimeException(
+                "ServerConfiguration #{$configuration->id} is not ready to provision"
+            ));
             return;
         }
 
@@ -105,17 +113,22 @@ class ProvisionServerJob implements ShouldQueue
         }
 
         $serverName = $this->serverNameOverride
-            ?? sprintf('srv-%s-%s', Str::slug((string) ($plan->shop_plan_slug ?: $plan->name)), substr($this->idempotencyKey, 0, 8));
+            ?? sprintf(
+                'srv-%s-%s',
+                Str::slug($configuration->internal_name),
+                substr($this->idempotencyKey, 0, 8),
+            );
 
         $server = $existing ?? Server::create([
             'user_id' => $user->id,
             'name' => $serverName,
             'status' => 'provisioning',
-            'egg_id' => $plan->egg_id,
-            'plan_id' => $plan->id,
+            'egg_id' => $configuration->egg_id,
+            'server_configuration_id' => $configuration->id,
             'stripe_subscription_id' => $this->stripeSubscriptionId,
             'payment_intent_id' => $this->paymentIntentId,
             'idempotency_key' => $this->idempotencyKey,
+            'external_order_id' => $this->externalOrderId,
         ]);
 
         // The client dashboard (/dashboard) lists servers via the
@@ -134,28 +147,31 @@ class ProvisionServerJob implements ShouldQueue
             // (`id`) AND a mirror of the Pelican PK (`pelican_*_id`). Pelican
             // only accepts its own IDs — passing the local PKs returns 404
             // NotFoundHttpException on every endpoint that takes one.
-            $node = $this->pickNode($plan);
+            $node = $this->pickNode($configuration);
             if ($node === null || $node->pelican_node_id === null) {
                 throw new \RuntimeException('No node available for provisioning');
             }
-            $egg = Egg::find($plan->egg_id);
+            $egg = Egg::find($configuration->egg_id);
             if ($egg === null || $egg->pelican_egg_id === null) {
-                throw new \RuntimeException("Egg #{$plan->egg_id} not found locally or missing pelican_egg_id (run sync:eggs)");
+                throw new \RuntimeException(
+                    "Egg #{$configuration->egg_id} not found locally or missing pelican_egg_id (run sync:eggs)"
+                );
             }
 
             // Effective count must include the highest offset referenced in
             // env_var_mapping — otherwise an admin who sets port_count=1
             // and a mapping at offset=2 would never get the +2 port reserved
-            // and the variable would resolve to null. ServerPlan computes
-            // this once, here we just hand it to the allocator which then
-            // guarantees the WHOLE consecutive block is free in one pass.
+            // and the variable would resolve to null. ServerConfiguration
+            // computes this once, here we just hand it to the allocator
+            // which then guarantees the WHOLE consecutive block is free in
+            // one pass.
             $allocations = $portAllocator->findConsecutiveFreePorts(
                 nodeId: (int) $node->pelican_node_id,
-                count: $plan->effectivePortCount(),
+                count: $configuration->effectivePortCount(),
             );
 
             $eggDefaults = $pelican->getEggVariableDefaults((int) $egg->pelican_egg_id);
-            $environment = $environmentResolver->resolve($plan, $allocations, $eggDefaults);
+            $environment = $environmentResolver->resolve($configuration, $allocations, $eggDefaults);
 
             $startup = $egg->startup;
 
@@ -171,22 +187,22 @@ class ProvisionServerJob implements ShouldQueue
                 // rules). The DTO field is kept for back-compat but the
                 // payload no longer carries it — pass 0 as a marker.
                 nestId: 0,
-                memoryMb: (int) ($plan->ram ?? 0),
-                swapMb: (int) ($plan->swap_mb ?? 0),
-                diskMb: (int) ($plan->disk ?? 0),
-                ioWeight: (int) ($plan->io_weight ?? 500),
-                cpuPercent: (int) ($plan->cpu ?? 0),
-                featureLimitDatabases: (int) ($plan->feature_limits_databases ?? 0),
-                featureLimitBackups: (int) ($plan->feature_limits_backups ?? 3),
-                featureLimitAllocations: (int) ($plan->feature_limits_allocations ?? 1),
+                memoryMb: (int) ($configuration->ram ?? 0),
+                swapMb: (int) ($configuration->swap_mb ?? 0),
+                diskMb: (int) ($configuration->disk ?? 0),
+                ioWeight: (int) ($configuration->io_weight ?? 500),
+                cpuPercent: (int) ($configuration->cpu ?? 0),
+                featureLimitDatabases: (int) ($configuration->feature_limits_databases ?? 0),
+                featureLimitBackups: (int) ($configuration->feature_limits_backups ?? 3),
+                featureLimitAllocations: (int) ($configuration->feature_limits_allocations ?? 1),
                 environment: $environment,
                 defaultAllocationId: $defaultAllocation->id,
                 additionalAllocations: $additionalAllocations,
-                dockerImage: $plan->docker_image ?: ($egg->docker_image ?: null),
+                dockerImage: $configuration->docker_image ?: ($egg->docker_image ?: null),
                 startup: $startup,
-                startOnCompletion: (bool) $plan->start_on_completion,
-                skipScripts: (bool) $plan->skip_install_script,
-                oomDisabled: ! (bool) $plan->enable_oom_killer,
+                startOnCompletion: (bool) $configuration->start_on_completion,
+                skipScripts: (bool) $configuration->skip_install_script,
+                oomDisabled: ! (bool) $configuration->enable_oom_killer,
             ));
 
             $server->update([
@@ -210,7 +226,7 @@ class ProvisionServerJob implements ShouldQueue
             Log::info('ProvisionServerJob: pelican-side row created, awaiting webhook', [
                 'server_id' => $server->id,
                 'pelican_server_id' => $pelicanServer->id,
-                'plan_id' => $plan->id,
+                'server_configuration_id' => $configuration->id,
             ]);
 
             // ServerProvisioned fires now (Pelican-side row exists). It's a
@@ -251,24 +267,28 @@ class ProvisionServerJob implements ShouldQueue
 
         Log::error('ProvisionServerJob: terminal failure', [
             'idempotency_key' => $this->idempotencyKey,
-            'plan_id' => $this->planId,
+            'server_configuration_id' => $this->serverConfigurationId,
             'message' => $e->getMessage(),
         ]);
     }
 
     /**
-     * Resolves the local Node row chosen for this plan. Returns the model
-     * (not just the id) so the caller can pull `pelican_node_id` for API
-     * calls — `node_id` / `default_node_id` / `allowed_node_ids` on the plan
-     * are LOCAL FKs into `nodes.id`, not Pelican-side ids.
+     * Resolves the local Node row chosen for this configuration. Returns the
+     * model (not just the id) so the caller can pull `pelican_node_id` for
+     * API calls — `node_id` / `default_node_id` / `allowed_node_ids` on the
+     * configuration are LOCAL FKs into `nodes.id`, not Pelican-side ids.
      */
-    private function pickNode(ServerPlan $plan): ?Node
+    private function pickNode(ServerConfiguration $configuration): ?Node
     {
-        $localId = $plan->node_id
-            ?? $plan->default_node_id
-            ?? ($plan->auto_deploy && is_array($plan->allowed_node_ids) && count($plan->allowed_node_ids) > 0
-                ? (int) $plan->allowed_node_ids[0]
-                : null);
+        $localId = $configuration->node_id
+            ?? $configuration->default_node_id
+            ?? (
+                $configuration->auto_deploy
+                && is_array($configuration->allowed_node_ids)
+                && count($configuration->allowed_node_ids) > 0
+                    ? (int) $configuration->allowed_node_ids[0]
+                    : null
+            );
 
         return $localId !== null ? Node::find($localId) : null;
     }

@@ -6,7 +6,7 @@ use App\Jobs\PurgeScheduledServerDeletionsJob;
 use App\Jobs\SubscriptionUpdateJob;
 use App\Jobs\SuspendServerJob;
 use App\Models\Server;
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
 use App\Models\Setting;
 use App\Models\StripeProcessedEvent;
 use App\Models\User;
@@ -42,13 +42,13 @@ class SubscriptionLifecycleTest extends TestCase
         config(['bridge.stripe.webhook_secret' => self::WEBHOOK_SECRET]);
     }
 
-    public function test_subscription_updated_dispatches_job_with_new_price_and_status(): void
+    public function test_subscription_updated_dispatches_job_with_new_configuration_and_status(): void
     {
         Bus::fake();
 
         $event = $this->subscriptionUpdatedEvent(
             subscriptionId: 'sub_abc',
-            newPriceId: 'price_new_123',
+            newConfigurationId: 42,
             newStatus: 'active',
         );
 
@@ -57,7 +57,7 @@ class SubscriptionLifecycleTest extends TestCase
 
         Bus::assertDispatched(SubscriptionUpdateJob::class, function ($job) {
             return $job->stripeSubscriptionId === 'sub_abc'
-                && $job->newStripePriceId === 'price_new_123'
+                && $job->newConfigurationId === 42
                 && $job->newStatus === 'active';
         });
     }
@@ -270,7 +270,7 @@ class SubscriptionLifecycleTest extends TestCase
         );
     }
 
-    private function subscriptionUpdatedEvent(string $subscriptionId, string $newPriceId, string $newStatus): array
+    private function subscriptionUpdatedEvent(string $subscriptionId, ?int $newConfigurationId, string $newStatus): array
     {
         return [
             'id' => 'evt_'.Str::random(24),
@@ -280,19 +280,16 @@ class SubscriptionLifecycleTest extends TestCase
                     'id' => $subscriptionId,
                     'object' => 'subscription',
                     'status' => $newStatus,
-                    'items' => [
-                        'data' => [[
-                            'id' => 'si_test',
-                            'price' => ['id' => $newPriceId],
-                        ]],
-                    ],
+                    'metadata' => $newConfigurationId !== null
+                        ? ['peregrine_configuration_id' => (string) $newConfigurationId]
+                        : [],
                 ],
             ],
         ];
     }
 
     /**
-     * @return array{0: Server, 1: ServerPlan}
+     * @return array{0: Server, 1: ServerConfiguration}
      */
     private function makeServerWithSubscription(string $subscriptionId): array
     {
@@ -305,10 +302,11 @@ class SubscriptionLifecycleTest extends TestCase
             'pelican_node_id' => mt_rand(1, 9999), 'name' => 'NN',
             'fqdn' => 'n.test', 'scheme' => 'https', 'memory' => 1, 'disk' => 1,
         ]);
-        $plan = ServerPlan::create([
-            'name' => 'P', 'stripe_price_id' => 'price_'.Str::random(8),
+        $configuration = ServerConfiguration::create([
+            'internal_name' => 'cfg-'.Str::random(6),
+            'name_template' => '{user.username}-{configuration.internal_name}',
             'egg_id' => $egg->id, 'nest_id' => $nest->id, 'node_id' => $node->id,
-            'ram' => 1024, 'cpu' => 100, 'disk' => 5000, 'is_active' => true,
+            'ram' => 1024, 'cpu' => 100, 'disk' => 5000,
         ]);
         $user = User::factory()->create();
         $server = Server::create([
@@ -317,10 +315,10 @@ class SubscriptionLifecycleTest extends TestCase
             'name' => 'srv-test',
             'status' => 'active',
             'egg_id' => $egg->id,
-            'plan_id' => $plan->id,
+            'server_configuration_id' => $configuration->id,
             'stripe_subscription_id' => $subscriptionId,
         ]);
-        return [$server, $plan];
+        return [$server, $configuration];
     }
 
     protected function tearDown(): void

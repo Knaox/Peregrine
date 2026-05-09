@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Bridge;
 
-use App\Enums\BridgeMode;
 use App\Events\Bridge\ServerInstalled;
 use App\Jobs\Bridge\SyncServerFromPelicanWebhookJob;
 use App\Models\Server;
@@ -20,11 +19,12 @@ use Tests\TestCase;
 /**
  * Locks the "Shop owns it" guard in SyncServerFromPelicanWebhookJob :
  *
- *  - When a local Server has a stripe_subscription_id OR plan_id, Pelican is
- *    only allowed to update install-related fields (status transition from
- *    `provisioning`, identifier, paymenter_service_id, egg_id). It must NEVER
- *    overwrite user_id, name, billing-status (`suspended`/`terminated`),
- *    plan_id, stripe_subscription_id.
+ *  - When a local Server has a stripe_subscription_id OR
+ *    server_configuration_id, Pelican is only allowed to update install-
+ *    related fields (status transition from `provisioning`, identifier,
+ *    paymenter_service_id, egg_id). It must NEVER overwrite user_id, name,
+ *    billing-status (`suspended`/`terminated`), server_configuration_id,
+ *    stripe_subscription_id.
  *
  *  - On the `provisioning` → `active` install transition AND shop_stripe
  *    mode, the job fires `ServerInstalled` so the "your server is playable"
@@ -47,7 +47,7 @@ class PelicanWebhookShopGuardTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::ShopStripe->value]);
+        Setting::updateOrCreate(['key' => 'bridge_stripe_webhook_secret'], ['value' => 'whsec_test_seed']);
         Setting::updateOrCreate(['key' => 'pelican_webhook_enabled'], ['value' => 'true']);
         app(SettingsService::class)->clearCache();
     }
@@ -100,7 +100,7 @@ class PelicanWebhookShopGuardTest extends TestCase
             pelicanServerId: 50,
             payloadSnapshot: ['id' => 50, 'updated_at' => '2026-04-22 10:00:00'],
         );
-        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Integrations\IntegrationStatusService::class));
 
         $server->refresh();
         $this->assertSame($shopOwner->id, $server->user_id, 'Pelican must not reassign Shop-owned ownership');
@@ -131,7 +131,7 @@ class PelicanWebhookShopGuardTest extends TestCase
             pelicanServerId: 60,
             payloadSnapshot: ['id' => 60, 'status' => null, 'updated_at' => '2026-04-22 10:00:00'],
         );
-        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Integrations\IntegrationStatusService::class));
 
         $server->refresh();
         $this->assertSame('active', $server->status);
@@ -160,7 +160,7 @@ class PelicanWebhookShopGuardTest extends TestCase
             pelicanServerId: 61,
             payloadSnapshot: ['id' => 61, 'status' => 'install_failed', 'updated_at' => '2026-04-22 10:00:00'],
         );
-        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Integrations\IntegrationStatusService::class));
 
         $server->refresh();
         $this->assertSame('provisioning_failed', $server->status);
@@ -189,7 +189,7 @@ class PelicanWebhookShopGuardTest extends TestCase
             pelicanServerId: 70,
             payloadSnapshot: ['id' => 70, 'status' => 'suspended', 'suspended' => true, 'updated_at' => '2026-04-22 10:00:00'],
         );
-        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Integrations\IntegrationStatusService::class));
 
         $server->refresh();
         $this->assertSame('active', $server->status, 'Shop billing status must not be overwritten by Pelican');
@@ -200,14 +200,14 @@ class PelicanWebhookShopGuardTest extends TestCase
         // Paymenter sends its own customer emails — Peregrine must not
         // double-email even when the install transition happens via webhook.
         Event::fake([ServerInstalled::class]);
-        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::Paymenter->value]);
+        Setting::query()->where('key', 'bridge_stripe_webhook_secret')->delete();
         app(SettingsService::class)->clearCache();
 
         $owner = User::factory()->create(['pelican_user_id' => 1]);
         $server = Server::create([
             'pelican_server_id' => 80,
             'user_id' => $owner->id,
-            // No plan_id, no stripe_subscription_id → Paymenter / admin-imported.
+            // No server_configuration_id, no stripe_subscription_id → Paymenter / admin-imported.
             'name' => 'srv',
             'identifier' => 'iden',
             'status' => 'provisioning',
@@ -220,7 +220,7 @@ class PelicanWebhookShopGuardTest extends TestCase
             pelicanServerId: 80,
             payloadSnapshot: ['id' => 80, 'user' => 1, 'status' => null, 'updated_at' => '2026-04-22 10:00:00'],
         );
-        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Integrations\IntegrationStatusService::class));
 
         Event::assertNotDispatched(ServerInstalled::class);
     }
@@ -247,7 +247,7 @@ class PelicanWebhookShopGuardTest extends TestCase
             pelicanServerId: 90,
             payloadSnapshot: ['id' => 90],
         );
-        $job->handle($mock, app(\App\Services\Bridge\BridgeModeService::class));
+        $job->handle($mock, app(\App\Services\Integrations\IntegrationStatusService::class));
 
         $this->assertDatabaseHas('servers', ['pelican_server_id' => 90]);
     }
@@ -263,7 +263,7 @@ class PelicanWebhookShopGuardTest extends TestCase
             pelicanServerId: 123,
             payloadSnapshot: ['id' => 123, 'user' => 1, 'updated_at' => '2026-04-22 10:00:00'],
         );
-        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Bridge\BridgeModeService::class));
+        $job->handle(app(PelicanApplicationService::class), app(\App\Services\Integrations\IntegrationStatusService::class));
 
         $this->assertDatabaseMissing('servers', ['pelican_server_id' => 123]);
     }

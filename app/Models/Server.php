@@ -21,7 +21,8 @@ class Server extends Model
         'name',
         'status',
         'egg_id',
-        'plan_id',
+        'server_configuration_id',
+        'external_order_id',
         'stripe_subscription_id',
         'payment_intent_id',
         'paymenter_service_id',
@@ -42,7 +43,7 @@ class Server extends Model
             'pelican_server_id' => 'integer',
             'status' => 'string',
             'egg_id' => 'integer',
-            'plan_id' => 'integer',
+            'server_configuration_id' => 'integer',
             'scheduled_deletion_at' => 'datetime',
         ];
     }
@@ -64,11 +65,11 @@ class Server extends Model
     }
 
     /**
-     * Get the plan associated with this server.
+     * Get the technical configuration this server was provisioned from.
      */
-    public function plan(): BelongsTo
+    public function serverConfiguration(): BelongsTo
     {
-        return $this->belongsTo(ServerPlan::class, 'plan_id');
+        return $this->belongsTo(ServerConfiguration::class, 'server_configuration_id');
     }
 
     /**

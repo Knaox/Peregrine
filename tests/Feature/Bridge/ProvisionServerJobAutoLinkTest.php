@@ -6,7 +6,7 @@ use App\Actions\Pelican\EnsurePelicanAccountAction;
 use App\Jobs\ProvisionServerJob;
 use App\Models\Egg;
 use App\Models\Node;
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
 use App\Models\User;
 use App\Services\Bridge\EnvironmentResolver;
 use App\Services\Bridge\PortAllocator;
@@ -55,17 +55,14 @@ class ProvisionServerJobAutoLinkTest extends TestCase
 
         // node_id set → isReadyToProvision() returns true and we reach the
         // safety-net line.
-        $plan = ServerPlan::create([
-            'name' => 'Test Plan',
-            'shop_plan_id' => 'shop-test-plan',
-            'shop_plan_slug' => 'test-plan',
-            'shop_plan_type' => 'recurring',
-            'price_cents' => 1000,
-            'currency' => 'usd',
-            'interval' => 'month',
-            'is_active' => true,
+        $configuration = ServerConfiguration::create([
+            'internal_name' => 'test-config',
+            'name_template' => '{user.username}-{configuration.internal_name}',
             'egg_id' => $egg->id,
             'node_id' => $node->id,
+            'ram' => 1024,
+            'cpu' => 100,
+            'disk' => 5000,
         ]);
 
         // Pelican already has a user with this email (e.g. created by a
@@ -90,7 +87,7 @@ class ProvisionServerJobAutoLinkTest extends TestCase
         ]);
 
         $job = new ProvisionServerJob(
-            planId: $plan->id,
+            serverConfigurationId: $configuration->id,
             userId: $user->id,
             idempotencyKey: 'test-idempotency-1',
         );

@@ -30,12 +30,12 @@ class AdminServerResource extends JsonResource
                 'name' => $this->egg->name,
                 'banner_image' => $this->egg->banner_image ? asset('storage/'.$this->egg->banner_image) : null,
             ]),
-            'plan' => $this->whenLoaded('plan', fn () => [
-                'id' => $this->plan->id,
-                'name' => $this->plan->name,
-                'ram' => $this->plan->ram,
-                'cpu' => $this->plan->cpu,
-                'disk' => $this->plan->disk,
+            'configuration' => $this->whenLoaded('serverConfiguration', fn () => [
+                'id' => $this->serverConfiguration->id,
+                'internal_name' => $this->serverConfiguration->internal_name,
+                'ram' => $this->serverConfiguration->ram,
+                'cpu' => $this->serverConfiguration->cpu,
+                'disk' => $this->serverConfiguration->disk,
             ]),
             'created_at' => $this->created_at?->toISOString(),
         ];

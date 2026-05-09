@@ -4,7 +4,7 @@ namespace App\Jobs\Bridge;
 
 use App\Enums\PelicanEventKind;
 use App\Models\Node;
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
 use App\Services\Pelican\PelicanApplicationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -99,19 +99,20 @@ class SyncNodeFromPelicanWebhookJob implements ShouldQueue
         }
 
         // Servers don't FK to Node locally (Peregrine doesn't mirror node
-        // assignment per server). The only local references are ServerPlan
-        // rows (default_node_id + allowed_node_ids). Refuse to delete a node
-        // still referenced by any plan to avoid breaking provisioning.
-        $referencingPlans = ServerPlan::query()
+        // assignment per server). The only local references are
+        // ServerConfiguration rows (default_node_id + allowed_node_ids).
+        // Refuse to delete a node still referenced by any configuration to
+        // avoid breaking provisioning.
+        $referencingConfigurations = ServerConfiguration::query()
             ->where('default_node_id', $node->id)
             ->orWhereJsonContains('allowed_node_ids', $node->id)
             ->count();
 
-        if ($referencingPlans > 0) {
-            Log::warning('SyncNodeFromPelicanWebhookJob: refusing to delete node referenced by server plans', [
+        if ($referencingConfigurations > 0) {
+            Log::warning('SyncNodeFromPelicanWebhookJob: refusing to delete node referenced by server configurations', [
                 'pelican_node_id' => $this->pelicanNodeId,
                 'local_node_id' => $node->id,
-                'referencing_plans' => $referencingPlans,
+                'referencing_configurations' => $referencingConfigurations,
             ]);
             return;
         }

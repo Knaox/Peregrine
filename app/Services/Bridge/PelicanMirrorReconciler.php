@@ -34,14 +34,16 @@ final class PelicanMirrorReconciler
 {
     public function __construct(
         private readonly PelicanApplicationService $pelican,
-        private readonly BridgeModeService $bridgeMode,
     ) {}
 
     public function reconcile(): void
     {
-        if (! $this->bridgeMode->isPaymenter()) {
-            return;
-        }
+        // Pelican mirror reconciliation always runs whenever the Pelican
+        // webhook receiver is enabled (third-party orchestrators like
+        // Paymenter / WHMCS rely on this to surface their server rows in
+        // Peregrine). The stripe-driven flow doesn't need it — its servers
+        // are created locally by ProvisionServerJob — but running the
+        // reconciler is harmless in that case (no missing rows to fill).
 
         try {
             $pelicanServers = $this->pelican->listServers();

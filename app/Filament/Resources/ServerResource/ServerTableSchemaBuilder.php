@@ -5,7 +5,7 @@ namespace App\Filament\Resources\ServerResource;
 use App\Filament\Actions\ResourceDeleteAction;
 use App\Jobs\ProvisionServerJob;
 use App\Models\Server;
-use App\Services\Bridge\BridgeModeService;
+use App\Services\Integrations\IntegrationStatusService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -26,7 +26,7 @@ final class ServerTableSchemaBuilder
 {
     public static function build(Table $table): Table
     {
-        $isShopStripe = app(BridgeModeService::class)->isShopStripe();
+        $isShopStripe = app(IntegrationStatusService::class)->hasStripeConfigured();
 
         $columns = self::columns($isShopStripe);
         $filters = self::filters($isShopStripe);
@@ -96,8 +96,8 @@ final class ServerTableSchemaBuilder
         ];
 
         if ($isShopStripe) {
-            $columns[] = Tables\Columns\TextColumn::make('plan.name')
-                ->label(__('admin/_shell.fields.plan'))->sortable()->placeholder('—');
+            $columns[] = Tables\Columns\TextColumn::make('serverConfiguration.internal_name')
+                ->label(__('admin/_shell.fields.configuration'))->sortable()->placeholder('—');
         }
 
         $columns[] = Tables\Columns\TextColumn::make('pelican_server_id')
@@ -154,7 +154,7 @@ final class ServerTableSchemaBuilder
         ];
 
         if ($isShopStripe) {
-            $filters[] = Tables\Filters\TernaryFilter::make('plan_id')->label(__('admin/_shell.fields.has_plan'))->nullable();
+            $filters[] = Tables\Filters\TernaryFilter::make('server_configuration_id')->label(__('admin/_shell.fields.has_configuration'))->nullable();
             $filters[] = Tables\Filters\TernaryFilter::make('stripe_subscription_id')->label(__('admin/_shell.fields.has_stripe_subscription'))->nullable();
             $filters[] = Tables\Filters\TernaryFilter::make('scheduled_deletion_at')->label(__('admin/_shell.fields.scheduled_for_deletion'))->nullable();
         }
@@ -174,7 +174,7 @@ final class ServerTableSchemaBuilder
             ->icon('heroicon-o-arrow-path')
             ->color('primary')
             ->visible(fn (Server $record): bool => $record->status === 'provisioning_failed'
-                && $record->plan_id !== null
+                && $record->server_configuration_id !== null
                 && $record->idempotency_key !== null)
             ->requiresConfirmation()
             ->modalHeading(fn (Server $record): string => __('admin/servers.retry.modal_heading', ['name' => $record->name]))
@@ -186,7 +186,7 @@ final class ServerTableSchemaBuilder
                     'provisioning_error' => null,
                 ]);
                 ProvisionServerJob::dispatch(
-                    planId: (int) $record->plan_id,
+                    serverConfigurationId: (int) $record->server_configuration_id,
                     userId: (int) $record->user_id,
                     idempotencyKey: (string) $record->idempotency_key,
                     serverNameOverride: $record->name,

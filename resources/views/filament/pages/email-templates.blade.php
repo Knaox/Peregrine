@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     @php
-        $bridgeActive = app(\App\Services\Bridge\BridgeModeService::class)->isShopStripe();
+        $bridgeActive = app(\App\Services\Integrations\IntegrationStatusService::class)->hasStripeConfigured();
         $badges = [];
         if ($bridgeActive) {
             $badges[] = ['label' => __('admin/_shell.badges.bridge_mode.shop_stripe'), 'color' => 'success', 'icon' => 'heroicon-o-link'];

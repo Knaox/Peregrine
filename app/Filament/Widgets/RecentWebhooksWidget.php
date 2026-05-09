@@ -2,9 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\BridgeMode;
 use App\Models\PelicanProcessedEvent;
-use App\Services\Bridge\BridgeModeService;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;

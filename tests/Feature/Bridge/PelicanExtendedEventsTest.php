@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Bridge;
 
-use App\Enums\BridgeMode;
 use App\Enums\PelicanEventKind;
 use App\Jobs\Bridge\SyncEggFromPelicanWebhookJob;
 use App\Jobs\Bridge\SyncNodeFromPelicanWebhookJob;
@@ -11,7 +10,7 @@ use App\Models\Egg;
 use App\Models\Nest;
 use App\Models\Node;
 use App\Models\Server;
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\SettingsService;
@@ -47,7 +46,7 @@ class PelicanExtendedEventsTest extends TestCase
             ['key' => 'pelican_webhook_token'],
             ['value' => Crypt::encryptString(self::TOKEN)],
         );
-        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::Paymenter->value]);
+        Setting::query()->where('key', 'bridge_stripe_webhook_secret')->delete();
         app(SettingsService::class)->clearCache();
     }
 
@@ -71,7 +70,7 @@ class PelicanExtendedEventsTest extends TestCase
     {
         // Updates run in ALL modes (covers admin email change in Pelican
         // panel — we mirror it even when Shop owns identity).
-        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::ShopStripe->value]);
+        Setting::updateOrCreate(['key' => 'bridge_stripe_webhook_secret'], ['value' => 'whsec_test_seed']);
         app(SettingsService::class)->clearCache();
 
         Bus::fake();
@@ -87,7 +86,7 @@ class PelicanExtendedEventsTest extends TestCase
 
     public function test_user_deleted_event_dispatches_in_all_modes(): void
     {
-        Setting::updateOrCreate(['key' => 'bridge_mode'], ['value' => BridgeMode::ShopStripe->value]);
+        Setting::updateOrCreate(['key' => 'bridge_stripe_webhook_secret'], ['value' => 'whsec_test_seed']);
         app(SettingsService::class)->clearCache();
 
         Bus::fake();
@@ -257,13 +256,13 @@ class PelicanExtendedEventsTest extends TestCase
             'disk' => 100000,
             'location' => 'EU',
         ]);
-        ServerPlan::create([
-            'name' => 'Plan referencing node',
+        ServerConfiguration::create([
+            'internal_name' => 'cfg-referencing-node',
+            'name_template' => '{user.username}-{configuration.internal_name}',
             'ram' => 1024,
             'cpu' => 100,
             'disk' => 5000,
             'default_node_id' => $node->id,
-            'is_active' => true,
         ]);
 
         (new SyncNodeFromPelicanWebhookJob(7, PelicanEventKind::NodeDeleted))->handle(app(\App\Services\Pelican\PelicanApplicationService::class));

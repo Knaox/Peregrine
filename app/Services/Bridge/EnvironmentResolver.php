@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Bridge;
 
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
 use App\Services\Pelican\DTOs\PelicanAllocation;
 
 /**
  * Computes the `environment` map sent to Pelican when provisioning a server.
  *
- * For each entry in $plan->env_var_mapping :
+ * For each entry in `$configuration->env_var_mapping` :
  *  - type=offset → variable_name = port at offset_value (0-indexed) of the
  *    allocated consecutive ports
  *  - type=random → variable_name = a random port from the allocated set
  *  - type=static → variable_name = static_value (literal passthrough)
  *
- * Variables present in $eggDefaults but NOT mapped by the plan keep their
- * default value. Mapped variables override the default.
+ * Variables present in `$eggDefaults` but NOT mapped by the configuration
+ * keep their default value. Mapped variables override the default.
  */
 class EnvironmentResolver
 {
@@ -24,10 +26,10 @@ class EnvironmentResolver
      * @param  array<string, scalar>          $eggDefaults
      * @return array<string, scalar>
      */
-    public function resolve(ServerPlan $plan, array $allocatedPorts, array $eggDefaults): array
+    public function resolve(ServerConfiguration $configuration, array $allocatedPorts, array $eggDefaults): array
     {
         $environment = $eggDefaults;
-        $mapping = $plan->env_var_mapping ?? [];
+        $mapping = $configuration->env_var_mapping ?? [];
 
         if (! is_array($mapping)) {
             return $environment;

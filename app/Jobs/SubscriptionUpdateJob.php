@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Events\Mirror\BroadcastsServerMirror;
 use App\Models\Server;
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
 use App\Services\Pelican\PelicanApplicationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,14 +19,21 @@ use Illuminate\Support\Facades\Log;
  * Handles `customer.subscription.updated` events from Stripe.
  *
  * Two reasons we care :
- *   1. Plan change (upgrade/downgrade) : the price_id has changed → look up
- *      the new ServerPlan and push the new resource limits to Pelican via
- *      `updateServerBuild()`. Update local Server.plan_id.
+ *   1. Configuration change (upgrade/downgrade) : the
+ *      `metadata.peregrine_configuration_id` on the subscription has changed
+ *      → look up the new ServerConfiguration and push the new resource
+ *      limits to Pelican via `updateServerBuild()`. Update local
+ *      Server.server_configuration_id.
  *   2. Status change to `past_due` : Stripe's dunning is failing. Soft-suspend
  *      the server so the customer loses access until they update payment.
  *      No scheduled deletion (this is recoverable). When Stripe gives up
  *      and emits `subscription.deleted`, the SuspendServerJob handles the
  *      hard suspend + scheduled deletion path.
+ *
+ * Configuration resolution is metadata-driven : the inbound shop tags every
+ * Stripe Subscription with `metadata.peregrine_configuration_id`. Stripe
+ * never invented this id — Peregrine owns it. The legacy `stripe_price_id`
+ * lookup was removed in Phase 1.
  *
  * Idempotent : same event re-delivered → same outcome (Pelican
  * updateServerBuild is itself idempotent for identical limits ; status
@@ -48,7 +57,7 @@ class SubscriptionUpdateJob implements ShouldQueue
     public function __construct(
         public readonly string $eventId,
         public readonly string $stripeSubscriptionId,
-        public readonly ?string $newStripePriceId,
+        public readonly ?int $newConfigurationId,
         public readonly string $newStatus,
     ) {}
 
@@ -75,32 +84,33 @@ class SubscriptionUpdateJob implements ShouldQueue
             return;
         }
 
-        // 1. Plan change (price_id different from current plan's stripe_price_id)
-        if ($this->newStripePriceId !== null
-            && $server->plan
-            && $server->plan->stripe_price_id !== $this->newStripePriceId
+        // 1. Configuration change (metadata.peregrine_configuration_id differs
+        // from the server's current server_configuration_id).
+        if ($this->newConfigurationId !== null
+            && $this->newConfigurationId !== $server->server_configuration_id
         ) {
-            $newPlan = ServerPlan::where('stripe_price_id', $this->newStripePriceId)->first();
-            if ($newPlan === null) {
-                Log::warning('SubscriptionUpdateJob: new stripe_price_id has no matching ServerPlan', [
+            $newConfiguration = ServerConfiguration::find($this->newConfigurationId);
+            if ($newConfiguration === null) {
+                Log::warning('SubscriptionUpdateJob: unknown peregrine_configuration_id', [
                     'event_id' => $this->eventId,
-                    'new_price_id' => $this->newStripePriceId,
+                    'new_configuration_id' => $this->newConfigurationId,
                     'server_id' => $server->id,
                 ]);
-                // Fall through to status handling — don't bail (status change might still be relevant).
+                // Fall through to status handling — don't bail (status change
+                // might still be relevant).
             } elseif ($server->pelican_server_id !== null) {
                 try {
                     $pelican->updateServerBuild($server->pelican_server_id, [
-                        'memory' => (int) ($newPlan->ram ?? 0),
-                        'swap' => (int) ($newPlan->swap_mb ?? 0),
-                        'disk' => (int) ($newPlan->disk ?? 0),
-                        'io' => (int) ($newPlan->io_weight ?? 500),
-                        'cpu' => (int) ($newPlan->cpu ?? 0),
-                        'oom_disabled' => ! (bool) $newPlan->enable_oom_killer,
+                        'memory' => (int) ($newConfiguration->ram ?? 0),
+                        'swap' => (int) ($newConfiguration->swap_mb ?? 0),
+                        'disk' => (int) ($newConfiguration->disk ?? 0),
+                        'io' => (int) ($newConfiguration->io_weight ?? 500),
+                        'cpu' => (int) ($newConfiguration->cpu ?? 0),
+                        'oom_disabled' => ! (bool) $newConfiguration->enable_oom_killer,
                         'feature_limits' => [
-                            'databases' => (int) ($newPlan->feature_limits_databases ?? 0),
-                            'backups' => (int) ($newPlan->feature_limits_backups ?? 3),
-                            'allocations' => (int) ($newPlan->feature_limits_allocations ?? 1),
+                            'databases' => (int) ($newConfiguration->feature_limits_databases ?? 0),
+                            'backups' => (int) ($newConfiguration->feature_limits_backups ?? 3),
+                            'allocations' => (int) ($newConfiguration->feature_limits_allocations ?? 1),
                         ],
                     ]);
                 } catch (\Throwable $e) {
@@ -112,11 +122,12 @@ class SubscriptionUpdateJob implements ShouldQueue
                     throw $e; // queue retry
                 }
 
-                $server->update(['plan_id' => $newPlan->id]);
-                Log::info('SubscriptionUpdateJob: plan upgraded/downgraded', [
+                $oldConfigurationId = $server->server_configuration_id;
+                $server->update(['server_configuration_id' => $newConfiguration->id]);
+                Log::info('SubscriptionUpdateJob: configuration upgraded/downgraded', [
                     'server_id' => $server->id,
-                    'old_plan_id' => $server->plan_id,
-                    'new_plan_id' => $newPlan->id,
+                    'old_configuration_id' => $oldConfigurationId,
+                    'new_configuration_id' => $newConfiguration->id,
                 ]);
             }
         }
