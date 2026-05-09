@@ -11,13 +11,17 @@ class SendServerReadyNotification implements ShouldQueue
 {
     public function handle(ServerProvisioned $event): void
     {
-        // Bridge emails are commercial messages tied to the Shop+Stripe
-        // lifecycle. In Paymenter mode Paymenter sends its own emails and we
-        // must not double-up. In Disabled mode we have no business reason
-        // to fire from this code path.
-        if (! app(IntegrationStatusService::class)->hasStripeConfigured()) {
-            return;
-        }
-        $event->user->notify(new ServerReadyNotification($event->server));
+        // Disabled : the customer-facing "your server is ready" message
+        // is now sent by `SendServerInstalledNotification` only — when
+        // Pelican's install script actually finishes. Sending this
+        // earlier "we created the row" version on top of the install-
+        // complete one was confusing customers who saw two emails for
+        // the same purchase. The listener stays registered (so any
+        // existing auto-discovered binding doesn't error) but no longer
+        // emits an email.
+        //
+        // To restore the dual-email behaviour, drop this no-op and
+        // reinstate the original
+        // `$event->user->notify(new ServerReadyNotification(...))`.
     }
 }

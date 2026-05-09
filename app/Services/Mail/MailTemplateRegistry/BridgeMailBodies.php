@@ -95,6 +95,12 @@ final class BridgeMailBodies
         return self::heading('🚀 Your {plan_name} server is now playable')
             .'<p>Hi <strong>{name}</strong>, the install script just finished — your <strong>{server_name}</strong> server is up and ready for players.</p>'
             .self::addressCard('Server address', '{ip_port}')
+            // {password_block} renders as either an empty string or a
+            // "Set my password" CTA depending on whether the user has
+            // a local password set + has no OAuth provider linked.
+            // The decision lives in `ServerInstalledNotification` so
+            // the template stays declarative.
+            .'{password_block}'
             .'<p>Connect with the address above, or open the panel to manage the server, view the console, edit files, and more.</p>'
             .self::buttonRow('{panel_url}', 'Open my server', color: '#16a34a')
             .self::secondaryLink('Or sign in to the panel', '{login_url}')
@@ -106,10 +112,32 @@ final class BridgeMailBodies
         return self::heading('🚀 Votre serveur {plan_name} est maintenant jouable')
             .'<p>Bonjour <strong>{name}</strong>, le script d\'installation vient de se terminer — votre serveur <strong>{server_name}</strong> est en ligne et prêt pour les joueurs.</p>'
             .self::addressCard('Adresse du serveur', '{ip_port}')
+            .'{password_block}'
             .'<p>Connectez-vous avec l\'adresse ci-dessus, ou ouvrez le panel pour gérer le serveur, voir la console, éditer les fichiers, etc.</p>'
             .self::buttonRow('{panel_url}', 'Accéder à mon serveur', color: '#16a34a')
             .self::secondaryLink('Ou se connecter au panel', '{login_url}')
             .self::timestamp();
+    }
+
+    /**
+     * Renders the "set your password" CTA block injected into the
+     * `serverInstalled*` template via the `{password_block}` token.
+     * Public so `ServerInstalledNotification` can pick the locale and
+     * decide whether to render at all (the notification is the source
+     * of truth for "user has no local password and no OAuth identity").
+     */
+    public static function passwordBlockEn(string $resetPasswordUrl): string
+    {
+        return '<p>You don\'t have a password yet — set one before signing in:</p>'
+            .self::buttonRow($resetPasswordUrl, 'Set my password', color: '#3b82f6')
+            .'<p style="font-size:12px;color:#6b7280;text-align:center;margin:-12px 0 24px;">This link is valid for 7 days.</p>';
+    }
+
+    public static function passwordBlockFr(string $resetPasswordUrl): string
+    {
+        return '<p>Vous n\'avez pas encore de mot de passe — définissez-en un avant de vous connecter :</p>'
+            .self::buttonRow($resetPasswordUrl, 'Définir mon mot de passe', color: '#3b82f6')
+            .'<p style="font-size:12px;color:#6b7280;text-align:center;margin:-12px 0 24px;">Ce lien est valide pendant 7 jours.</p>';
     }
 
     public static function serverReactivatedEn(): string

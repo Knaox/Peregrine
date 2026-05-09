@@ -5,6 +5,7 @@ namespace App\Notifications\Bridge;
 use App\Models\Server;
 use App\Models\User;
 use App\Services\Mail\MailTemplateRegistry;
+use App\Services\Mail\MailTemplateRegistry\BridgeMailBodies;
 use App\Services\Mail\MailTemplateService;
 use App\Services\Pelican\PelicanNetworkService;
 use App\Services\SettingsService;
@@ -12,11 +13,21 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Password;
 
 /**
  * Sent when Pelican finishes installing the server (status flipped out of
- * `installing`). Counterpart to ServerReadyNotification — that one says
- * "we created your server", this one says "your server is now playable".
+ * `installing`). This is the email customers actually wait for : "your
+ * server is now playable, here is the address".
+ *
+ * Conditional password block : when the user has no local password set
+ * AND no OAuth provider linked (= account was created during the
+ * checkout flow but they've never signed in yet), the email injects a
+ * "Set your password" CTA pointing at a fresh `Password::createToken`
+ * reset link valid for 7 days. If either condition is missing — they
+ * already logged in once, or they have a Google / Discord / Shop OAuth
+ * link — the block is omitted (we don't want to confuse a user who
+ * already has a working sign-in path).
  */
 class ServerInstalledNotification extends Notification implements ShouldQueue
 {
@@ -50,6 +61,7 @@ class ServerInstalledNotification extends Notification implements ShouldQueue
                 'panel_url' => $appUrl.'/servers/'.$this->server->id,
                 'login_url' => $appUrl.'/login',
                 'timestamp' => now()->format('Y-m-d H:i e'),
+                'password_block' => $this->buildPasswordBlock($notifiable, $locale),
             ],
         );
 
@@ -62,6 +74,37 @@ class ServerInstalledNotification extends Notification implements ShouldQueue
                 'brand' => app(SettingsService::class)->get('app_name', 'Peregrine'),
                 'footerText' => (string) app(SettingsService::class)->get('email_footer_text', ''),
             ]);
+    }
+
+    /**
+     * Render the inline "Set your password" CTA, or empty string when
+     * the user already has a working sign-in path. The two skip
+     * conditions are intentional :
+     *   1. Has a local password (`$user->password` not empty) → they
+     *      already signed in at least once or completed a previous
+     *      reset flow. Telling them to "create a password" would be
+     *      confusing.
+     *   2. Has at least one OAuth identity → they sign in via Shop /
+     *      Google / Discord / etc. Asking them to set a local password
+     *      would push a sign-in path they don't need.
+     */
+    private function buildPasswordBlock(User $user, string $locale): string
+    {
+        $isOAuth = $user->oauthIdentities()->exists();
+        $hasLocalPassword = ! empty($user->password);
+        if ($isOAuth || $hasLocalPassword) {
+            return '';
+        }
+
+        $token = Password::broker()->createToken($user);
+        $resetUrl = url(route('password.reset', [
+            'token' => $token,
+            'email' => $user->email,
+        ], false));
+
+        return $locale === 'fr'
+            ? BridgeMailBodies::passwordBlockFr($resetUrl)
+            : BridgeMailBodies::passwordBlockEn($resetUrl);
     }
 
     private function resolveAddress(): string

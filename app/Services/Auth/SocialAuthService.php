@@ -39,15 +39,23 @@ class SocialAuthService
      * from the DB-stored provider config and returns the URL — the controller
      * returns that as an HTTP redirect.
      *
-     * `prompt=consent` is forced on every redirect so that providers (notably
-     * Laravel Passport on the Shop side, plus Google / Discord) ALWAYS show
-     * their consent screen. Without it, a user who unlinks then re-links the
-     * provider sees a silent same-window redirect — the provider still has a
-     * session cookie + a previously-approved client grant, so it bounces
-     * straight back without asking. The papercut is real enough that users
-     * report "the connect button does nothing visible" when it actually did
-     * the round-trip in 200ms. Safe with all providers we support: standard
-     * OAuth2 ignores unknown query params.
+     * Historical note : we used to force `prompt=consent` on every
+     * redirect to defeat the "silent re-link" papercut (a user who
+     * unlinks then re-links would bounce back in 200 ms with no UI,
+     * making the connect button feel broken). The side effect on
+     * Laravel Passport (the Shop side) was that Passport's
+     * `AuthorizationController` skipped its `hasGrantedScopes()` check
+     * whenever `prompt=consent` was set, so EVERY login showed the
+     * consent screen — even after the user had already approved it
+     * once. Customers reported being asked to authorize the shop
+     * three or four times in a row.
+     *
+     * Resolution : drop the forced consent. Passport's standard flow
+     * now applies — first login shows the consent screen, subsequent
+     * logins silently reuse the existing grant. The original "silent
+     * re-link" papercut is acceptable : if it ever bites again we'll
+     * revoke the token in the DB on unlink, which surgically forces
+     * consent only on the legitimate case.
      */
     public function redirectUrl(string $provider): string
     {
@@ -58,7 +66,6 @@ class SocialAuthService
         $this->registry->configureSocialite($provider);
 
         return Socialite::driver($this->registry->socialiteDriver($provider))
-            ->with(['prompt' => 'consent'])
             ->redirect()
             ->getTargetUrl();
     }

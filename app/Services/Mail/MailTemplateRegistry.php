@@ -148,7 +148,7 @@ final class MailTemplateRegistry
                 'group' => 'Bridge',
                 'label' => __('admin/email_templates.registry.server_installed.label'),
                 'description' => __('admin/email_templates.registry.server_installed.description'),
-                'variables' => ['name', 'plan_name', 'server_name', 'ip_port', 'panel_url', 'login_url', 'timestamp'],
+                'variables' => ['name', 'plan_name', 'server_name', 'ip_port', 'panel_url', 'login_url', 'timestamp', 'password_block'],
                 'default_subject_en' => 'Your {plan_name} server is now playable',
                 'default_subject_fr' => 'Votre serveur {plan_name} est maintenant jouable',
                 'default_body_en' => BridgeMailBodies::serverInstalledEn(),

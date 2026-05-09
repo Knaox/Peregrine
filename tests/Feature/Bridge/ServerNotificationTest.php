@@ -37,8 +37,17 @@ class ServerNotificationTest extends TestCase
         app(SettingsService::class)->set('bridge_stripe_webhook_secret', 'whsec_test_seed');
     }
 
-    public function test_server_provisioned_event_dispatches_ready_notification(): void
+    public function test_server_provisioned_event_no_longer_dispatches_ready_notification(): void
     {
+        // The customer-facing "your server is ready" email is now sent
+        // by `ServerInstalledNotification` only (when Pelican's install
+        // script actually finishes), not by `ServerReadyNotification`
+        // (which fired earlier on Pelican-row-created and was duplicate
+        // for the customer). The listener remains registered as a no-op
+        // so any auto-discovered binding doesn't error. This test pins
+        // the silence — if a future change accidentally re-arms the
+        // listener, customers would start getting two emails per
+        // checkout again.
         Notification::fake();
 
         $user = User::factory()->create();
@@ -46,7 +55,7 @@ class ServerNotificationTest extends TestCase
 
         event(new ServerProvisioned($server, $user));
 
-        Notification::assertSentTo($user, ServerReadyNotification::class);
+        Notification::assertNothingSentTo($user);
     }
 
     public function test_server_suspended_event_dispatches_suspended_notification(): void
