@@ -138,10 +138,16 @@ creates **must** carry these four metadata keys :
 
 | Key | Type | Source |
 |---|---|---|
-| `peregrine_configuration_id` | int (string) | `id` from `GET /configurations` |
-| `peregrine_shop_id` | int (string) | The shop's own `Shop.id` |
-| `peregrine_user_email` | string | Buyer email |
+| `peregrine_configuration_id` | int (string) | The `id` field returned by `GET /configurations` (Peregrine's upstream `ServerConfiguration.id`). **Do NOT send your shop-side mirror table's primary key — that's a different column.** |
+| `peregrine_shop_id` | int (string) | The shop's own `Shop.id` (returned by `GET /shop/me`) |
+| `peregrine_user_email` | string | Buyer email (lowercased + trimmed) |
 | `peregrine_external_order_id` | string | Shop's own opaque order reference |
+
+> If the shop mirrors the catalog locally (recommended pattern), make
+> sure the metadata builder reads from the column that stores the
+> upstream id (e.g. `peregrine_configurations.peregrine_id`), not the
+> local row PK. Sending the local PK is the most frequent cause of
+> `skipped: unknown_configuration` in production logs.
 
 Optional :
 

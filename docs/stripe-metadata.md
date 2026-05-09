@@ -9,10 +9,17 @@ following keys on every `Checkout Session`, `Subscription` and
 
 | Key | Type | Source |
 |---|---|---|
-| `peregrine_configuration_id` | int (string) | `ServerConfiguration.id` (from `GET /api/v1/configurations`) |
-| `peregrine_shop_id` | int (string) | Your `Shop.id` in Peregrine |
-| `peregrine_user_email` | string | Buyer email |
+| `peregrine_configuration_id` | int (string) | The **upstream** `ServerConfiguration.id` returned in `data[].id` by `GET /api/v1/configurations`. **NOT** the primary key of any local mirror table you may keep on the shop side. |
+| `peregrine_shop_id` | int (string) | Your `Shop.id` returned by `GET /api/v1/shop/me` |
+| `peregrine_user_email` | string | Buyer email (lowercased + trimmed by convention) |
 | `peregrine_external_order_id` | string | Your own opaque order reference (used for `GET /api/v1/orders/{id}`) |
+
+> **Common pitfall** : shops that mirror the catalog locally (recommended)
+> often pick the wrong column. If your local table looks like
+> `peregrine_configurations(id BIGINT PK AUTO_INCREMENT, peregrine_id BIGINT UNIQUE, …)`,
+> the value Peregrine expects is **`peregrine_id`**, never your local `id`.
+> Sending the local PK is the #1 cause of `skipped: unknown_configuration`
+> in production logs.
 
 ## Optional
 

@@ -140,10 +140,16 @@ shop crée **doit** porter ces quatre clés metadata :
 
 | Clé | Type | Source |
 |---|---|---|
-| `peregrine_configuration_id` | int (string) | `id` de `GET /configurations` |
-| `peregrine_shop_id` | int (string) | Le `Shop.id` du shop |
-| `peregrine_user_email` | string | Email de l'acheteur |
+| `peregrine_configuration_id` | int (string) | Le champ `id` retourné par `GET /configurations` (= `ServerConfiguration.id` upstream côté Peregrine). **N'envoyez PAS la primary key de votre table miroir locale — c'est une autre colonne.** |
+| `peregrine_shop_id` | int (string) | Le `Shop.id` du shop (retourné par `GET /shop/me`) |
+| `peregrine_user_email` | string | Email de l'acheteur (lowercased + trim) |
 | `peregrine_external_order_id` | string | Référence d'order opaque côté shop |
+
+> Si le shop mirror le catalogue localement (pattern recommandé),
+> assurez-vous que le builder de metadata lit la colonne qui stocke
+> l'id upstream (par ex. `peregrine_configurations.peregrine_id`), pas
+> la PK de la row locale. Envoyer la PK locale est la cause la plus
+> fréquente de `skipped: unknown_configuration` en prod.
 
 Optionnels :
 

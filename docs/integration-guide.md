@@ -52,9 +52,9 @@ following metadata :
 
 | Key | Type | Value |
 |---|---|---|
-| `peregrine_configuration_id` | int | `ServerConfiguration.id` from step 2 |
+| `peregrine_configuration_id` | int | The **upstream** `id` from step 2's `GET /api/v1/configurations` response (NOT a shop-side mirror PK) |
 | `peregrine_shop_id` | int | Your `Shop.id` from step 1 |
-| `peregrine_user_email` | string | The buyer's email |
+| `peregrine_user_email` | string | The buyer's email (lowercased + trimmed) |
 | `peregrine_external_order_id` | string | Your own opaque order reference |
 
 Optional :
