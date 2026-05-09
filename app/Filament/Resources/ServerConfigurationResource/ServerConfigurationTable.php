@@ -74,19 +74,16 @@ final class ServerConfigurationTable
                 ->icon(fn (string $state): string => match ($state) {
                     'ready' => 'heroicon-o-check-circle',
                     'needs_config' => 'heroicon-o-exclamation-triangle',
-                    'sync_error' => 'heroicon-o-x-circle',
                     default => 'heroicon-o-question-mark-circle',
                 })
                 ->color(fn (string $state): string => match ($state) {
                     'ready' => 'success',
                     'needs_config' => 'warning',
-                    'sync_error' => 'danger',
                     default => 'gray',
                 })
                 ->tooltip(fn (string $state): string => match ($state) {
                     'ready' => __('admin/server_configurations.sync_status.ready'),
                     'needs_config' => __('admin/server_configurations.sync_status.needs_config'),
-                    'sync_error' => __('admin/server_configurations.sync_status.sync_error'),
                     default => __('admin/_shell.common.unknown'),
                 }),
         ];

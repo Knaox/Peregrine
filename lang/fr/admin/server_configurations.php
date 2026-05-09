@@ -72,7 +72,6 @@ return [
     'sync_status' => [
         'ready' => 'Prêt à provisionner (egg + node configurés)',
         'needs_config' => 'Configurer egg + node avant que cette configuration ne puisse provisionner des serveurs',
-        'sync_error' => 'La dernière sync Bridge a échoué — consultez le journal d\'audit',
     ],
     'tooltips' => [
         'no_egg' => 'Aucun egg configuré — le provisioning échouera tant que vous n\'en sélectionnez pas un sur la page d\'édition.',

@@ -8,13 +8,6 @@ return [
             'navigation' => 'Received webhooks',
         ],
     ],
-    'bridge' => [
-        'resource' => [
-            'label' => 'Bridge call',
-            'plural' => 'Bridge logs',
-            'navigation' => 'Bridge logs',
-        ],
-    ],
     'sync' => [
         'resource' => [
             'label' => 'Sync',

@@ -170,21 +170,11 @@ class ServerConfiguration extends Model
 
     /**
      * Aggregate sync status for the Filament admin badge.
-     *  - 'sync_error'  : the most recent BridgeSyncLog entry has response_status >= 400.
      *  - 'ready'       : isReadyToProvision().
      *  - 'needs_config': egg/node missing — admin action required.
      */
     public function syncStatus(): string
     {
-        $lastLog = BridgeSyncLog::query()
-            ->where('server_configuration_id', $this->id)
-            ->orderByDesc('attempted_at')
-            ->first();
-
-        if ($lastLog !== null && $lastLog->response_status >= 400) {
-            return 'sync_error';
-        }
-
         return $this->isReadyToProvision() ? 'ready' : 'needs_config';
     }
 
@@ -233,11 +223,6 @@ class ServerConfiguration extends Model
     public function defaultNode(): BelongsTo
     {
         return $this->belongsTo(Node::class, 'default_node_id');
-    }
-
-    public function syncLogs(): HasMany
-    {
-        return $this->hasMany(BridgeSyncLog::class);
     }
 
     public function servers(): HasMany

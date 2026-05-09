@@ -101,9 +101,9 @@ class EmailTemplates extends Page implements HasForms
         ];
 
         // Templates from the registry — one section per entry. Bridge
-        // templates are hidden when the Bridge feature is disabled (matches
-        // the visibility rule used elsewhere : ServerConfigurationResource
-        // navigation, BridgeSyncLogResource navigation).
+        // templates are hidden when Stripe is not wired (matches the
+        // visibility rule used elsewhere : ServerConfigurationResource
+        // navigation).
         $bridgeActive = $this->isBridgeActive();
         foreach (MailTemplateRegistry::all() as $tpl) {
             if ($tpl['group'] === 'Bridge' && ! $bridgeActive) {
