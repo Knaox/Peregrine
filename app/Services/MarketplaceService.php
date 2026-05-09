@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\PhpProcessUser;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -339,11 +340,13 @@ class MarketplaceService
         if ($this->files->isDirectory($pluginPath)) {
             $deleted = $this->files->deleteDirectory($pluginPath);
             if (! $deleted || $this->files->isDirectory($pluginPath)) {
+                $owner = PhpProcessUser::ownerSpec();
                 throw new \RuntimeException(
                     "Failed to remove the existing plugin directory at {$pluginPath} before updating. "
-                    ."Likely cause : the directory contains files owned by a different user "
-                    ."(e.g. a previous install ran as root or www-data, the current PHP process can't delete them). "
-                    ."Fix : `chown -R \$(id -un):\$(id -gn) {$pluginPath}` then retry, "
+                    ."Likely cause : the directory contains files owned by a different user than the PHP-FPM/web "
+                    ."process (running as `{$owner}`) — typically because the files were created by `git pull` "
+                    ."run as your shell user, or by a previous install that ran as root. "
+                    ."Fix : `sudo chown -R {$owner} {$pluginPath}` then retry, "
                     ."or remove the directory manually before clicking Update again."
                 );
             }
