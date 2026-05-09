@@ -15,6 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
+        // Phase 5 — public API v1 surface for third-party shops.
+        // Loaded into the `api` middleware group (no CSRF, JSON-friendly)
+        // and prefixed `/api/v1`. Per-route auth via EnsureShopApiKey.
+        then: fn () => \Illuminate\Support\Facades\Route::middleware('api')
+            ->prefix('api/v1')
+            ->name('api.v1.')
+            ->group(__DIR__.'/../routes/api_v1.php'),
         // `channels:` intentionally NOT passed here — Laravel's
         // auto-registration would attach `/broadcasting/auth` with
         // bare `web` middleware (no throttle). We register the
@@ -61,6 +68,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'two-factor' => \App\Http\Middleware\RequireTwoFactor::class,
+            'shop_api_key' => \App\Http\Middleware\EnsureShopApiKey::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

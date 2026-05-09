@@ -70,6 +70,15 @@ $renderDoc = function (string $slug, string $view): \Illuminate\Http\Response|\I
 Route::get('/docs/bridge-api', fn () => $renderDoc('bridge-api', 'docs.bridge-api'))
     ->name('docs.bridge-api');
 
+// Multi-shop integration guide — the canonical doc for the new platform
+// flow (replaces the legacy bridge-api). FR / EN auto-resolved.
+Route::get('/docs/shops', fn () => $renderDoc('shops', 'docs.shops'))
+    ->name('docs.shops');
+
+// Stripe integration settings — companion doc for /admin/stripe-settings.
+Route::get('/docs/stripe-settings', fn () => $renderDoc('stripe-settings', 'docs.stripe-settings'))
+    ->name('docs.stripe-settings');
+
 // Bridge — webhook orchestrator operator guide (Paymenter, WHMCS, …).
 Route::get('/docs/bridge-webhook-orchestrator', fn () => $renderDoc('bridge-webhook-orchestrator', 'docs.bridge-webhook-orchestrator'))
     ->name('docs.bridge-webhook-orchestrator');
