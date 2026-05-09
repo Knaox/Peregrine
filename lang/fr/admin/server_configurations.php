@@ -90,6 +90,14 @@ return [
         'irreversible' => 'Cette action est irréversible.',
         'submit' => 'Oui, supprimer définitivement',
     ],
+    'duplicate' => [
+        'label' => 'Dupliquer',
+        'modal_heading' => 'Dupliquer la configuration « :name » ?',
+        'modal_description' => 'Crée une copie de cette configuration avec un nouveau `internal_name` (suffixé `-copy`). Toutes les specs Pelican sont reprises à l\'identique. La copie est invisible pour toutes les boutiques jusqu\'à ce que vous l\'autorisiez explicitement (pivot non recopié).',
+        'submit' => 'Oui, dupliquer',
+        'notification_title' => 'Configuration dupliquée',
+        'notification_body' => 'La copie « :name » a été créée. Vous êtes redirigé sur sa page d\'édition.',
+    ],
     'delete_bulk' => [
         'modal_heading' => 'Supprimer les configurations sélectionnées ?',
         'count' => 'Suppression de :count configuration(s).',

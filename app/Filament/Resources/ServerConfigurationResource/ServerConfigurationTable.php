@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\ServerConfigurationResource;
 
+use App\Actions\Admin\DuplicateServerConfigurationAction;
+use App\Filament\Resources\ServerConfigurationResource;
 use App\Models\ServerConfiguration;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -108,6 +112,7 @@ final class ServerConfigurationTable
     {
         return [
             EditAction::make(),
+            self::duplicateAction(),
             DeleteAction::make()
                 ->requiresConfirmation()
                 ->modalHeading(fn (ServerConfiguration $record): string => __(
@@ -123,6 +128,44 @@ final class ServerConfigurationTable
                 })
                 ->modalSubmitActionLabel(__('admin/server_configurations.delete.submit')),
         ];
+    }
+
+    /**
+     * Row action that clones a configuration, generating a unique
+     * `internal_name` (`-copy`, `-copy-2`, …) and redirecting the admin
+     * straight to the edit page so they can tweak the new copy without
+     * a page-load round-trip.
+     *
+     * Pivot links to shops are NOT copied — the clone is invisible to
+     * every shop until explicitly authorized (same pattern as creating
+     * a fresh configuration).
+     */
+    private static function duplicateAction(): Action
+    {
+        return Action::make('duplicate')
+            ->label(__('admin/server_configurations.duplicate.label'))
+            ->icon('heroicon-o-document-duplicate')
+            ->color('gray')
+            ->requiresConfirmation()
+            ->modalHeading(fn (ServerConfiguration $record): string => __(
+                'admin/server_configurations.duplicate.modal_heading',
+                ['name' => $record->internal_name]
+            ))
+            ->modalDescription(__('admin/server_configurations.duplicate.modal_description'))
+            ->modalSubmitActionLabel(__('admin/server_configurations.duplicate.submit'))
+            ->action(function (ServerConfiguration $record) {
+                $clone = app(DuplicateServerConfigurationAction::class)($record);
+
+                Notification::make()
+                    ->title(__('admin/server_configurations.duplicate.notification_title'))
+                    ->body(__('admin/server_configurations.duplicate.notification_body', [
+                        'name' => $clone->internal_name,
+                    ]))
+                    ->success()
+                    ->send();
+
+                return redirect()->to(ServerConfigurationResource::getUrl('edit', ['record' => $clone]));
+            });
     }
 
     /**
