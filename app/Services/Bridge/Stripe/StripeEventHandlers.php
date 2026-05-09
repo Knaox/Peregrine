@@ -2,21 +2,12 @@
 
 namespace App\Services\Bridge\Stripe;
 
-use App\Events\Bridge\PaymentConfirmed;
-use App\Events\Bridge\ServerReactivated;
-use App\Jobs\Pelican\LinkPelicanAccountJob;
-use App\Jobs\ProvisionServerJob;
 use App\Jobs\SubscriptionUpdateJob;
 use App\Jobs\SuspendServerJob;
 use App\Models\Server;
-use App\Models\ServerPlan;
 use App\Models\User;
 use App\Notifications\Bridge\PaymentFailedNotification;
-use App\Services\Pelican\PelicanApplicationService;
-use App\Services\SettingsService;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Str;
 use Stripe\Event;
 
 /**
@@ -64,8 +55,12 @@ final class StripeEventHandlers
 
         $subscriptionId = (string) ($subData['id'] ?? '');
         $newStatus = (string) ($subData['status'] ?? '');
-        // First item's price (most subscriptions are single-item).
-        $newPriceId = $subData['items']['data'][0]['price']['id'] ?? null;
+
+        // Configuration id is metadata-driven : the inbound shop tags every
+        // Stripe Subscription with `metadata.peregrine_configuration_id`. The
+        // legacy stripe_price_id lookup was removed in Phase 1.
+        $rawConfigId = $subData['metadata']['peregrine_configuration_id'] ?? null;
+        $newConfigurationId = is_numeric($rawConfigId) ? (int) $rawConfigId : null;
 
         if ($subscriptionId === '') {
             return ['skipped' => 'missing_subscription_id'];
@@ -74,14 +69,14 @@ final class StripeEventHandlers
         SubscriptionUpdateJob::dispatch(
             eventId: $event->id,
             stripeSubscriptionId: $subscriptionId,
-            newStripePriceId: is_string($newPriceId) ? $newPriceId : null,
+            newConfigurationId: $newConfigurationId,
             newStatus: $newStatus,
         );
 
         return [
             'dispatched' => 'SubscriptionUpdateJob',
             'subscription_id' => $subscriptionId,
-            'new_price_id' => $newPriceId,
+            'new_configuration_id' => $newConfigurationId,
             'new_status' => $newStatus,
         ];
     }

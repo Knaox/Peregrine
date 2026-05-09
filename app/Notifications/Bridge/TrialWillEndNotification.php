@@ -50,7 +50,7 @@ class TrialWillEndNotification extends Notification implements ShouldQueue
             $locale,
             [
                 'name' => $notifiable->name,
-                'plan_name' => $this->server->plan?->name ?? '—',
+                'plan_name' => $this->server->serverConfiguration?->internal_name ?? '—',
                 'server_name' => $this->server->name,
                 'trial_ends_at' => $this->trialEndsAt->format('Y-m-d H:i e'),
                 'panel_url' => $panelUrl,

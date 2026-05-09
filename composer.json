@@ -15,6 +15,7 @@
         "laravel/socialite": "^5.26",
         "laravel/tinker": "^3.0",
         "socialiteproviders/discord": "^4.2",
+        "spatie/laravel-webhook-server": "^3.10",
         "stripe/stripe-php": "^17.0"
     },
     "require-dev": {

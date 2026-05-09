@@ -2,7 +2,7 @@
 
 namespace App\Notifications\Bridge;
 
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
 use App\Models\User;
 use App\Services\Bridge\Stripe\StripeBillingPortalLinker;
 use App\Services\Mail\MailTemplateRegistry;
@@ -31,7 +31,7 @@ class PaymentConfirmedNotification extends Notification implements ShouldQueue
     use Queueable;
 
     public function __construct(
-        public readonly ServerPlan $plan,
+        public readonly ServerConfiguration $configuration,
         public readonly int $amountCents,
         public readonly string $currency,
         public readonly ?string $invoiceId = null,
@@ -60,7 +60,7 @@ class PaymentConfirmedNotification extends Notification implements ShouldQueue
             $locale,
             [
                 'name' => $notifiable->name,
-                'plan_name' => $this->plan->name,
+                'plan_name' => $this->configuration->internal_name,
                 'amount' => $this->formatAmount(),
                 'currency' => strtoupper($this->currency),
                 'payment_date' => now()->format('Y-m-d H:i e'),

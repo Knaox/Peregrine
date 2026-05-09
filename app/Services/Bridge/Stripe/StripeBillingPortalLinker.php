@@ -3,7 +3,7 @@
 namespace App\Services\Bridge\Stripe;
 
 use App\Models\Server;
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
 use App\Models\User;
 use App\Services\SettingsService;
 use Illuminate\Support\Facades\Crypt;
@@ -53,44 +53,44 @@ class StripeBillingPortalLinker
      *
      * Reads `bridge_resubscribe_url` setting (admin-editable template) and
      * interpolates the following placeholders :
-     *   {server_id}   = local Peregrine Server::id
-     *   {plan_slug}   = ServerPlan::shop_plan_slug
-     *   {plan_id}     = ServerPlan::shop_plan_id
-     *   {ts}          = unix timestamp at link generation
-     *   {signature}   = HMAC-SHA256 over "{server_id}|{plan_slug}|{ts}",
-     *                   keyed with bridge_shop_shared_secret
+     *   {server_id}     = local Peregrine Server::id
+     *   {configuration} = ServerConfiguration::internal_name (slug-safe)
+     *   {configuration_id} = ServerConfiguration::id
+     *   {ts}            = unix timestamp at link generation
+     *   {signature}     = HMAC-SHA256 over "{server_id}|{configuration}|{ts}",
+     *                     keyed with bridge_shop_shared_secret
      *
      * The signature lets the shop prove the link was minted by Peregrine
      * — same secret already used to sign the /api/bridge/* HTTP calls,
      * no new secret to provision. Returns null when no template configured.
      */
-    public function resubscribeUrlFor(?Server $server, ?ServerPlan $plan): ?string
+    public function resubscribeUrlFor(?Server $server, ?ServerConfiguration $configuration): ?string
     {
         $template = (string) $this->settings->get('bridge_resubscribe_url', '');
         if ($template === '') {
             return null;
         }
         $serverId = (string) ($server?->id ?? '');
-        $planSlug = (string) ($plan?->shop_plan_slug ?? '');
+        $configurationSlug = (string) ($configuration?->internal_name ?? '');
         $ts = (string) time();
-        $signature = $this->signResubscribePayload($serverId, $planSlug, $ts);
+        $signature = $this->signResubscribePayload($serverId, $configurationSlug, $ts);
 
         return strtr($template, [
             '{server_id}' => $serverId,
-            '{plan_slug}' => $planSlug,
-            '{plan_id}' => (string) ($plan?->shop_plan_id ?? ''),
+            '{configuration}' => $configurationSlug,
+            '{configuration_id}' => (string) ($configuration?->id ?? ''),
             '{ts}' => $ts,
             '{signature}' => $signature,
         ]);
     }
 
-    private function signResubscribePayload(string $serverId, string $planSlug, string $ts): string
+    private function signResubscribePayload(string $serverId, string $configurationSlug, string $ts): string
     {
         $secret = $this->resolveShopSharedSecret();
         if ($secret === '') {
             return '';
         }
-        return hash_hmac('sha256', "{$serverId}|{$planSlug}|{$ts}", $secret);
+        return hash_hmac('sha256', "{$serverId}|{$configurationSlug}|{$ts}", $secret);
     }
 
     private function resolveShopSharedSecret(): string

@@ -1,13 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Bridge\Stripe;
 
+use App\Bridge\Stripe\Actions\ResolveStripeMetadataAction;
+use App\Bridge\Stripe\DTOs\ResolvedStripeContext;
+use App\Bridge\Stripe\Exceptions\BridgeMetadataException;
 use App\Events\Bridge\PaymentConfirmed;
 use App\Events\Bridge\ServerReactivated;
 use App\Jobs\Pelican\LinkPelicanAccountJob;
 use App\Jobs\ProvisionServerJob;
 use App\Models\Server;
-use App\Models\ServerPlan;
 use App\Models\User;
 use App\Services\Pelican\PelicanApplicationService;
 use App\Services\SettingsService;
@@ -16,16 +20,18 @@ use Illuminate\Support\Str;
 use Stripe\Event;
 
 /**
- * Stripe `checkout.session.completed` handler. Extracted from
- * StripeEventHandlers to keep that file under the 300-line plafond
- * CLAUDE.md.
+ * Stripe `checkout.session.completed` orchestrator. Two paths :
  *
- * Two paths :
- *  - resubscribe : metadata.is_resubscribe=true + peregrine_server_id →
- *    revive the existing server (clear scheduled deletion, unsuspend
- *    Pelican-side, fire ServerReactivated)
- *  - normal     : provision a new server via the
- *    LinkPelicanAccountJob → ProvisionServerJob chain
+ *  - resubscribe : `metadata.is_resubscribe=true` + `peregrine_server_id`
+ *    → revives the existing server (clear scheduled deletion, unsuspend
+ *    Pelican-side, fire `ServerReactivated`).
+ *  - normal : delegates to `ResolveStripeMetadataAction` for full
+ *    validation (pivot, shop status, configuration existence) then
+ *    chains LinkPelicanAccountJob → ProvisionServerJob.
+ *
+ * On `BridgeMetadataException`, returns a 200-style summary so the
+ * controller's audit log captures the rejection without triggering Stripe
+ * retries. Admin notifications surface via the audit dashboard.
  */
 final class StripeCheckoutHandler
 {
@@ -40,12 +46,10 @@ final class StripeCheckoutHandler
         $paymentIntentId = (string) ($sessionData['payment_intent'] ?? '');
         $subscriptionId = $sessionData['subscription'] ?? null;
         $customerId = $sessionData['customer'] ?? null;
-        $customerEmail = $sessionData['customer_details']['email']
-            ?? $sessionData['customer_email']
-            ?? null;
+        $metadata = is_array($sessionData['metadata'] ?? null) ? $sessionData['metadata'] : [];
 
-        $isResubscribe = ($sessionData['metadata']['is_resubscribe'] ?? '') === 'true';
-        $resubscribeServerId = (int) ($sessionData['metadata']['peregrine_server_id'] ?? 0);
+        $isResubscribe = ($metadata['is_resubscribe'] ?? '') === 'true';
+        $resubscribeServerId = (int) ($metadata['peregrine_server_id'] ?? 0);
         if ($isResubscribe && $resubscribeServerId > 0) {
             return self::handleResubscribe(
                 $event,
@@ -54,45 +58,24 @@ final class StripeCheckoutHandler
             );
         }
 
-        // Server name from Checkout custom field "server_name".
-        $customFields = $sessionData['custom_fields'] ?? [];
-        $serverName = null;
-        foreach ($customFields as $field) {
-            if (strtolower((string) ($field['key'] ?? '')) === 'server_name') {
-                $serverName = $field['text']['value'] ?? null;
-                break;
-            }
+        try {
+            $context = (new ResolveStripeMetadataAction())($metadata);
+        } catch (BridgeMetadataException $e) {
+            Log::warning('Stripe checkout.session.completed metadata rejected', [
+                'event_id' => $event->id,
+                'reason' => $e->reason,
+                'details' => $e->details,
+            ]);
+            return ['skipped' => $e->reason, 'details' => $e->details];
         }
 
-        $priceId = self::resolvePriceId($sessionData);
-        if ($priceId === null) {
-            Log::warning('Stripe checkout.session.completed without resolvable price_id', [
-                'event_id' => $event->id,
-                'session_id' => $sessionData['id'] ?? null,
-            ]);
-            return ['skipped' => 'no_price_id'];
-        }
-
-        $plan = ServerPlan::where('stripe_price_id', $priceId)->first();
-        if ($plan === null) {
-            Log::warning('Stripe checkout.session.completed with unknown stripe_price_id', [
-                'event_id' => $event->id,
-                'price_id' => $priceId,
-            ]);
-            return ['skipped' => 'unknown_price_id', 'price_id' => $priceId];
-        }
-
-        if ($customerEmail === null) {
-            Log::warning('Stripe checkout.session.completed missing customer_email', [
-                'event_id' => $event->id,
-            ]);
-            return ['skipped' => 'no_customer_email'];
-        }
+        $serverName = self::extractServerName($sessionData);
 
         $user = User::firstOrCreate(
-            ['email' => strtolower(trim($customerEmail))],
+            ['email' => $context->userEmail],
             [
-                'name' => $sessionData['customer_details']['name'] ?? Str::before($customerEmail, '@'),
+                'name' => $sessionData['customer_details']['name']
+                    ?? Str::before($context->userEmail, '@'),
                 'locale' => app(SettingsService::class)->get('default_locale', 'en'),
             ],
         );
@@ -107,14 +90,12 @@ final class StripeCheckoutHandler
             $event->id,
         );
 
-        // Receipt email — independent of provisioning chain so payment
-        // confirmation lands even if provisioning is slow.
         $amountTotal = (int) ($sessionData['amount_total'] ?? 0);
         $currency = (string) ($sessionData['currency'] ?? 'eur');
         $invoiceId = is_string($sessionData['invoice'] ?? null) ? $sessionData['invoice'] : null;
         event(new PaymentConfirmed(
             user: $user,
-            plan: $plan,
+            configuration: $context->configuration,
             amountCents: $amountTotal,
             currency: $currency,
             invoiceId: $invoiceId,
@@ -123,39 +104,45 @@ final class StripeCheckoutHandler
         LinkPelicanAccountJob::dispatch($user->id, 'stripe-checkout')
             ->chain([
                 new ProvisionServerJob(
-                    planId: $plan->id,
+                    serverConfigurationId: $context->configuration->id,
                     userId: $user->id,
                     idempotencyKey: $idempotencyKey,
                     serverNameOverride: $serverName,
                     stripeSubscriptionId: is_string($subscriptionId) ? $subscriptionId : null,
                     paymentIntentId: $paymentIntentId !== '' ? $paymentIntentId : null,
+                    externalOrderId: $context->externalOrderId,
                 ),
             ]);
 
         return [
             'dispatched' => 'LinkPelicanAccountJob+ProvisionServerJob',
-            'plan_id' => $plan->id,
+            'configuration_id' => $context->configuration->id,
+            'shop_id' => $context->shop->id,
             'user_id' => $user->id,
             'subscription_id' => is_string($subscriptionId) ? $subscriptionId : null,
             'server_name' => $serverName,
+            'external_order_id' => $context->externalOrderId,
         ];
     }
 
     /**
+     * Server name override from the optional `server_name` Stripe Checkout
+     * custom field. Returns null when absent — `ProvisionServerJob` falls
+     * back to the configuration's `name_template`.
+     *
      * @param  array<string, mixed>  $sessionData
      */
-    private static function resolvePriceId(array $sessionData): ?string
+    private static function extractServerName(array $sessionData): ?string
     {
-        $lineItems = $sessionData['line_items']['data'] ?? [];
-        if (! empty($lineItems)) {
-            return $lineItems[0]['price']['id'] ?? null;
+        $customFields = $sessionData['custom_fields'] ?? [];
+        if (! is_array($customFields)) {
+            return null;
         }
-        if (isset($sessionData['metadata']['stripe_price_id'])) {
-            return $sessionData['metadata']['stripe_price_id'];
-        }
-        if (! empty($sessionData['id'])) {
-            return app(StripeSessionFetcher::class)
-                ->fetchFirstLineItemPriceId((string) $sessionData['id']);
+        foreach ($customFields as $field) {
+            if (is_array($field) && strtolower((string) ($field['key'] ?? '')) === 'server_name') {
+                $value = $field['text']['value'] ?? null;
+                return is_string($value) ? $value : null;
+            }
         }
         return null;
     }

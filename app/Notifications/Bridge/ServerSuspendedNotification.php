@@ -44,7 +44,7 @@ class ServerSuspendedNotification extends Notification implements ShouldQueue
         // PRIMARY action = re-checkout on the shop, since Stripe forbids
         // re-activating a `canceled` subscription from the Customer Portal.
         // Falls back to the panel URL so the button is never broken.
-        $resubscribeUrl = $linker->resubscribeUrlFor($this->server, $this->server->plan) ?? $panelUrl;
+        $resubscribeUrl = $linker->resubscribeUrlFor($this->server, $this->server->serverConfiguration) ?? $panelUrl;
 
         // SECONDARY action = Customer Portal for managing payment methods,
         // viewing invoice history, or cancelling other (still active) subs.
@@ -56,7 +56,7 @@ class ServerSuspendedNotification extends Notification implements ShouldQueue
             $locale,
             [
                 'name' => $notifiable->name,
-                'plan_name' => $this->server->plan?->name ?? '—',
+                'plan_name' => $this->server->serverConfiguration?->internal_name ?? '—',
                 'server_name' => $this->server->name,
                 'scheduled_deletion_at' => $this->server->scheduled_deletion_at?->format('Y-m-d H:i e') ?? '—',
                 'panel_url' => $panelUrl,

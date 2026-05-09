@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature;
 
 use App\Events\Bridge\PaymentConfirmed;
 use App\Jobs\Pelican\LinkPelicanAccountJob;
 use App\Jobs\ProvisionServerJob;
 use App\Listeners\Bridge\SendPaymentConfirmedNotification;
+use App\Actions\Shops\AuthorizeConfigurationForShopAction;
 use App\Models\Server;
-use App\Models\ServerPlan;
+use App\Models\ServerConfiguration;
+use App\Models\Shop;
 use App\Models\StripeProcessedEvent;
 use App\Models\User;
 use App\Notifications\Bridge\PaymentConfirmedNotification;
 use App\Notifications\Bridge\TrialWillEndNotification;
-use App\Services\Bridge\Stripe\StripeSessionFetcher;
 use App\Services\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -25,7 +28,8 @@ use Tests\TestCase;
  *  - Signature validation via the official SDK (we sign manually with the
  *    same algo Stripe uses : HMAC-SHA256 of "{timestamp}.{payload}")
  *  - Idempotency by event.id (no double-dispatch on Stripe re-deliveries)
- *  - Lookup ServerPlan by stripe_price_id, skip + 200 when unmapped
+ *  - Configuration resolution via Checkout metadata
+ *    (`peregrine_configuration_id`) — NOT via stripe_price_id (Phase 1)
  *  - Dispatch ProvisionServerJob with payment_intent as idempotency_key
  *  - Custom fields → server_name override
  */
@@ -45,14 +49,15 @@ class StripeWebhookTest extends TestCase
     {
         Bus::fake();
 
-        $plan = $this->seedPlan(stripePriceId: 'price_test_123');
+        [$shop, $configuration] = $this->seedShopWithConfiguration();
         $event = $this->makeCheckoutCompletedEvent(
-            priceId: 'price_test_123',
+            configurationId: $configuration->id,
             email: 'buyer@example.com',
             paymentIntent: 'pi_test_001',
             subscription: 'sub_test_001',
             customer: 'cus_test_001',
             serverName: 'MyMinecraftServer',
+            shopId: $shop->id,
         );
 
         $response = $this->signedStripePost($event);
@@ -65,8 +70,8 @@ class StripeWebhookTest extends TestCase
         // the chain head + check the chained ProvisionServerJob payload.
         Bus::assertChained([
             LinkPelicanAccountJob::class,
-            function (ProvisionServerJob $job) use ($plan): bool {
-                return $job->planId === $plan->id
+            function (ProvisionServerJob $job) use ($configuration): bool {
+                return $job->serverConfigurationId === $configuration->id
                     && $job->idempotencyKey === 'stripe-pi-pi_test_001'
                     && $job->serverNameOverride === 'MyMinecraftServer'
                     && $job->stripeSubscriptionId === 'sub_test_001'
@@ -91,7 +96,7 @@ class StripeWebhookTest extends TestCase
     {
         Bus::fake();
 
-        $event = $this->makeCheckoutCompletedEvent(priceId: 'price_test_x', email: 'x@x.com');
+        $event = $this->makeCheckoutCompletedEvent(configurationId: 1, email: 'x@x.com');
         $payload = json_encode($event);
         $ts = time();
 
@@ -114,7 +119,7 @@ class StripeWebhookTest extends TestCase
     {
         Bus::fake();
 
-        $event = $this->makeCheckoutCompletedEvent(priceId: 'price_test_x', email: 'x@x.com');
+        $event = $this->makeCheckoutCompletedEvent(configurationId: 1, email: 'x@x.com');
         $payload = json_encode($event);
         // 10 minutes in the past, Stripe SDK tolerance is 300s by default
         $expiredTs = time() - 600;
@@ -138,7 +143,7 @@ class StripeWebhookTest extends TestCase
     {
         Bus::fake();
 
-        $event = $this->makeCheckoutCompletedEvent(priceId: 'price_test_y', email: 'y@y.com');
+        $event = $this->makeCheckoutCompletedEvent(configurationId: 1, email: 'y@y.com');
 
         // Pre-mark this event as processed
         StripeProcessedEvent::create([
@@ -157,95 +162,29 @@ class StripeWebhookTest extends TestCase
         $this->assertDatabaseCount('stripe_processed_events', 1);
     }
 
-    public function test_falls_back_to_api_expand_when_line_items_absent_from_payload(): void
-    {
-        Bus::fake();
-
-        // Real Stripe webhook payloads NEVER inline line_items — the handler
-        // must call back the API with expand[]=line_items. Stub the fetcher
-        // so we can assert it gets called with the session id and have it
-        // return the price the rest of the handler will resolve.
-        $plan = $this->seedPlan(stripePriceId: 'price_expanded_001');
-        $event = $this->makeCheckoutCompletedEvent(
-            priceId: 'price_expanded_001',
-            email: 'expand@example.com',
-            paymentIntent: 'pi_expand_001',
-            includeLineItems: false,
-        );
-        $sessionId = $event['data']['object']['id'];
-
-        $fetcher = new class extends StripeSessionFetcher {
-            public ?string $calledWith = null;
-            public function fetchFirstLineItemPriceId(string $sessionId): ?string
-            {
-                $this->calledWith = $sessionId;
-                return 'price_expanded_001';
-            }
-        };
-        $this->app->instance(StripeSessionFetcher::class, $fetcher);
-
-        $response = $this->signedStripePost($event);
-
-        $response->assertStatus(200);
-        $this->assertSame($sessionId, $fetcher->calledWith);
-        Bus::assertChained([
-            LinkPelicanAccountJob::class,
-            function (ProvisionServerJob $job) use ($plan): bool {
-                return $job->planId === $plan->id
-                    && $job->idempotencyKey === 'stripe-pi-pi_expand_001';
-            },
-        ]);
-    }
-
-    public function test_returns_200_when_line_items_absent_and_api_expand_fails(): void
-    {
-        Bus::fake();
-
-        $event = $this->makeCheckoutCompletedEvent(
-            priceId: 'price_irrelevant',
-            email: 'expand-fail@example.com',
-            includeLineItems: false,
-        );
-
-        // Fetcher returns null (network error / auth failure / missing secret).
-        $fetcher = new class extends StripeSessionFetcher {
-            public function fetchFirstLineItemPriceId(string $sessionId): ?string
-            {
-                return null;
-            }
-        };
-        $this->app->instance(StripeSessionFetcher::class, $fetcher);
-
-        $response = $this->signedStripePost($event);
-
-        $response->assertStatus(200);
-        Bus::assertNothingDispatched();
-        $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
-        $this->assertSame('no_price_id', $log->payload_summary['skipped'] ?? null);
-    }
-
     public function test_idempotency_key_falls_back_to_subscription_when_no_payment_intent(): void
     {
         Bus::fake();
 
-        $plan = $this->seedPlan(stripePriceId: 'price_sub_idem');
+        [$shop, $configuration] = $this->seedShopWithConfiguration();
         // Subscription Checkout : no payment_intent (Stripe uses setup_intent
         // for card auth in subscription mode). The webhook is then re-delivered
         // by the Dashboard with a NEW event.id. Without subscription_id as a
         // stable fallback, every redeliver would create a duplicate Server.
         $event = $this->makeCheckoutCompletedEvent(
-            priceId: 'price_sub_idem',
+            configurationId: $configuration->id,
             email: 'sub@example.com',
             paymentIntent: '',
             subscription: 'sub_stable_001',
+            shopId: $shop->id,
         );
 
         $this->signedStripePost($event)->assertStatus(200);
 
         Bus::assertChained([
             LinkPelicanAccountJob::class,
-            function (ProvisionServerJob $job) use ($plan): bool {
-                return $job->planId === $plan->id
+            function (ProvisionServerJob $job) use ($configuration): bool {
+                return $job->serverConfigurationId === $configuration->id
                     && $job->idempotencyKey === 'stripe-sub-sub_stable_001';
             },
         ]);
@@ -255,12 +194,13 @@ class StripeWebhookTest extends TestCase
     {
         Bus::fake();
 
-        $plan = $this->seedPlan(stripePriceId: 'price_session_idem');
+        [$shop, $configuration] = $this->seedShopWithConfiguration();
         $event = $this->makeCheckoutCompletedEvent(
-            priceId: 'price_session_idem',
+            configurationId: $configuration->id,
             email: 'session@example.com',
             paymentIntent: '',
             subscription: null,
+            shopId: $shop->id,
         );
         $sessionId = $event['data']['object']['id'];
 
@@ -268,21 +208,20 @@ class StripeWebhookTest extends TestCase
 
         Bus::assertChained([
             LinkPelicanAccountJob::class,
-            function (ProvisionServerJob $job) use ($plan, $sessionId): bool {
-                return $job->planId === $plan->id
+            function (ProvisionServerJob $job) use ($configuration, $sessionId): bool {
+                return $job->serverConfigurationId === $configuration->id
                     && $job->idempotencyKey === 'stripe-cs-'.$sessionId;
             },
         ]);
     }
 
-    public function test_returns_200_when_stripe_price_id_unknown(): void
+    public function test_returns_200_when_configuration_metadata_missing(): void
     {
         Bus::fake();
 
-        // No plan seeded for this price_id
         $event = $this->makeCheckoutCompletedEvent(
-            priceId: 'price_does_not_exist',
-            email: 'noplan@example.com',
+            configurationId: null,
+            email: 'nometa@example.com',
         );
 
         $response = $this->signedStripePost($event);
@@ -290,22 +229,89 @@ class StripeWebhookTest extends TestCase
         $response->assertStatus(200);
         Bus::assertNothingDispatched();
 
-        // Recorded as processed with skipped summary
         $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
         $this->assertNotNull($log);
-        $this->assertSame('unknown_price_id', $log->payload_summary['skipped'] ?? null);
+        $this->assertSame('missing_required_metadata', $log->payload_summary['skipped'] ?? null);
+    }
+
+    public function test_returns_200_when_configuration_id_unknown(): void
+    {
+        Bus::fake();
+
+        $shop = Shop::factory()->create();
+
+        // Shop+config-ID metadata present, but config doesn't exist.
+        $event = $this->makeCheckoutCompletedEvent(
+            configurationId: 99999,
+            email: 'noconfig@example.com',
+            shopId: $shop->id,
+        );
+
+        $response = $this->signedStripePost($event);
+
+        $response->assertStatus(200);
+        Bus::assertNothingDispatched();
+
+        $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
+        $this->assertNotNull($log);
+        $this->assertSame('unknown_configuration', $log->payload_summary['skipped'] ?? null);
+    }
+
+    public function test_returns_200_when_shop_not_authorised_for_configuration(): void
+    {
+        Bus::fake();
+
+        $shop = Shop::factory()->create();
+        $configuration = $this->seedConfiguration();
+        // NO pivot row attaching this configuration to the shop.
+
+        $event = $this->makeCheckoutCompletedEvent(
+            configurationId: $configuration->id,
+            email: 'unauth@example.com',
+            shopId: $shop->id,
+        );
+
+        $response = $this->signedStripePost($event);
+
+        $response->assertStatus(200);
+        Bus::assertNothingDispatched();
+
+        $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
+        $this->assertSame('configuration_not_authorised_for_shop', $log->payload_summary['skipped'] ?? null);
+    }
+
+    public function test_returns_200_when_shop_suspended(): void
+    {
+        Bus::fake();
+
+        $shop = Shop::factory()->suspended()->create();
+        $configuration = $this->seedConfiguration();
+        (new AuthorizeConfigurationForShopAction())($shop, $configuration);
+
+        $event = $this->makeCheckoutCompletedEvent(
+            configurationId: $configuration->id,
+            email: 'suspended@example.com',
+            shopId: $shop->id,
+        );
+
+        $this->signedStripePost($event)->assertStatus(200);
+        Bus::assertNothingDispatched();
+
+        $log = StripeProcessedEvent::where('event_id', $event['id'])->first();
+        $this->assertSame('shop_suspended', $log->payload_summary['skipped'] ?? null);
     }
 
     public function test_handles_missing_custom_fields_with_default_server_name(): void
     {
         Bus::fake();
 
-        $plan = $this->seedPlan(stripePriceId: 'price_test_nameless');
+        [$shop, $configuration] = $this->seedShopWithConfiguration();
         $event = $this->makeCheckoutCompletedEvent(
-            priceId: 'price_test_nameless',
+            configurationId: $configuration->id,
             email: 'noname@example.com',
             paymentIntent: 'pi_test_nameless',
             customFields: [], // no server_name custom field
+            shopId: $shop->id,
         );
 
         $response = $this->signedStripePost($event);
@@ -325,7 +331,7 @@ class StripeWebhookTest extends TestCase
         Bus::fake();
         config(['bridge.stripe.webhook_secret' => '']);
 
-        $event = $this->makeCheckoutCompletedEvent(priceId: 'price_x', email: 'x@x.com');
+        $event = $this->makeCheckoutCompletedEvent(configurationId: 1, email: 'x@x.com');
         $response = $this->signedStripePost($event);
 
         $response->assertStatus(503);
@@ -339,14 +345,14 @@ class StripeWebhookTest extends TestCase
         // payment" receipt. Stripe will fire a real invoice.payment_succeeded
         // when the trial converts to a paid charge.
         Notification::fake();
-        app(SettingsService::class)->set('bridge_mode', 'shop_stripe');
+        app(SettingsService::class)->set('bridge_stripe_webhook_secret', 'whsec_test_seed');
 
         $user = User::factory()->create();
-        $plan = $this->seedPlan(stripePriceId: 'price_trial_zero');
+        $configuration = $this->seedConfiguration();
 
         (new SendPaymentConfirmedNotification())->handle(new PaymentConfirmed(
             user: $user,
-            plan: $plan,
+            configuration: $configuration,
             amountCents: 0,
             currency: 'eur',
             invoiceId: null,
@@ -359,14 +365,14 @@ class StripeWebhookTest extends TestCase
     {
         // Counter-test: a real paid checkout (amount > 0) still gets the receipt.
         Notification::fake();
-        app(SettingsService::class)->set('bridge_mode', 'shop_stripe');
+        app(SettingsService::class)->set('bridge_stripe_webhook_secret', 'whsec_test_seed');
 
         $user = User::factory()->create();
-        $plan = $this->seedPlan(stripePriceId: 'price_paid_positive');
+        $configuration = $this->seedConfiguration();
 
         (new SendPaymentConfirmedNotification())->handle(new PaymentConfirmed(
             user: $user,
-            plan: $plan,
+            configuration: $configuration,
             amountCents: 999,
             currency: 'eur',
             invoiceId: 'in_test_001',
@@ -378,7 +384,7 @@ class StripeWebhookTest extends TestCase
     public function test_trial_will_end_dispatches_user_email(): void
     {
         Notification::fake();
-        app(SettingsService::class)->set('bridge_mode', 'shop_stripe');
+        app(SettingsService::class)->set('bridge_stripe_webhook_secret', 'whsec_test_seed');
 
         $user = User::factory()->create();
         $this->seedServerWithSubscription($user, 'sub_trial_001');
@@ -399,7 +405,7 @@ class StripeWebhookTest extends TestCase
     public function test_trial_will_end_skipped_in_paymenter_mode(): void
     {
         Notification::fake();
-        app(SettingsService::class)->set('bridge_mode', 'paymenter');
+        app(SettingsService::class)->forget('bridge_stripe_webhook_secret');
 
         $user = User::factory()->create();
         $this->seedServerWithSubscription($user, 'sub_trial_paymenter');
@@ -407,14 +413,14 @@ class StripeWebhookTest extends TestCase
         $event = $this->makeTrialWillEndEvent('sub_trial_paymenter', time() + (3 * 86400));
         $this->signedStripePost($event)->assertStatus(200);
 
-        // Listener gates on isShopStripe() — Paymenter mode = silent.
+        // Listener gates on hasStripeConfigured() — no secret seeded.
         Notification::assertNothingSent();
     }
 
     public function test_trial_will_end_skipped_when_server_not_found(): void
     {
         Notification::fake();
-        app(SettingsService::class)->set('bridge_mode', 'shop_stripe');
+        app(SettingsService::class)->set('bridge_stripe_webhook_secret', 'whsec_test_seed');
 
         // No server seeded for this subscription id.
         $event = $this->makeTrialWillEndEvent('sub_unknown_trial', time() + (3 * 86400));
@@ -550,7 +556,7 @@ class StripeWebhookTest extends TestCase
 
     private function seedServerWithSubscription(User $user, string $subscriptionId): Server
     {
-        $plan = $this->seedPlan(stripePriceId: 'price_'.Str::random(8));
+        $configuration = $this->seedConfiguration();
 
         return Server::create([
             'user_id' => $user->id,
@@ -558,31 +564,56 @@ class StripeWebhookTest extends TestCase
             'identifier' => substr(Str::random(8), 0, 8),
             'name' => 'srv-'.Str::random(4),
             'status' => 'active',
-            'egg_id' => $plan->egg_id,
-            'plan_id' => $plan->id,
+            'egg_id' => $configuration->egg_id,
+            'server_configuration_id' => $configuration->id,
             'stripe_subscription_id' => $subscriptionId,
         ]);
     }
 
-    private function seedPlan(string $stripePriceId): ServerPlan
+    /**
+     * @return array{0: Shop, 1: ServerConfiguration}
+     */
+    private function seedShopWithConfiguration(): array
     {
-        $nest = \App\Models\Nest::create(['pelican_nest_id' => 100, 'name' => 'TestNest', 'description' => 't']);
+        $shop = Shop::factory()->create();
+        $configuration = $this->seedConfiguration();
+        (new AuthorizeConfigurationForShopAction())($shop, $configuration);
+        return [$shop, $configuration];
+    }
+
+    private function seedConfiguration(): ServerConfiguration
+    {
+        $nest = \App\Models\Nest::create([
+            'pelican_nest_id' => mt_rand(100, 9999),
+            'name' => 'TestNest-'.Str::random(4),
+            'description' => 't',
+        ]);
         $egg = \App\Models\Egg::create([
-            'pelican_egg_id' => 200, 'nest_id' => $nest->id, 'name' => 'TestEgg',
-            'description' => 't', 'docker_image' => 'test:latest', 'startup' => 'echo hi',
+            'pelican_egg_id' => mt_rand(100, 9999),
+            'nest_id' => $nest->id,
+            'name' => 'TestEgg-'.Str::random(4),
+            'description' => 't',
+            'docker_image' => 'test:latest',
+            'startup' => 'echo hi',
         ]);
         $node = \App\Models\Node::create([
-            'pelican_node_id' => 300, 'name' => 'TestNode', 'fqdn' => 'test.test',
-            'scheme' => 'https', 'memory' => 1000, 'disk' => 1000,
+            'pelican_node_id' => mt_rand(100, 9999),
+            'name' => 'TestNode-'.Str::random(4),
+            'fqdn' => 'test.test',
+            'scheme' => 'https',
+            'memory' => 1000,
+            'disk' => 1000,
         ]);
-        return ServerPlan::create([
-            'name' => 'Test Plan',
-            'stripe_price_id' => $stripePriceId,
+
+        return ServerConfiguration::create([
+            'internal_name' => 'cfg-'.Str::random(8),
+            'name_template' => '{user.username}-{configuration.internal_name}',
             'egg_id' => $egg->id,
             'nest_id' => $nest->id,
             'node_id' => $node->id,
-            'ram' => 1024, 'cpu' => 100, 'disk' => 5000,
-            'is_active' => true,
+            'ram' => 1024,
+            'cpu' => 100,
+            'disk' => 5000,
         ]);
     }
 
@@ -590,20 +621,27 @@ class StripeWebhookTest extends TestCase
      * @param  array<int, array<string, mixed>>|null  $customFields
      */
     private function makeCheckoutCompletedEvent(
-        string $priceId,
+        ?int $configurationId,
         string $email,
         ?string $paymentIntent = 'pi_default',
         ?string $subscription = 'sub_default',
         ?string $customer = 'cus_default',
         ?string $serverName = null,
         ?array $customFields = null,
-        bool $includeLineItems = true,
+        ?int $shopId = null,
     ): array {
         if ($customFields === null && $serverName !== null) {
             $customFields = [[
                 'key' => 'server_name',
                 'text' => ['value' => $serverName],
             ]];
+        }
+        $metadata = [];
+        if ($configurationId !== null) {
+            $metadata['peregrine_configuration_id'] = (string) $configurationId;
+            $metadata['peregrine_shop_id'] = (string) ($shopId ?? 0);
+            $metadata['peregrine_user_email'] = $email;
+            $metadata['peregrine_external_order_id'] = 'ord-'.Str::random(8);
         }
         $sessionObject = [
             'id' => 'cs_test_'.Str::random(20),
@@ -614,15 +652,8 @@ class StripeWebhookTest extends TestCase
             'customer_email' => $email,
             'customer_details' => ['email' => $email, 'name' => 'Test Buyer'],
             'custom_fields' => $customFields ?? [],
+            'metadata' => $metadata,
         ];
-        if ($includeLineItems) {
-            $sessionObject['line_items'] = [
-                'data' => [[
-                    'id' => 'li_test',
-                    'price' => ['id' => $priceId],
-                ]],
-            ];
-        }
         return [
             'id' => 'evt_'.Str::random(24),
             'type' => 'checkout.session.completed',

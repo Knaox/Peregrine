@@ -44,7 +44,7 @@ class ServerInstalledNotification extends Notification implements ShouldQueue
             $locale,
             [
                 'name' => $notifiable->name,
-                'plan_name' => $this->server->plan?->name ?? '—',
+                'plan_name' => $this->server->serverConfiguration?->internal_name ?? '—',
                 'server_name' => $this->server->name,
                 'ip_port' => $this->resolveAddress(),
                 'panel_url' => $appUrl.'/servers/'.$this->server->id,

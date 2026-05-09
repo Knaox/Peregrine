@@ -4,7 +4,7 @@ namespace App\Listeners\Bridge;
 
 use App\Events\Bridge\ServerProvisioned;
 use App\Notifications\Bridge\ServerReadyNotification;
-use App\Services\Bridge\BridgeModeService;
+use App\Services\Integrations\IntegrationStatusService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 class SendServerReadyNotification implements ShouldQueue
@@ -15,7 +15,7 @@ class SendServerReadyNotification implements ShouldQueue
         // lifecycle. In Paymenter mode Paymenter sends its own emails and we
         // must not double-up. In Disabled mode we have no business reason
         // to fire from this code path.
-        if (! app(BridgeModeService::class)->current()->isShopStripe()) {
+        if (! app(IntegrationStatusService::class)->hasStripeConfigured()) {
             return;
         }
         $event->user->notify(new ServerReadyNotification($event->server));
