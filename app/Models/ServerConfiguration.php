@@ -1,36 +1,50 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ServerPlan extends Model
+/**
+ * Server provisioning configuration — the technical blueprint that the
+ * Pelican panel needs in order to spin up a game server.
+ *
+ * Strictly TECHNICAL. Commercial concepts (price, currency, billing cycle,
+ * trial, marketing description) live in the external shop and Stripe ; this
+ * model knows none of them. A configuration becomes purchasable when it is
+ * attached to a Shop via the `shop_server_configuration` pivot (Phase 2).
+ *
+ * Identification :
+ *  - `internal_name` : stable admin slug, used in name_template placeholders
+ *    and in outbound webhook payloads.
+ *  - `name_template` : Twig-like template applied at provision time to derive
+ *    the final `Server.name`. Default placeholders : `{user.username}` and
+ *    `{configuration.internal_name}`.
+ *
+ * Pelican specs (`ram`, `cpu`, `disk`, `swap_mb`, `io_weight`, `cpu_pinning`)
+ * are technical : they are pushed to Pelican `createServer`/`updateServerBuild`
+ * verbatim. They reflect what the panel allocates, not what the shop
+ * advertises.
+ */
+class ServerConfiguration extends Model
 {
+    use HasFactory;
+
     /**
-     * The attributes that are mass assignable.
-     *
      * @var list<string>
      */
     protected $fillable = [
-        // Mirror Shop business
-        'shop_plan_id',
-        'shop_plan_slug',
-        'shop_plan_type',
-        'name',
-        'description',
-        'is_active',
-        'price_cents',
-        'currency',
-        'interval',
-        'interval_count',
-        'has_trial',
-        'trial_interval',
-        'trial_interval_count',
-        'stripe_price_id',
+        // Identity (technical-only)
+        'internal_name',
+        'technical_description',
+        'name_template',
 
-        // Mirror Shop Pelican specs
+        // Pelican resource limits
         'ram',
         'cpu',
         'disk',
@@ -38,13 +52,15 @@ class ServerPlan extends Model
         'io_weight',
         'cpu_pinning',
 
-        // Peregrine technical config
+        // Pelican egg / nest / node selection
         'egg_id',
         'nest_id',
         'node_id',
         'default_node_id',
         'allowed_node_ids',
         'auto_deploy',
+
+        // Pelican runtime
         'docker_image',
         'port_count',
         'env_var_mapping',
@@ -52,64 +68,23 @@ class ServerPlan extends Model
         'start_on_completion',
         'skip_install_script',
         'dedicated_ip',
+
+        // Pelican feature limits
         'feature_limits_databases',
         'feature_limits_backups',
         'feature_limits_allocations',
-
-        // Stripe Checkout config (Shop-owned)
-        'checkout_custom_fields',
-
-        // Sync tracking
-        'last_shop_synced_at',
-    ];
-
-    /**
-     * Champs Shop-owned, jamais modifiés par l'admin Peregrine.
-     * Utilisés par PlanSyncController::upsert() pour ne réécrire que les
-     * champs business à chaque push, en préservant la config technique
-     * Peregrine déjà saisie par l'admin.
-     *
-     * @var list<string>
-     */
-    public const SHOP_OWNED_FIELDS = [
-        'shop_plan_id',
-        'shop_plan_slug',
-        'shop_plan_type',
-        'name',
-        'description',
-        'is_active',
-        'price_cents',
-        'currency',
-        'interval',
-        'interval_count',
-        'has_trial',
-        'trial_interval',
-        'trial_interval_count',
-        'stripe_price_id',
-        'ram',
-        'cpu',
-        'disk',
-        'swap_mb',
-        'io_weight',
-        'cpu_pinning',
-        'checkout_custom_fields',
     ];
 
     protected function casts(): array
     {
         return [
-            'shop_plan_id' => 'integer',
-            'price_cents' => 'integer',
-            'interval_count' => 'integer',
-            'has_trial' => 'boolean',
-            'trial_interval_count' => 'integer',
-            'egg_id' => 'integer',
-            'nest_id' => 'integer',
             'ram' => 'integer',
             'cpu' => 'integer',
             'disk' => 'integer',
             'swap_mb' => 'integer',
             'io_weight' => 'integer',
+            'egg_id' => 'integer',
+            'nest_id' => 'integer',
             'node_id' => 'integer',
             'default_node_id' => 'integer',
             'allowed_node_ids' => 'array',
@@ -123,9 +98,6 @@ class ServerPlan extends Model
             'feature_limits_databases' => 'integer',
             'feature_limits_backups' => 'integer',
             'feature_limits_allocations' => 'integer',
-            'checkout_custom_fields' => 'array',
-            'is_active' => 'boolean',
-            'last_shop_synced_at' => 'datetime',
         ];
     }
 
@@ -165,16 +137,15 @@ class ServerPlan extends Model
     }
 
     /**
-     * Un plan est "ready to provision" quand :
-     *  - egg_id est défini ET
-     *  - soit node_id défini (legacy, déploiement sur un node spécifique),
-     *  - soit default_node_id défini (auto_deploy off + node par défaut choisi
-     *    dans le formulaire admin),
-     *  - soit auto_deploy actif AVEC au moins un allowed_node_ids.
+     * A configuration is "ready to provision" when :
+     *  - egg_id is set, AND
+     *  - either node_id is set (legacy : fixed-node deployment), OR
+     *  - default_node_id is set (auto_deploy off + admin-picked default), OR
+     *  - auto_deploy is on AND allowed_node_ids has at least one entry.
      *
-     * Doit rester aligné avec ProvisionServerJob::pickNode() qui résout dans
-     * le même ordre — sinon le plan est rejeté en "needs_config" alors que
-     * le job aurait su trouver un node.
+     * Must stay aligned with `ProvisionServerJob::pickNode()` — same
+     * resolution order. Drift would mark a configuration as "needs_config"
+     * in Filament even though the job would have picked a node.
      */
     public function isReadyToProvision(): bool
     {
@@ -198,29 +169,15 @@ class ServerPlan extends Model
     }
 
     /**
-     * Vrai si le plan a été créé par un push depuis le Shop (vs créé
-     * manuellement en standalone — futur cas d'usage).
-     */
-    public function isFromShop(): bool
-    {
-        return $this->shop_plan_id !== null;
-    }
-
-    /**
-     * Statut de sync agrégé pour l'indicateur visuel Filament.
-     *  - 'inactive'    : is_active = false (désactivé côté Shop)
-     *  - 'sync_error'  : dernière entrée bridge_sync_logs failed
-     *  - 'ready'       : isReadyToProvision()
-     *  - 'needs_config': egg/node manquants, à configurer côté Peregrine
+     * Aggregate sync status for the Filament admin badge.
+     *  - 'sync_error'  : the most recent BridgeSyncLog entry has response_status >= 400.
+     *  - 'ready'       : isReadyToProvision().
+     *  - 'needs_config': egg/node missing — admin action required.
      */
     public function syncStatus(): string
     {
-        if (! $this->is_active) {
-            return 'inactive';
-        }
-
         $lastLog = BridgeSyncLog::query()
-            ->where('server_plan_id', $this->id)
+            ->where('server_configuration_id', $this->id)
             ->orderByDesc('attempted_at')
             ->first();
 
@@ -233,23 +190,29 @@ class ServerPlan extends Model
 
     /**
      * Pelican removed the standalone /api/application/nests endpoint — nests
-     * are now only reachable through eggs. We mirror that semantics here :
-     * the admin only picks an egg (in Filament or via the Bridge), and the
-     * nest_id is auto-derived from that egg whenever the plan is saved.
+     * are reachable through eggs only. We mirror that semantics here :
+     * admins pick an egg (Filament or via the catalog import flow), and the
+     * `nest_id` is auto-derived whenever the configuration is saved.
      *
      * Defense in depth : works for ANY save path (Filament edit, artisan
-     * tinker, Bridge upsert if Shop ever pushes egg_id, factory, seeder).
+     * tinker, factory, seeder, future API import).
      */
     protected static function booted(): void
     {
-        static::saving(function (self $plan): void {
-            if ($plan->egg_id !== null && $plan->isDirty('egg_id')) {
-                $plan->nest_id = Egg::query()->whereKey($plan->egg_id)->value('nest_id');
+        static::saving(function (self $configuration): void {
+            if ($configuration->egg_id !== null && $configuration->isDirty('egg_id')) {
+                $configuration->nest_id = Egg::query()
+                    ->whereKey($configuration->egg_id)
+                    ->value('nest_id');
             }
-            if ($plan->egg_id === null) {
-                $plan->nest_id = null;
+            if ($configuration->egg_id === null) {
+                $configuration->nest_id = null;
             }
         });
+
+        // Outbound catalog webhooks (Phase 3). The observer fans out to
+        // authorised shops + their subscribed endpoints.
+        static::observe(\App\Observers\ServerConfigurationObserver::class);
     }
 
     public function egg(): BelongsTo
@@ -279,6 +242,22 @@ class ServerPlan extends Model
 
     public function servers(): HasMany
     {
-        return $this->hasMany(Server::class, 'plan_id');
+        return $this->hasMany(Server::class, 'server_configuration_id');
+    }
+
+    /**
+     * Shops authorised to resell this configuration via the
+     * `shop_server_configuration` pivot. A configuration with no shops
+     * attached is admin-only (an orphan template) — invisible from the
+     * public API surface.
+     */
+    public function shops(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Shop::class,
+            'shop_server_configuration',
+        )
+            ->withPivot(['shop_external_id', 'is_visible', 'sort_order'])
+            ->withTimestamps();
     }
 }
