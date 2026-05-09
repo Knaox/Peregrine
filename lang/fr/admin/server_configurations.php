@@ -30,6 +30,8 @@ return [
         'docker_override' => 'Image Docker (override)',
         'port_count' => 'Nombre de ports consécutifs à allouer',
         'env_mapping' => 'Mapping des variables d\'environnement',
+        'resource_template' => 'Template de ressources',
+        'resource_template_preview' => 'Aperçu des specs',
         'enable_oom' => 'Activer OOM Killer',
         'start_on_install' => 'Démarrer automatiquement après l\'installation',
         'skip_install' => 'Ignorer le script d\'installation',
@@ -47,8 +49,12 @@ return [
     ],
     'placeholders' => [
         'docker_default' => 'Laisser vide pour utiliser l\'image par défaut de l\'egg',
+        'resource_template' => 'Sélectionnez un template…',
     ],
     'helpers' => [
+        'resource_template' => 'Bundle nommé de specs Pelican (RAM, CPU, disque, …). Plusieurs configurations peuvent partager le même template — éditer le template propage la nouvelle valeur partout. Gérer les templates depuis Servers → Templates.',
+        'resource_template_empty' => 'Sélectionnez un template ci-dessus pour voir ses specs.',
+        'resource_template_not_found' => 'Template introuvable.',
         'internal_name' => 'Identifiant admin stable. Apparaît dans les URLs internes et les payloads webhook sortants. À garder court et slug-safe.',
         'name_template' => 'Template Twig-like appliqué au provisioning pour générer le nom du serveur. Placeholders : {user.username}, {configuration.internal_name}.',
         'technical_description' => 'Notes admin libres. Jamais exposées via l\'API publique.',

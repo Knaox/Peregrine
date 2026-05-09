@@ -38,19 +38,26 @@ class ServerConfiguration extends Model
     /**
      * @var list<string>
      */
+    use \App\Models\Concerns\HasResourceTemplate;
+
     protected $fillable = [
         // Identity (technical-only)
         'internal_name',
         'technical_description',
         'name_template',
 
-        // Pelican resource limits
-        'ram',
-        'cpu',
-        'disk',
-        'swap_mb',
-        'io_weight',
-        'cpu_pinning',
+        // Pelican resource limits — extracted into a reusable
+        // `ResourceTemplate`. `ram`, `cpu`, `disk`, `swap_mb`, `io_weight`,
+        // `cpu_pinning` are no longer columns here ; they are read via
+        // the `resourceTemplate` relation and surfaced through accessors
+        // so the API + webhook payloads keep their pre-extraction shape.
+        'resource_template_id',
+        'ram',          // legacy compat — rerouted to ResourceTemplate
+        'cpu',          // legacy compat
+        'disk',         // legacy compat
+        'swap_mb',      // legacy compat
+        'io_weight',    // legacy compat
+        'cpu_pinning',  // legacy compat
 
         // Pelican egg / nest / node selection
         'egg_id',
@@ -75,14 +82,28 @@ class ServerConfiguration extends Model
         'feature_limits_allocations',
     ];
 
+    /**
+     * Attributes computed from the linked `ResourceTemplate`. Listed in
+     * `$appends` so they survive `toArray()` / `toJson()` calls — this
+     * is what keeps the API + outbound webhook payloads byte-identical
+     * to the pre-extraction shape (consumers like SaaSykit see the same
+     * top-level keys as before).
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'ram',
+        'cpu',
+        'disk',
+        'swap_mb',
+        'io_weight',
+        'cpu_pinning',
+    ];
+
     protected function casts(): array
     {
         return [
-            'ram' => 'integer',
-            'cpu' => 'integer',
-            'disk' => 'integer',
-            'swap_mb' => 'integer',
-            'io_weight' => 'integer',
+            'resource_template_id' => 'integer',
             'egg_id' => 'integer',
             'nest_id' => 'integer',
             'node_id' => 'integer',
@@ -100,6 +121,12 @@ class ServerConfiguration extends Model
             'feature_limits_allocations' => 'integer',
         ];
     }
+
+    // Resource specs (ram / cpu / disk / swap_mb / io_weight /
+    // cpu_pinning) live in `App\Models\Concerns\HasResourceTemplate`
+    // so the model stays under the 300-line file rule. The trait
+    // exposes the BelongsTo, the read-only accessors, and the
+    // legacy-write compat path.
 
     /**
      * Number of consecutive free ports the allocator must reserve at
@@ -198,6 +225,13 @@ class ServerConfiguration extends Model
             if ($configuration->egg_id === null) {
                 $configuration->nest_id = null;
             }
+
+            // Persist the bound ResourceTemplate first when the legacy
+            // compat write path mutated specs in memory. The trait
+            // saves the template (fresh or dirty) and back-fills
+            // `resource_template_id` so the parent's SQL commits the
+            // correct FK on the same save() call.
+            $configuration->persistResourceTemplateBeforeSave();
         });
 
         // Outbound catalog webhooks (Phase 3). The observer fans out to

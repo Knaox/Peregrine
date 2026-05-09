@@ -6,6 +6,7 @@ namespace Database\Factories;
 
 use App\Models\Egg;
 use App\Models\Node;
+use App\Models\ResourceTemplate;
 use App\Models\ServerConfiguration;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -31,12 +32,11 @@ final class ServerConfigurationFactory extends Factory
             'internal_name' => $internal,
             'technical_description' => null,
             'name_template' => '{user.username}-{configuration.internal_name}',
-            'ram' => 2048,
-            'cpu' => 100,
-            'disk' => 10240,
-            'swap_mb' => 0,
-            'io_weight' => 500,
-            'cpu_pinning' => null,
+            // Specs now live on ResourceTemplate. The factory creates a
+            // dedicated template per config by default to keep tests
+            // independent — pass `forTemplate($tpl)` to share an
+            // existing template across several configurations.
+            'resource_template_id' => fn () => ResourceTemplate::factory()->create()->id,
             'egg_id' => null,
             'nest_id' => null,
             'node_id' => null,
@@ -54,6 +54,16 @@ final class ServerConfigurationFactory extends Factory
             'feature_limits_backups' => 3,
             'feature_limits_allocations' => 1,
         ];
+    }
+
+    /**
+     * Reuse an existing ResourceTemplate (or any falsy → none attached).
+     */
+    public function forTemplate(?ResourceTemplate $template): static
+    {
+        return $this->state(fn () => [
+            'resource_template_id' => $template?->id,
+        ]);
     }
 
     /**
@@ -98,4 +108,10 @@ final class ServerConfigurationFactory extends Factory
             'node_id' => null,
         ]);
     }
+
+    // Legacy specs (`ram`, `cpu`, `disk`, `swap_mb`, `io_weight`,
+    // `cpu_pinning`) passed by tests as `factory()->create(['ram' =>
+    // 4096])` are routed to the bound ResourceTemplate by the
+    // `HasResourceTemplate` trait's setAttribute() override on the
+    // parent model. Nothing to intercept here.
 }

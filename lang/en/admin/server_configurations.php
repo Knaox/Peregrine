@@ -30,6 +30,8 @@ return [
         'docker_override' => 'Docker image override',
         'port_count' => 'Number of consecutive ports to allocate',
         'env_mapping' => 'Environment variable mapping',
+        'resource_template' => 'Resource template',
+        'resource_template_preview' => 'Specs preview',
         'enable_oom' => 'Enable OOM Killer',
         'start_on_install' => 'Start automatically after install',
         'skip_install' => 'Skip install script',
@@ -47,8 +49,12 @@ return [
     ],
     'placeholders' => [
         'docker_default' => 'Leave empty to use the egg default',
+        'resource_template' => 'Pick a template…',
     ],
     'helpers' => [
+        'resource_template' => 'Named bundle of Pelican specs (RAM, CPU, disk, …). Multiple configurations can share the same template — editing the template propagates the change everywhere. Manage templates from Servers → Templates.',
+        'resource_template_empty' => 'Pick a template above to preview its specs.',
+        'resource_template_not_found' => 'Template not found.',
         'internal_name' => 'Stable admin slug. Surfaces in internal URLs and outbound webhook payloads. Keep it short and slug-safe.',
         'name_template' => 'Twig-like template applied at provisioning time to derive the server name. Placeholders: {user.username}, {configuration.internal_name}.',
         'technical_description' => 'Free-form admin notes. Never exposed via the public API.',

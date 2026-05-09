@@ -72,52 +72,66 @@ final class ServerConfigurationFormSchema
         ];
     }
 
-    /** @return array<int, mixed> */
+    /**
+     * Replaces the legacy inline-specs section. The form now exposes a
+     * Select on `resource_template_id`, populated from the
+     * `ResourceTemplate` table. A read-only Placeholder mirrors the
+     * picked template's specs so the admin sees what they're binding
+     * without leaving the form.
+     *
+     * @return array<int, mixed>
+     */
     private static function resourceFields(): array
     {
         return [
-            TextInput::make('ram')
-                ->label(__('admin/server_configurations.fields.ram'))
-                ->numeric()
-                ->minValue(0)
+            \Filament\Forms\Components\Select::make('resource_template_id')
+                ->label(__('admin/server_configurations.fields.resource_template'))
+                ->helperText(__('admin/server_configurations.helpers.resource_template'))
+                ->relationship('resourceTemplate', 'name')
+                ->searchable()
+                ->preload()
+                ->live()
                 ->required()
-                ->suffix('MB'),
+                ->placeholder(__('admin/server_configurations.placeholders.resource_template')),
 
-            TextInput::make('cpu')
-                ->label(__('admin/server_configurations.fields.cpu'))
-                ->numeric()
-                ->minValue(0)
-                ->required()
-                ->suffix('%'),
-
-            TextInput::make('disk')
-                ->label(__('admin/server_configurations.fields.disk'))
-                ->numeric()
-                ->minValue(0)
-                ->required()
-                ->suffix('MB'),
-
-            TextInput::make('swap_mb')
-                ->label(__('admin/server_configurations.fields.swap'))
-                ->numeric()
-                ->minValue(-1)
-                ->default(0)
-                ->suffix('MB'),
-
-            TextInput::make('io_weight')
-                ->label(__('admin/server_configurations.fields.io_weight'))
-                ->numeric()
-                ->minValue(10)
-                ->maxValue(1000)
-                ->default(500)
-                ->helperText(__('admin/server_configurations.helpers.io_weight')),
-
-            TextInput::make('cpu_pinning')
-                ->label(__('admin/server_configurations.fields.cpu_pinning'))
-                ->placeholder('e.g. 0-3')
-                ->helperText(__('admin/server_configurations.helpers.cpu_pinning'))
-                ->maxLength(64),
+            \Filament\Forms\Components\Placeholder::make('resource_template_preview')
+                ->label(__('admin/server_configurations.fields.resource_template_preview'))
+                ->content(fn (\Filament\Schemas\Components\Utilities\Get $get) => self::renderTemplatePreview($get('resource_template_id'))),
         ];
+    }
+
+    /**
+     * Read-only preview of the picked ResourceTemplate's specs. Empty
+     * placeholder when nothing is picked yet.
+     */
+    private static function renderTemplatePreview(mixed $templateId): \Illuminate\Support\HtmlString
+    {
+        if (! $templateId) {
+            return new \Illuminate\Support\HtmlString(
+                '<em class="opacity-60">'.e(__('admin/server_configurations.helpers.resource_template_empty')).'</em>'
+            );
+        }
+        $tpl = \App\Models\ResourceTemplate::find((int) $templateId);
+        if ($tpl === null) {
+            return new \Illuminate\Support\HtmlString(
+                '<em class="opacity-60">'.e(__('admin/server_configurations.helpers.resource_template_not_found')).'</em>'
+            );
+        }
+        $rows = [
+            ['RAM', number_format((int) $tpl->ram).' MB'],
+            ['CPU', $tpl->cpu.' %'],
+            ['Disk', number_format((int) $tpl->disk).' MB'],
+            ['Swap', number_format((int) ($tpl->swap_mb ?? 0)).' MB'],
+            ['I/O weight', (string) ($tpl->io_weight ?? 500)],
+            ['CPU pinning', $tpl->cpu_pinning ?: '—'],
+        ];
+        $html = '<dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">';
+        foreach ($rows as [$k, $v]) {
+            $html .= '<dt class="opacity-60">'.e($k).'</dt><dd>'.e($v).'</dd>';
+        }
+        $html .= '</dl>';
+
+        return new \Illuminate\Support\HtmlString($html);
     }
 
     /** @return array<int, mixed> */
