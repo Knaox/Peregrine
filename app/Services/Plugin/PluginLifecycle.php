@@ -3,6 +3,7 @@
 namespace App\Services\Plugin;
 
 use App\Models\Plugin;
+use App\Support\PhpProcessUser;
 use Illuminate\Database\QueryException;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Artisan;
@@ -95,11 +96,13 @@ class PluginLifecycle
         if ($path && $this->files->isDirectory($path)) {
             $deleted = $this->files->deleteDirectory($path);
             if (! $deleted || $this->files->isDirectory($path)) {
+                $owner = PhpProcessUser::ownerSpec();
                 throw new \RuntimeException(
                     "Failed to remove plugin directory at {$path}. "
                     ."The DB record was preserved so the plugin still appears in the admin list — retry once "
-                    ."the underlying issue is fixed (typically file ownership : "
-                    ."`chown -R \$(id -un):\$(id -gn) {$path}`)."
+                    ."the underlying issue is fixed (typically file ownership : the PHP-FPM/web process runs as "
+                    ."`{$owner}` but the files belong to a different user, so unlink() fails ; run "
+                    ."`sudo chown -R {$owner} {$path}`)."
                 );
             }
         }
