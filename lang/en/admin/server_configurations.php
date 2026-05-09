@@ -98,6 +98,14 @@ return [
         'notification_title' => 'Configuration duplicated',
         'notification_body' => 'Copy ":name" was created. You\'re being redirected to its edit page.',
     ],
+    'duplicate_bulk' => [
+        'label' => 'Duplicate selection',
+        'modal_heading' => 'Duplicate selected configurations?',
+        'modal_description' => ':count configuration(s) will be cloned. Each copy receives a fresh suffixed `internal_name` (`-copy`, `-copy-2`, …). Copies are invisible to every shop until explicitly authorized.',
+        'submit' => 'Yes, duplicate selection',
+        'notification_title' => 'Configurations duplicated',
+        'notification_body' => ':count copy/copies created successfully.',
+    ],
     'delete_bulk' => [
         'modal_heading' => 'Delete selected configurations?',
         'count' => 'Deleting :count configuration(s).',

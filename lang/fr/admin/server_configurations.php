@@ -98,6 +98,14 @@ return [
         'notification_title' => 'Configuration dupliquée',
         'notification_body' => 'La copie « :name » a été créée. Vous êtes redirigé sur sa page d\'édition.',
     ],
+    'duplicate_bulk' => [
+        'label' => 'Dupliquer la sélection',
+        'modal_heading' => 'Dupliquer les configurations sélectionnées ?',
+        'modal_description' => ':count configuration(s) seront clonées. Chaque copie reçoit un nouveau `internal_name` suffixé (`-copy`, `-copy-2`, …). Les copies sont invisibles pour toutes les boutiques jusqu\'à autorisation explicite.',
+        'submit' => 'Oui, dupliquer la sélection',
+        'notification_title' => 'Configurations dupliquées',
+        'notification_body' => ':count copie(s) créée(s) avec succès.',
+    ],
     'delete_bulk' => [
         'modal_heading' => 'Supprimer les configurations sélectionnées ?',
         'count' => 'Suppression de :count configuration(s).',

@@ -8,6 +8,7 @@ use App\Actions\Admin\DuplicateServerConfigurationAction;
 use App\Filament\Resources\ServerConfigurationResource;
 use App\Models\ServerConfiguration;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -175,6 +176,7 @@ final class ServerConfigurationTable
     {
         return [
             BulkActionGroup::make([
+                self::duplicateBulkAction(),
                 DeleteBulkAction::make()
                     ->requiresConfirmation()
                     ->modalHeading(__('admin/server_configurations.delete_bulk.modal_heading'))
@@ -191,5 +193,44 @@ final class ServerConfigurationTable
                     ->modalSubmitActionLabel(__('admin/server_configurations.delete_bulk.submit')),
             ]),
         ];
+    }
+
+    /**
+     * Bulk duplicate. Each selected configuration is cloned independently
+     * via the same `DuplicateServerConfigurationAction` used by the row
+     * action, so the naming logic (`-copy`, `-copy-2`, …) stays consistent
+     * with what an admin gets when duplicating one row at a time.
+     *
+     * Pivots are NOT carried over (cohérent avec la duplication unitaire) :
+     * each clone is invisible to every shop until explicitly authorized.
+     */
+    private static function duplicateBulkAction(): BulkAction
+    {
+        return BulkAction::make('duplicate')
+            ->label(__('admin/server_configurations.duplicate_bulk.label'))
+            ->icon('heroicon-o-document-duplicate')
+            ->color('gray')
+            ->requiresConfirmation()
+            ->modalHeading(__('admin/server_configurations.duplicate_bulk.modal_heading'))
+            ->modalDescription(fn ($records): string => __(
+                'admin/server_configurations.duplicate_bulk.modal_description',
+                ['count' => $records->count()]
+            ))
+            ->modalSubmitActionLabel(__('admin/server_configurations.duplicate_bulk.submit'))
+            ->action(function ($records) {
+                $duplicator = app(DuplicateServerConfigurationAction::class);
+                $count = 0;
+                foreach ($records as $record) {
+                    $duplicator($record);
+                    $count++;
+                }
+
+                Notification::make()
+                    ->title(__('admin/server_configurations.duplicate_bulk.notification_title'))
+                    ->body(__('admin/server_configurations.duplicate_bulk.notification_body', ['count' => $count]))
+                    ->success()
+                    ->send();
+            })
+            ->deselectRecordsAfterCompletion();
     }
 }

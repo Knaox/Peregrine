@@ -116,4 +116,25 @@ class DuplicateServerConfigurationActionTest extends TestCase
 
         $this->assertSame(0, $clone->servers()->count());
     }
+
+    public function test_bulk_duplicate_clones_all_selected_with_distinct_internal_names(): void
+    {
+        $sources = collect([
+            ServerConfiguration::factory()->create(['internal_name' => 'mc-tiny']),
+            ServerConfiguration::factory()->create(['internal_name' => 'mc-medium']),
+            ServerConfiguration::factory()->create(['internal_name' => 'mc-large']),
+        ]);
+
+        $svc = $this->action();
+        $clones = $sources->map(fn ($s) => $svc($s));
+
+        $this->assertSame('mc-tiny-copy', $clones[0]->internal_name);
+        $this->assertSame('mc-medium-copy', $clones[1]->internal_name);
+        $this->assertSame('mc-large-copy', $clones[2]->internal_name);
+
+        // Source rows untouched
+        $this->assertSame('mc-tiny', $sources[0]->fresh()->internal_name);
+        $this->assertSame('mc-medium', $sources[1]->fresh()->internal_name);
+        $this->assertSame('mc-large', $sources[2]->fresh()->internal_name);
+    }
 }
