@@ -263,7 +263,9 @@ class StripeWebhookTest extends TestCase
 
         $shop = Shop::factory()->create();
         $configuration = $this->seedConfiguration();
-        // NO pivot row attaching this configuration to the shop.
+        // Auto-pivot attached the new configuration to every shop ;
+        // explicitly detach to reproduce the "not authorised" scenario.
+        $shop->serverConfigurations()->detach($configuration->id);
 
         $event = $this->makeCheckoutCompletedEvent(
             configurationId: $configuration->id,

@@ -54,6 +54,11 @@ class ApiV1Test extends TestCase
         $otherShop = Shop::factory()->create();
         (new AuthorizeConfigurationForShopAction())($otherShop, $other);
 
+        // Auto-pivot would attach `$other` to `$shop` too (every new
+        // config lands in every existing shop). Detach to restore the
+        // scoped scenario this test pins.
+        $shop->serverConfigurations()->detach($other->id);
+
         $response = $this->withToken($token)->getJson('/api/v1/configurations');
         $response->assertOk();
 
@@ -66,6 +71,9 @@ class ApiV1Test extends TestCase
     {
         [$shop, $token] = $this->seedShopWithKey(['configurations:read']);
         $orphan = $this->configuration();
+        // Auto-pivot attached the new config to every shop — detach to
+        // reproduce the orphan/not-in-pivot scenario.
+        $shop->serverConfigurations()->detach($orphan->id);
 
         $this->withToken($token)
             ->getJson('/api/v1/configurations/'.$orphan->id)
@@ -105,10 +113,13 @@ class ApiV1Test extends TestCase
 
     public function test_orders_show_returns_404_for_other_shops_order(): void
     {
-        [, $token] = $this->seedShopWithKey(['orders:read']);
+        [$shop, $token] = $this->seedShopWithKey(['orders:read']);
         $config = $this->configuration();
         $otherShop = Shop::factory()->create();
         (new AuthorizeConfigurationForShopAction())($otherShop, $config);
+        // Auto-pivot attached the config to OUR shop too — detach to
+        // restore the "config belongs only to other shop" scenario.
+        $shop->serverConfigurations()->detach($config->id);
         $user = User::factory()->create();
         Server::create([
             'user_id' => $user->id,

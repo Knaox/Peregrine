@@ -8,6 +8,9 @@ return [
             'settings' => 'Paramètres',
         ],
         'player_panel' => 'Panneau joueur',
+        'shops' => [
+            'cluster' => 'Boutiques',
+        ],
     ],
     'common' => [
         'save' => 'Enregistrer',

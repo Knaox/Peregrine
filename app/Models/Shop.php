@@ -83,4 +83,12 @@ class Shop extends Model
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
     }
+
+    protected static function booted(): void
+    {
+        // Auto-pivots a freshly-created shop into every existing
+        // configuration so it sees the full catalog by default. See
+        // App\Observers\ShopObserver for rationale.
+        static::observe(\App\Observers\ShopObserver::class);
+    }
 }

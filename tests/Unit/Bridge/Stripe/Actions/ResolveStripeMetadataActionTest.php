@@ -65,7 +65,10 @@ class ResolveStripeMetadataActionTest extends TestCase
     {
         $shop = Shop::factory()->create();
         $config = ServerConfiguration::create($this->validConfigAttributes());
-        // No pivot row.
+        // Auto-pivot attached the new config to every existing shop on
+        // creation — explicitly detach to reproduce the "not authorised"
+        // scenario this test pins.
+        $shop->serverConfigurations()->detach($config->id);
 
         try {
             (new ResolveStripeMetadataAction())([

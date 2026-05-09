@@ -8,6 +8,9 @@ return [
             'settings' => 'Settings',
         ],
         'player_panel' => 'Player panel',
+        'shops' => [
+            'cluster' => 'Shops',
+        ],
     ],
     'common' => [
         'save' => 'Save',

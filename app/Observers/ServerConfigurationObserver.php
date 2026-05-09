@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
+use App\Actions\Shops\AuthorizeConfigurationForShopAction;
 use App\Actions\Webhooks\EmitWebhookEventAction;
 use App\Models\ServerConfiguration;
+use App\Models\Shop;
 use App\Webhooks\WebhookEventTypes;
 
 /**
@@ -22,10 +24,23 @@ final class ServerConfigurationObserver
 {
     public function __construct(
         private readonly EmitWebhookEventAction $emitter,
+        private readonly AuthorizeConfigurationForShopAction $authorize,
     ) {}
 
     public function created(ServerConfiguration $configuration): void
     {
+        // Auto-pivot every freshly-created configuration into every
+        // existing shop with default visibility. Admins keep the
+        // freedom to toggle `is_visible=false` on individual pivots
+        // afterwards, but the default is "available everywhere"
+        // (mirrors the implicit shop-equality assumption when the
+        // catalog is single-tenant). Idempotent — re-attaching is a
+        // no-op thanks to the UNIQUE(shop_id, configuration_id)
+        // constraint on the pivot.
+        foreach (Shop::query()->get() as $shop) {
+            ($this->authorize)($shop, $configuration);
+        }
+
         ($this->emitter)(
             WebhookEventTypes::CONFIGURATION_CREATED,
             $configuration,
