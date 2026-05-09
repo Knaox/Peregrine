@@ -4,13 +4,13 @@
         {
             "id": "invitations",
             "name": "Server Invitations",
-            "version": "1.3.1",
-            "description": "Invite users to your servers by email with granular Pelican permissions. Edit permissions of active subusers and pending invitations. Ships with Peregrine by default. Admin-aware — panel admins can manage invitations / subusers on any server. Other plugins can register their own permission groups via the shared PermissionRegistry singleton with an optional `availableForServer` filter so they can hide their group on servers where it doesn't apply. Includes : (1) Resend button on pending invitations — token rotates on each resend so older mails are invalidated, throttled at 5 / min / user ; (2) plugin-permission persistence fix — modifications including plugin perms (modpack.*, arkmods.*, …) correctly land in the local pivot even when Pelican rejects unknown prefixes ; (3) full plugin-namespaced i18n (frontend strings + backend `__('invitations::messages.*')` + new `lang/{en,fr}/messages.php` files) — no more leaks into the Peregrine core bundle ; (4) `auto_activate_on_setup` manifest flag so the setup wizard activates the plugin without the core hard-coding any plugin id.",
+            "version": "1.3.2",
+            "description": "Invite users to your servers by email with granular Pelican permissions. Edit permissions of active subusers and pending invitations. Ships with Peregrine by default. Admin-aware — panel admins can manage invitations / subusers on any server. Other plugins can register their own permission groups via the shared PermissionRegistry singleton with an optional `availableForServer` filter so they can hide their group on servers where it doesn't apply. Includes : (1) Resend button on pending invitations — token rotates on each resend so older mails are invalidated, throttled at 5 / min / user ; (2) plugin-permission persistence fix — modifications including plugin perms (modpack.*, arkmods.*, …) correctly land in the local pivot even when Pelican rejects unknown prefixes ; (3) full plugin-namespaced i18n (frontend strings + backend `__('invitations::messages.*')` + new `lang/{en,fr}/messages.php` files) — no more leaks into the Peregrine core bundle ; (4) `auto_activate_on_setup` manifest flag so the setup wizard activates the plugin without the core hard-coding any plugin id ; (5) v1.3.2 — invitation emails now resolve the brand name from SettingsService (canonical `app_name` set in /admin/settings) instead of the APP_NAME env var, fixing the literal \"LARAVEL\" header on Docker installs whose .env was never resynchronised after the wizard.",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.4",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.4/invitations-1.3.1.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.6/invitations-1.3.2.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/invitations",
             "tags": ["users", "permissions", "collaboration", "default"]
         },
