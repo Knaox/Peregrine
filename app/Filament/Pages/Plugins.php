@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Pages\Concerns\HandlesPluginActions;
+use App\Filament\Pages\Concerns\HandlesPluginUpload;
 use App\Models\Plugin;
 use App\Services\MarketplaceService;
 use App\Services\PluginManager;
@@ -19,6 +21,8 @@ use UnitEnum;
 
 class Plugins extends Page implements HasForms
 {
+    use HandlesPluginActions;
+    use HandlesPluginUpload;
     use InteractsWithForms;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-puzzle-piece';
@@ -66,8 +70,8 @@ class Plugins extends Page implements HasForms
         $installed = app(PluginManager::class)->allWithStatus();
 
         // Annotate each installed plugin with marketplace upgrade info +
-        // an `official` flag derived either from the registry entry or from
-        // the plugin's own author field (covers the "marketplace
+        // an `official` flag derived either from the registry entry or
+        // from the plugin's own author field (covers the "marketplace
         // unreachable" case).
         try {
             $registry = app(MarketplaceService::class)->listWithStatus();
@@ -76,10 +80,8 @@ class Plugins extends Page implements HasForms
             foreach ($installed as &$p) {
                 $entry = $registryById->get($p['id']);
                 $p['latest_version'] = $entry['version'] ?? null;
-                $p['update_available'] = $entry !== null
-                    && !empty($entry['update_available']);
-                $p['official'] = !empty($entry['official'])
-                    || ($p['author'] ?? null) === 'Peregrine Team';
+                $p['update_available'] = $entry !== null && ! empty($entry['update_available']);
+                $p['official'] = ! empty($entry['official']) || ($p['author'] ?? null) === 'Peregrine Team';
             }
             unset($p);
         } catch (\Throwable) {
@@ -92,28 +94,6 @@ class Plugins extends Page implements HasForms
         $this->plugins = $installed;
     }
 
-    public function updatePlugin(string $id): void
-    {
-        try {
-            app(MarketplaceService::class)->update($id);
-
-            Notification::make()
-                ->title('Plugin updated')
-                ->body("'{$id}' has been upgraded to the latest version.")
-                ->success()
-                ->send();
-        } catch (\Throwable $e) {
-            Notification::make()
-                ->title('Update failed')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-
-        $this->loadPlugins();
-        $this->loadMarketplace();
-    }
-
     public function loadMarketplace(): void
     {
         if (! config('panel.marketplace.enabled', true)) {
@@ -121,84 +101,41 @@ class Plugins extends Page implements HasForms
         }
 
         try {
-            $marketplace = app(MarketplaceService::class);
-            $this->marketplacePlugins = $marketplace->listWithStatus();
+            $this->marketplacePlugins = app(MarketplaceService::class)->listWithStatus();
         } catch (\Throwable) {
             $this->marketplacePlugins = [];
         }
     }
 
-    public function refreshMarketplace(): void
+    /**
+     * Aggregate counters used by the page header.
+     *
+     * @return array{installed: int, active: int, updates: int, marketplace: int}
+     */
+    public function getStats(): array
     {
-        try {
-            app(MarketplaceService::class)->clearCache();
-        } catch (\Throwable) {
-            // noop — cache store unavailable is non-fatal.
-        }
+        $installed = count($this->plugins);
+        $active = collect($this->plugins)->where('is_active', true)->count();
+        $updates = collect($this->plugins)->where('update_available', true)->count();
+        $marketplace = count($this->marketplacePlugins);
 
-        $this->loadMarketplace();
-
-        Notification::make()
-            ->title('Marketplace refreshed')
-            ->body(count($this->marketplacePlugins) . ' plugin(s) listed.')
-            ->success()
-            ->send();
+        return compact('installed', 'active', 'updates', 'marketplace');
     }
 
-    public function activatePlugin(string $id): void
+    /**
+     * Distinct category tags across the marketplace listing — used to
+     * render the category filter chips on the marketplace tab.
+     *
+     * @return array<int, string>
+     */
+    public function getCategories(): array
     {
-        try {
-            app(PluginManager::class)->activate($id);
-
-            Notification::make()
-                ->title('Plugin activated')
-                ->body("'{$id}' has been activated successfully.")
-                ->success()
-                ->send();
-        } catch (\Throwable $e) {
-            Notification::make()
-                ->title('Activation failed')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-
-        $this->loadPlugins();
-    }
-
-    public function uninstallPlugin(string $id): void
-    {
-        try {
-            app(PluginManager::class)->uninstall($id);
-
-            Notification::make()
-                ->title('Plugin uninstalled')
-                ->body("'{$id}' has been removed.")
-                ->success()
-                ->send();
-        } catch (\Throwable $e) {
-            Notification::make()
-                ->title('Uninstall failed')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-
-        $this->loadPlugins();
-        $this->loadMarketplace();
-    }
-
-    public function deactivatePlugin(string $id): void
-    {
-        app(PluginManager::class)->deactivate($id);
-
-        Notification::make()
-            ->title('Plugin deactivated')
-            ->body("'{$id}' has been deactivated.")
-            ->success()
-            ->send();
-
-        $this->loadPlugins();
+        return collect($this->marketplacePlugins)
+            ->flatMap(fn (array $p) => $p['tags'] ?? [])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function openSettings(string $id): void
@@ -207,7 +144,8 @@ class Plugins extends Page implements HasForms
         $plugin = Plugin::where('plugin_id', $id)->first();
         $this->settingsData = $plugin?->settings ?? [];
 
-        // Fill defaults from schema
+        // Fill defaults from schema so toggles + selects render in their
+        // declared default state on first open.
         $manifest = app(PluginManager::class)->getManifest($id);
         $schema = $manifest['settings_schema'] ?? [];
 
@@ -233,34 +171,12 @@ class Plugins extends Page implements HasForms
         }
 
         Notification::make()
-            ->title('Settings saved')
+            ->title(__('admin/plugins.notifications.settings_saved'))
             ->success()
             ->send();
 
         $this->settingsPluginId = null;
         $this->dispatch('close-modal', id: 'plugin-settings');
-    }
-
-    public function installFromMarketplace(string $id): void
-    {
-        try {
-            app(MarketplaceService::class)->install($id);
-
-            Notification::make()
-                ->title('Plugin installed')
-                ->body("'{$id}' has been downloaded and installed.")
-                ->success()
-                ->send();
-        } catch (\Throwable $e) {
-            Notification::make()
-                ->title('Installation failed')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-
-        $this->loadPlugins();
-        $this->loadMarketplace();
     }
 
     /**
@@ -283,15 +199,13 @@ class Plugins extends Page implements HasForms
             $label = $field['label'] ?? $key;
             $type = $field['type'] ?? 'text';
 
-            $component = match ($type) {
+            $fields[] = match ($type) {
                 'number' => TextInput::make("settingsData.{$key}")->label($label)->numeric(),
                 'toggle' => Toggle::make("settingsData.{$key}")->label($label),
                 'select' => Select::make("settingsData.{$key}")->label($label)->options($field['options'] ?? []),
                 'textarea' => Textarea::make("settingsData.{$key}")->label($label)->rows(3),
                 default => TextInput::make("settingsData.{$key}")->label($label),
             };
-
-            $fields[] = $component;
         }
 
         return $fields;

@@ -4,6 +4,74 @@ All notable changes to the Peregrine panel are documented in this file.
 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha.6] — 2026-05-09
+
+### Highlights
+
+- **Plugin import via .zip**: admins can drop a plugin archive directly onto `/admin/plugins` and have it validated through 8 layers of defence (MIME + magic bytes, anti zip-slip, anti zip-bomb, symlink rejection incl. **CVE-2025-3445**, manifest validation, sandbox extraction with canonical-path check). Inline FR/EN documentation explains every check and the active limits.
+- **`/admin/plugins` UI overhaul**: redesigned page with clickable stat cards header, underline tabs, live search + category filters on the marketplace, separate **Officials** and **Community** sections, Blade components (`<x-pg.btn>`, `<x-pg.pill>`), polished settings modal.
+- **External marketplace plugins**: registry entries can now declare `external_url` (e.g. BuiltByBit). The install button becomes **"View on BuiltByBit"** and opens in a new tab — no download flows through Peregrine for premium plugins.
+- **i18n inline bundle** (3b9e3e2): namespaces pre-compiled into a single `window.__I18N_BUNDLE__` global inlined in `app.blade.php`, eliminating the 100–300 ms FOUC of raw keys on slow connections. EN bundle = 11.4 KB gzipped, cold service call 1.48 ms / cached 0.24 ms.
+
+### Added
+
+- **`PluginUploadService`** (`app/Services/PluginUploadService.php` + `Concerns/ValidatesPluginUpload.php` trait) implementing the 8 defence layers:
+  - MIME + extension whitelist + magic bytes check (`PK\x03\x04` / `PK\x05\x06` / `PK\x07\x08`)
+  - `ZipArchive::CHECKCONS` for archive integrity
+  - Anti zip-bomb: max entries (500), max extracted size (100 MB), max compression ratio (100:1)
+  - Anti zip-slip: rejects absolute paths, `..` traversal segments, Windows backslashes
+  - Anti symlinks (CVE-2025-3445): pre-extraction Unix-mode bits check + post-extraction `realpath` walk + `is_link()`
+  - Per-file extension whitelist (configurable)
+  - Manifest validation: kebab-case `id`, SemVer `version`, required `name`/`author`
+  - Sandbox extraction → canonical-path check → atomic move (anti TOCTOU)
+- **Inline plugin upload help** (`partials/plugins/help-doc.blade.php`) — collapsible doc card explaining the expected manifest format, the security checks performed and the active limits. Auto-translates to FR/EN via `__()`.
+- **Livewire traits** :
+  - `HandlesPluginUpload` (`Concerns/HandlesPluginUpload.php`) — wires `WithFileUploads` + the `updatedUploadedZip()` lifecycle hook
+  - `HandlesPluginActions` — extracted from the page controller (install / update / activate / deactivate / uninstall + new `updateAllPlugins()` batch action)
+- **Page `/admin/plugins` redesign**:
+  - 4 clickable stat cards header (Installed / Active / Updates / Marketplace)
+  - Global "Updates available" banner with "Update all" batch button
+  - Underline tabs with counters
+  - Live search + filter chips on marketplace (All / Officials / Community + clickable tag categories)
+  - Two distinct sections (Officials with primary-tinted gradient + Community)
+  - Polished settings modal (plugin logo + name in header)
+- **Reusable Blade components** under `resources/views/components/pg/` :
+  - `<x-pg.btn variant="primary|success|danger|warning|default|ghost" :loading-target="...">` — built-in Livewire loading state and `<a>`/`<button>` polymorphism
+  - `<x-pg.pill variant="active|inactive|installed|external" :dot>`
+- **Marketplace `external_url` field** — when set, the install button becomes a `target="_blank" rel="noopener noreferrer"` link to the vendor site (BuiltByBit detection adds an explicit "BuiltByBit" badge with chain icon).
+- **Config section** `panel.plugin_upload` (in `config/panel.php`) with env vars: `PLUGIN_UPLOAD_ENABLED`, `PLUGIN_UPLOAD_MAX_SIZE`, `PLUGIN_UPLOAD_MAX_ENTRIES`, `PLUGIN_UPLOAD_MAX_EXTRACTED`, `PLUGIN_UPLOAD_MAX_RATIO`, `PLUGIN_UPLOAD_ALLOW_OVERWRITE`.
+- **i18n**: ~30 new keys in `lang/{en,fr}/admin/plugins.php` covering stats, filters, sections, updates banner, upload zone, doc, errors, external badge.
+- **Performance — i18n inline bundle (3b9e3e2)**: a service provider pre-compiles every namespace into one bundle, cached 6 h with mtime-keyed invalidation, served as a single inline global. The other locale stays lazy and is fetched once on language switch (instant on subsequent flips). Plugin i18n contract (`/api/plugins/{id}/i18n/{lng}`) is unchanged.
+
+### Changed
+
+- **`Plugins.php` Filament page** refactored from 385 → 216 lines. Actions extracted to `HandlesPluginActions`, upload to `HandlesPluginUpload`, all kept under the project's per-file ceiling.
+- **Allowed extensions whitelist** for the `.zip` importer extended with conventional extensionless basenames: `LICENSE`, `README`, `CHANGELOG`, `AUTHORS`, `CONTRIBUTORS`, `COPYING`, `NOTICE`, `CODEOWNERS`. Plugins shipping a bare `LICENSE` no longer fail import.
+- **Plugin importer ignores `__MACOSX/` and `._*` AppleDouble entries silently** — macOS resource-fork metadata that `zip` CLI stuffs into archives even with `-x "__MACOSX/*"`. Skipping them rather than aborting prevents user frustration without weakening security.
+- **Plugin upload zone** receives drag-over visual feedback and an `is-uploading` opacity state during validation/extraction.
+- **Mail layout** (`resources/views/mail/layouts/base.blade.php`) and the templated email wrapper now both source the brand name from `SettingsService::get('app_name')` first, falling back to `config('app.name')` then to a `'Peregrine'` default.
+- **Repo housekeeping (c22dd3b)**: `MODPACK_FEATURE_SPEC.md` excluded from the versioned tree (kept locally as a working note).
+
+### Fixed
+
+- **Email invitations showed "LARAVEL" instead of the panel name** (plugin `invitations` 1.3.1 → 1.3.2): `ServerInvitationMail` was calling `config('app.name', 'Peregrine')` which reads `APP_NAME` from `.env` — but on Docker installs the env var is rarely resynchronised after the setup wizard. The canonical panel name lives in `SettingsService::get('app_name')` (the value set in `/admin/settings`). `ServerInvitationMail::build()` and `buildVariables()` now resolve the brand from the settings service first.
+- **Plugin `.zip` upload required two attempts** to import: `wire:change="importPluginZip"` fired the server method before `wire:model="uploadedZip"` had finished streaming the file to `livewire-tmp/`. The first call saw `$uploadedZip = null` and bailed out silently; the second call found the previously-streamed file and succeeded. Replaced with the Livewire `updatedUploadedZip()` lifecycle hook which only fires after the upload completes.
+- **`PluginUploadService` was importing `Symfony\Component\Filesystem\Filesystem`** — a class that's NOT part of Laravel's default dependency tree. Switched to `Illuminate\Filesystem\Filesystem` (loaded everywhere via the framework). API rewrites: `mkdir → makeDirectory(recursive: true)`, `remove → deleteDirectory`, `rename → move`. The original `Class … not found` import errors stopped at the very first guard.
+- **`@once` directives** added around the `<style>` blocks in `partials/plugins/upload-zone.blade.php` and `help-doc.blade.php` so the same CSS isn't re-emitted if the partial is included multiple times in a single response.
+
+### Security
+
+- **Plugin `.zip` import hardened against CVE-2025-3445**: a recent class of zip-slip bypasses where attackers craft archives with symbolic-link entries pointing outside the extraction root. Two redundant guards: (1) the Unix mode bits in each ZIP entry's external attributes are inspected before extraction (any entry with the symlink bit `0xA000` aborts the import), and (2) every extracted file is walked post-extraction with `realpath` + `is_link` so an entry that managed to slip through is still rejected before the atomic move.
+- **Anti zip-bomb defaults**: max 500 entries, max 100 MB total uncompressed size, max 100:1 compression ratio. A 1 MB malicious ZIP that decompresses to 1 GB is rejected with `admin/plugins.upload.errors.zip_bomb`.
+- **Audit log on every import attempt** — the SHA-256 of the uploaded ZIP, the admin's user ID, the source IP and the request timestamp are written to the configured logging channel (`stderr` on Docker, surfaced in `docker logs`).
+
+### Docker
+
+- `Dockerfile`: `mkdir` + `chown www-data:www-data` extended to `/var/www/html/plugins` and `/var/www/html/storage/app/plugin-uploads`. The previous chown only covered `storage/`, `bootstrap/cache/` and `public/plugins/` — admin-uploaded archives land in the (untouched) `plugins/` directory, which would have failed with "Permission denied" on every import.
+- `docker/entrypoint.sh`: re-asserts ownership on `plugins/` and `storage/app/plugin-uploads/` on every container boot. Necessary because the named volume `peregrine_plugins` can preserve previous-image ownership when reused after a rebuild.
+
+---
+
 ## [1.0.0-alpha.5] — 2026-05-08
 
 ### Highlights

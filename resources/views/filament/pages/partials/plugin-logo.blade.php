@@ -29,7 +29,7 @@
     " aria-label="{{ __('admin/_shell.partials.plugin_logo.community') }}">
         <img src="{{ $iconUrl }}"
              alt=""
-             style="width: 24px; height: 24px; object-fit: contain;"
+             style="width: 24px; height: 24px; object-fit: contain; opacity: 0.88;"
              loading="lazy" decoding="async" />
     </div>
 @elseif($official)
@@ -45,7 +45,7 @@
     " aria-label="{{ __('admin/_shell.partials.plugin_logo.official') }}">
         <img src="{{ asset('images/logo.webp') }}"
              alt="Peregrine"
-             style="width: 28px; height: 28px; object-fit: contain;"
+             style="width: 28px; height: 28px; object-fit: contain; opacity: 0.85;"
              loading="lazy" decoding="async" />
     </div>
 @else

@@ -52,7 +52,11 @@ final class ServerInvitationMail extends Mailable
         $bodyTemplate = $settings->get($bodyKey, $this->defaultBody());
         $body = $this->replaceVars($bodyTemplate, $vars);
 
-        $appName = config('app.name', 'Peregrine');
+        // Le nom canonique du panel est stocké dans la DB (via la page
+        // /admin/settings → SettingsService::set('app_name', …)). Pas
+        // dans APP_NAME env, qui n'est souvent pas resynchronisé après
+        // changement et reste à "Laravel" sur des installs Docker.
+        $appName = $settings->get('app_name', config('app.name', 'Peregrine'));
         $appUrl = config('app.url', 'http://localhost');
 
         return $this->view('mail.layouts.base', [
@@ -71,6 +75,7 @@ final class ServerInvitationMail extends Mailable
     private function buildVariables(): array
     {
         $registry = app(PermissionRegistry::class);
+        $settings = app(SettingsService::class);
         $allGroups = $registry->getGroups();
 
         $labels = [];
@@ -87,6 +92,7 @@ final class ServerInvitationMail extends Mailable
 
         $permHtml = '<ul>' . implode('', array_map(fn (string $l) => "<li>{$l}</li>", $labels)) . '</ul>';
         $appUrl = config('app.url', 'http://localhost');
+        $appName = $settings->get('app_name', config('app.name', 'Peregrine'));
 
         return [
             '{inviter_name}' => e($this->invitation->inviter?->name ?? 'Someone'),
@@ -94,7 +100,7 @@ final class ServerInvitationMail extends Mailable
             '{permissions_list}' => $permHtml,
             '{accept_url}' => $appUrl . '/invite/' . $this->plainToken,
             '{expires_at}' => $this->invitation->expires_at?->format('M j, Y') ?? '',
-            '{app_name}' => e(config('app.name', 'Peregrine')),
+            '{app_name}' => e($appName),
         ];
     }
 

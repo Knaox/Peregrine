@@ -4,8 +4,13 @@
     // change in /admin/email-templates renders consistently without needing
     // us to publish vendor mail views.
     $footerText = $footerText ?? '';
-    $brand = $brand ?? (config('app.name') ?: 'Peregrine');
-    $logoUrl = $logoUrl ?? app(\App\Services\SettingsService::class)->getEmailLogoUrl();
+    // Brand priority : explicit prop > DB setting `app_name` (canonical
+    // panel name) > APP_NAME env > "Peregrine" fallback. Reading the
+    // env first would surface "Laravel" on Docker installs where the
+    // env var was never resynchronised after the wizard.
+    $settingsService = app(\App\Services\SettingsService::class);
+    $brand = $brand ?? $settingsService->get('app_name', config('app.name') ?: 'Peregrine');
+    $logoUrl = $logoUrl ?? $settingsService->getEmailLogoUrl();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale ?? 'en' }}">
