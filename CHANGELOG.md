@@ -4,6 +4,47 @@ All notable changes to the Peregrine panel are documented in this file.
 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha.7] — 2026-05-09
+
+### Highlights
+
+- **Public integration platform** (5-commit rollout). Replaces the legacy Bridge subsystem (push-based, single-shop, custom-HMAC) with a typed pull-based API + outbound Standard Webhooks suitable for any third-party billing surface (Paymenter, WHMCS, custom storefronts). Peregrine no longer cares "which billing mode am I in" — it just exposes capabilities and reacts to Stripe events.
+- **Public API v1** under `/api/v1/*`: `GET /shop/me`, `GET /health`, `GET /configurations`, `POST /orders` (with `Idempotency-Key`), CRUD `/webhook-endpoints`. Authenticated per-shop via the new `EnsureShopApiKey` middleware (hashed-key bearer tokens, rotation-friendly).
+- **Standard Webhooks outbound** (standardwebhooks.com spec) — Peregrine now emits signed events (`server.created`, `server.suspended`, `payment.succeeded`, …) to shop-managed endpoints, with retries via `spatie/laravel-webhook-server` and per-attempt audit rows visible at `/admin/webhook-deliveries`.
+- **Peregrine PHP SDK** (`packages/peregrine-shop-sdk/`) — Guzzle-backed client + Stripe metadata builder + standard-webhooks verifier; ships in the monorepo, will move to its own packagist package in a later release.
+
+### Added
+
+- **`Shop` + `ShopApiKey` + `shop_server_configuration` pivot** — a shop is now a first-class entity with its own hashed API keys, last-used timestamps, expiry/revocation columns and an explicit allow-list of `ServerConfiguration`s it may provision against. Filament resource at `/admin/shops` with key-rotation actions.
+- **`servers.external_order_id`** column — the shop's own order/invoice reference, propagated through `ProvisionServerJob` so customer support can pivot from "shop order #X" to a Peregrine server in one click.
+- **Outbound webhook plumbing** (5 migrations: `webhook_endpoints`, `webhook_events`, `webhook_deliveries`, `webhook_delivery_attempts`, `api_idempotency_keys`). `EmitWebhookEventAction` fans out one delivery per subscribed endpoint; `DispatchWebhookDeliveryJob` defers to spatie's webhook-server for retries with exponential backoff.
+- **`StandardWebhookSigner`** — base64 HMAC-SHA256 over `msg_id.timestamp.payload`, headers `webhook-id` / `webhook-timestamp` / `webhook-signature`. Verifiable by any Standard Webhooks consumer (a symmetric `StandardWebhookVerifier` ships in the SDK).
+- **Stripe pipeline refactor** under `app/Bridge/Stripe/` — fat handlers split into discrete actions (`ResolveStripeMetadataAction`, `HandleRefundAction`, `HandleDisputeAction`) wired through an `EventActionMapper`; metadata errors raise `BridgeMetadataException` with stable error codes.
+- **`/admin/stripe-settings`** Filament page + `/docs/stripe-settings` + `/docs/stripe-metadata` operator references — replaces the deleted `BridgeSettings` page.
+- **`/admin/webhook-endpoints` + `/admin/webhook-deliveries`** Filament resources, plus `WebhookHealthWidget` (24 h success rate + queued depth on the dashboard).
+- **`IntegrationStatusService`** (`hasStripeConfigured()` / `hasActiveShop()`) — single source of truth for the integration badges, replacing `BridgeModeService`.
+- **`/docs/shops` + `/docs/integration-guide`** — operator-facing how-to for both flavours of integration.
+- **i18n bundles** (FR/EN) for every new surface: `server_configurations`, `shops`, `shop_api_keys`, `stripe_settings`, `webhook_endpoints`, `webhook_deliveries`, `api_v1`.
+
+### Changed
+
+- **`ServerPlan` renamed to `ServerConfiguration`**, columns renamed in lockstep (`servers.plan_id` → `servers.server_configuration_id`, `bridge_sync_logs.server_plan_id` → `bridge_sync_logs.server_configuration_id`). The legacy table mixed technical provisioning config (CPU, RAM, port mapping, env vars) with commercial pricing — the commercial columns are dropped here and now live on the third-party shop side. New `internal_name` + `name_template` columns let admins keep a stable technical key while still rendering a human-friendly display name.
+- **`PelicanMirrorReconciler`** no longer guards on bridge mode — it runs whenever the Pelican webhook receiver is enabled and is a no-op when there's nothing to mirror.
+- **`PelicanWebhookDispatcher`** suppresses Pelican-driven `User.created` events only when Stripe is wired (Peregrine drives users itself in that flow).
+- **Customer notifications** (`PaymentConfirmed`, `ServerInstalled`, `ServerReactivated`, `ServerReady`, `ServerSuspended`, `TrialWillEnd`) are now also emitted as outbound webhook events for shops to react to.
+- **`spatie/laravel-webhook-server` ^3.10** added to `composer.json`.
+
+### Removed
+
+- **Legacy Bridge subsystem**: `BridgeMode` enum, `BridgeModeService`, `BridgeSettings` Filament page, `VerifyBridgeSignature` middleware, `PlanSyncController` + the `/api/bridge/{ping,plans/upsert,plans/{id}}` route group, `BridgeUpsertPlanRequest`, the `app/Plugins/Bridge/*` skeleton, the `bridge_settings` rows in the `settings` table (dropped via migration `000019`), and the matching FR/EN i18n bundles + `BridgeSettingsTest` / `BridgePlanSyncTest`. Configuration sync is now `GET /api/v1/configurations` (the shop reads — it doesn't push).
+
+### Security
+
+- **Hashed shop API keys** (never stored in cleartext, displayed once at creation), explicit revocation and expiry columns, per-key `last_used_at` for anomaly detection.
+- **Idempotency-Key support** on `POST /api/v1/orders` (the `api_idempotency_keys` table) prevents accidental double-provisioning if a shop retries a request.
+
+---
+
 ## [1.0.0-alpha.6] — 2026-05-09
 
 ### Highlights
