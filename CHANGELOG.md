@@ -43,6 +43,32 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 - **Hashed shop API keys** (never stored in cleartext, displayed once at creation), explicit revocation and expiry columns, per-key `last_used_at` for anomaly detection.
 - **Idempotency-Key support** on `POST /api/v1/orders` (the `api_idempotency_keys` table) prevents accidental double-provisioning if a shop retries a request.
 
+### Post-release hotfixes
+
+These 9 commits landed on `main` between the original `chore(release): 1.0.0-alpha.7` commit and the published `v1.0.0-alpha.7` GitHub tag. They are part of this release.
+
+#### Added
+
+- **Duplicate `ServerConfiguration`** — row action and bulk action on `/admin/server-configurations`. Auto-suffixes the `internal_name` (`-copy`, `-copy-2`, `-copy-3`, …, with a 999-iteration safety net) and strips an existing `-copy[-N]` from the source so a clone of a clone produces `mc-2gb-copy` instead of `mc-2gb-copy-copy`. Pivot links to shops are intentionally NOT carried over — the clone is invisible to every shop until explicitly authorized, mirroring the "create from scratch" flow. (`61f5dd3`, `d258fbc`)
+- **`ResourceTemplate` model** — a reusable named bundle of Pelican specs (RAM, CPU, disk, swap, I/O weight, cpu_pinning) that any number of `ServerConfiguration`s can share. Editing the template propagates to every bound configuration in one shot, including a fan-out of `configuration.updated` outbound webhooks (one per bound config). New Filament resource at `/admin/resource-templates` with row + bulk Duplicate actions, and a corresponding `<Select>` + read-only specs preview on the Server Configuration form. Includes a back-fill migration that materialises one template per distinct spec tuple on existing rows before dropping the inline columns. (`e427955`)
+- **Auto-pivot shops ↔ configurations** — creating a `ServerConfiguration` now attaches it to every existing `Shop` with `is_visible=true`, and creating a `Shop` attaches every existing `ServerConfiguration` to it. The multi-shop scoping rules in the API + `StripeCheckoutHandler` stay enforced, but the default is "everything visible everywhere" — which matches how single-shop deployments actually use the catalog. Idempotent via the pivot's UNIQUE constraint. (`078ad1f`)
+- **Filament `Shops` cluster** — `ShopResource`, `ServerConfigurationResource` and `ResourceTemplateResource` are now bundled under a single sidebar entry that opens onto a sub-navigation listing the three resources, mirroring the pattern the Settings menu already uses. Each resource keeps its own routes and CRUD ; only the navigation rendering changed. (`078ad1f`)
+
+#### Changed
+
+- **Resubscribe URL contract is now keyed on `configuration_id`**, not `internal_name`. The HMAC payload becomes `{server_id}|{configuration_id}|{ts}` and the shop joins back to its local `Plan` via the FK on its `peregrine_configurations` mirror, never via slug↔internal_name. Removes the implicit "shop-side `Plan::slug` must match Peregrine-side `ServerConfiguration::internal_name`" convention that broke the resubscribe flow whenever a Plan was renamed shop-side. The `{configuration}` placeholder is still interpolated for legacy templates but is no longer covered by the signature ; admins migrating to v1 should switch to `{configuration_id}`. Coordinated with a SaaSykit-side fix shipped separately. (`6c711dc`)
+- **`/admin/stripe-settings` third-party billing card** clarifies that pointing a third-party billing system (WHMCS, Paymenter, …) at `/api/pelican/webhook` requires the Pelican webhook secret to be configured first, and links directly to `/admin/pelican-webhook-settings`. The previous wording made it sound like the endpoint just worked out of the box. (`3bd37ee`)
+- **Customer email cadence** collapses from 3 Peregrine emails per checkout to 2. The intermediate "we created your server" notification (`SendServerReadyNotification`, fired on `ServerProvisioned` = Pelican row created) is silenced — the listener stays registered as a no-op so any auto-discovered binding doesn't error, but the customer no longer receives an extra email between "Paiement confirmé" and "🚀 Votre serveur est jouable". The "playable" email now optionally inlines a "Set my password" CTA + 7-day reset link, but only when the user has neither a local password nor a linked OAuth identity (= account just created during checkout, never signed in yet). (`699d0bd`)
+
+#### Fixed
+
+- **OAuth multi-consent loop on Shop sign-in** — `SocialAuthService::redirectUrl()` was forcing `prompt=consent` on every Socialite redirect, which made Passport (on the Shop side) skip its `hasGrantedScopes()` check and re-display the consent screen on every login. Drops the parameter ; standard OAuth2 flow now applies (consent on first login, silent reuse afterwards). The original "silent re-link papercut" rationale for forcing consent is documented in the new comment block ; if it ever bites again it'll be fixed surgically by revoking the token at unlink time. (`699d0bd`)
+- **Documentation of the Stripe metadata `peregrine_configuration_id` key** — every place the integration docs mentioned the key now spells out that the value must be the **upstream** `ServerConfiguration.id` returned by `GET /api/v1/configurations`, not a shop-side mirror's primary key. The ambiguity had bitten one live shop (SaaSykit) with `skipped: unknown_configuration` rejections — fixed shop-side in the matching SaaSykit commit, locked into the docs here so the next integrator (in-house WordPress plugin, custom storefront, …) can't repeat the mistake. (`51ba657`)
+
+#### Removed
+
+- **`BridgeSyncLog` Filament resource** + the underlying `bridge_sync_logs` table. Both were already orphans on the alpha.7 branch (the legacy bridge they audited was deleted in the main alpha.7 commits) — this drop just cleans up the leftover wiring so admins don't see a dead resource in the navigation. (`15c6aa2`)
+
 ---
 
 ## [1.0.0-alpha.6] — 2026-05-09
