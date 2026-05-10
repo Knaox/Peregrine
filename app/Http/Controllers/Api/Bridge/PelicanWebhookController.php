@@ -53,12 +53,6 @@ class PelicanWebhookController extends Controller
         $modelId = (int) ($data['id'] ?? 0);
 
         if ($eventType === '' || $modelId === 0) {
-            Log::warning('Pelican webhook: missing event type or model id', [
-                'event_type' => $eventType,
-                'model_id' => $modelId,
-                'keys' => array_keys($payload),
-            ]);
-
             // Pelican has a known bug where Eloquent CRUD events ship
             // `(array) $model` instead of `$model->toArray()` — keys are
             // Eloquent internals, the model id is unrecoverable. For Server
@@ -75,6 +69,25 @@ class PelicanWebhookController extends Controller
                         : 'reconcile_debounced';
                 }
             }
+
+            // Reclassify the log level by recoverability :
+            //   - fallback armed (mirror reconcile dispatched/debounced) →
+            //     DEBUG, this is the documented Pelican CRUD-event bug and
+            //     the recovery path is reliable. Operators don't need to
+            //     see a WARNING per provisioning step ; the same minute we
+            //     get a clean `event: Server\\Installed` event with the
+            //     full payload anyway.
+            //   - no fallback armed (event type unknown, or non-Server
+            //     model with empty payload) → WARNING, because we are
+            //     genuinely losing information that nobody downstream
+            //     reconciles.
+            $level = $fallback !== null ? 'debug' : 'warning';
+            Log::log($level, 'Pelican webhook: missing event type or model id', [
+                'event_type' => $eventType,
+                'model_id' => $modelId,
+                'keys' => array_keys($payload),
+                'fallback' => $fallback,
+            ]);
 
             return response()->json(array_filter([
                 'received' => true,
