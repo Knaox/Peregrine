@@ -57,14 +57,39 @@ final class ServerConfigurationObserver
         );
     }
 
+    /**
+     * Snapshot the recipient shops BEFORE the SQL DELETE runs. The pivot
+     * `shop_server_configuration` is `cascadeOnDelete` on
+     * `server_configuration_id`, so by the time `deleted` fires the pivot
+     * rows are gone — a fresh `shops()` query then returns an empty
+     * collection and the `configuration.deleted` webhook is silently
+     * dropped. We stash the pre-cascade snapshot on the in-memory model
+     * via `setRelation('shopsBeforeDelete', …)` so `deleted()` can pass it
+     * straight through to `EmitWebhookEventAction`'s `$shopsOverride`.
+     */
+    public function deleting(ServerConfiguration $configuration): void
+    {
+        $configuration->setRelation(
+            'shopsBeforeDelete',
+            $configuration->shops()->where('shops.status', 'active')->get(),
+        );
+    }
+
     public function deleted(ServerConfiguration $configuration): void
     {
         // On delete the model still has its attributes ; ship the final
-        // snapshot so the receiver knows what was removed.
+        // snapshot so the receiver knows what was removed. The recipient
+        // shops were captured in `deleting()` above (the pivot is
+        // already empty here thanks to the FK cascade).
+        $shops = $configuration->relationLoaded('shopsBeforeDelete')
+            ? $configuration->getRelation('shopsBeforeDelete')
+            : null;
+
         ($this->emitter)(
             WebhookEventTypes::CONFIGURATION_DELETED,
             $configuration,
             $this->payload($configuration),
+            $shops,
         );
     }
 
