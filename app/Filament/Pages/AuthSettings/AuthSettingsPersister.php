@@ -46,6 +46,7 @@ final class AuthSettingsPersister
         $settings = app(SettingsService::class);
         $settings->set('auth_shop_config', json_encode($existing, JSON_THROW_ON_ERROR));
         $settings->set('auth_shop_enabled', ($data['auth_shop_enabled'] ?? false) ? 'true' : 'false');
+        $settings->set('auth_shop_skip_consent', ($data['auth_shop_skip_consent'] ?? false) ? 'true' : 'false');
 
         $typed = (string) ($data['auth_shop_client_secret'] ?? '');
         if ($typed !== '') {

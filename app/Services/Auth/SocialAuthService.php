@@ -56,6 +56,17 @@ class SocialAuthService
      * re-link" papercut is acceptable : if it ever bites again we'll
      * revoke the token in the DB on unlink, which surgically forces
      * consent only on the legitimate case.
+     *
+     * Opt-in escape hatch (`auth_shop_skip_consent`, OFF by default,
+     * scoped to provider='shop'): appends `prompt=allow` to every
+     * authorize request. This is a miniOrange OAuth Server (WordPress
+     * plugin) non-standard parameter that bypasses its always-on
+     * consent screen on the free tier. Different semantics from the
+     * `prompt=consent` Passport pitfall above: miniOrange treats
+     * `prompt=allow` as "silent allow", whereas Passport ignores
+     * (or worse, re-prompts on) unknown prompt values. The helper
+     * text on the admin toggle warns operators not to enable this
+     * for Passport-backed shops.
      */
     public function redirectUrl(string $provider): string
     {
@@ -65,9 +76,13 @@ class SocialAuthService
 
         $this->registry->configureSocialite($provider);
 
-        return Socialite::driver($this->registry->socialiteDriver($provider))
-            ->redirect()
-            ->getTargetUrl();
+        $driver = Socialite::driver($this->registry->socialiteDriver($provider));
+
+        if ($provider === 'shop' && $this->settings->get('auth_shop_skip_consent', 'false') === 'true') {
+            $driver->with(['prompt' => 'allow']);
+        }
+
+        return $driver->redirect()->getTargetUrl();
     }
 
     /**

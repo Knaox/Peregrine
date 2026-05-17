@@ -35,6 +35,8 @@ return [
             'section' => 'Shop Custom',
             'description' => 'Canonical identity provider. When enabled, accounts are auto-created on first OAuth login, email is synced to Pelican, and local registration is forced off. Mutually exclusive with Paymenter.',
             'enable' => 'Enable Shop as identity provider',
+            'skip_consent' => 'Skip OAuth consent screen',
+            'skip_consent_helper' => 'Append <code>prompt=allow</code> to every authorize request. Designed for OAuth servers that show a consent screen on each login and accept this non-standard parameter as a "silent allow" — typically the <strong>miniOrange OAuth Server</strong> WordPress plugin on its free tier (the only way to skip its consent screen without paying for the premium plan). Leave OFF unless your OAuth server documents this parameter: most servers ignore it, and Laravel Passport in particular will force the consent screen back on every login when an unknown <code>prompt</code> value is passed.',
             'client_id' => 'Client ID',
             'client_id_helper' => 'Public identifier of the OAuth client. Created in the Shop\'s admin (Passport: artisan passport:client → "Authorization Code"). Copy the "Client ID" here.',
             'client_secret' => 'Client secret',

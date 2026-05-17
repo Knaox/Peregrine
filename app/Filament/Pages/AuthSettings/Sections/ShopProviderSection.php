@@ -25,6 +25,10 @@ final class ShopProviderSection
             ->schema([
                 Toggle::make('auth_shop_enabled')->label(__('admin/auth_settings.form.shop.enable')),
 
+                Toggle::make('auth_shop_skip_consent')
+                    ->label(__('admin/auth_settings.form.shop.skip_consent'))
+                    ->helperText(__('admin/auth_settings.form.shop.skip_consent_helper')),
+
                 TextInput::make('auth_shop_client_id')
                     ->label(__('admin/auth_settings.form.shop.client_id'))
                     ->maxLength(255)

@@ -56,6 +56,7 @@ class AuthSettings extends Page implements HasForms
     public bool $auth_2fa_enabled = true;
     public bool $auth_2fa_required_admins = false;
     public bool $auth_shop_enabled = false;
+    public bool $auth_shop_skip_consent = false;
     public ?string $auth_shop_client_id = '';
     public ?string $auth_shop_client_secret = '';
     public ?string $auth_shop_authorize_url = '';
@@ -107,6 +108,7 @@ class AuthSettings extends Page implements HasForms
 
         $shop = $registry->shopConfig();
         $this->auth_shop_enabled = $settings->get('auth_shop_enabled', 'false') === 'true';
+        $this->auth_shop_skip_consent = $settings->get('auth_shop_skip_consent', 'false') === 'true';
         $this->auth_shop_client_id = (string) ($shop['client_id'] ?? '');
         $this->auth_shop_client_secret = '';
         $this->auth_shop_authorize_url = (string) ($shop['authorize_url'] ?? '');
@@ -268,6 +270,7 @@ class AuthSettings extends Page implements HasForms
             'auth_2fa_enabled' => $this->auth_2fa_enabled,
             'auth_2fa_required_admins' => $this->auth_2fa_required_admins,
             'auth_shop_enabled' => $this->auth_shop_enabled,
+            'auth_shop_skip_consent' => $this->auth_shop_skip_consent,
             'auth_shop_client_id' => $this->auth_shop_client_id,
             'auth_shop_authorize_url' => $this->auth_shop_authorize_url,
             'auth_shop_token_url' => $this->auth_shop_token_url,

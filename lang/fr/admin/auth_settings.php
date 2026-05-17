@@ -34,6 +34,8 @@ return [
             'section' => 'Shop Custom',
             'description' => 'Fournisseur d\'identité canonique. Quand activé, les comptes sont créés automatiquement à la première connexion OAuth, l\'email est synchronisé vers Pelican et l\'inscription locale est désactivée. Mutuellement exclusif avec Paymenter.',
             'enable' => 'Activer Shop comme fournisseur d\'identité',
+            'skip_consent' => 'Sauter l\'écran de consentement OAuth',
+            'skip_consent_helper' => 'Ajoute <code>prompt=allow</code> à chaque requête d\'autorisation. Conçu pour les serveurs OAuth qui affichent un écran de consentement à chaque connexion et acceptent ce paramètre non-standard comme un « allow silencieux » — typiquement le plugin WordPress <strong>miniOrange OAuth Server</strong> en version gratuite (seul moyen d\'éviter l\'écran de consentement sans souscrire au plan premium). Laisser DÉSACTIVÉ sauf si votre serveur OAuth documente ce paramètre : la plupart l\'ignorent, et Laravel Passport en particulier forcera au contraire l\'écran de consentement à chaque connexion si une valeur <code>prompt</code> inconnue est passée.',
             'client_id' => 'Client ID',
             'client_id_helper' => 'Identifiant public du client OAuth. Créé dans l\'admin Shop (Passport : artisan passport:client → "Authorization Code"). Copiez le "Client ID" ici.',
             'client_secret' => 'Client secret',
