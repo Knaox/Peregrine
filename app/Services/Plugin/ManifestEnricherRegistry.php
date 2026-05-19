@@ -38,6 +38,9 @@ class ManifestEnricherRegistry
     /** @var array<string, Closure> Map of plugin_id => enricher closure. */
     private array $enrichers = [];
 
+    /** @var array<string, Closure> Map of plugin_id => i18n override closure. */
+    private array $i18nOverrides = [];
+
     public static function getInstance(): self
     {
         if (self::$instance === null) {
@@ -74,9 +77,48 @@ class ManifestEnricherRegistry
 
         try {
             $result = ($this->enrichers[$pluginId])($manifest);
+
             return is_array($result) ? $result : $manifest;
         } catch (\Throwable) {
             return $manifest;
+        }
+    }
+
+    /**
+     * Register an i18n override for the given plugin. The closure
+     * receives `(string $locale, array $i18n)` — the raw translations
+     * already loaded from `plugins/{id}/frontend/i18n/{locale}.json`
+     * — and returns a possibly mutated translations array. Useful for
+     * surfacing admin-configured values (e.g. a custom sidebar label
+     * set in Filament) without rewriting the on-disk JSON file.
+     *
+     * Applied by `PluginController::i18n()` right before the JSON is
+     * shipped to the frontend.
+     */
+    public function registerI18nOverride(string $pluginId, Closure $callback): void
+    {
+        $this->i18nOverrides[$pluginId] = $callback;
+    }
+
+    /**
+     * Apply the registered i18n override (if any). Defensive : a
+     * throwing override returns the unchanged input — a bad admin
+     * setting must never break the i18n endpoint.
+     *
+     * @param  array<string, mixed>  $i18n
+     * @return array<string, mixed>
+     */
+    public function applyI18n(string $pluginId, string $locale, array $i18n): array
+    {
+        if (! isset($this->i18nOverrides[$pluginId])) {
+            return $i18n;
+        }
+        try {
+            $result = ($this->i18nOverrides[$pluginId])($locale, $i18n);
+
+            return is_array($result) ? $result : $i18n;
+        } catch (\Throwable) {
+            return $i18n;
         }
     }
 
@@ -87,5 +129,6 @@ class ManifestEnricherRegistry
     public function reset(): void
     {
         $this->enrichers = [];
+        $this->i18nOverrides = [];
     }
 }

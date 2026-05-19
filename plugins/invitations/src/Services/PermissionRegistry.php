@@ -52,12 +52,12 @@ class PermissionRegistry
     /**
      * Register a permission group.
      *
-     * @param string $groupKey Unique group key (e.g., 'control', 'file', 'mods')
-     * @param array<string, string> $groupLabel Labels per locale (['en' => '...', 'fr' => '...'])
-     * @param array<string, array<string, string>> $permissions Map of permission key => labels per locale
-     * @param Closure|null $availableForServer Optional `fn(Server $server): bool` —
-     *        return true to surface this group for the given server, false to hide it.
-     *        Omit (or pass null) for an always-visible group.
+     * @param  string  $groupKey  Unique group key (e.g., 'control', 'file', 'mods')
+     * @param  array<string, string>  $groupLabel  Labels per locale (['en' => '...', 'fr' => '...'])
+     * @param  array<string, array<string, string>>  $permissions  Map of permission key => labels per locale
+     * @param  Closure|null  $availableForServer  Optional `fn(Server $server): bool` —
+     *                                            return true to surface this group for the given server, false to hide it.
+     *                                            Omit (or pass null) for an always-visible group.
      */
     public function registerGroup(
         string $groupKey,
@@ -132,18 +132,45 @@ class PermissionRegistry
             }
             $filtered[$key] = $group;
         }
+
         return $this->serializeGroups($filtered, $locale);
     }
 
     /**
-     * @param array<string, array{label: array<string, string>, permissions: array<string, array<string, string>>, filter?: ?Closure}> $groups
+     * Core Peregrine permission groups — kept in the order they are
+     * surfaced to the user. Whatever plugin happened to boot first
+     * (modpack-installer, mods-installer, …) ended up being inserted
+     * before the Pelican defaults in the registry hashmap and was
+     * rendered at the top of the picker. Sorting at serialise time
+     * pins core groups first regardless of boot order, with plugin
+     * groups appended in their own registration order.
+     *
+     * Keep this list in sync with `registerPelicanDefaults()` below.
+     */
+    private const CORE_GROUP_ORDER = [
+        'overview', 'control', 'user', 'file', 'backup',
+        'database', 'schedule', 'allocation', 'startup', 'settings',
+    ];
+
+    /**
+     * @param  array<string, array{label: array<string, string>, permissions: array<string, array<string, string>>, filter?: ?Closure}>  $groups
      * @return array<int, array<string, mixed>>
      */
     private function serializeGroups(array $groups, string $locale): array
     {
+        // Stable sort: core entries first (in declared order), then
+        // anything else in the registry's insertion order.
+        $core = [];
+        foreach (self::CORE_GROUP_ORDER as $key) {
+            if (isset($groups[$key])) {
+                $core[$key] = $groups[$key];
+            }
+        }
+        $ordered = $core + array_diff_key($groups, $core);
+
         $result = [];
 
-        foreach ($groups as $key => $group) {
+        foreach ($ordered as $key => $group) {
             $permissions = [];
 
             foreach ($group['permissions'] as $permKey => $labels) {

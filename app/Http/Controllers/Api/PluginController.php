@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Plugin;
+use App\Services\Plugin\ManifestEnricherRegistry;
 use App\Services\PluginManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -128,7 +129,7 @@ class PluginController extends Controller
             abort(404);
         }
 
-        $bundlePath = $pluginPath . '/frontend/dist/bundle.js';
+        $bundlePath = $pluginPath.'/frontend/dist/bundle.js';
         if (! is_file($bundlePath)) {
             abort(404);
         }
@@ -152,7 +153,7 @@ class PluginController extends Controller
             abort(404);
         }
 
-        $iconPath = $pluginPath . '/icon.svg';
+        $iconPath = $pluginPath.'/icon.svg';
         if (! is_file($iconPath)) {
             abort(404);
         }
@@ -190,15 +191,15 @@ class PluginController extends Controller
             return response()->json(['error' => 'plugin_not_found'], 404);
         }
 
-        $i18nDir = $pluginPath . '/frontend/i18n';
-        $candidate = $i18nDir . '/' . $locale . '.json';
+        $i18nDir = $pluginPath.'/frontend/i18n';
+        $candidate = $i18nDir.'/'.$locale.'.json';
 
         // English fallback : if the plugin doesn't ship the requested
         // locale, return EN so the player still sees translated labels
         // instead of raw keys. Returning {} is the last-resort fallback for
         // plugins that ship no i18n at all.
         if (! is_file($candidate)) {
-            $candidate = $i18nDir . '/en.json';
+            $candidate = $i18nDir.'/en.json';
         }
         if (! is_file($candidate)) {
             return response()->json(new \stdClass)->setMaxAge(3600);
@@ -214,6 +215,17 @@ class PluginController extends Controller
             return response()->json(new \stdClass);
         }
 
-        return response()->json($decoded)->setMaxAge(3600);
+        // Plugins may register a runtime override (admin-configured
+        // sidebar label, custom page title, …) via
+        // `ManifestEnricherRegistry::registerI18nOverride()`. Throws
+        // are silently absorbed inside the registry so a bad admin
+        // value can't break the i18n endpoint.
+        $decoded = ManifestEnricherRegistry::getInstance()
+            ->applyI18n($pluginId, $locale, $decoded);
+
+        // No max-age — admin-configured overrides should propagate
+        // within a refresh. The response is tiny and the route is
+        // throttled at the api group level.
+        return response()->json($decoded);
     }
 }
