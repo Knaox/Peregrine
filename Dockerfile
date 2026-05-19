@@ -10,7 +10,17 @@
 # ---------------------------------------------------------------
 FROM node:22-alpine AS frontend-build
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Pin pnpm to the latest 9.x line — pnpm 10.4+ enforces a hard
+# ERR_PNPM_IGNORED_BUILDS error on any dep with a build script that
+# isn't in `pnpm.onlyBuiltDependencies`, but the per-package
+# allow-list in package.json is silently ignored under
+# `--frozen-lockfile` in CI (the lockfile would have to carry the
+# approval too — `pnpm approve-builds` does both at once interactively
+# but can't be scripted into a Docker layer). pnpm 9.x reads our
+# `lockfileVersion: '9.0'` lockfile natively and lets esbuild's
+# postinstall download its native binary so vite's TSX transform
+# works at `pnpm run build` time.
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 WORKDIR /build
 
