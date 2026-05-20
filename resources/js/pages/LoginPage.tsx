@@ -14,6 +14,7 @@ const LOGIN_DEFAULTS = {
     carousel_interval: 6000,
     carousel_random: true,
     background_opacity: 100,
+    oauth_first: false,
 };
 
 /**

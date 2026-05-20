@@ -1,12 +1,12 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, m } from 'motion/react';
 import clsx from 'clsx';
-import { useAuthStore } from '@/stores/authStore';
 import { useAuthProviders } from '@/hooks/useAuthProviders';
-import { ApiError } from '@/services/api';
+import { useResolvedTheme } from '@/hooks/useResolvedTheme';
 import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons';
+import { LocalLoginForm } from '@/components/auth/LocalLoginForm';
 import { useNamespace } from '@/i18n/useNamespace';
 
 interface LoginFormCardProps {
@@ -16,25 +16,30 @@ interface LoginFormCardProps {
 }
 
 /**
- * Self-contained login form: social buttons + local form + register link.
+ * Login card orchestrator: social buttons + local form + register link.
  * Reused across all 4 LoginTemplate components — only the surrounding
  * background/layout differs per template.
+ *
+ * "Nice OAuth" mode (theme.data.login.oauth_first): the card leads with the
+ * OAuth providers and tucks the local email/password form behind a "sign in
+ * locally" text link, so shop-sourced users who never set a local password
+ * aren't nudged into a dead-end form. The register link stays visible. The
+ * mode degrades to the classic combined layout whenever there is no OAuth
+ * provider to lead with, or local login is disabled — never stranding a user.
  */
 export function LoginFormCard({ variant = 'glass', className }: LoginFormCardProps) {
     useNamespace(["auth-social"] as const);
     const { t } = useTranslation();
-    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const { login } = useAuthStore();
     const providers = useAuthProviders();
+    const theme = useResolvedTheme();
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [remember, setRemember] = useState(false);
-    const [error, setError] = useState('');
     const [providerError, setProviderError] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [focusedField, setFocusedField] = useState<string | null>(null);
+    // OAuth-first progressive disclosure. `showLocal` reveals the email/password
+    // form; `localExpanded` drops the clip-mask once the open animation settles
+    // so the inputs' focus glow isn't cropped by overflow-hidden.
+    const [showLocal, setShowLocal] = useState(false);
+    const [localExpanded, setLocalExpanded] = useState(false);
 
     const localEnabled = providers.data?.local_enabled ?? true;
     const localRegistrationEnabled = providers.data?.local_registration_enabled ?? true;
@@ -45,6 +50,17 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
     const canRegisterCanonical = canonicalRegisterUrl !== null;
     const canonicalProviderLabel =
         canonicalProvider !== null ? t(`auth-social:providers.${canonicalProvider}`) : '';
+
+    // Engage "Nice OAuth" only when the admin enabled it AND there is at least
+    // one OAuth provider to lead with AND local login is available. Otherwise
+    // hiding the form would leave users with no way in, so we fall back to the
+    // classic combined layout.
+    const oauthFirst =
+        (theme?.data.login?.oauth_first ?? false) && enabledProviders.length > 0 && localEnabled;
+    // Local form is shown outright in classic mode; in OAuth-first mode it waits
+    // until the user opts into it via the "sign in locally" link.
+    const localVisible = localEnabled && (!oauthFirst || showLocal);
+    const showDivider = enabledProviders.length > 0;
 
     useEffect(() => {
         const errorKey = searchParams.get('error');
@@ -57,24 +73,6 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
         next.delete('error');
         setSearchParams(next, { replace: true });
     }, [searchParams, setSearchParams, t, canonicalProviderLabel]);
-
-    const handleSubmit = async (e: FormEvent): Promise<void> => {
-        e.preventDefault();
-        setError('');
-        setIsSubmitting(true);
-        try {
-            const result = await login(email, password, remember);
-            if (result.requires2fa === true) {
-                navigate('/2fa/challenge');
-                return;
-            }
-            navigate('/dashboard');
-        } catch (err) {
-            setError(err instanceof ApiError ? t('auth-login:error') : t('common:error'));
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
     const cardClasses = clsx(
         'rounded-[var(--radius-xl)] p-4 sm:p-6 md:p-8',
@@ -123,79 +121,53 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
 
                 {enabledProviders.length > 0 && <SocialLoginButtons providers={enabledProviders} />}
 
-                {localEnabled && enabledProviders.length > 0 && (
-                    <div className="flex items-center gap-3 py-1">
-                        <div className="flex-1 h-px bg-[var(--color-border)]" />
-                        <span className="text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
-                            {t('auth-login:or')}
-                        </span>
-                        <div className="flex-1 h-px bg-[var(--color-border)]" />
-                    </div>
-                )}
+                {/* Classic layout — OAuth (if any) and the local form together. */}
+                {!oauthFirst && localVisible && <LocalLoginForm showDivider={showDivider} />}
 
-                {localEnabled && (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <AnimatePresence>
-                            {error && (
-                                <m.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="overflow-hidden rounded-[var(--radius)] border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-2.5 text-sm text-[var(--color-danger)]"
+                {/* "Nice OAuth" — OAuth leads; the local form hides behind a link. */}
+                {oauthFirst && (
+                    <AnimatePresence initial={false} mode="wait">
+                        {showLocal ? (
+                            <m.div
+                                key="local"
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                                onAnimationComplete={() => setLocalExpanded(true)}
+                                className={clsx('space-y-4', !localExpanded && 'overflow-hidden')}
+                            >
+                                <LocalLoginForm showDivider={showDivider} />
+                            </m.div>
+                        ) : (
+                            <m.div
+                                key="reveal"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLocal(true)}
+                                    className="group flex w-full items-center justify-center gap-1.5 py-3 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-primary)] cursor-pointer"
                                 >
-                                    {error}
-                                </m.div>
-                            )}
-                        </AnimatePresence>
-
-                        <AuthField
-                            id="email"
-                            type="email"
-                            value={email}
-                            label={t('auth-login:email')}
-                            onChange={setEmail}
-                            focused={focusedField === 'email'}
-                            onFocus={() => setFocusedField('email')}
-                            onBlur={() => setFocusedField(null)}
-                        />
-                        <AuthField
-                            id="password"
-                            type="password"
-                            value={password}
-                            label={t('auth-login:password')}
-                            onChange={setPassword}
-                            focused={focusedField === 'password'}
-                            onFocus={() => setFocusedField('password')}
-                            onBlur={() => setFocusedField(null)}
-                        />
-
-                        <label className="flex items-center gap-2 cursor-pointer group pt-1">
-                            <input
-                                type="checkbox"
-                                checked={remember}
-                                onChange={(e) => setRemember(e.target.checked)}
-                                className="h-5 w-5 sm:h-4 sm:w-4 rounded border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-primary)] cursor-pointer"
-                            />
-                            <span className="text-sm text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors">
-                                {t('auth-login:remember')}
-                            </span>
-                        </label>
-
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className={clsx(
-                                'w-full rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white cursor-pointer',
-                                'shadow-[0_4px_20px_var(--color-primary-glow)]',
-                                'transition-all duration-200',
-                                'hover:bg-[var(--color-primary-hover)] hover:shadow-[0_8px_32px_var(--color-primary-glow)]',
-                                'active:scale-[0.98]',
-                                'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
-                            )}
-                        >
-                            {isSubmitting ? t('common:loading') : t('auth-login:button')}
-                        </button>
-                    </form>
+                                    <span className="underline decoration-[var(--color-border)] decoration-1 underline-offset-4 transition-colors group-hover:decoration-[var(--color-primary)]">
+                                        {t('auth-login:use_local')}
+                                    </span>
+                                    <svg
+                                        className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-y-0.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                        aria-hidden="true"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                            </m.div>
+                        )}
+                    </AnimatePresence>
                 )}
             </div>
 
@@ -232,61 +204,6 @@ export function LoginFormCard({ variant = 'glass', className }: LoginFormCardPro
                     )}
                 </p>
             )}
-        </div>
-    );
-}
-
-function AuthField({
-    id,
-    type,
-    value,
-    label,
-    error,
-    onChange,
-    focused,
-    onFocus,
-    onBlur,
-}: {
-    id: string;
-    type: string;
-    value: string;
-    label: string;
-    error?: string;
-    onChange: (v: string) => void;
-    focused: boolean;
-    onFocus: () => void;
-    onBlur: () => void;
-}) {
-    return (
-        <div>
-            <label
-                htmlFor={id}
-                className={clsx(
-                    'mb-1.5 block text-xs font-medium uppercase tracking-wider transition-colors duration-150',
-                    focused ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]',
-                )}
-            >
-                {label}
-            </label>
-            <input
-                id={id}
-                type={type}
-                value={value}
-                required
-                autoComplete={type === 'email' ? 'email' : type === 'password' ? 'current-password' : undefined}
-                onChange={(e) => onChange(e.target.value)}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                className={clsx(
-                    'w-full rounded-[var(--radius)] border px-4 py-2.5 text-sm text-[var(--color-text-primary)]',
-                    'bg-[var(--color-background)] transition-all duration-200',
-                    'focus:outline-none focus:ring-1',
-                    focused
-                        ? 'border-[var(--color-primary)] ring-[var(--color-primary-glow)] shadow-[0_0_12px_var(--color-primary-glow)]'
-                        : 'border-[var(--color-border)] ring-transparent hover:border-[var(--color-border-hover)]',
-                )}
-            />
-            {error && <p className="mt-1 text-xs text-[var(--color-danger)]">{error}</p>}
         </div>
     );
 }

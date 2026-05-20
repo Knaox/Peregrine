@@ -85,6 +85,8 @@ class SaveThemeRequest extends FormRequest
             'theme_login_carousel_interval' => ['nullable', 'integer', 'min:2000', 'max:30000'],
             'theme_login_carousel_random' => ['nullable', 'boolean'],
             'theme_login_background_opacity' => ['nullable', 'integer', 'min:0', 'max:100'],
+            // OAuth-first sign-in toggle ("Nice OAuth").
+            'theme_login_oauth_first' => ['nullable', 'boolean'],
 
             // Per-page overrides (Vague 3 complète).
             'theme_page_console_fullwidth' => ['nullable', 'boolean'],

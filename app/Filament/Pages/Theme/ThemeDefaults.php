@@ -56,6 +56,13 @@ final class ThemeDefaults
         'theme_login_carousel_interval' => '6000',
         'theme_login_carousel_random' => '1',
         'theme_login_background_opacity' => '100',
+        // OAuth-first sign-in ("Nice OAuth"). When on, the login card leads
+        // with the configured OAuth providers and tucks the local email /
+        // password form behind a "sign in locally" text link (one click away).
+        // The register link stays visible. Off by default so existing installs
+        // keep the current combined layout. Falls back to the classic form when
+        // no OAuth provider is enabled — see LoginFormCard.
+        'theme_login_oauth_first' => '0',
         // Per-page layout overrides (Vague 3 complète).
         'theme_page_console_fullwidth' => '0',
         'theme_page_files_fullwidth' => '0',

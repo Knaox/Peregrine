@@ -56,6 +56,7 @@ final class ThemeAdvancedSettings
         }
         $carouselEnabled = (string) $this->settings->get('theme_login_carousel_enabled', '0');
         $carouselRandom = (string) $this->settings->get('theme_login_carousel_random', '1');
+        $oauthFirst = (string) $this->settings->get('theme_login_oauth_first', '0');
 
         return [
             'template' => (string) $this->settings->get('theme_login_template', 'centered'),
@@ -67,6 +68,9 @@ final class ThemeAdvancedSettings
             'carousel_interval' => (int) $this->settings->get('theme_login_carousel_interval', '6000'),
             'carousel_random' => $carouselRandom === '1' || $carouselRandom === 'true',
             'background_opacity' => (int) $this->settings->get('theme_login_background_opacity', '100'),
+            // OAuth-first: lead with the OAuth buttons and hide the local form
+            // behind a text link. Consumed by LoginFormCard via theme.data.login.
+            'oauth_first' => $oauthFirst === '1' || $oauthFirst === 'true',
         ];
     }
 

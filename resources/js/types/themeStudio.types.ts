@@ -64,6 +64,9 @@ export interface ThemeDraft {
     theme_login_carousel_interval: number;
     theme_login_carousel_random: boolean;
     theme_login_background_opacity: number;
+    /** OAuth-first ("Nice OAuth") — lead with the OAuth providers and hide the
+     *  local email/password form behind a "sign in locally" text link. */
+    theme_login_oauth_first: boolean;
     // Per-page overrides (Vague 3 complète).
     theme_page_console_fullwidth: boolean;
     theme_page_files_fullwidth: boolean;

@@ -90,6 +90,8 @@
         "theme_sidebar_floating_help": "Detach the sidebar from the viewport edge with a margin and shadow.",
         "theme_sidebar_floating_unavailable": "Floating glass card is only available with Left sidebar position. Dock and Top navigation are already floating by design.",
         "theme_login_template": "Template",
+        "theme_login_oauth_first": "OAuth-first sign-in",
+        "theme_login_oauth_first_help": "Lead with the OAuth providers and tuck the email/password form behind a \"Sign in locally\" link. The \"create an account\" link stays visible. Applies to every template; automatically ignored when no OAuth provider is enabled.",
         "theme_login_background_image": "Background image",
         "theme_login_background_image_help": "JPG / PNG / WEBP, max 5 MB. Hidden on mobile for the split layout.",
         "theme_login_background_blur": "Background blur",

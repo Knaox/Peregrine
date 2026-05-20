@@ -3,6 +3,7 @@
     "button": "Sign In",
     "oauth_button": "Sign in with {{provider}}",
     "or": "or",
+    "use_local": "Sign in locally",
     "email": "Email Address",
     "password": "Password",
     "remember": "Remember me",

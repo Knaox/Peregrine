@@ -90,6 +90,8 @@
         "theme_sidebar_floating_help": "Décolle la sidebar du bord avec une marge et une ombre.",
         "theme_sidebar_floating_unavailable": "La carte glass flottante n'est disponible qu'avec la position Gauche. Le Dock et les onglets en haut sont déjà flottants par design.",
         "theme_login_template": "Modèle",
+        "theme_login_oauth_first": "Connexion OAuth en priorité",
+        "theme_login_oauth_first_help": "Met les fournisseurs OAuth en avant et replie le formulaire e-mail/mot de passe derrière un lien « Se connecter localement ». Le lien « créer un compte » reste visible. S'applique à tous les modèles ; ignoré automatiquement si aucun fournisseur OAuth n'est activé.",
         "theme_login_background_image": "Image de fond",
         "theme_login_background_image_help": "JPG / PNG / WEBP, 5 Mo max. Masquée sur mobile pour le modèle split.",
         "theme_login_background_blur": "Flou du fond",

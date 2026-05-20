@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { request, ApiError } from '@/services/http';
 import { fetchServers } from '@/services/api';
 import { buildModeVariants } from '@/lib/themeStudio/buildModeVariants';
+import { buildPreviewPayload } from '@/lib/themeStudio/buildPreviewPayload';
 import type {
     PreviewBreakpoint,
     PreviewMode,
@@ -138,59 +139,15 @@ export function useThemeStudio(): UseThemeStudioReturn {
             if (!win) return;
             const preset = presetsData?.presets[next.theme_preset] ?? null;
             const variants = buildModeVariants(next, preset);
-            const payload = {
-                css_variables: variants[mode],
-                mode_variants: variants,
-                data: {
-                    custom_css: next.theme_custom_css,
-                    font: next.theme_font,
-                    mode,
-                    // Layout descriptors consumed by ThemeProvider to set
-                    // data-header-sticky / data-header-align on <html>.
-                    layout: {
-                        header_height: next.theme_layout_header_height,
-                        header_sticky: next.theme_layout_header_sticky,
-                        header_align: next.theme_layout_header_align,
-                        container_max: next.theme_layout_container_max,
-                        page_padding: next.theme_layout_page_padding,
-                    },
-                    sidebar_advanced: {
-                        classic_width: next.theme_sidebar_classic_width,
-                        rail_width: next.theme_sidebar_rail_width,
-                        mobile_width: next.theme_sidebar_mobile_width,
-                        blur_intensity: next.theme_sidebar_blur_intensity,
-                        floating: next.theme_sidebar_floating,
-                    },
-                    login: {
-                        template: next.theme_login_template,
-                        background_image: next.theme_login_background_image,
-                        background_blur: next.theme_login_background_blur,
-                        background_pattern: next.theme_login_background_pattern,
-                        background_images: next.theme_login_background_images,
-                        carousel_enabled: next.theme_login_carousel_enabled,
-                        carousel_interval: next.theme_login_carousel_interval,
-                        carousel_random: next.theme_login_carousel_random,
-                        background_opacity: next.theme_login_background_opacity,
-                    },
-                    page_overrides: {
-                        console_fullwidth: next.theme_page_console_fullwidth,
-                        files_fullwidth: next.theme_page_files_fullwidth,
-                        dashboard_expanded: next.theme_page_dashboard_expanded,
-                    },
-                    footer: {
-                        enabled: next.theme_footer_enabled,
-                        text: next.theme_footer_text,
-                        links: next.theme_footer_links,
-                    },
-                    app: {
-                        background_pattern: next.theme_app_background_pattern,
-                        shell_variant: next.theme_app_shell_variant,
-                        rail_width: next.theme_workspace_rail_width,
-                    },
-                },
-                card_config: cardDraft ?? data?.card_config ?? null,
-                sidebar_config: sidebarDraft ?? data?.sidebar_config ?? null,
-            };
+            // Fold the flat draft into the nested ThemeData payload the iframe
+            // expects (extracted to a sibling builder to keep this hook lean).
+            const payload = buildPreviewPayload(
+                next,
+                mode,
+                variants,
+                cardDraft ?? data?.card_config ?? null,
+                sidebarDraft ?? data?.sidebar_config ?? null,
+            );
             win.postMessage({ type: 'peregrine:theme:update', payload }, PEER_ORIGIN);
             win.postMessage({ type: 'peregrine:theme:setMode', payload: mode }, PEER_ORIGIN);
         },

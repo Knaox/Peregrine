@@ -60,6 +60,14 @@ export function ThemeLoginSection({ draft, onField }: ThemeLoginSectionProps) {
                 options={templateOptions}
                 onChange={(v) => onField('theme_login_template', v)}
             />
+            <ToggleField
+                label={t('theme-studio:fields.theme_login_oauth_first', 'OAuth-first sign-in')}
+                value={draft.theme_login_oauth_first}
+                description={t('theme-studio:fields.theme_login_oauth_first_help',
+                    'Lead with the OAuth providers and tuck the email/password form behind a "Sign in locally" link. The "create an account" link stays visible. Applies to every template; automatically ignored when no OAuth provider is enabled.',
+                )}
+                onChange={(v) => onField('theme_login_oauth_first', v)}
+            />
             <SelectField
                 label={t('theme-studio:fields.theme_login_background_pattern', 'Background pattern')}
                 value={draft.theme_login_background_pattern}

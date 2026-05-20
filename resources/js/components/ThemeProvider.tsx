@@ -42,6 +42,10 @@ export interface ThemeLoginData {
     carousel_interval: number;
     carousel_random: boolean;
     background_opacity: number;
+    /** OAuth-first sign-in: lead with the OAuth buttons and tuck the local
+     *  email/password form behind a "sign in locally" link. The register
+     *  link stays visible. Read by LoginFormCard. */
+    oauth_first: boolean;
 }
 
 export interface ThemePageOverridesData {
