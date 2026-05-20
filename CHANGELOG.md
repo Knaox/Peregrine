@@ -4,6 +4,19 @@ All notable changes to the Peregrine panel are documented in this file.
 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha.9] — 2026-05-20
+
+### Added
+
+- **Theme Studio — "Nice OAuth" sign-in mode** (`theme_login_oauth_first`, section Login). When enabled, the login card leads with the configured OAuth providers and tucks the local email/password form behind a "sign in locally" text link (progressive disclosure with an animated reveal); the "create an account" link stays visible. Intended for shops whose users authenticate through an OAuth IdP and have no local account, so they aren't nudged into a dead-end password form. Degrades automatically to the classic combined layout when no OAuth provider is enabled or local login is disabled — users are never stranded. Exposed end-to-end through the live Theme Studio preview (`theme.data.login.oauth_first`). Internally, `LoginFormCard` was split into `AuthField` + `LocalLoginForm`, and the studio preview payload extracted into `lib/themeStudio/buildPreviewPayload.ts`.
+- **Stripe resubscribe: the `subscription_id` is now signed, plus an admin field for the shared secret.** Hardens the resubscribe URL contract so the shop side can verify the subscription identifier alongside the existing signature.
+
+### Fixed
+
+- **Stripe: a server scheduled for deletion is no longer auto-reactivated** when a stale or out-of-order `subscription.updated(active)` webhook arrives after the cancellation has already been processed.
+- **Docker: pinned pnpm to 9.15.9** to bypass the strict-builds enforcement that broke the image build.
+- **Docker: allow the esbuild build script** to run under pnpm strict mode.
+
 ## [1.0.0-alpha.8] — 2026-05-19
 
 ### Highlights
