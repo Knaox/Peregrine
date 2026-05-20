@@ -151,8 +151,20 @@ class SubscriptionUpdateJob implements ShouldQueue
             // sidebar gates the moment Stripe drops us into past_due,
             // not on the next 5-minute staleTime refetch.
             $this->broadcastServerMirrorChanged($server);
-        } elseif (in_array($this->newStatus, ['active', 'trialing'], true) && $server->status === 'suspended') {
-            // Customer fixed their payment, reactivate.
+        } elseif (in_array($this->newStatus, ['active', 'trialing'], true)
+            && $server->status === 'suspended'
+            && $server->scheduled_deletion_at === null
+        ) {
+            // Customer fixed their payment, reactivate. The scheduled_deletion_at
+            // guard is essential and applies to EVERY subscription (standard or
+            // resubscribed): Stripe does not guarantee event ordering and
+            // re-delivers events for up to 3 days, so a stale "active" update
+            // emitted at subscribe time can land AFTER the cancellation that
+            // suspended + scheduled the server for deletion. We only auto-revive
+            // servers suspended for non-payment (past_due leaves
+            // scheduled_deletion_at null). A terminally cancelled server is
+            // revived solely by an explicit paid resubscribe (which clears
+            // scheduled_deletion_at), never by a replayed/out-of-order event.
             if ($server->pelican_server_id !== null) {
                 try {
                     $pelican->unsuspendServer($server->pelican_server_id);
