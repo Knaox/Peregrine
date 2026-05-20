@@ -57,8 +57,13 @@ class StripeBillingPortalLinker
      *   {configuration_id} = ServerConfiguration::id (= the shop's mirror peregrine_id)
      *   {configuration}    = ServerConfiguration::internal_name (kept for legacy
      *                        templates ; new shops should use configuration_id)
+     *   {subscription_id}  = the cancelled Server::stripe_subscription_id. The
+     *                        shop reuses its Stripe Price (correct cycle +
+     *                        grandfathered amount) and checks its customer
+     *                        belongs to the logged-in user (ownership gate).
      *   {ts}               = unix timestamp at link generation
-     *   {signature}        = HMAC-SHA256 over "{server_id}|{configuration_id}|{ts}",
+     *   {signature}        = HMAC-SHA256 over
+     *                        "{server_id}|{configuration_id}|{subscription_id}|{ts}",
      *                        keyed with bridge_shop_shared_secret
      *
      * The signature porte sur configuration_id (stable Peregrine ID) au lieu
@@ -77,25 +82,27 @@ class StripeBillingPortalLinker
         $serverId = (string) ($server?->id ?? '');
         $configurationId = (string) ($configuration?->id ?? '');
         $configurationSlug = (string) ($configuration?->internal_name ?? '');
+        $subscriptionId = (string) ($server?->stripe_subscription_id ?? '');
         $ts = (string) time();
-        $signature = $this->signResubscribePayload($serverId, $configurationId, $ts);
+        $signature = $this->signResubscribePayload($serverId, $configurationId, $subscriptionId, $ts);
 
         return strtr($template, [
             '{server_id}' => $serverId,
             '{configuration_id}' => $configurationId,
             '{configuration}' => $configurationSlug, // legacy placeholder ; signature no longer covers it
+            '{subscription_id}' => $subscriptionId,
             '{ts}' => $ts,
             '{signature}' => $signature,
         ]);
     }
 
-    private function signResubscribePayload(string $serverId, string $configurationId, string $ts): string
+    private function signResubscribePayload(string $serverId, string $configurationId, string $subscriptionId, string $ts): string
     {
         $secret = $this->resolveShopSharedSecret();
         if ($secret === '') {
             return '';
         }
-        return hash_hmac('sha256', "{$serverId}|{$configurationId}|{$ts}", $secret);
+        return hash_hmac('sha256', "{$serverId}|{$configurationId}|{$subscriptionId}|{$ts}", $secret);
     }
 
     private function resolveShopSharedSecret(): string

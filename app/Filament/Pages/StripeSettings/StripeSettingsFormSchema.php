@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages\StripeSettings;
 
+use Filament\Actions\Action;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\HtmlString;
 
 /**
@@ -101,10 +104,30 @@ final class StripeSettingsFormSchema
                     ->placeholder('https://billing.stripe.com/p/login/...')
                     ->helperText(__('admin/stripe_settings.helpers.billing_portal_url')),
 
+                TextInput::make('bridge_shop_shared_secret')
+                    ->label(__('admin/stripe_settings.fields.shared_secret'))
+                    ->password()
+                    ->revealable()
+                    ->maxLength(255)
+                    ->helperText(__('admin/stripe_settings.helpers.shared_secret'))
+                    ->suffixAction(
+                        Action::make('generateSharedSecret')
+                            ->icon('heroicon-o-key')
+                            ->tooltip(__('admin/stripe_settings.fields.shared_secret_action_tooltip'))
+                            ->action(function (Set $set): void {
+                                $set('bridge_shop_shared_secret', base64_encode(random_bytes(32)));
+                                Notification::make()
+                                    ->title(__('admin/stripe_settings.notifications.secret_generated_title'))
+                                    ->body(__('admin/stripe_settings.notifications.secret_generated_body'))
+                                    ->warning()
+                                    ->send();
+                            }),
+                    ),
+
                 TextInput::make('bridge_resubscribe_url')
                     ->label(__('admin/stripe_settings.fields.resubscribe_url'))
                     ->maxLength(512)
-                    ->placeholder('https://shop.example.com/resubscribe?server_id={server_id}&configuration_id={configuration_id}&ts={ts}&signature={signature}')
+                    ->placeholder('https://shop.example.com/resubscribe?server_id={server_id}&configuration_id={configuration_id}&subscription_id={subscription_id}&ts={ts}&signature={signature}')
                     ->helperText(__('admin/stripe_settings.helpers.resubscribe_url')),
 
                 TextInput::make('bridge_grace_period_days')

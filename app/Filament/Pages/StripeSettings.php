@@ -63,6 +63,8 @@ class StripeSettings extends Page implements HasForms
 
     public ?string $bridge_resubscribe_url = '';
 
+    public ?string $bridge_shop_shared_secret = '';
+
     public int $bridge_grace_period_days = 14;
 
     public function mount(): void
@@ -73,6 +75,20 @@ class StripeSettings extends Page implements HasForms
         $this->bridge_stripe_webhook_secret = '';
         $this->bridge_stripe_api_secret = '';
 
+        // The resubscribe shared secret is the exception: the shop owner must
+        // be able to read it to copy it into the WordPress plugin, so we
+        // decrypt and prefill it (best-effort — a non-decryptable envelope
+        // shows empty and can be regenerated).
+        $this->bridge_shop_shared_secret = '';
+        $sharedEnvelope = (string) $settings->get('bridge_shop_shared_secret', '');
+        if ($sharedEnvelope !== '') {
+            try {
+                $this->bridge_shop_shared_secret = (string) Crypt::decryptString($sharedEnvelope);
+            } catch (\Throwable) {
+                $this->bridge_shop_shared_secret = '';
+            }
+        }
+
         $this->bridge_stripe_billing_portal_url = (string) $settings->get('bridge_stripe_billing_portal_url', '');
         $this->bridge_resubscribe_url = (string) $settings->get('bridge_resubscribe_url', '');
         $this->bridge_grace_period_days = (int) $settings->get('bridge_grace_period_days', 14);
@@ -80,6 +96,7 @@ class StripeSettings extends Page implements HasForms
         $this->form->fill([
             'bridge_stripe_webhook_secret' => $this->bridge_stripe_webhook_secret,
             'bridge_stripe_api_secret' => $this->bridge_stripe_api_secret,
+            'bridge_shop_shared_secret' => $this->bridge_shop_shared_secret,
             'bridge_stripe_billing_portal_url' => $this->bridge_stripe_billing_portal_url,
             'bridge_resubscribe_url' => $this->bridge_resubscribe_url,
             'bridge_grace_period_days' => $this->bridge_grace_period_days,
@@ -104,6 +121,14 @@ class StripeSettings extends Page implements HasForms
         $typedApi = (string) ($data['bridge_stripe_api_secret'] ?? '');
         if ($typedApi !== '') {
             $settings->set('bridge_stripe_api_secret', Crypt::encryptString($typedApi));
+        }
+
+        // Encrypt + persist the shared secret only when present (prefilled
+        // from mount, so a normal save re-stores the same value; an empty
+        // field keeps the existing one rather than wiping it).
+        $typedShared = (string) ($data['bridge_shop_shared_secret'] ?? '');
+        if ($typedShared !== '') {
+            $settings->set('bridge_shop_shared_secret', Crypt::encryptString($typedShared));
         }
 
         $settings->set('bridge_stripe_billing_portal_url', (string) ($data['bridge_stripe_billing_portal_url'] ?? ''));

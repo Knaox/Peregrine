@@ -43,13 +43,16 @@ return [
         'billing_portal_url' => 'Stripe Billing Portal fallback URL',
         'resubscribe_url' => 'Resubscribe URL template',
         'grace_period_days' => 'Grace period (days)',
+        'shared_secret' => 'Resubscribe shared secret (HMAC)',
+        'shared_secret_action_tooltip' => 'Generate a new random secret',
     ],
     'helpers' => [
         'webhook_secret' => 'Used to verify the signature of inbound Stripe events. Without this, the /api/stripe/webhook endpoint rejects all calls. Leave empty to keep the existing value; type a fresh value to rotate.',
         'api_secret' => 'Used by Peregrine to call Stripe (e.g. fetch invoice URLs in receipt emails, create Customer Portal sessions). Optional — without it, emails fall back to the Billing Portal URL below.',
         'billing_portal_url' => 'Static fallback URL pointing at your Stripe Customer Portal. Used in lifecycle emails when the API session creation fails or no API secret is set.',
-        'resubscribe_url' => 'Template applied when sending the "your server was suspended" email. Signature covers {server_id}|{configuration_id}|{ts} keyed with bridge_shop_shared_secret. Placeholders: {server_id}, {configuration_id}, {ts}, {signature}. The {configuration} placeholder (internal_name) is still interpolated for legacy shops but is no longer part of the signature.',
+        'resubscribe_url' => 'Template applied when sending the "your server was suspended" email. Signature covers {server_id}|{configuration_id}|{subscription_id}|{ts} keyed with bridge_shop_shared_secret. Placeholders: {server_id}, {configuration_id}, {subscription_id}, {ts}, {signature}. The {subscription_id} (the cancelled Stripe subscription) lets the shop reuse the original price and verify the subscription belongs to the user. The {configuration} placeholder (internal_name) is still interpolated for legacy shops but is no longer part of the signature.',
         'grace_period_days' => 'Days kept between subscription cancellation and actual server deletion. The customer can resubscribe during this window. Default: 14 days.',
+        'shared_secret' => 'HMAC key that signs resubscribe links. Copy this value EXACTLY into the "Bridge Shared Secret" setting of the WordPress plugin (Peregrine settings → Stripe). Both sides must match or links are rejected. Stored encrypted. Regenerating invalidates every link already sent.',
     ],
     'placeholders' => [
         'webhook_secret' => 'whsec_…',
@@ -63,5 +66,7 @@ return [
     ],
     'notifications' => [
         'saved' => 'Stripe settings saved.',
+        'secret_generated_title' => 'New secret generated',
+        'secret_generated_body' => 'Save to apply it, then copy it into the WordPress plugin. Existing resubscribe links will be invalidated.',
     ],
 ];
