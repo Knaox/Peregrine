@@ -1,0 +1,94 @@
+name: Release
+
+# On every push to main, read the shipped version from config/panel.php and,
+# if no release exists for it yet, cut a tag (vX.Y.Z) + a GitHub Release titled
+# "Peregrine X.Y.Z". The release body is the matching "## [X.Y.Z]" section of
+# CHANGELOG.md, so "what changed" is curated by hand in the repo and published
+# verbatim. Idempotent: a push that doesn't bump the version finds the tag
+# already present and no-ops, so this never fails on ordinary commits.
+#
+# Release flow:
+#   1. As you work, add bullets under "## [Unreleased]" in CHANGELOG.md.
+#   2. To ship: rename [Unreleased] to "## [X.Y.Z] — <date>", add a fresh empty
+#      [Unreleased], bump 'version' in config/panel.php, commit, push to main.
+#
+# NOTE: the tag created here (vX.Y.Z) matches docker.yml's tag trigger, but a
+# tag created with the default GITHUB_TOKEN does NOT start docker.yml — GitHub
+# blocks token-created events from chaining workflows (anti-recursion). To also
+# build the versioned image, either run docker.yml via workflow_dispatch on the
+# new tag, or replace GITHUB_TOKEN below with a PAT stored as a repo secret.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Resolve version + changelog section
+        id: meta
+        run: |
+          set -euo pipefail
+          version="$(sed -nE "s/.*env\('APP_VERSION', *'([^']+)'\).*/\1/p" config/panel.php | head -n1)"
+          if [ -z "$version" ]; then
+            echo "::error file=config/panel.php::Could not read APP_VERSION default"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+          # Extract the "## [version] …" block from CHANGELOG.md, up to the next
+          # "## [" heading. The heading may carry a date suffix — index() only
+          # checks the prefix, so "— 2026-05-21" after the bracket is fine.
+          awk -v ver="$version" '
+            index($0, "## [" ver "]") == 1 { flag = 1; next }
+            flag && /^## \[/ { flag = 0 }
+            flag { print }
+          ' CHANGELOG.md > section.md || true
+          # Drop leading blank lines so the release body starts on content.
+          sed -i -e '/./,$!d' section.md
+
+          if [ -s section.md ]; then
+            echo "has_notes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_notes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create release if it does not exist yet
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          HAS_NOTES: ${{ steps.meta.outputs.has_notes }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists — nothing to do."
+            exit 0
+          fi
+
+          # Pre-1.0.0 / any "-suffix" version is flagged as a GitHub pre-release.
+          prerelease=""
+          case "$VERSION" in *-*) prerelease="--prerelease";; esac
+
+          if [ "$HAS_NOTES" = "true" ]; then
+            gh release create "$TAG" --target "$GITHUB_SHA" \
+              --title "Peregrine $VERSION" --notes-file section.md $prerelease
+          else
+            echo "::warning::No CHANGELOG section for $VERSION — using auto-generated notes."
+            gh release create "$TAG" --target "$GITHUB_SHA" \
+              --title "Peregrine $VERSION" --generate-notes $prerelease
+          fi
+          echo "Created release \"Peregrine $VERSION\" ($TAG)."

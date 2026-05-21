@@ -4,6 +4,37 @@ All notable changes to the Peregrine panel are documented in this file.
 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> **Workflow** — Add one bullet per change under **[Unreleased]** as you work, in the right group (`Added` / `Changed` / `Fixed` / `Removed` / `Security`). When you ship, rename **[Unreleased]** to the version you set in `config/panel.php` with today's date (`## [1.2.3] — YYYY-MM-DD`), start a fresh empty **[Unreleased]** on top, commit, and `git push origin main`. The Release workflow publishes that section verbatim as the GitHub release notes for tag `vX.Y.Z`.
+
+## [Unreleased]
+
+## [1.0.0-alpha.10] — 2026-05-21
+
+### Added
+
+- **Two-phase cancellation lifecycle.** Disabling auto-renew (`cancel_at_period_end`) no longer suspends right away — the customer keeps the server until the paid period ends. Peregrine now records two dates: `scheduled_suspension_at` (period end) and `scheduled_deletion_at` (period end + `bridge_grace_period_days`). A new `SuspendScheduledServersJob` cron suspends the server once the suspension date passes (keeping the deletion date for the existing purge to hard-delete after grace), and re-enabling renewal clears both. Disabling renewal while a server is still provisioning (or after a failed provision) records the dates up front too, so nothing slips through between provisioning and period end. Adds the `scheduled_suspension_at` column (migration).
+- **Editable scheduled dates in the admin.** The server edit form (Billing tab) gains a "Suspension planifiée le" picker next to "Suppression planifiée le", so both dates can be set or adjusted by hand to exercise the cancellation flow. New FR/EN labels + helper text.
+- **Manual status change drives Pelican.** Setting a server's status to *suspended* in the admin now suspends it in Pelican, and switching a suspended server back to *active* unsuspends it. The Pelican call runs before the DB write, so a Pelican failure aborts the save with a notification instead of leaving the panel and Pelican out of sync.
+- **Suspension sweep safety net.** The scheduled-suspension cron targets every non-terminal server (not just `active`), so a server powered off (stopped/offline) at its suspension date is still suspended, and servers whose deletion date elapsed during downtime without ever being suspended are caught — the purge's `status='suspended'` guard never strands them.
+
+### Changed
+
+- **Pelican mirror protection recentred on the Stripe subscription.** Pelican `created`/`deleted: Server` webhooks were neutralised as soon as a server carried *either* a `stripe_subscription_id` *or* a `server_configuration_id` — too broad, it stopped Pelican from creating or deleting servers that had no subscription. The guard now keys solely on `stripe_subscription_id`: subscription-backed servers are preserved on drift, while servers without a subscription are mirrored (manual Pelican creations, via a race-safe resolution) and removed locally when deleted in Pelican.
+- **Server `status` carries only the lifecycle state** in the admin (active / suspended / provisioning / provisioning_failed). Power state (running / stopped / offline) is shown live in the frontend via the Wings websocket and is no longer persisted into `status`; the runtime sync only normalises any leftover power state back to `active`. The admin status select and table filter expose just the four lifecycle states.
+
+### Fixed
+
+- **Two-phase teardown scheduling could silently no-op** on a live server whose `status` had been overwritten with a power state by the old runtime sync (the guard checked `status === 'active'`, which a `running`/`stopped` row never matched). With power states out of `status`, the scheduling guard now matches the lifecycle status reliably.
+
+### Admin UX
+
+- **Every admin table column is now hideable** via the columns toggle (`Column::configureUsing(toggleable)`), and wide tables scroll horizontally + vertically through a global CSS render hook.
+- **Missing translations added** (FR/EN): `fields.configuration`, `fields.has_configuration`, `fields.scheduled_suspension`.
+
+### Internal
+
+- **Automated GitHub releases.** A Release workflow cuts tag `vX.Y.Z` + a "Peregrine X.Y.Z" GitHub Release from the matching `CHANGELOG.md` section on every version bump pushed to `main`, idempotent on ordinary commits.
+
 ## [1.0.0-alpha.9] — 2026-05-20
 
 ### Added
