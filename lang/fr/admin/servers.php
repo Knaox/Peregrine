@@ -20,6 +20,9 @@ return [
         'egg' => 'L\'egg Pelican utilisé pour provisionner ce serveur. Détermine l\'image Docker et la commande de démarrage.',
         'plan' => 'Optionnel — relier ce serveur à un plan du Shop pour la réconciliation de facturation.',
     ],
+    'status_change' => [
+        'pelican_failed' => 'Échec de l\'action Pelican (suspension/désuspension). Le statut n\'a pas été modifié.',
+    ],
     'retry' => [
         'label' => 'Relancer le provisioning',
         'modal_heading' => 'Relancer le provisioning de ":name" ?',

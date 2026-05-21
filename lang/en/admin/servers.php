@@ -20,6 +20,9 @@ return [
         'egg' => 'The Pelican egg used to provision this server. Determines the docker image and start command.',
         'plan' => 'Optional — link this server to a Shop plan for billing reconciliation.',
     ],
+    'status_change' => [
+        'pelican_failed' => 'Pelican action failed (suspend/unsuspend). The status was not changed.',
+    ],
     'retry' => [
         'label' => 'Retry provisioning',
         'modal_heading' => 'Retry provisioning for ":name"?',
