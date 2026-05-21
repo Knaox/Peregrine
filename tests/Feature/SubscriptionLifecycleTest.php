@@ -180,7 +180,7 @@ class SubscriptionLifecycleTest extends TestCase
         };
 
         $pelicanMock = Mockery::mock(PelicanApplicationService::class);
-        $job->handle($pelicanMock);
+        $job->handle($pelicanMock, app(SettingsService::class));
 
         $this->assertSame(60, $job->releasedDelay, 'first retry should use backoff[0] = 60s');
     }
@@ -197,7 +197,7 @@ class SubscriptionLifecycleTest extends TestCase
         };
 
         $pelicanMock = Mockery::mock(PelicanApplicationService::class);
-        $job->handle($pelicanMock);
+        $job->handle($pelicanMock, app(SettingsService::class));
 
         $this->assertNull($job->releasedDelay, 'third attempt should not release');
     }
