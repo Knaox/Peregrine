@@ -90,6 +90,10 @@ final class ServerFormSchemaBuilder
                         ->nullable()
                         ->disabled()
                         ->helperText(__('admin/servers.helpers.payment_intent')),
+                    \Filament\Forms\Components\DateTimePicker::make('scheduled_suspension_at')
+                        ->label(__('admin/_shell.fields.scheduled_suspension_at'))
+                        ->nullable()
+                        ->helperText(__('admin/servers.helpers.scheduled_suspension')),
                     \Filament\Forms\Components\DateTimePicker::make('scheduled_deletion_at')
                         ->label(__('admin/_shell.fields.scheduled_deletion_at'))
                         ->nullable()

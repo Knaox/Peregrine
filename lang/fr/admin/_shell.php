@@ -149,6 +149,7 @@ return [
         'scheduled_suspension' => 'Suspension planifiée',
         'scheduled_deletion' => 'Suppression planifiée',
         'scheduled_deletion_at' => 'Suppression planifiée le',
+        'scheduled_suspension_at' => 'Suspension planifiée le',
         'http' => 'HTTP',
         'http_outcome' => 'Résultat HTTP',
         'hmac' => 'HMAC',

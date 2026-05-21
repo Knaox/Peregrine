@@ -15,6 +15,7 @@ return [
         'idempotency' => 'Set by ProvisionServerJob — guarantees a single Pelican server per Stripe checkout.',
         'stripe_subscription' => 'Bound to the customer\'s active subscription. Cleared on cancellation.',
         'payment_intent' => 'Set automatically from the Stripe checkout — read-only.',
+        'scheduled_suspension' => 'Date the server will be suspended (end of the paid period). Editable to test the flow.',
         'scheduled_deletion' => 'Set when the customer cancels — server is hard-deleted at this date if not unsuspended.',
         'egg' => 'The Pelican egg used to provision this server. Determines the docker image and start command.',
         'plan' => 'Optional — link this server to a Shop plan for billing reconciliation.',
