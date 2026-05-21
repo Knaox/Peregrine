@@ -7,6 +7,7 @@ use App\Events\Mirror\ServerMirrorChanged;
 use App\Models\Server;
 use App\Models\User;
 use App\Services\Integrations\IntegrationStatusService;
+use App\Services\Pelican\DTOs\PelicanServer;
 use App\Services\Pelican\PelicanApplicationService;
 use App\Services\Sync\EggResolver;
 use App\Services\Sync\ServerStatusResolver;
@@ -48,7 +49,8 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
         IntegrationStatusService $integrations,
     ): void {
         if ($this->isDeletionEvent()) {
-            $this->handleDeletion($integrations);
+            $this->handleDeletion();
+
             return;
         }
 
@@ -64,13 +66,14 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
 
         $existing = Server::where('pelican_server_id', $this->pelicanServerId)->first();
 
-        if ($existing !== null && $this->isShopOwned($existing)) {
+        if ($existing !== null && $this->isStripeManaged($existing)) {
             $this->updateShopOwned($existing, $apiSnapshot);
+
             return;
         }
 
-        // Not Shop-owned (orchestrator-driven mirror or admin-imported) →
-        // full upsert.
+        // Not Stripe-managed (orchestrator-driven mirror, admin-imported, or
+        // hand-created in Pelican) → full upsert.
         $this->fullUpsert($existing, $apiSnapshot, $integrations);
     }
 
@@ -80,7 +83,7 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
      */
     private function updateShopOwned(
         Server $server,
-        ?\App\Services\Pelican\DTOs\PelicanServer $apiSnapshot,
+        ?PelicanServer $apiSnapshot,
     ): void {
         $previousStatus = (string) $server->status;
 
@@ -108,10 +111,9 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
 
         // STRICT ORDER : status update MUST land before the event — listeners
         // see the row in its final state. Tested in ShopGuardTest.
-        // We've already passed the `isShopOwned()` check at the top of the
-        // dispatcher : the server carries a stripe_subscription_id or a
-        // server_configuration_id, meaning Peregrine drives its lifecycle.
-        // Fire the install-completed email regardless of any global mode.
+        // We've already passed the `isStripeManaged()` check in handle() :
+        // the server carries a stripe_subscription_id, meaning Stripe drives
+        // its lifecycle. Fire the install-completed email regardless of mode.
         if (
             $previousStatus === 'provisioning'
             && ($updates['status'] ?? null) === 'active'
@@ -142,21 +144,37 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
      */
     private function fullUpsert(
         ?Server $existing,
-        ?\App\Services\Pelican\DTOs\PelicanServer $apiSnapshot,
+        ?PelicanServer $apiSnapshot,
         IntegrationStatusService $integrations,
     ): void {
-        // When Stripe is wired, server creation is owned by Peregrine's
-        // checkout flow (ProvisionServerJob writes the local row first then
-        // calls Pelican). A "server.created" event arriving for an unknown
-        // pelican_server_id means Pelican fired before our local row landed
-        // — race condition, the next `updated` event will sync it. We
-        // silently skip rather than create a foreign-owned row.
+        // When Stripe is wired, an unknown pelican_server_id is ambiguous :
+        //   (a) provisioning race — ProvisionServerJob created the local row
+        //       (status='provisioning', carrying stripe_subscription_id) but
+        //       hasn't written back the pelican_server_id yet, so we can't
+        //       find it. Releasing lets that job land the id ; on retry the
+        //       row is found and routed to updateShopOwned().
+        //   (b) genuinely hand-created in Pelican — no local row will ever
+        //       appear. Such a server has no subscription, so Pelican is its
+        //       source of truth and we must mirror it.
+        // We can't tell them apart immediately, so we release-and-retry and
+        // only fall through to creation on the last attempt (by then the
+        // provisioning write-back has had the full backoff window to land).
         if ($existing === null && $integrations->hasStripeConfigured()) {
-            Log::info('SyncServerFromPelicanWebhookJob: skipping unknown server (Stripe-driven flow will own creation)', [
+            if ($this->attempts() < $this->tries) {
+                Log::info('SyncServerFromPelicanWebhookJob: unknown server under Stripe, releasing to disambiguate provisioning race', [
+                    'pelican_server_id' => $this->pelicanServerId,
+                    'event_type' => $this->eventType,
+                    'attempt' => $this->attempts(),
+                ]);
+                $this->release(60);
+
+                return;
+            }
+
+            Log::info('SyncServerFromPelicanWebhookJob: unknown server still absent after retries, mirroring as hand-created (no subscription)', [
                 'pelican_server_id' => $this->pelicanServerId,
                 'event_type' => $this->eventType,
             ]);
-            return;
         }
 
         $ownerId = $apiSnapshot?->userId
@@ -166,6 +184,7 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
                 'pelican_server_id' => $this->pelicanServerId,
                 'event_type' => $this->eventType,
             ]);
+
             return;
         }
 
@@ -175,6 +194,7 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
             // backoff gives Pelican / queue worker time to finish.
             SyncUserFromPelicanWebhookJob::dispatch($ownerId);
             $this->release(60);
+
             return;
         }
 
@@ -216,22 +236,27 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
     }
 
     /**
-     * A server is "Shop-owned" when the Stripe webhook flow has tagged it
-     * with either a subscription id or a plan id. In those cases the Shop is
-     * source of truth for everything except install state.
+     * A server is "Stripe-managed" when it carries a Stripe subscription id.
+     * Those servers have their lifecycle driven by Stripe (create via the
+     * checkout flow, delete via the cancellation → purge pipeline), so
+     * Pelican is NOT allowed to create or delete them out of band — only the
+     * install-state delta is mirrored. Every other server (no subscription :
+     * admin-imported, hand-created in Pelican, orchestrator mirror) follows
+     * Pelican as source of truth. `stripe_subscription_id` is never reset to
+     * null while the row lives, so this stays true until the legitimate purge
+     * removes the row entirely.
      */
-    private function isShopOwned(Server $server): bool
+    private function isStripeManaged(Server $server): bool
     {
-        return $server->stripe_subscription_id !== null
-            || $server->server_configuration_id !== null;
+        return $server->stripe_subscription_id !== null;
     }
 
-    private function resolveInstallStatus(?\App\Services\Pelican\DTOs\PelicanServer $apiSnapshot, string $previousStatus): ?string
+    private function resolveInstallStatus(?PelicanServer $apiSnapshot, string $previousStatus): ?string
     {
         return ServerStatusResolver::resolveInstallStatus($apiSnapshot, $previousStatus, $this->payloadSnapshot);
     }
 
-    private function mapStatusFromApi(\App\Services\Pelican\DTOs\PelicanServer $snapshot): string
+    private function mapStatusFromApi(PelicanServer $snapshot): string
     {
         return ServerStatusResolver::mapStatusFromApi($snapshot);
     }
@@ -241,26 +266,30 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
         // Long form ("eloquent.deleted: App\Models\Server") and short form
         // ("deleted: Server") both end with "deleted: ...".
         $normalized = str_replace(' ', '', $this->eventType);
+
         return str_starts_with($normalized, 'deleted:') || str_contains($normalized, 'eloquent.deleted');
     }
 
-    private function handleDeletion(IntegrationStatusService $integrations): void
+    private function handleDeletion(): void
     {
         $server = Server::where('pelican_server_id', $this->pelicanServerId)->first();
         if ($server === null) {
             return;
         }
 
-        // Shop-owned deletions belong to PurgeScheduledServerDeletionsJob.
-        // A Pelican-side deletion arriving for a Stripe-driven server is
-        // drift (someone hand-deleted in the Pelican panel). We refuse to
-        // mirror it locally so the admin can investigate.
-        if ($this->isShopOwned($server) && $integrations->hasStripeConfigured()) {
-            Log::warning('SyncServerFromPelicanWebhookJob: Pelican deleted a Shop-owned server, leaving local row in place for admin review', [
+        // Stripe-managed deletions belong to PurgeScheduledServerDeletionsJob.
+        // A Pelican-side deletion arriving for a server that still carries a
+        // Stripe subscription is drift (someone hand-deleted it in the Pelican
+        // panel while billing is live). We refuse to mirror it so the admin
+        // can investigate. Servers without a subscription follow Pelican and
+        // are removed locally below.
+        if ($this->isStripeManaged($server)) {
+            Log::warning('SyncServerFromPelicanWebhookJob: Pelican deleted a Stripe-managed server, leaving local row in place for admin review', [
                 'pelican_server_id' => $this->pelicanServerId,
                 'local_server_id' => $server->id,
                 'stripe_subscription_id' => $server->stripe_subscription_id,
             ]);
+
             return;
         }
 
@@ -297,6 +326,7 @@ class SyncServerFromPelicanWebhookJob implements ShouldQueue
     {
         // Pelican stores Paymenter's service id in `external_id`.
         $value = $data['external_id'] ?? null;
+
         return ($value === null || $value === '') ? null : (string) $value;
     }
 

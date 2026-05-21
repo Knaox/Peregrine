@@ -51,6 +51,7 @@ final class PelicanMirrorReconciler
             Log::warning('PelicanMirrorReconciler: listServers failed', [
                 'message' => $e->getMessage(),
             ]);
+
             return;
         }
 
@@ -62,6 +63,7 @@ final class PelicanMirrorReconciler
 
             if ($local === null) {
                 $this->dispatchSync($pelicanServer);
+
                 continue;
             }
 
@@ -125,6 +127,21 @@ final class PelicanMirrorReconciler
 
     private function deleteOrphan(Server $server): void
     {
+        // Mirror the guard in SyncServerFromPelicanWebhookJob::handleDeletion :
+        // a server that still carries a Stripe subscription is lifecycle-owned
+        // by Stripe (cancellation → suspend → PurgeScheduledServerDeletionsJob).
+        // Its absence from Pelican's list is drift, not an order to delete —
+        // leave the row in place for admin review.
+        if ($server->stripe_subscription_id !== null) {
+            Log::warning('PelicanMirrorReconciler: skipping orphan delete for Stripe-managed server (drift)', [
+                'local_server_id' => (int) $server->id,
+                'pelican_server_id' => $server->pelican_server_id,
+                'stripe_subscription_id' => $server->stripe_subscription_id,
+            ]);
+
+            return;
+        }
+
         $localId = (int) $server->id;
         $accessUserIds = $server->accessUsers()->pluck('users.id')->all();
 
