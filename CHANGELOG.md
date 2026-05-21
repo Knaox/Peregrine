@@ -34,6 +34,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 ### Internal
 
 - **Automated GitHub releases.** A Release workflow cuts tag `vX.Y.Z` + a "Peregrine X.Y.Z" GitHub Release from the matching `CHANGELOG.md` section on every version bump pushed to `main`, idempotent on ordinary commits.
+- **Versioned Docker images on push.** The Docker workflow tags the published image with the panel version (read from `config/panel.php`) on every push to `main`, so `ghcr.io/knaox/peregrine:<version>` ships alongside `latest` / `main`.
 
 ## [1.0.0-alpha.9] — 2026-05-20
 
