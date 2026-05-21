@@ -59,6 +59,8 @@ class SubscriptionUpdateJob implements ShouldQueue
         public readonly string $stripeSubscriptionId,
         public readonly ?int $newConfigurationId,
         public readonly string $newStatus,
+        public readonly bool $cancelAtPeriodEnd = false,
+        public readonly ?int $cancelAt = null,
     ) {}
 
     public function handle(PelicanApplicationService $pelican): void
@@ -181,6 +183,37 @@ class SubscriptionUpdateJob implements ShouldQueue
             // (sidebar entries return, dashboard pill drops) without
             // requiring a refresh after they pay.
             $this->broadcastServerMirrorChanged($server);
+        }
+
+        // 3. Auto-renew toggle on an ACTIVE server. Disabling renewal does not
+        // suspend — the customer keeps the server until the paid period ends —
+        // but we mark the upcoming removal so the dashboard/admin show
+        // "deletion scheduled for <period end>". At period end Stripe emits
+        // subscription.deleted and SuspendServerJob takes over (suspend +
+        // purge after grace), so this is purely the scheduled-state signal.
+        //
+        // Invariant making the "clear" branch safe: an ACTIVE server only ever
+        // carries scheduled_deletion_at because auto-renew was disabled here
+        // (every suspend path sets status='suspended'). So re-enabling renewal
+        // can clear it without ever reviving a terminally-cancelled server.
+        if (in_array($this->newStatus, ['active', 'trialing'], true) && $server->status === 'active') {
+            if ($this->cancelAtPeriodEnd && $this->cancelAt !== null) {
+                if ($server->scheduled_deletion_at?->timestamp !== $this->cancelAt) {
+                    $target = \Carbon\CarbonImmutable::createFromTimestamp($this->cancelAt);
+                    $server->update(['scheduled_deletion_at' => $target]);
+                    $this->broadcastServerMirrorChanged($server);
+                    Log::info('SubscriptionUpdateJob: auto-renew disabled → deletion scheduled', [
+                        'server_id' => $server->id,
+                        'scheduled_deletion_at' => $target->toIso8601String(),
+                    ]);
+                }
+            } elseif (! $this->cancelAtPeriodEnd && $server->scheduled_deletion_at !== null) {
+                $server->update(['scheduled_deletion_at' => null]);
+                $this->broadcastServerMirrorChanged($server);
+                Log::info('SubscriptionUpdateJob: auto-renew re-enabled → scheduled deletion cleared', [
+                    'server_id' => $server->id,
+                ]);
+            }
         }
     }
 

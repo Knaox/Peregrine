@@ -62,6 +62,17 @@ final class StripeEventHandlers
         $rawConfigId = $subData['metadata']['peregrine_configuration_id'] ?? null;
         $newConfigurationId = is_numeric($rawConfigId) ? (int) $rawConfigId : null;
 
+        // Auto-renew toggle : `cancel_at_period_end` reflects the CURRENT state
+        // of the subscription (every update carries it, not just the toggle
+        // event). When true, Stripe sets `cancel_at` to the period end. We pass
+        // both down so the job can schedule (or clear) the server deletion
+        // without suspending — the customer keeps the server until paid period
+        // end, then the eventual subscription.deleted handles the suspend.
+        $cancelAtPeriodEnd = (bool) ($subData['cancel_at_period_end'] ?? false);
+        $cancelAt = isset($subData['cancel_at']) && $subData['cancel_at'] !== null
+            ? (int) $subData['cancel_at']
+            : (isset($subData['current_period_end']) ? (int) $subData['current_period_end'] : null);
+
         if ($subscriptionId === '') {
             return ['skipped' => 'missing_subscription_id'];
         }
@@ -71,6 +82,8 @@ final class StripeEventHandlers
             stripeSubscriptionId: $subscriptionId,
             newConfigurationId: $newConfigurationId,
             newStatus: $newStatus,
+            cancelAtPeriodEnd: $cancelAtPeriodEnd,
+            cancelAt: $cancelAt,
         );
 
         return [
@@ -78,6 +91,8 @@ final class StripeEventHandlers
             'subscription_id' => $subscriptionId,
             'new_configuration_id' => $newConfigurationId,
             'new_status' => $newStatus,
+            'cancel_at_period_end' => $cancelAtPeriodEnd,
+            'cancel_at' => $cancelAt,
         ];
     }
 
