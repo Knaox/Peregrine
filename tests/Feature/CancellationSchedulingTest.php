@@ -135,6 +135,48 @@ class CancellationSchedulingTest extends TestCase
         $this->assertSame($preplanned->getTimestamp(), $server->scheduled_deletion_at->getTimestamp());
     }
 
+    public function test_suspend_sweep_suspends_powered_off_server_past_its_date(): void
+    {
+        // Safety net: the server was powered OFF (status != 'active') when its
+        // suspension date passed — it must still be suspended.
+        $server = $this->makeServer('sub_off');
+        $server->update([
+            'status' => 'stopped',
+            'scheduled_suspension_at' => now()->subMinute(),
+            'scheduled_deletion_at' => now()->addDays(7),
+        ]);
+
+        $pelicanMock = Mockery::mock(PelicanApplicationService::class);
+        $pelicanMock->shouldReceive('suspendServer')->once()->with($server->pelican_server_id);
+        $this->app->instance(PelicanApplicationService::class, $pelicanMock);
+
+        (new SuspendScheduledServersJob())->handle($pelicanMock);
+
+        $server->refresh();
+        $this->assertSame('suspended', $server->status);
+        $this->assertNull($server->scheduled_suspension_at);
+    }
+
+    public function test_suspend_sweep_self_heals_server_overdue_for_deletion(): void
+    {
+        // A server whose deletion date already passed but that was never
+        // suspended (missed suspension) gets suspended so the purge can act.
+        $server = $this->makeServer('sub_overdue');
+        $server->update([
+            'status' => 'active',
+            'scheduled_suspension_at' => null,
+            'scheduled_deletion_at' => now()->subDay(),
+        ]);
+
+        $pelicanMock = Mockery::mock(PelicanApplicationService::class);
+        $pelicanMock->shouldReceive('suspendServer')->once()->with($server->pelican_server_id);
+        $this->app->instance(PelicanApplicationService::class, $pelicanMock);
+
+        (new SuspendScheduledServersJob())->handle($pelicanMock);
+
+        $this->assertSame('suspended', $server->refresh()->status);
+    }
+
     private function makeServer(string $subscriptionId): Server
     {
         $nest = \App\Models\Nest::create(['pelican_nest_id' => mt_rand(1, 9999), 'name' => 'N']);

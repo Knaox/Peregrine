@@ -14,22 +14,31 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Hourly sweep — phase 1 of the two-phase cancellation lifecycle.
+ * Periodic sweep — phase 1 of the two-phase cancellation lifecycle.
  *
  * When a customer disables auto-renew, SubscriptionUpdateJob records on the
  * (still active) server :
  *   scheduled_suspension_at = paid period end
  *   scheduled_deletion_at   = period end + grace period
  *
- * This job suspends each server whose suspension date has passed (Pelican +
- * status='suspended'), clears `scheduled_suspension_at` (done) and KEEPS
- * `scheduled_deletion_at` so `PurgeScheduledServerDeletionsJob` hard-deletes
- * it after the grace period.
+ * This job suspends each overdue server (Pelican + status='suspended'), clears
+ * `scheduled_suspension_at` (done) and KEEPS `scheduled_deletion_at` so
+ * `PurgeScheduledServerDeletionsJob` hard-deletes it after the grace period.
  *
- * Idempotent : only ACTIVE servers are picked up, so a server already
- * suspended by a parallel `customer.subscription.deleted` is skipped. A
- * per-server Pelican failure is logged and the row is left untouched so the
- * next hourly run retries it (the batch is not aborted).
+ * Safety net (why it picks up more than just 'active' servers) :
+ *  - It targets EVERY non-terminal server (active, running, stopped, offline,
+ *    provisioning…), not only 'active', so a server that was powered OFF at its
+ *    suspension date still gets suspended.
+ *  - It also picks up servers whose DELETION date already passed but that are
+ *    not suspended yet (a missed suspension), so the purge guard
+ *    (status='suspended') never strands them — they get suspended here, then
+ *    deleted on the next purge run.
+ *  - `<= now()` means a date that elapsed while the host/scheduler was down is
+ *    caught on the next sweep.
+ *
+ * Idempotent : already-suspended/terminated servers are excluded by the status
+ * filter. A per-server Pelican failure is logged and the row is left untouched
+ * so the next sweep retries it (the batch is not aborted).
  */
 class SuspendScheduledServersJob implements ShouldQueue
 {
@@ -44,9 +53,23 @@ class SuspendScheduledServersJob implements ShouldQueue
     public function handle(PelicanApplicationService $pelican): void
     {
         $due = Server::query()
-            ->whereNotNull('scheduled_suspension_at')
-            ->where('scheduled_suspension_at', '<=', now())
-            ->where('status', 'active')
+            // Any non-terminal server (active, running, stopped, offline…),
+            // so a powered-off server is still suspended at its date.
+            ->whereNotIn('status', ['suspended', 'terminated'])
+            ->where(function ($query): void {
+                $query
+                    ->where(function ($q): void {
+                        $q->whereNotNull('scheduled_suspension_at')
+                            ->where('scheduled_suspension_at', '<=', now());
+                    })
+                    // Self-heal: a server overdue for deletion but never
+                    // suspended (missed suspension) gets suspended here so the
+                    // purge's status='suspended' guard can then delete it.
+                    ->orWhere(function ($q): void {
+                        $q->whereNotNull('scheduled_deletion_at')
+                            ->where('scheduled_deletion_at', '<=', now());
+                    });
+            })
             ->get();
 
         foreach ($due as $server) {
@@ -55,7 +78,7 @@ class SuspendScheduledServersJob implements ShouldQueue
                     $pelican->suspendServer($server->pelican_server_id);
                 }
             } catch (\Throwable $e) {
-                // Keep scheduled_suspension_at so the next hourly run retries.
+                // Leave the row untouched so the next sweep retries it.
                 Log::warning('SuspendScheduledServersJob: Pelican suspendServer failed, will retry next sweep', [
                     'server_id' => $server->id,
                     'message' => $e->getMessage(),
