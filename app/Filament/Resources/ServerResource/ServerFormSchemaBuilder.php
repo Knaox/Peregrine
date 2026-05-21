@@ -36,19 +36,19 @@ final class ServerFormSchemaBuilder
                         ->searchable()
                         ->preload()
                         ->required(),
-                    // Only the manageable lifecycle states. The runtime/power
-                    // states (running/stopped/offline) and the transient
-                    // provisioning states are sync-managed and not set by hand;
-                    // they are collapsed to "active" on fill (EditServer).
                     Select::make('status')
                         ->label(__('admin/_shell.fields.status'))
                         ->options([
                             'active' => __('admin/_shell.statuses.active'),
+                            'running' => __('admin/_shell.statuses.running'),
+                            'stopped' => __('admin/_shell.statuses.stopped'),
                             'suspended' => __('admin/_shell.statuses.suspended'),
                             'terminated' => __('admin/_shell.statuses.terminated'),
+                            'provisioning' => __('admin/_shell.statuses.provisioning'),
+                            'provisioning_failed' => __('admin/_shell.statuses.provisioning_failed'),
+                            'offline' => __('admin/_shell.statuses.offline'),
                         ])
-                        ->required()
-                        ->helperText(__('admin/servers.helpers.status')),
+                        ->required(),
                 ])->columns(2),
 
             Tab::make(__('admin/_shell.tabs.configuration'))

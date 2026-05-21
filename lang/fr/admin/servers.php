@@ -19,10 +19,6 @@ return [
         'scheduled_deletion' => 'Défini quand le client annule — le serveur est supprimé définitivement à cette date s\'il n\'est pas réactivé.',
         'egg' => 'L\'egg Pelican utilisé pour provisionner ce serveur. Détermine l\'image Docker et la commande de démarrage.',
         'plan' => 'Optionnel — relier ce serveur à un plan du Shop pour la réconciliation de facturation.',
-        'status' => 'Passer à « Suspendu » suspend le serveur dans Pelican ; « Actif » le désuspend (réactive l\'accès).',
-    ],
-    'status_change' => [
-        'pelican_failed' => 'Échec de l\'action Pelican (suspension/désuspension). Le statut n\'a pas été modifié.',
     ],
     'retry' => [
         'label' => 'Relancer le provisioning',
