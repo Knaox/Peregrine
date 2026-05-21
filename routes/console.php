@@ -21,10 +21,11 @@ Schedule::job(new SyncServerStatusJob)->everyFiveMinutes();
 Schedule::job(new SuspendScheduledServersJob)->everyFiveMinutes();
 
 // Hard-delete servers whose Bridge grace period has expired (cancelled
-// subscriptions where scheduled_deletion_at is in the past). Runs at
-// 03:00 to avoid peak hours and to give "today" cancellations the
-// configured grace window in full days.
-Schedule::job(new PurgeScheduledServerDeletionsJob)->dailyAt('03:00');
+// subscriptions where scheduled_deletion_at is in the past). Every 10 minutes
+// so a passed deletion date is acted on promptly. The query is guarded to
+// status='suspended' + scheduled_deletion_at <= now, so it's a cheap no-op
+// when nothing is due.
+Schedule::job(new PurgeScheduledServerDeletionsJob)->everyTenMinutes();
 
 // Prune the Stripe webhook idempotency ledger past the 30-day retention
 // window. Runs at 03:30 (after the deletion purge so logs are easy to
