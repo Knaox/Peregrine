@@ -107,6 +107,9 @@ final class ServerTableSchemaBuilder
             $columns[] = Tables\Columns\TextColumn::make('stripe_subscription_id')
                 ->label(__('admin/_shell.fields.stripe_subscription'))->sortable()
                 ->toggleable(isToggledHiddenByDefault: true)->placeholder('—');
+            $columns[] = Tables\Columns\TextColumn::make('scheduled_suspension_at')
+                ->label(__('admin/_shell.fields.scheduled_suspension'))->dateTime()->sortable()->placeholder('—')
+                ->color(fn ($state) => $state === null ? null : 'warning');
             $columns[] = Tables\Columns\TextColumn::make('scheduled_deletion_at')
                 ->label(__('admin/_shell.fields.scheduled_deletion'))->dateTime()->sortable()->placeholder('—')
                 ->color(fn ($state) => $state === null ? null : 'danger')
@@ -205,7 +208,7 @@ final class ServerTableSchemaBuilder
                 ->label(__('admin/servers.cancel_deletion.label'))
                 ->icon('heroicon-o-arrow-uturn-left')
                 ->color('warning')
-                ->visible(fn (Server $record): bool => $record->scheduled_deletion_at !== null)
+                ->visible(fn (Server $record): bool => $record->scheduled_deletion_at !== null || $record->scheduled_suspension_at !== null)
                 ->requiresConfirmation()
                 ->modalHeading(fn (Server $record): string => __('admin/servers.cancel_deletion.modal_heading', ['name' => $record->name]))
                 ->modalDescription(fn (Server $record): string => __('admin/servers.cancel_deletion.modal_description', [
@@ -213,7 +216,7 @@ final class ServerTableSchemaBuilder
                 ]))
                 ->modalSubmitActionLabel(__('admin/servers.cancel_deletion.submit'))
                 ->action(function (Server $record): void {
-                    $record->update(['scheduled_deletion_at' => null]);
+                    $record->update(['scheduled_deletion_at' => null, 'scheduled_suspension_at' => null]);
                     Notification::make()
                         ->title(__('admin/servers.cancel_deletion.notification_title'))
                         ->body(__('admin/servers.cancel_deletion.notification_body', ['name' => $record->name]))

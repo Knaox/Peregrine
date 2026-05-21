@@ -92,7 +92,14 @@ class SuspendServerJob implements ShouldQueue
         }
 
         $updates = ['status' => 'suspended'];
-        if ($this->scheduleDeletion) {
+        // We're suspending now, so any pending scheduled suspension is moot.
+        if ($server->scheduled_suspension_at !== null) {
+            $updates['scheduled_suspension_at'] = null;
+        }
+        // Only schedule deletion if not already planned: the two-phase
+        // auto-renew flow (SubscriptionUpdateJob) may have set an exact
+        // deletion date we must not overwrite with now()+grace.
+        if ($this->scheduleDeletion && $server->scheduled_deletion_at === null) {
             $graceDays = (int) $settings->get('bridge_grace_period_days', 14);
             $updates['scheduled_deletion_at'] = now()->addDays(max(0, $graceDays));
         }
@@ -110,7 +117,7 @@ class SuspendServerJob implements ShouldQueue
         Log::info('SuspendServerJob: server suspended', [
             'event_id' => $this->eventId,
             'server_id' => $server->id,
-            'scheduled_deletion_at' => $updates['scheduled_deletion_at'] ?? null,
+            'scheduled_deletion_at' => optional($server->scheduled_deletion_at)->toIso8601String(),
         ]);
 
         // Customer-facing notification only when this is a "subscription

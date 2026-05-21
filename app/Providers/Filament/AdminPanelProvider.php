@@ -14,6 +14,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use App\Services\ThemeService;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -60,6 +61,12 @@ class AdminPanelProvider extends PanelProvider
                     ->visible(fn () => (auth()->user()?->locale ?? 'en') !== 'en'),
             ])
             ->sidebarCollapsibleOnDesktop()
+            // Global CSS so every admin table scrolls (H + V) instead of being
+            // clipped when it has many columns / rows. See the Blade view.
+            ->renderHook(
+                PanelsRenderHook::STYLES_AFTER,
+                fn (): \Illuminate\Contracts\View\View => view('filament.admin.table-scroll'),
+            )
             ->navigationItems([
                 NavigationItem::make('player-panel')
                     ->label(fn () => __('admin/_shell.navigation.player_panel'))

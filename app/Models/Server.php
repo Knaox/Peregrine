@@ -29,6 +29,7 @@ class Server extends Model
         'idempotency_key',
         'provisioning_error',
         'scheduled_deletion_at',
+        'scheduled_suspension_at',
     ];
 
     /**
@@ -45,6 +46,7 @@ class Server extends Model
             'egg_id' => 'integer',
             'server_configuration_id' => 'integer',
             'scheduled_deletion_at' => 'datetime',
+            'scheduled_suspension_at' => 'datetime',
         ];
     }
 

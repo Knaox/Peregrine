@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Filament\Tables\Columns\Column;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
@@ -25,6 +26,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Make EVERY admin table column hideable from the column manager. By
+        // default Filament only lists columns explicitly marked toggleable();
+        // this global default turns it on for all of them. A column can still
+        // opt out with ->toggleable(false), and columns that set their own
+        // ->toggleable(isToggledHiddenByDefault: true) keep that (the explicit
+        // call in the table definition runs after this default and wins).
+        Column::configureUsing(fn (Column $column) => $column->toggleable());
+
         // Apply DB-backed runtime overrides (debug + timezone) BEFORE any
         // service starts caching values. Saved in the `settings` table by
         // /admin/settings — they survive a Docker stack rebuild because

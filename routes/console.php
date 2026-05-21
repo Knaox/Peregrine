@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\PurgeScheduledServerDeletionsJob;
+use App\Jobs\SuspendScheduledServersJob;
 use App\Jobs\SyncServerStatusJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -11,6 +12,12 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::job(new SyncServerStatusJob)->everyFiveMinutes();
+
+// Phase 1 of the two-phase cancellation lifecycle: suspend servers whose
+// scheduled_suspension_at (paid period end, set when auto-renew was disabled)
+// has passed. Hourly so the suspension lands close to the period end without
+// hammering Pelican. The deletion happens later via PurgeScheduledServerDeletionsJob.
+Schedule::job(new SuspendScheduledServersJob)->hourly();
 
 // Hard-delete servers whose Bridge grace period has expired (cancelled
 // subscriptions where scheduled_deletion_at is in the past). Runs at

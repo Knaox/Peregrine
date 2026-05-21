@@ -8,6 +8,7 @@ use App\Events\Mirror\BroadcastsServerMirror;
 use App\Models\Server;
 use App\Models\ServerConfiguration;
 use App\Services\Pelican\PelicanApplicationService;
+use App\Services\SettingsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -63,7 +64,7 @@ class SubscriptionUpdateJob implements ShouldQueue
         public readonly ?int $cancelAt = null,
     ) {}
 
-    public function handle(PelicanApplicationService $pelican): void
+    public function handle(PelicanApplicationService $pelican, SettingsService $settings): void
     {
         $server = Server::where('stripe_subscription_id', $this->stripeSubscriptionId)->first();
 
@@ -185,32 +186,43 @@ class SubscriptionUpdateJob implements ShouldQueue
             $this->broadcastServerMirrorChanged($server);
         }
 
-        // 3. Auto-renew toggle on an ACTIVE server. Disabling renewal does not
+        // 3. Auto-renew toggle on an ACTIVE server. Disabling renewal does NOT
         // suspend — the customer keeps the server until the paid period ends —
-        // but we mark the upcoming removal so the dashboard/admin show
-        // "deletion scheduled for <period end>". At period end Stripe emits
-        // subscription.deleted and SuspendServerJob takes over (suspend +
-        // purge after grace), so this is purely the scheduled-state signal.
+        // we schedule the two-phase teardown so the dashboard/admin show both
+        // upcoming dates: suspension at period end, deletion after the grace
+        // period. SuspendScheduledServersJob performs the suspend at
+        // scheduled_suspension_at; PurgeScheduledServerDeletionsJob deletes at
+        // scheduled_deletion_at.
         //
         // Invariant making the "clear" branch safe: an ACTIVE server only ever
-        // carries scheduled_deletion_at because auto-renew was disabled here
-        // (every suspend path sets status='suspended'). So re-enabling renewal
-        // can clear it without ever reviving a terminally-cancelled server.
+        // carries these columns because auto-renew was disabled here (every
+        // suspend path flips status to 'suspended'). So re-enabling renewal can
+        // clear them without ever reviving a terminally-cancelled server.
         if (in_array($this->newStatus, ['active', 'trialing'], true) && $server->status === 'active') {
             if ($this->cancelAtPeriodEnd && $this->cancelAt !== null) {
-                if ($server->scheduled_deletion_at?->timestamp !== $this->cancelAt) {
-                    $target = \Carbon\CarbonImmutable::createFromTimestamp($this->cancelAt);
-                    $server->update(['scheduled_deletion_at' => $target]);
+                if ($server->scheduled_suspension_at?->timestamp !== $this->cancelAt) {
+                    $grace = max(0, (int) $settings->get('bridge_grace_period_days', 14));
+                    $suspendAt = \Carbon\CarbonImmutable::createFromTimestamp($this->cancelAt);
+                    $server->update([
+                        'scheduled_suspension_at' => $suspendAt,
+                        'scheduled_deletion_at' => $suspendAt->addDays($grace),
+                    ]);
                     $this->broadcastServerMirrorChanged($server);
-                    Log::info('SubscriptionUpdateJob: auto-renew disabled → deletion scheduled', [
+                    Log::info('SubscriptionUpdateJob: auto-renew disabled → suspension+deletion scheduled', [
                         'server_id' => $server->id,
-                        'scheduled_deletion_at' => $target->toIso8601String(),
+                        'scheduled_suspension_at' => $suspendAt->toIso8601String(),
+                        'grace_days' => $grace,
                     ]);
                 }
-            } elseif (! $this->cancelAtPeriodEnd && $server->scheduled_deletion_at !== null) {
-                $server->update(['scheduled_deletion_at' => null]);
+            } elseif (! $this->cancelAtPeriodEnd
+                && ($server->scheduled_suspension_at !== null || $server->scheduled_deletion_at !== null)
+            ) {
+                $server->update([
+                    'scheduled_suspension_at' => null,
+                    'scheduled_deletion_at' => null,
+                ]);
                 $this->broadcastServerMirrorChanged($server);
-                Log::info('SubscriptionUpdateJob: auto-renew re-enabled → scheduled deletion cleared', [
+                Log::info('SubscriptionUpdateJob: auto-renew re-enabled → scheduled teardown cleared', [
                     'server_id' => $server->id,
                 ]);
             }
