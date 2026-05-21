@@ -186,7 +186,7 @@ class SubscriptionUpdateJob implements ShouldQueue
             $this->broadcastServerMirrorChanged($server);
         }
 
-        // 3. Auto-renew toggle on an ACTIVE server. Disabling renewal does NOT
+        // 3. Auto-renew toggle on a live server. Disabling renewal does NOT
         // suspend — the customer keeps the server until the paid period ends —
         // we schedule the two-phase teardown so the dashboard/admin show both
         // upcoming dates: suspension at period end, deletion after the grace
@@ -194,11 +194,21 @@ class SubscriptionUpdateJob implements ShouldQueue
         // scheduled_suspension_at; PurgeScheduledServerDeletionsJob deletes at
         // scheduled_deletion_at.
         //
-        // Invariant making the "clear" branch safe: an ACTIVE server only ever
-        // carries these columns because auto-renew was disabled here (every
-        // suspend path flips status to 'suspended'). So re-enabling renewal can
-        // clear them without ever reviving a terminally-cancelled server.
-        if (in_array($this->newStatus, ['active', 'trialing'], true) && $server->status === 'active') {
+        // We include the provisioning states (not just 'active') so disabling
+        // renewal mid-install still records the teardown dates up front:
+        // install completion is a Pelican webhook, not a Stripe event, so this
+        // job never re-fires afterwards to schedule them late. Without this, a
+        // server whose renewal is cut while provisioning would only be torn
+        // down by the eventual subscription.deleted, with no advance dates shown.
+        //
+        // Invariant making the "clear" branch safe: a non-suspended server
+        // only ever carries these columns because auto-renew was disabled here
+        // (every suspend path flips status to 'suspended'). So re-enabling
+        // renewal can clear them without ever reviving a terminally-cancelled
+        // server.
+        if (in_array($this->newStatus, ['active', 'trialing'], true)
+            && in_array($server->status, ['active', 'provisioning', 'provisioning_failed'], true)
+        ) {
             if ($this->cancelAtPeriodEnd && $this->cancelAt !== null) {
                 if ($server->scheduled_suspension_at?->timestamp !== $this->cancelAt) {
                     $grace = max(0, (int) $settings->get('bridge_grace_period_days', 14));
