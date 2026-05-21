@@ -48,7 +48,16 @@ class EditServer extends EditRecord
         $newStatus = $data['status'] ?? null;
         $oldStatus = $record->status;
 
-        if ($newStatus !== $oldStatus && $record->pelican_server_id !== null) {
+        // "active" in the select is the coerced display for ANY non-suspended
+        // live state. So if the admin leaves it on "active" for a server that
+        // was already a live power state (running/stopped/offline/provisioning…),
+        // preserve the real status instead of clobbering it to 'active' — the
+        // frontend card's live status line relies on running/stopped/offline.
+        if ($newStatus === 'active' && ! in_array($oldStatus, ['suspended', 'terminated'], true)) {
+            $data['status'] = $oldStatus;
+        }
+
+        if ($record->pelican_server_id !== null) {
             $pelican = app(PelicanApplicationService::class);
             try {
                 if ($newStatus === 'suspended' && $oldStatus !== 'suspended') {
