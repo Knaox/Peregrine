@@ -19,6 +19,10 @@ return [
         'scheduled_deletion' => 'Set when the customer cancels — server is hard-deleted at this date if not unsuspended.',
         'egg' => 'The Pelican egg used to provision this server. Determines the docker image and start command.',
         'plan' => 'Optional — link this server to a Shop plan for billing reconciliation.',
+        'status' => 'Switching to "Suspended" suspends the server in Pelican; "Active" unsuspends it (restores access).',
+    ],
+    'status_change' => [
+        'pelican_failed' => 'Pelican action failed (suspend/unsuspend). The status was not changed.',
     ],
     'retry' => [
         'label' => 'Retry provisioning',
