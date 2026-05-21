@@ -135,13 +135,9 @@ final class ServerTableSchemaBuilder
                 ->label(__('admin/_shell.fields.status'))
                 ->options([
                     'active' => __('admin/_shell.statuses.active'),
-                    'running' => __('admin/_shell.statuses.running'),
-                    'stopped' => __('admin/_shell.statuses.stopped'),
                     'suspended' => __('admin/_shell.statuses.suspended'),
-                    'terminated' => __('admin/_shell.statuses.terminated'),
                     'provisioning' => __('admin/_shell.statuses.provisioning'),
                     'provisioning_failed' => __('admin/_shell.statuses.provisioning_failed'),
-                    'offline' => __('admin/_shell.statuses.offline'),
                 ])
                 ->multiple(),
             Tables\Filters\SelectFilter::make('user_id')

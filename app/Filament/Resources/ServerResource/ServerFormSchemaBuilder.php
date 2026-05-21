@@ -36,17 +36,16 @@ final class ServerFormSchemaBuilder
                         ->searchable()
                         ->preload()
                         ->required(),
+                    // Lifecycle states only. Power states (running/stopped/
+                    // offline) live in the frontend (Wings websocket), not in
+                    // `status`; "terminated" is end-of-life, not set by hand.
                     Select::make('status')
                         ->label(__('admin/_shell.fields.status'))
                         ->options([
                             'active' => __('admin/_shell.statuses.active'),
-                            'running' => __('admin/_shell.statuses.running'),
-                            'stopped' => __('admin/_shell.statuses.stopped'),
                             'suspended' => __('admin/_shell.statuses.suspended'),
-                            'terminated' => __('admin/_shell.statuses.terminated'),
                             'provisioning' => __('admin/_shell.statuses.provisioning'),
                             'provisioning_failed' => __('admin/_shell.statuses.provisioning_failed'),
-                            'offline' => __('admin/_shell.statuses.offline'),
                         ])
                         ->required(),
                 ])->columns(2),

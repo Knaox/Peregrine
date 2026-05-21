@@ -47,48 +47,16 @@ class SyncServerStatusJob implements ShouldQueue
 
     private function syncRuntimeStatuses(PelicanClientService $clientService): void
     {
-        $servers = Server::whereNotNull('identifier')->get();
-
-        foreach ($servers as $server) {
-            // Skip servers we already moved out of `provisioning` in this
-            // tick — and skip ones we left there on purpose (the
-            // Application API still reports `installing`). The client API
-            // would return either an error or a misleading `offline`
-            // state during install, both of which would clobber the
-            // intentional `provisioning` flag.
-            if ($server->status === 'provisioning') {
-                continue;
-            }
-
-            try {
-                $resources = $clientService->getServerResources($server->identifier);
-
-                $newStatus = match ($resources->state) {
-                    'running', 'starting' => 'running',
-                    'stopping', 'stopped' => 'stopped',
-                    'offline' => 'offline',
-                    default => $server->status,
-                };
-
-                if ($server->status !== $newStatus && ! in_array($server->status, ['suspended', 'terminated'], true)) {
-                    $server->update(['status' => $newStatus]);
-                    // Broadcast so the dashboard list and the detail
-                    // page reflect runtime crashes / restarts within
-                    // ~100 ms instead of waiting on the 5-min React
-                    // Query staleTime refetch.
-                    $this->broadcastServerMirrorChanged($server);
-                }
-            } catch (\Throwable) {
-                // If API call fails, mark as offline (unless suspended/terminated)
-                if (! in_array($server->status, ['suspended', 'terminated'], true)) {
-                    $previousStatus = $server->status;
-                    $server->update(['status' => 'offline']);
-                    if ($previousStatus !== 'offline') {
-                        $this->broadcastServerMirrorChanged($server);
-                    }
-                }
-            }
-        }
+        // Power state (running/stopped/offline) is shown LIVE in the frontend
+        // via the Wings websocket (ServerCard reads `stats.state`); it must NOT
+        // be persisted into `status`, which is the lifecycle state surfaced in
+        // the admin. So we no longer poll Pelican for runtime power here — we
+        // only normalise any server still left on a power state (by the previous
+        // behaviour) back to 'active'. Lifecycle states (suspended / terminated
+        // / provisioning / provisioning_failed) are left untouched.
+        Server::query()
+            ->whereIn('status', ['running', 'stopped', 'offline'])
+            ->update(['status' => 'active']);
     }
 
     /**
