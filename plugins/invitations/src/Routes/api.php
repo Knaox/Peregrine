@@ -229,7 +229,10 @@ Route::middleware('auth')->group(function () {
         }
     });
 
-    // Remove a subuser from Pelican
+    // Remove a subuser: drop them from Pelican AND clean up Peregrine's local
+    // access. Without the local cleanup the user keeps every permission via the
+    // server_user pivot (permissionsForUser reads it), so they'd stay "revoked
+    // but still in" — a security hole.
     Route::delete('servers/{serverIdentifier}/subusers/{subuserUuid}', function (string $serverIdentifier, string $subuserUuid, Request $request): JsonResponse {
         $server = Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
 
@@ -238,21 +241,43 @@ Route::middleware('auth')->group(function () {
         }
 
         $subusers = app(PelicanSubuserService::class)->listSubusers($serverIdentifier);
+        $targetEmail = null;
         foreach ($subusers as $sub) {
-            if (($sub['uuid'] ?? '') === $subuserUuid
-                && isset($sub['email'])
-                && strtolower((string) $sub['email']) === strtolower($request->user()->email)) {
-                return response()->json(['error' => __('invitations::messages.errors.self_remove'), 'error_code' => 'self_remove'], 403);
+            if (($sub['uuid'] ?? '') === $subuserUuid) {
+                $targetEmail = isset($sub['email']) ? strtolower((string) $sub['email']) : null;
+                break;
             }
+        }
+
+        // A subuser cannot remove themselves.
+        if ($targetEmail !== null && $targetEmail === strtolower($request->user()->email)) {
+            return response()->json(['error' => __('invitations::messages.errors.self_remove'), 'error_code' => 'self_remove'], 403);
         }
 
         try {
             app(PelicanSubuserService::class)->deleteSubuser($serverIdentifier, $subuserUuid);
-
-            return response()->json(['message' => 'Subuser removed.']);
         } catch (Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
+
+        // Revoke Peregrine-side access too: drop the pivot and close any
+        // lingering invitation so the user truly loses access and can be
+        // cleanly re-invited later.
+        if ($targetEmail !== null) {
+            $localUser = User::where('email', $targetEmail)->first();
+            if ($localUser) {
+                DB::table('server_user')
+                    ->where('user_id', $localUser->id)
+                    ->where('server_id', $server->id)
+                    ->delete();
+            }
+            Invitation::where('server_id', $server->id)
+                ->where('email', $targetEmail)
+                ->whereNull('revoked_at')
+                ->update(['revoked_at' => now()]);
+        }
+
+        return response()->json(['message' => 'Subuser removed.']);
     });
 
     Route::get('servers/{serverIdentifier}/permissions', function (string $serverIdentifier, Request $request): JsonResponse {
