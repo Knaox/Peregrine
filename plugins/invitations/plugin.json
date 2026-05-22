@@ -18,7 +18,8 @@
                 "label_key": "invitations:page.title",
                 "icon": "users",
                 "route_suffix": "/users",
-                "order": 8
+                "order": 8,
+                "required_permission": "user.read"
             }
         ]
     },

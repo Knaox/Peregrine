@@ -120,6 +120,15 @@ export function ServerDetailPage() {
                     && !se.requires_egg_ids.includes(currentEggId)) {
                     continue;
                 }
+                // Permission gate — owners see everything, subusers need the
+                // declared grant. Core entries are filtered below via
+                // SIDEBAR_ENTRY_PERMISSIONS, but plugin entries aren't in that
+                // map, so without this a subuser saw plugin pages (and the
+                // route was built) for plugins they had no permission for.
+                if (!isOwner && se.required_permission
+                    && !(userPermissions?.includes(se.required_permission) ?? false)) {
+                    continue;
+                }
                 pluginEntries.push({
                     id: se.id,
                     label_key: se.label_key,

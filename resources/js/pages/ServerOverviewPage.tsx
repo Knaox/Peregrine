@@ -137,6 +137,12 @@ export function ServerOverviewPage() {
                     && !se.requires_egg_ids.includes(currentEggId)) {
                     continue;
                 }
+                // Permission gate — owners see everything, subusers need the
+                // declared grant (plugin ids aren't in SIDEBAR_ENTRY_PERMISSIONS).
+                if (!isOwner && se.required_permission
+                    && !(perms?.includes(se.required_permission) ?? false)) {
+                    continue;
+                }
                 pluginEntries.push({ id: se.id, label_key: se.label_key, icon: se.icon, enabled: true, route_suffix: se.route_suffix, order: se.order ?? 100 });
             }
         }

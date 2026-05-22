@@ -18,6 +18,12 @@ export interface PluginServerSidebarEntry {
     route_suffix: string;
     order?: number;
     /**
+     * Optional Peregrine permission key (e.g. `minecraftmods.read`) gating
+     * visibility. Owners always see the entry; subusers need this grant.
+     * Mirrors `PluginServerHomeSection.required_permission`.
+     */
+    required_permission?: string;
+    /**
      * Optional egg whitelist. When set and non-empty, the entry is only
      * rendered for servers whose `egg_id` is included. When omitted or empty
      * the entry is shown on every server (legacy behaviour). Generic plugin-
