@@ -1,20 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { fetchUploadUrl, uploadFilesToWings, createFolder } from '@/services/fileApi';
-
-interface UploadState {
-    isUploading: boolean;
-    progress: string;
-    error: string | null;
-}
+import { useUploadStore } from '@/stores/uploadStore';
 
 export function useFileUpload(serverId: number) {
-    const [state, setState] = useState<UploadState>({
-        isUploading: false,
-        progress: '',
-        error: null,
-    });
     const queryClient = useQueryClient();
+    // Subscribe to the global store so the progress survives navigating away
+    // from the Files page (the upload keeps running in the background).
+    const isUploading = useUploadStore((s) => s.isUploading);
+    const percent = useUploadStore((s) => s.percent);
+    const error = useUploadStore((s) => s.error);
 
     const uploadFiles = useCallback(async (
         files: File[],
@@ -22,7 +17,11 @@ export function useFileUpload(serverId: number) {
     ) => {
         if (files.length === 0) return;
 
-        setState({ isUploading: true, progress: `Uploading ${files.length} file(s)...`, error: null });
+        const store = useUploadStore.getState();
+        // Aggregate % is driven by the sum of file sizes, NOT the per-batch XHR
+        // `total` (which includes multipart overhead and resets each batch).
+        const totalBytes = files.reduce((sum, f) => sum + f.size, 0) || 1;
+        store.start(files.length, currentDirectory);
 
         try {
             const uploadUrl = await fetchUploadUrl(serverId);
@@ -60,21 +59,22 @@ export function useFileUpload(serverId: number) {
                 }
             }
 
-            // Upload files to each directory
+            // Upload files to each directory, aggregating progress across batches
+            let completedBytes = 0;
             for (const [dir, dirFileList] of dirFiles) {
-                setState(prev => ({ ...prev, progress: `Uploading to ${dir}...` }));
-                await uploadFilesToWings(uploadUrl, dir, dirFileList);
+                const batchBytes = dirFileList.reduce((sum, f) => sum + f.size, 0);
+                await uploadFilesToWings(uploadUrl, dir, dirFileList, (loaded, total) => {
+                    const frac = total > 0 ? loaded / total : 0;
+                    store.setPercent(((completedBytes + frac * batchBytes) / totalBytes) * 100);
+                });
+                completedBytes += batchBytes;
             }
 
-            // Invalidate file list query
+            // Invalidate file list query so the new files show up
             void queryClient.invalidateQueries({ queryKey: ['servers', serverId, 'files'] });
-            setState({ isUploading: false, progress: '', error: null });
+            store.finish();
         } catch (err) {
-            setState({
-                isUploading: false,
-                progress: '',
-                error: err instanceof Error ? err.message : 'Upload failed',
-            });
+            store.fail(err instanceof Error ? err.message : 'Upload failed');
         }
     }, [serverId, queryClient]);
 
@@ -108,7 +108,7 @@ export function useFileUpload(serverId: number) {
         await uploadFiles(allFiles, currentDirectory);
     }, [uploadFiles]);
 
-    return { ...state, handleDrop, uploadFiles };
+    return { isUploading, percent, error, handleDrop, uploadFiles };
 }
 
 async function readEntries(

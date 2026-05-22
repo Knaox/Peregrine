@@ -1,10 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchFiles } from '@/services/fileApi';
 import type { FileEntry } from '@/types/FileEntry';
 
 export function useFileManager(serverId: number) {
-    const [currentDirectory, setCurrentDirectory] = useState('/');
+    // Current directory lives in the URL (?path=/plugins) so it survives a
+    // page reload and the browser Back/Forward buttons walk the history.
+    const [searchParams, setSearchParams] = useSearchParams();
+    const currentDirectory = searchParams.get('path') || '/';
     const queryClient = useQueryClient();
 
     const { data: files, isLoading } = useQuery({
@@ -15,15 +19,21 @@ export function useFileManager(serverId: number) {
     });
 
     const navigateTo = useCallback((dir: string) => {
-        setCurrentDirectory(dir);
-    }, []);
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            // Keep the URL clean at the root — no dangling ?path=/
+            if (dir === '/') next.delete('path');
+            else next.set('path', dir);
+            return next;
+        });
+    }, [setSearchParams]);
 
     const goUp = useCallback(() => {
         if (currentDirectory === '/') return;
         const parts = currentDirectory.split('/').filter(Boolean);
         parts.pop();
-        setCurrentDirectory('/' + parts.join('/'));
-    }, [currentDirectory]);
+        navigateTo('/' + parts.join('/'));
+    }, [currentDirectory, navigateTo]);
 
     const refresh = useCallback(() => {
         queryClient.invalidateQueries({

@@ -78,19 +78,38 @@ export async function fetchUploadUrl(serverId: number): Promise<string> {
     return data.url;
 }
 
+/**
+ * Upload a batch of files straight to Wings (bypassing Peregrine's backend).
+ *
+ * Uses XMLHttpRequest rather than fetch() because only XHR exposes
+ * `upload.onprogress`, which is what drives the percentage bar. `onProgress`
+ * reports the bytes sent for THIS batch; the caller aggregates across batches.
+ */
 export async function uploadFilesToWings(
     uploadUrl: string,
     directory: string,
     files: File[],
+    onProgress?: (loaded: number, total: number) => void,
 ): Promise<void> {
     const formData = new FormData();
     for (const file of files) {
         formData.append('files', file);
     }
-    // Upload directly to Wings (not through Peregrine backend)
-    await fetch(`${uploadUrl}&directory=${encodeURIComponent(directory)}`, {
-        method: 'POST',
-        body: formData,
+    const url = `${uploadUrl}&directory=${encodeURIComponent(directory)}`;
+
+    await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url);
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && onProgress) onProgress(e.loaded, e.total);
+        };
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error(`Upload failed (HTTP ${xhr.status})`));
+        };
+        xhr.onerror = () => reject(new Error('Upload failed: network error'));
+        xhr.onabort = () => reject(new Error('Upload aborted'));
+        xhr.send(formData);
     });
 }
 

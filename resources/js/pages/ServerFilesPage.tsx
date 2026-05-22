@@ -36,7 +36,9 @@ function ServerFilesPageImpl() {
 
     const { files, isLoading, currentDirectory, navigateTo, refresh } = useFileManager(serverId);
     const editor = useFileEditor();
-    const { isUploading, progress, error: uploadError, handleDrop } = useFileUpload(serverId);
+    // Upload progress + errors are surfaced by the app-wide UploadProgressWidget
+    // (mounted in app.tsx) so they survive navigating away from this page.
+    const { handleDrop } = useFileUpload(serverId);
     const [isDragOver, setIsDragOver] = useState(false);
     const dragCounter = useRef(0);
     const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
@@ -179,9 +181,7 @@ function ServerFilesPageImpl() {
                     )}
                 </AnimatePresence>
 
-                {/* Status messages */}
-                {isUploading && <div className="mb-3 rounded-[var(--radius)] bg-[var(--color-primary)]/10 px-3 py-2 text-sm text-[var(--color-primary)]">{progress || t('server-files:files.uploading')}</div>}
-                {uploadError && <div className="mb-3 rounded-[var(--radius)] bg-[var(--color-danger)]/10 px-3 py-2 text-sm text-[var(--color-danger)]">{t('server-files:files.upload_error')}: {uploadError}</div>}
+                {/* Editor status — upload progress/errors live in the global UploadProgressWidget */}
                 {editor.error && <div className="mb-3 rounded-[var(--radius)] bg-[var(--color-danger)]/10 px-3 py-2 text-sm text-[var(--color-danger)]">{editor.error}</div>}
 
                 <FileList

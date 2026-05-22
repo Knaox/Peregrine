@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { PluginLoader } from '@/plugins/PluginLoader';
 import { PluginPageRenderer } from '@/plugins/PluginPageRenderer';
 import { LoadingScreen } from '@/components/LoadingScreen';
+import { UploadProgressWidget } from '@/components/files/UploadProgressWidget';
 import '@/i18n/config';
 import '../css/app.css';
 import { LoginPage } from '@/pages/LoginPage';
@@ -51,6 +52,10 @@ function App() {
                 <MotionProvider>
                     <BrowserRouter>
                         <PluginLoader />
+                        {/* App-wide upload indicator — stays mounted across
+                            route changes so an in-flight upload survives
+                            navigation, and guards against accidental reloads. */}
+                        <UploadProgressWidget />
                         <Routes>
                             <Route path="/login" element={<LoginPage />} />
                             <Route path="/register" element={<RegisterPage />} />
