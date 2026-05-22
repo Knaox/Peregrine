@@ -1,7 +1,66 @@
 {
     "plugin_name": "Easy Configuration",
+    "common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "close": "Close",
+        "back": "Back",
+        "edit": "Edit",
+        "delete": "Delete",
+        "export": "Export"
+    },
+    "errors": {
+        "generic": "Something went wrong. Please try again."
+    },
     "section": {
         "title": "Game configuration",
         "subtitle": "Tweak your server settings without touching a config file."
+    },
+    "field": {
+        "auto_detected": "Auto",
+        "reset_default": "Reset to default"
+    },
+    "admin": {
+        "unauthorized": "You need administrator access to manage templates.",
+        "list": {
+            "title": "Configuration templates",
+            "subtitle": "Render schemas that drive the in-game configuration editor. Share them as JSON.",
+            "new": "New template",
+            "import": "Import",
+            "import_title": "Import a template",
+            "invalid": "Invalid",
+            "files": "{{count}} files",
+            "eggs": "{{count}} eggs",
+            "boost": "Boost",
+            "empty": "No templates yet. Create one or import a JSON file to get started.",
+            "confirm_delete": "Delete template \"{{id}}\"? The JSON file will be removed.",
+            "deleted": "Template deleted.",
+            "imported": "Template imported.",
+            "import_failed": "Import failed. Check the JSON is valid."
+        },
+        "editor": {
+            "title_new": "New template",
+            "tab_edit": "Edit",
+            "tab_preview": "Preview",
+            "id": "Template id (slug)",
+            "name_en": "Name (EN)",
+            "name_fr": "Name (FR)",
+            "desc_en": "Description (EN)",
+            "desc_fr": "Description (FR)",
+            "author": "Author",
+            "target_eggs": "Target eggs",
+            "search_eggs": "Search eggs...",
+            "no_eggs": "No matching eggs.",
+            "boost_enabled": "Allow boost for this template",
+            "boost_blacklist": "Parameters excluded from boost",
+            "boost_blacklist_hint": "Comma-separated parameter keys. Non-numeric parameters are excluded automatically.",
+            "files_json": "Files & parameters (JSON)",
+            "invalid_files_json": "The files JSON is not valid JSON.",
+            "saved": "Template saved.",
+            "save_failed": "The template could not be saved.",
+            "preview_empty": "Add at least one file to preview the editor.",
+            "no_params": "No parameters in this file."
+        }
     }
 }

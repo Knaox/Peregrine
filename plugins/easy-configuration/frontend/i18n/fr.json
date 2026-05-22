@@ -1,7 +1,66 @@
 {
     "plugin_name": "Configuration facile",
+    "common": {
+        "loading": "Chargement...",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "close": "Fermer",
+        "back": "Retour",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "export": "Exporter"
+    },
+    "errors": {
+        "generic": "Une erreur est survenue. Veuillez réessayer."
+    },
     "section": {
         "title": "Configuration du jeu",
         "subtitle": "Ajustez les paramètres de votre serveur sans toucher à un fichier de config."
+    },
+    "field": {
+        "auto_detected": "Auto",
+        "reset_default": "Réinitialiser par défaut"
+    },
+    "admin": {
+        "unauthorized": "Un accès administrateur est requis pour gérer les templates.",
+        "list": {
+            "title": "Templates de configuration",
+            "subtitle": "Des schémas de rendu qui pilotent l'éditeur de configuration en jeu. Partagez-les en JSON.",
+            "new": "Nouveau template",
+            "import": "Importer",
+            "import_title": "Importer un template",
+            "invalid": "Invalide",
+            "files": "{{count}} fichiers",
+            "eggs": "{{count}} eggs",
+            "boost": "Boost",
+            "empty": "Aucun template pour l'instant. Créez-en un ou importez un fichier JSON pour démarrer.",
+            "confirm_delete": "Supprimer le template « {{id}} » ? Le fichier JSON sera effacé.",
+            "deleted": "Template supprimé.",
+            "imported": "Template importé.",
+            "import_failed": "Échec de l'import. Vérifiez que le JSON est valide."
+        },
+        "editor": {
+            "title_new": "Nouveau template",
+            "tab_edit": "Édition",
+            "tab_preview": "Aperçu",
+            "id": "Identifiant du template (slug)",
+            "name_en": "Nom (EN)",
+            "name_fr": "Nom (FR)",
+            "desc_en": "Description (EN)",
+            "desc_fr": "Description (FR)",
+            "author": "Auteur",
+            "target_eggs": "Eggs ciblés",
+            "search_eggs": "Rechercher des eggs...",
+            "no_eggs": "Aucun egg correspondant.",
+            "boost_enabled": "Autoriser le boost pour ce template",
+            "boost_blacklist": "Paramètres exclus du boost",
+            "boost_blacklist_hint": "Clés de paramètres séparées par des virgules. Les paramètres non numériques sont exclus automatiquement.",
+            "files_json": "Fichiers & paramètres (JSON)",
+            "invalid_files_json": "Le JSON des fichiers est invalide.",
+            "saved": "Template enregistré.",
+            "save_failed": "Le template n'a pas pu être enregistré.",
+            "preview_empty": "Ajoutez au moins un fichier pour prévisualiser l'éditeur.",
+            "no_params": "Aucun paramètre dans ce fichier."
+        }
     }
 }
