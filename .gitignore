@@ -46,6 +46,7 @@ public/fonts/filament/
 !/plugins/easy-configuration/
 !/plugins/easy-configuration/**
 /plugins/easy-configuration/frontend/node_modules
+/plugins/easy-configuration/tests/.phpunit.cache
 
 # Plugin asset symlinks — created at activation time by PluginManager,
 # never committed (point to absolute host paths).

@@ -6,6 +6,11 @@ namespace Plugins\EasyConfiguration;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Plugins\EasyConfiguration\Services\Parsing\ParserRegistry;
+use Plugins\EasyConfiguration\Services\Templates\TemplateLoader;
+use Plugins\EasyConfiguration\Services\Templates\TemplateRegistry;
+use Plugins\EasyConfiguration\Services\Templates\TemplateSchemaValidator;
+use Plugins\EasyConfiguration\Services\Templates\TemplateStorage;
 
 /**
  * Boots the Easy Configuration plugin.
@@ -26,8 +31,17 @@ class EasyConfigurationServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        // Service bindings (ParserRegistry, TemplateRegistry, config/boost/copy
-        // services) are registered in later phases.
+        $this->app->singleton(ParserRegistry::class);
+        $this->app->singleton(TemplateSchemaValidator::class);
+
+        $this->app->singleton(TemplateStorage::class, static fn (): TemplateStorage => new TemplateStorage(
+            storage_path('app/easy-config/templates'),
+        ));
+
+        // TemplateLoader (storage + validator) and TemplateRegistry (loader)
+        // auto-resolve their constructor dependencies from the bindings above.
+        $this->app->singleton(TemplateLoader::class);
+        $this->app->singleton(TemplateRegistry::class);
     }
 
     public function boot(): void
