@@ -91,23 +91,30 @@ function ServerSchedulesPageImpl() {
         }
     };
 
-    const handleCreate = () => {
+    const handleCreate = async () => {
         const currentPreset = PRESETS[preset];
         const payload = { ...form };
         if (!payload.name.trim() && currentPreset) {
             payload.name = currentPreset.name;
         }
-        create.mutate(payload, {
-            onSuccess: (newSchedule) => {
-                if (currentPreset?.task && newSchedule?.id) {
-                    addTask.mutate({ scheduleId: newSchedule.id, payload: currentPreset.task });
-                }
-                setShowCreate(false);
-                setPreset('restart_daily');
-                setShowAdvanced(false);
-                setForm({ name: '', minute: '0', hour: '4', day_of_month: '*', month: '*', day_of_week: '*', is_active: true, only_when_online: true });
-            },
-        });
+        try {
+            // Sequential, not parallel: create's auto-invalidation would refetch
+            // the schedule list before the preset task exists, and that stale
+            // refetch (no task) raced ahead of the task one — so the new task
+            // only showed up after a manual refresh. Awaiting the task creation
+            // makes addTask's invalidation the last refetch, which wins.
+            const newSchedule = await create.mutateAsync(payload);
+            if (currentPreset?.task && newSchedule?.id) {
+                await addTask.mutateAsync({ scheduleId: newSchedule.id, payload: currentPreset.task });
+            }
+            setShowCreate(false);
+            setPreset('restart_daily');
+            setShowAdvanced(false);
+            setForm({ name: '', minute: '0', hour: '4', day_of_month: '*', month: '*', day_of_week: '*', is_active: true, only_when_online: true });
+        } catch {
+            // create/addTask expose their own error state; keep the form open
+            // so the user can retry without re-entering everything.
+        }
     };
 
     const updateForm = (key: string, value: string | boolean) => setForm((prev) => ({ ...prev, [key]: value }));
