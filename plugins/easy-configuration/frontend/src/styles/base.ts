@@ -99,6 +99,10 @@ export const baseCss = `
 
 .ec-empty { padding: 2.5rem 1rem; text-align: center; color: var(--color-text-muted); font-size: 0.8125rem; }
 
+.ec-root input[type="checkbox"] { accent-color: var(--color-primary); cursor: pointer; width: 1rem; height: 1rem; flex-shrink: 0; }
+.ec-check-row { cursor: pointer; }
+.ec-check-row:hover { background: var(--color-surface-hover); }
+
 @keyframes ec-spin { to { transform: rotate(360deg); } }
 @keyframes ec-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ec-pop-in { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }

@@ -1,13 +1,15 @@
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Copy, Search, SlidersHorizontal } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { backendFieldKey, fieldKeyOf } from '../lib/fieldKey';
 import { pickLabel, useT } from '../lib/i18n';
 import { validateValue } from '../lib/validate';
 import type { ApiError } from '../shared';
 import type { ConfigParam, ConfigTemplate } from '../types';
+import { Button } from '../ui/Button';
 import { Input } from '../ui/inputs';
 import { useToast } from '../ui/Toast';
 import type { EditorController } from './controller';
+import { CopyDialog } from './copy/CopyDialog';
 import { FileCard } from './FileCard';
 import { FloatingSaveBar } from './FloatingSaveBar';
 import { useSaveConfig, type SaveFilePayload } from './hooks/useServerConfig';
@@ -39,6 +41,7 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
     const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
     const [justSaved, setJustSaved] = useState(false);
     const [search, setSearch] = useState('');
+    const [copyOpen, setCopyOpen] = useState(false);
 
     const dirtyKeys = useMemo(() => Object.keys(values).filter((key) => values[key] !== original[key]), [values, original]);
     const isDirty = dirtyKeys.length > 0;
@@ -152,6 +155,9 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
                         <p className="ec-subtitle">{t('section.subtitle')}</p>
                     </div>
                 </div>
+                <Button variant="secondary" onClick={() => setCopyOpen(true)}>
+                    <Copy size={15} /> {t('copy.button')}
+                </Button>
             </div>
 
             <div className="ec-search">
@@ -166,6 +172,8 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
             ))}
 
             {(isDirty || justSaved) && !disabled && <FloatingSaveBar saving={save.isPending} saved={justSaved} onSave={doSave} />}
+
+            <CopyDialog open={copyOpen} onClose={() => setCopyOpen(false)} serverId={serverId} templates={templates} />
         </div>
     );
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\EggCatalogController;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\TemplateController;
+use Plugins\EasyConfiguration\Http\Controllers\CopyController;
 use Plugins\EasyConfiguration\Http\Controllers\ServerConfigController;
 use Plugins\EasyConfiguration\Http\Middleware\EnsureAdmin;
 
@@ -19,6 +20,11 @@ Route::middleware(['auth', 'throttle:240,1'])->group(function (): void {
     Route::put('servers/{server}/config', [ServerConfigController::class, 'update']);
     Route::get('servers/{server}/status', [ServerConfigController::class, 'status']);
     Route::post('servers/{server}/power', [ServerConfigController::class, 'power']);
+
+    // Copy configuration to other servers of the same egg.
+    Route::get('servers/{server}/copy/targets', [CopyController::class, 'targets']);
+    Route::post('servers/{server}/copy', [CopyController::class, 'store']);
+    Route::get('servers/{server}/copy/log', [CopyController::class, 'log']);
 
     // Admin template management (is_admin enforced server-side).
     Route::middleware(EnsureAdmin::class)->prefix('admin')->group(function (): void {

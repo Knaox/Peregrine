@@ -54,6 +54,21 @@
         "auto_detected": "Auto",
         "reset_default": "Reset to default"
     },
+    "copy": {
+        "button": "Copy configuration",
+        "title": "Copy configuration",
+        "next": "Next",
+        "confirm": "Confirm",
+        "search_servers": "Search a server...",
+        "no_targets": "You have no other server running the same egg.",
+        "no_params": "No parameters to copy.",
+        "running": "Running",
+        "running_tip": "Stop this server before copying configuration to it.",
+        "preview_summary": "{{params}} parameters will be copied to {{servers}} servers.",
+        "in_progress": "Copy in progress...",
+        "recap_success": "Copied to {{ok}} servers.",
+        "recap_partial": "Success on {{ok}} servers, failed on {{fail}}."
+    },
     "admin": {
         "unauthorized": "You need administrator access to manage templates.",
         "list": {

@@ -54,6 +54,21 @@
         "auto_detected": "Auto",
         "reset_default": "Réinitialiser par défaut"
     },
+    "copy": {
+        "button": "Copier la configuration",
+        "title": "Copier la configuration",
+        "next": "Suivant",
+        "confirm": "Confirmer",
+        "search_servers": "Rechercher un serveur...",
+        "no_targets": "Vous n'avez aucun autre serveur avec le même egg.",
+        "no_params": "Aucun paramètre à copier.",
+        "running": "En cours",
+        "running_tip": "Arrêtez ce serveur avant d'y copier la configuration.",
+        "preview_summary": "{{params}} paramètres seront copiés sur {{servers}} serveurs.",
+        "in_progress": "Copie en cours...",
+        "recap_success": "Copié sur {{ok}} serveurs.",
+        "recap_partial": "Succès sur {{ok}} serveurs, échec sur {{fail}}."
+    },
     "admin": {
         "unauthorized": "Un accès administrateur est requis pour gérer les templates.",
         "list": {
