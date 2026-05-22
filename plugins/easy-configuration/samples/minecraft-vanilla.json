@@ -1,0 +1,93 @@
+{
+    "$schema": "https://peregrine.dev/schemas/easy-config-template/v1.json",
+    "id": "minecraft-vanilla",
+    "version": "1.0.0",
+    "name": { "fr": "Minecraft Vanilla", "en": "Minecraft Vanilla" },
+    "description": {
+        "fr": "Configuration standard d'un serveur Minecraft vanilla (server.properties).",
+        "en": "Standard vanilla Minecraft server configuration (server.properties)."
+    },
+    "author": "knaox",
+    "target_eggs": [],
+    "boost": {
+        "enabled": true,
+        "parameter_blacklist": ["server-port", "rcon.port", "query.port"]
+    },
+    "files": [
+        {
+            "id": "server-properties",
+            "path": "server.properties",
+            "format": "properties",
+            "enabled": true,
+            "label": { "fr": "Propriétés du serveur", "en": "Server properties" },
+            "parameters": {
+                "difficulty": {
+                    "display_type": "select",
+                    "config": {
+                        "default": "easy",
+                        "options": [
+                            { "value": "peaceful", "label": { "fr": "Paisible", "en": "Peaceful" } },
+                            { "value": "easy", "label": { "fr": "Facile", "en": "Easy" } },
+                            { "value": "normal", "label": { "fr": "Normal", "en": "Normal" } },
+                            { "value": "hard", "label": { "fr": "Difficile", "en": "Hard" } }
+                        ]
+                    },
+                    "label": { "fr": "Difficulté", "en": "Difficulty" },
+                    "description": { "fr": "Niveau de difficulté du serveur.", "en": "Server difficulty level." }
+                },
+                "gamemode": {
+                    "display_type": "select",
+                    "config": {
+                        "default": "survival",
+                        "options": [
+                            { "value": "survival", "label": { "fr": "Survie", "en": "Survival" } },
+                            { "value": "creative", "label": { "fr": "Créatif", "en": "Creative" } },
+                            { "value": "adventure", "label": { "fr": "Aventure", "en": "Adventure" } }
+                        ]
+                    },
+                    "label": { "fr": "Mode de jeu", "en": "Game mode" }
+                },
+                "max-players": {
+                    "display_type": "slider",
+                    "config": { "min": 1, "max": 100, "step": 1, "default": 20 },
+                    "label": { "fr": "Joueurs max", "en": "Max players" }
+                },
+                "view-distance": {
+                    "display_type": "slider",
+                    "config": { "min": 3, "max": 32, "step": 1, "default": 10 },
+                    "label": { "fr": "Distance de vue", "en": "View distance" }
+                },
+                "spawn-protection": {
+                    "display_type": "number",
+                    "config": { "min": 0, "max": 256, "default": 16 },
+                    "label": { "fr": "Protection du spawn", "en": "Spawn protection" }
+                },
+                "pvp": {
+                    "display_type": "boolean",
+                    "config": { "true_value": "true", "false_value": "false" },
+                    "label": { "fr": "PvP activé", "en": "PvP enabled" }
+                },
+                "hardcore": {
+                    "display_type": "boolean",
+                    "config": { "true_value": "true", "false_value": "false" },
+                    "label": { "fr": "Hardcore", "en": "Hardcore" }
+                },
+                "white-list": {
+                    "display_type": "boolean",
+                    "config": { "true_value": "true", "false_value": "false" },
+                    "label": { "fr": "Liste blanche", "en": "Whitelist" }
+                },
+                "level-seed": {
+                    "display_type": "text",
+                    "config": { "max_length": 128 },
+                    "label": { "fr": "Seed du monde", "en": "Level seed" }
+                },
+                "motd": {
+                    "display_type": "textarea",
+                    "config": { "max_length": 256 },
+                    "label": { "fr": "Message du jour", "en": "Message of the day" }
+                }
+            }
+        }
+    ]
+}

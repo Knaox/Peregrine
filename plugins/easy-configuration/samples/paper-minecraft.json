@@ -1,0 +1,52 @@
+{
+    "$schema": "https://peregrine.dev/schemas/easy-config-template/v1.json",
+    "id": "paper-minecraft",
+    "version": "1.0.0",
+    "name": { "fr": "Minecraft Paper", "en": "Minecraft Paper" },
+    "description": {
+        "fr": "Réglages courants d'un serveur Paper/Spigot (bukkit.yml, YAML imbriqué).",
+        "en": "Common Paper/Spigot server settings (bukkit.yml, nested YAML)."
+    },
+    "author": "knaox",
+    "target_eggs": [],
+    "boost": {
+        "enabled": true,
+        "parameter_blacklist": []
+    },
+    "files": [
+        {
+            "id": "bukkit-yml",
+            "path": "bukkit.yml",
+            "format": "yaml",
+            "enabled": true,
+            "label": { "fr": "Bukkit", "en": "Bukkit" },
+            "parameters": {
+                "settings.allow-end": {
+                    "display_type": "boolean",
+                    "config": { "true_value": "true", "false_value": "false" },
+                    "label": { "fr": "Autoriser l'End", "en": "Allow the End" }
+                },
+                "spawn-limits.monsters": {
+                    "display_type": "slider",
+                    "config": { "min": 0, "max": 200, "step": 1, "default": 70 },
+                    "label": { "fr": "Limite de monstres", "en": "Monster spawn limit" }
+                },
+                "spawn-limits.animals": {
+                    "display_type": "slider",
+                    "config": { "min": 0, "max": 100, "step": 1, "default": 10 },
+                    "label": { "fr": "Limite d'animaux", "en": "Animal spawn limit" }
+                },
+                "ticks-per.monster-spawns": {
+                    "display_type": "number",
+                    "config": { "min": 1, "max": 400, "default": 1 },
+                    "label": { "fr": "Ticks par spawn de monstre", "en": "Ticks per monster spawn" }
+                },
+                "settings.shutdown-message": {
+                    "display_type": "textarea",
+                    "config": { "max_length": 200 },
+                    "label": { "fr": "Message d'arrêt", "en": "Shutdown message" }
+                }
+            }
+        }
+    ]
+}

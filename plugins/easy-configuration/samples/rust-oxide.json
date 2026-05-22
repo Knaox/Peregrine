@@ -1,0 +1,47 @@
+{
+    "$schema": "https://peregrine.dev/schemas/easy-config-template/v1.json",
+    "id": "rust-oxide",
+    "version": "1.0.0",
+    "name": { "fr": "Rust (Oxide)", "en": "Rust (Oxide)" },
+    "description": {
+        "fr": "Exemple de configuration d'un plugin Oxide/uMod (config JSON).",
+        "en": "Example Oxide/uMod plugin configuration (JSON config)."
+    },
+    "author": "knaox",
+    "target_eggs": [],
+    "boost": {
+        "enabled": true,
+        "parameter_blacklist": []
+    },
+    "files": [
+        {
+            "id": "oxide-plugin",
+            "path": "oxide/config/ServerRewards.json",
+            "format": "json",
+            "enabled": true,
+            "label": { "fr": "ServerRewards", "en": "ServerRewards" },
+            "parameters": {
+                "Settings.Enabled": {
+                    "display_type": "boolean",
+                    "config": { "true_value": "true", "false_value": "false" },
+                    "label": { "fr": "Activé", "en": "Enabled" }
+                },
+                "Settings.Points per minute": {
+                    "display_type": "number",
+                    "config": { "min": 0, "max": 1000, "default": 1 },
+                    "label": { "fr": "Points par minute", "en": "Points per minute" }
+                },
+                "Settings.Starting points": {
+                    "display_type": "number",
+                    "config": { "min": 0, "max": 100000, "default": 0 },
+                    "label": { "fr": "Points de départ", "en": "Starting points" }
+                },
+                "Messages.ChatPrefix": {
+                    "display_type": "text",
+                    "config": { "max_length": 64 },
+                    "label": { "fr": "Préfixe de chat", "en": "Chat prefix" }
+                }
+            }
+        }
+    ]
+}

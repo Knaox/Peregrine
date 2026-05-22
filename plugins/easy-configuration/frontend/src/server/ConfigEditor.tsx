@@ -43,7 +43,21 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
     const [invalid, setInvalid] = useState<Record<string, boolean>>({});
     const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
     const [justSaved, setJustSaved] = useState(false);
-    const [search, setSearch] = useState('');
+    const [search, setSearchState] = useState<string>(() => {
+        try {
+            return localStorage.getItem(`ec:search:${serverId}`) ?? '';
+        } catch {
+            return '';
+        }
+    });
+    const setSearch = (value: string): void => {
+        setSearchState(value);
+        try {
+            localStorage.setItem(`ec:search:${serverId}`, value);
+        } catch {
+            /* localStorage unavailable */
+        }
+    };
     const [copyOpen, setCopyOpen] = useState(false);
     const [boostMode, setBoostMode] = useState(false);
     const [boostOpen, setBoostOpen] = useState(false);

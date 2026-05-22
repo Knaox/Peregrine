@@ -1,0 +1,65 @@
+{
+    "$schema": "https://peregrine.dev/schemas/easy-config-template/v1.json",
+    "id": "ark-survival",
+    "version": "1.0.0",
+    "name": { "fr": "ARK: Survival", "en": "ARK: Survival" },
+    "description": {
+        "fr": "Réglages serveur ARK (GameUserSettings.ini), section ServerSettings.",
+        "en": "ARK server settings (GameUserSettings.ini), ServerSettings section."
+    },
+    "author": "knaox",
+    "target_eggs": [],
+    "boost": {
+        "enabled": true,
+        "parameter_blacklist": []
+    },
+    "files": [
+        {
+            "id": "game-user-settings",
+            "path": "ShooterGame/Saved/Config/LinuxServer/GameUserSettings.ini",
+            "format": "ini",
+            "enabled": true,
+            "section_whitelist": ["ServerSettings"],
+            "label": { "fr": "Réglages serveur", "en": "Server settings" },
+            "parameters": {
+                "ServerSettings": {
+                    "DifficultyOffset": {
+                        "display_type": "slider",
+                        "config": { "min": 0, "max": 1, "step": 0.05, "float": true, "default": 0.2 },
+                        "label": { "fr": "Difficulté", "en": "Difficulty offset" }
+                    },
+                    "XPMultiplier": {
+                        "display_type": "number",
+                        "config": { "min": 1, "max": 100, "float": true, "default": 1, "max_cap": 50 },
+                        "label": { "fr": "Multiplicateur d'XP", "en": "XP multiplier" }
+                    },
+                    "TamingSpeedMultiplier": {
+                        "display_type": "number",
+                        "config": { "min": 1, "max": 100, "float": true, "default": 1 },
+                        "label": { "fr": "Vitesse d'apprivoisement", "en": "Taming speed multiplier" }
+                    },
+                    "HarvestAmountMultiplier": {
+                        "display_type": "number",
+                        "config": { "min": 1, "max": 100, "float": true, "default": 1 },
+                        "label": { "fr": "Multiplicateur de récolte", "en": "Harvest amount multiplier" }
+                    },
+                    "ServerPVE": {
+                        "display_type": "boolean",
+                        "config": { "true_value": "True", "false_value": "False" },
+                        "label": { "fr": "Mode PvE", "en": "PvE mode" }
+                    },
+                    "allowThirdPersonPlayer": {
+                        "display_type": "boolean",
+                        "config": { "true_value": "True", "false_value": "False" },
+                        "label": { "fr": "Vue à la 3e personne", "en": "Third person view" }
+                    },
+                    "ServerPassword": {
+                        "display_type": "text",
+                        "config": { "max_length": 64 },
+                        "label": { "fr": "Mot de passe serveur", "en": "Server password" }
+                    }
+                }
+            }
+        }
+    ]
+}

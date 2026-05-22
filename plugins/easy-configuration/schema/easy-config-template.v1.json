@@ -1,0 +1,98 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://peregrine.dev/schemas/easy-config-template/v1.json",
+    "title": "Easy Configuration template",
+    "description": "A pure render schema describing how to display a server's config files. Never stores values.",
+    "type": "object",
+    "required": ["id", "version", "name", "target_eggs", "files"],
+    "additionalProperties": true,
+    "properties": {
+        "$schema": { "type": "string" },
+        "id": { "type": "string", "pattern": "^[a-z0-9._-]+$", "description": "Unique slug; also the JSON file name." },
+        "version": { "type": "string" },
+        "name": { "$ref": "#/$defs/localeLabel" },
+        "description": { "$ref": "#/$defs/localeLabel" },
+        "author": { "type": "string" },
+        "target_eggs": {
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "Local Peregrine egg ids this template applies to."
+        },
+        "boost": {
+            "type": "object",
+            "properties": {
+                "enabled": { "type": "boolean" },
+                "parameter_blacklist": { "type": "array", "items": { "type": "string" } }
+            }
+        },
+        "files": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/file" }
+        }
+    },
+    "$defs": {
+        "localeLabel": {
+            "type": "object",
+            "description": "At least one of fr/en.",
+            "properties": { "fr": { "type": "string" }, "en": { "type": "string" } },
+            "anyOf": [{ "required": ["fr"] }, { "required": ["en"] }]
+        },
+        "file": {
+            "type": "object",
+            "required": ["id", "path", "format", "parameters"],
+            "properties": {
+                "id": { "type": "string" },
+                "path": { "type": "string" },
+                "format": { "enum": ["properties", "ini", "yaml", "json", "toml"] },
+                "enabled": { "type": "boolean", "default": true },
+                "section_whitelist": { "type": "array", "items": { "type": "string" } },
+                "label": { "$ref": "#/$defs/localeLabel" },
+                "parameters": {
+                    "type": "object",
+                    "description": "Flat { key: param } for properties/json/yaml, or nested { section: { key: param } } for ini/toml.",
+                    "additionalProperties": {
+                        "oneOf": [
+                            { "$ref": "#/$defs/parameter" },
+                            { "type": "object", "additionalProperties": { "$ref": "#/$defs/parameter" } }
+                        ]
+                    }
+                }
+            }
+        },
+        "parameter": {
+            "type": "object",
+            "required": ["display_type"],
+            "properties": {
+                "display_type": { "enum": ["boolean", "slider", "select", "multiselect", "text", "number", "textarea", "color"] },
+                "config": {
+                    "type": "object",
+                    "properties": {
+                        "min": { "type": "number" },
+                        "max": { "type": "number" },
+                        "step": { "type": "number" },
+                        "float": { "type": "boolean" },
+                        "suffix": { "type": "string" },
+                        "max_length": { "type": "integer" },
+                        "regex": { "type": "string" },
+                        "format": { "type": "string" },
+                        "separator": { "type": "string" },
+                        "true_value": { "type": "string" },
+                        "false_value": { "type": "string" },
+                        "default": {},
+                        "options": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": ["value"],
+                                "properties": { "value": { "type": "string" }, "label": { "$ref": "#/$defs/localeLabel" } }
+                            }
+                        }
+                    }
+                },
+                "label": { "$ref": "#/$defs/localeLabel" },
+                "description": { "$ref": "#/$defs/localeLabel" }
+            }
+        }
+    }
+}
