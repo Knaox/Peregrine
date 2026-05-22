@@ -10,6 +10,16 @@ export function useBackups(serverId: number) {
         queryFn: () => fetchBackups(serverId),
         staleTime: 120_000,
         enabled: serverId > 0,
+        // Pelican/Wings creates backups asynchronously: a fresh backup lands
+        // with `completed_at = null` and is filled in seconds later. There's no
+        // inbound webhook syncing that, so poll every 5s while ANY backup is
+        // still in progress, then stop — flips the "Creating…" badge to done
+        // without a manual refresh.
+        refetchInterval: (query) => {
+            const backups = query.state.data;
+            const hasInProgress = Array.isArray(backups) && backups.some((b) => !b.completed_at);
+            return hasInProgress ? 5_000 : false;
+        },
     });
 
     const create = useMutation({
