@@ -21,10 +21,18 @@ final class TemplateRegistry
 
     public function rebuild(): void
     {
+        $existing = TemplateCache::query()->pluck('checksum', 'template_id');
         $seen = [];
 
         foreach ($this->loader->loadAll() as $loaded) {
             $seen[] = $loaded->id;
+
+            // Skip files whose content is unchanged so the 60s self-heal
+            // rebuild stays cheap (no write when nothing moved).
+            if (($existing[$loaded->id] ?? null) === $loaded->checksum) {
+                continue;
+            }
+
             TemplateCache::query()->updateOrCreate(
                 ['template_id' => $loaded->id],
                 $this->attributes($loaded),
