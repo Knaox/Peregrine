@@ -131,6 +131,15 @@ i18n
         },
         react: {
             useSuspense: false,
+            // Plugin i18n bundles are injected at runtime via
+            // `addResourceBundle` (loadPluginI18n), which fires i18next's
+            // 'added' event. react-i18next only re-renders on
+            // 'languageChanged loaded' by default, so a component mounted
+            // before its plugin namespace finishes loading — e.g. the PUBLIC
+            // /invite page reading the `invitations` namespace — would stay on
+            // raw keys forever. Binding 'added removed' makes it re-render once
+            // the bundle lands.
+            bindI18n: 'languageChanged loaded added removed',
         },
     });
 
