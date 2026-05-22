@@ -27,7 +27,7 @@ class InvitationService
     /**
      * Create and send a server invitation.
      *
-     * @param array<int, string> $permissions
+     * @param  array<int, string>  $permissions
      */
     public function create(
         Server $server,
@@ -99,22 +99,31 @@ class InvitationService
             // username collisions, and parallel-call locking.
             app(EnsurePelicanAccountAction::class)->execute($user, 'invitation');
 
-            // Step 2: Create subuser on Pelican
+            // Step 2: Create the subuser on Pelican — or UPDATE it if the user
+            // is already a subuser of this server (re-invitation, or a leftover
+            // from a previous grant). Calling createSubuser blindly would 422 on
+            // the duplicate and roll back the whole accept, leaving the
+            // invitation stuck "pending" with stale permissions.
             $invitation->loadMissing('server');
             $serverIdentifier = $invitation->server->identifier;
+            $permissions = $invitation->permissions ?? [];
 
-            $this->subuserService->createSubuser(
-                $serverIdentifier,
-                $user->email,
-                $invitation->permissions ?? [],
-            );
+            $existing = collect($this->subuserService->listSubusers($serverIdentifier))
+                ->first(fn (array $s): bool => isset($s['email'])
+                    && strtolower((string) $s['email']) === strtolower($user->email));
+
+            if (is_array($existing) && ! empty($existing['uuid'])) {
+                $this->subuserService->updateSubuser($serverIdentifier, (string) $existing['uuid'], $permissions);
+            } else {
+                $this->subuserService->createSubuser($serverIdentifier, $user->email, $permissions);
+            }
 
             // Step 3: Create access record in Peregrine DB (pivot table)
             DB::table('server_user')->updateOrInsert(
                 ['user_id' => $user->id, 'server_id' => $invitation->server_id],
                 [
                     'role' => 'subuser',
-                    'permissions' => json_encode($invitation->permissions ?? []),
+                    'permissions' => json_encode($permissions),
                     'updated_at' => now(),
                     'created_at' => now(),
                 ],
