@@ -9,6 +9,7 @@ import { formatBytes, formatDate } from '@/utils/format';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { withServerConflictGate } from '@/components/server/withServerConflictGate';
+import { ResourceQuota } from '@/components/server/ResourceQuota';
 import { useNamespace } from '@/i18n/useNamespace';
 
 const INPUT_CLS = 'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none';
@@ -83,6 +84,10 @@ function ServerBackupsPageImpl() {
     const canRestore = perms.has('backup.restore');
     const canDelete = perms.has('backup.delete');
 
+    const usedBackups = backups?.length ?? 0;
+    const backupLimit = server?.feature_limits?.backups;
+    const atBackupLimit = backupLimit !== undefined && usedBackups >= backupLimit;
+
     const [showCreate, setShowCreate] = useState(false);
     const [bkName, setBkName] = useState('');
     const [bkIgnored, setBkIgnored] = useState('');
@@ -106,11 +111,16 @@ function ServerBackupsPageImpl() {
                     <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{t('server-backups:backups.title')}</h2>
                 </div>
                 {canCreate && (
-                    <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
+                    <Button variant="primary" size="sm" disabled={atBackupLimit} onClick={() => setShowCreate(!showCreate)}>
                         {t('server-backups:backups.create')}
                     </Button>
                 )}
             </div>
+
+            {/* Quota — used / limit + remaining (or limit reached) */}
+            {backupLimit !== undefined && (
+                <ResourceQuota label={t('server-backups:backups.title')} used={usedBackups} limit={backupLimit} />
+            )}
 
             {/* Create form */}
             {showCreate && (

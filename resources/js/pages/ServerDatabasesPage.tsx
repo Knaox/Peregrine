@@ -10,6 +10,7 @@ import { copyToClipboard } from '@/utils/clipboard';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { withServerConflictGate } from '@/components/server/withServerConflictGate';
+import { ResourceQuota } from '@/components/server/ResourceQuota';
 import { useNamespace } from '@/i18n/useNamespace';
 
 const INPUT_CLS = 'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none';
@@ -54,6 +55,10 @@ function ServerDatabasesPageImpl() {
     const canDelete = perms.has('database.delete');
     const canViewPassword = perms.has('database.view_password');
 
+    const usedDatabases = databases?.length ?? 0;
+    const databaseLimit = server?.feature_limits?.databases;
+    const atDatabaseLimit = databaseLimit !== undefined && usedDatabases >= databaseLimit;
+
     const [showCreate, setShowCreate] = useState(false);
     const [dbName, setDbName] = useState('');
     const [dbRemote, setDbRemote] = useState('%');
@@ -93,11 +98,16 @@ function ServerDatabasesPageImpl() {
                     <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{t('server-databases:databases.title')}</h2>
                 </div>
                 {canCreate && (
-                    <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
+                    <Button variant="primary" size="sm" disabled={atDatabaseLimit} onClick={() => setShowCreate(!showCreate)}>
                         {t('server-databases:databases.create')}
                     </Button>
                 )}
             </div>
+
+            {/* Quota — used / limit + remaining (or limit reached) */}
+            {databaseLimit !== undefined && (
+                <ResourceQuota label={t('server-databases:databases.title')} used={usedDatabases} limit={databaseLimit} />
+            )}
 
             {/* Create form */}
             {showCreate && (

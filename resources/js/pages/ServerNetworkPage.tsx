@@ -9,6 +9,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { AllocationCard } from '@/components/network/AllocationCard';
 import { withServerConflictGate } from '@/components/server/withServerConflictGate';
+import { ResourceQuota } from '@/components/server/ResourceQuota';
 import { useNamespace } from '@/i18n/useNamespace';
 
 function GlobeIcon({ className }: { className?: string }) {
@@ -57,6 +58,10 @@ function ServerNetworkPageImpl() {
     const canCreate = perms.has('allocation.create');
     const canUpdate = perms.has('allocation.update');
     const canDelete = perms.has('allocation.delete');
+
+    const usedAllocations = allocations?.length ?? 0;
+    const allocationLimit = server?.feature_limits?.allocations;
+    const atAllocationLimit = allocationLimit !== undefined && usedAllocations >= allocationLimit;
 
     const [editingNotes, setEditingNotes] = useState<number | null>(null);
     const [notesValue, setNotesValue] = useState('');
@@ -113,12 +118,17 @@ function ServerNetworkPageImpl() {
                     </h2>
                 </div>
                 {canCreate && (
-                    <Button variant="primary" size="sm" isLoading={add.isPending} onClick={() => add.mutate()}>
+                    <Button variant="primary" size="sm" isLoading={add.isPending} disabled={atAllocationLimit} onClick={() => { if (!atAllocationLimit) add.mutate(); }}>
                         <PlusIcon className="h-4 w-4" />
                         {t('server-network:network.add')}
                     </Button>
                 )}
             </div>
+
+            {/* Quota — used / limit + remaining (or limit reached) */}
+            {allocationLimit !== undefined && (
+                <ResourceQuota label={t('server-network:network.title')} used={usedAllocations} limit={allocationLimit} />
+            )}
 
             {/* Error banner */}
             {add.isError && (

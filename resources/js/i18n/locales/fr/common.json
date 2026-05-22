@@ -60,5 +60,10 @@
         "expired": "Cette invitation a expiré ou a été révoquée.",
         "already_accepted": "Cette invitation a déjà été acceptée.",
         "go_home": "Aller au tableau de bord"
+    },
+    "quota": {
+        "remaining_one": "{{count}} restant",
+        "remaining_other": "{{count}} restants",
+        "limit_reached": "Limite atteinte"
     }
 }
