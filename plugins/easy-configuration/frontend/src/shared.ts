@@ -23,6 +23,16 @@ export const P: PeregrinePlugins = window.__PEREGRINE_PLUGINS__;
 export const PLUGIN_ID = 'easy-configuration';
 export const BASE = `/api/plugins/${PLUGIN_ID}`;
 
+/**
+ * SPA path of the admin template manager. It lives under a `/manage` sub-path,
+ * NOT the bare `/plugins/easy-configuration`, because the host symlinks
+ * `public/plugins/easy-configuration` -> the plugin's `frontend/dist` to serve
+ * the bundle; nginx would 403 on the bare directory (autoindex off) instead of
+ * falling through to the SPA. A sub-path absent from dist routes to index.php
+ * and renders the SPA correctly.
+ */
+export const ADMIN_PATH = `/plugins/${PLUGIN_ID}/manage`;
+
 /** A structured API error thrown by {@link api}. */
 export interface ApiError {
     status: number;

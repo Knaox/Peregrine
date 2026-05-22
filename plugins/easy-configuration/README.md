@@ -42,7 +42,7 @@ lines. Supported formats: `properties`, `ini`, `yaml`, `json`, `toml`.
 
 Templates are JSON files under `storage/app/easy-config/templates/{id}.json`,
 designed to be shared and forked on GitHub. Manage them from
-**/admin/plugins → Easy Configuration → Configure** (`/plugins/easy-configuration`),
+**/admin/plugins → Easy Configuration → Configure** (`/plugins/easy-configuration/manage`),
 which is admin-only:
 
 - **List** every template with validity, target eggs, file count and boost flag.

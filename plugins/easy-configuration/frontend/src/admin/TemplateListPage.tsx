@@ -2,7 +2,7 @@ import { Download, FilePlus2, Pencil, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pickLabel, useT } from '../lib/i18n';
-import { BASE, PLUGIN_ID, type ApiError } from '../shared';
+import { ADMIN_PATH, BASE, type ApiError } from '../shared';
 import { Button, IconButton } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { Textarea } from '../ui/inputs';
@@ -62,7 +62,7 @@ export function TemplateListPage() {
                     <Button variant="secondary" onClick={() => setImportOpen(true)}>
                         <Upload size={15} /> {t('admin.list.import')}
                     </Button>
-                    <Button onClick={() => navigate(`/plugins/${PLUGIN_ID}/new`)}>
+                    <Button onClick={() => navigate(`${ADMIN_PATH}/new`)}>
                         <FilePlus2 size={15} /> {t('admin.list.new')}
                     </Button>
                 </div>
@@ -88,7 +88,7 @@ export function TemplateListPage() {
                                 {tpl.boost_enabled && <Badge variant="accent">{t('admin.list.boost')}</Badge>}
                             </div>
                             <div className="ec-row">
-                                <Button size="sm" variant="secondary" onClick={() => navigate(`/plugins/${PLUGIN_ID}/${tpl.template_id}`)}>
+                                <Button size="sm" variant="secondary" onClick={() => navigate(`${ADMIN_PATH}/${tpl.template_id}`)}>
                                     <Pencil size={13} /> {t('common.edit')}
                                 </Button>
                                 <a className="ec-btn ec-btn-ghost ec-btn-sm" href={`${BASE}/admin/templates/${tpl.template_id}/export`}>

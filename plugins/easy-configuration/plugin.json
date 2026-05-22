@@ -9,7 +9,7 @@
     "min_peregrine_version": "1.0.0",
     "bundled": false,
     "service_provider": "EasyConfigurationServiceProvider",
-    "manage_url": "/plugins/easy-configuration",
+    "manage_url": "/plugins/easy-configuration/manage",
     "frontend": {
         "bundle": "frontend/dist/bundle.js",
         "nav": [],

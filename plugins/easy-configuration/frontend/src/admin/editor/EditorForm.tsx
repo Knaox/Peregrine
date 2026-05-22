@@ -2,7 +2,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../../lib/i18n';
-import { PLUGIN_ID, type ApiError } from '../../shared';
+import { ADMIN_PATH, type ApiError } from '../../shared';
 import { Button } from '../../ui/Button';
 import { Input, Textarea, Toggle } from '../../ui/inputs';
 import { Card, Tabs } from '../../ui/surfaces';
@@ -86,7 +86,7 @@ export function EditorForm({ initial, isNew }: { initial: Draft; isNew: boolean 
             {
                 onSuccess: () => {
                     toast.success(t('admin.editor.saved'));
-                    navigate(`/plugins/${PLUGIN_ID}`);
+                    navigate(ADMIN_PATH);
                 },
                 onError: (error) => {
                     const apiError = error as unknown as ApiError;
@@ -101,7 +101,7 @@ export function EditorForm({ initial, isNew }: { initial: Draft; isNew: boolean 
         <div className="ec-page">
             <div className="ec-between">
                 <div className="ec-row">
-                    <Button variant="ghost" onClick={() => navigate(`/plugins/${PLUGIN_ID}`)}>
+                    <Button variant="ghost" onClick={() => navigate(ADMIN_PATH)}>
                         <ArrowLeft size={15} /> {t('common.back')}
                     </Button>
                     <h1 className="ec-title">{isNew ? t('admin.editor.title_new') : draft.id}</h1>
