@@ -1,36 +1,51 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, m } from 'motion/react';
-import { useUploadStore } from '@/stores/uploadStore';
+import { useUploadStore, type ActivityKind } from '@/stores/uploadStore';
 import { useNamespace } from '@/i18n/useNamespace';
 
+const BUSY_LABEL_KEY: Record<Exclude<ActivityKind, 'upload'>, string> = {
+    compress: 'compressing',
+    decompress: 'decompressing',
+    pull: 'pulling',
+};
+
 /**
- * Floating, app-wide upload indicator. Mounted once at the root (app.tsx) so
- * it stays visible while the user navigates between server tabs during an
- * upload, and it owns the `beforeunload` guard that warns before a hard reload
- * would cancel an in-flight transfer.
+ * Floating, app-wide file-activity indicator. Mounted once at the root
+ * (app.tsx) so it stays visible while the user navigates between server tabs
+ * during an upload, and it owns the `beforeunload` guard (upload only).
+ *
+ * Shows a real % bar for uploads; an indeterminate animated bar for
+ * compress/decompress/pull (Pelican exposes no progress for those).
  */
 export function UploadProgressWidget() {
     useNamespace(["server-files"] as const);
     const { t } = useTranslation();
-    const isUploading = useUploadStore((s) => s.isUploading);
+    const active = useUploadStore((s) => s.active);
+    const kind = useUploadStore((s) => s.kind);
     const percent = useUploadStore((s) => s.percent);
     const fileCount = useUploadStore((s) => s.fileCount);
     const directory = useUploadStore((s) => s.directory);
     const error = useUploadStore((s) => s.error);
     const reset = useUploadStore((s) => s.reset);
 
+    // Only uploads stream bytes from the browser, so only they are lost on a
+    // hard reload. compress/decompress/pull run server-side — no guard needed.
     useEffect(() => {
-        if (!isUploading) return;
+        if (!active || kind !== 'upload') return;
         const handler = (e: BeforeUnloadEvent) => {
             e.preventDefault();
             e.returnValue = '';
         };
         window.addEventListener('beforeunload', handler);
         return () => window.removeEventListener('beforeunload', handler);
-    }, [isUploading]);
+    }, [active, kind]);
 
-    const visible = isUploading || !!error;
+    const visible = active || !!error;
+    const determinate = kind === 'upload';
+    const label = kind === 'upload'
+        ? `${t('server-files:files.uploading')} · ${fileCount} → ${directory}`
+        : t(`server-files:files.${BUSY_LABEL_KEY[kind]}`);
 
     return (
         <AnimatePresence>
@@ -61,17 +76,23 @@ export function UploadProgressWidget() {
                     ) : (
                         <>
                             <div className="mb-2 flex items-center justify-between gap-2">
-                                <p className="truncate text-xs font-medium text-[var(--color-text-secondary)]">
-                                    {t('server-files:files.uploading')} · {fileCount} → <span style={{ fontFamily: 'var(--font-mono)' }}>{directory}</span>
-                                </p>
-                                <span className="shrink-0 text-xs font-semibold text-[var(--color-primary)]">{percent}%</span>
+                                <p className="truncate text-xs font-medium text-[var(--color-text-secondary)]">{label}</p>
+                                {determinate && <span className="shrink-0 text-xs font-semibold text-[var(--color-primary)]">{percent}%</span>}
                             </div>
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-surface-hover)]">
-                                <m.div
-                                    className="h-full rounded-full bg-[var(--color-primary)]"
-                                    animate={{ width: `${percent}%` }}
-                                    transition={{ duration: 0.2, ease: 'easeOut' }}
-                                />
+                            <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-surface-hover)]">
+                                {determinate ? (
+                                    <m.div
+                                        className="h-full rounded-full bg-[var(--color-primary)]"
+                                        animate={{ width: `${percent}%` }}
+                                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                                    />
+                                ) : (
+                                    <m.div
+                                        className="absolute inset-y-0 w-1/3 rounded-full bg-[var(--color-primary)]"
+                                        animate={{ x: ['-110%', '330%'] }}
+                                        transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+                                    />
+                                )}
                             </div>
                         </>
                     )}

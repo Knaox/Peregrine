@@ -19,6 +19,7 @@ import { FileEditor } from '@/components/files/FileEditor';
 import { FileBulkBar } from '@/components/files/FileBulkBar';
 import { FilePullModal } from '@/components/files/FilePullModal';
 import { withServerConflictGate } from '@/components/server/withServerConflictGate';
+import { useUploadStore } from '@/stores/uploadStore';
 import { useNamespace } from '@/i18n/useNamespace';
 
 function ServerFilesPageImpl() {
@@ -39,6 +40,11 @@ function ServerFilesPageImpl() {
     // Upload progress + errors are surfaced by the app-wide UploadProgressWidget
     // (mounted in app.tsx) so they survive navigating away from this page.
     const { handleDrop } = useFileUpload(serverId);
+    // Same widget shows an indeterminate bar for the archive/pull operations,
+    // which have no real progress to report from Pelican.
+    const startBusy = useUploadStore((s) => s.startBusy);
+    const finishActivity = useUploadStore((s) => s.finish);
+    const failActivity = useUploadStore((s) => s.fail);
     const [isDragOver, setIsDragOver] = useState(false);
     const dragCounter = useRef(0);
     const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
@@ -67,11 +73,15 @@ function ServerFilesPageImpl() {
     });
     const compressMutation = useMutation({
         mutationFn: (names: string[]) => compressFiles(serverId, currentDirectory, names),
-        onSuccess: () => { deselectAll(); refresh(); },
+        onMutate: () => startBusy('compress'),
+        onSuccess: () => { deselectAll(); refresh(); finishActivity(); },
+        onError: (e) => failActivity(e instanceof Error ? e.message : 'Compression failed'),
     });
     const decompressMutation = useMutation({
         mutationFn: (name: string) => decompressFile(serverId, currentDirectory, name),
-        onSuccess: refresh,
+        onMutate: () => startBusy('decompress'),
+        onSuccess: () => { refresh(); finishActivity(); },
+        onError: (e) => failActivity(e instanceof Error ? e.message : 'Extraction failed'),
     });
     const chmodMutation = useMutation({
         mutationFn: (params: { name: string; mode: string }) => chmodFiles(serverId, currentDirectory, [{ file: params.name, mode: params.mode }]),
@@ -79,7 +89,16 @@ function ServerFilesPageImpl() {
     });
     const pullMutation = useMutation({
         mutationFn: (params: { url: string; filename: string | undefined }) => pullFile(serverId, params.url, currentDirectory, params.filename),
-        onSuccess: () => { setPullOpen(false); refresh(); },
+        onMutate: () => startBusy('pull'),
+        onSuccess: () => {
+            setPullOpen(false);
+            refresh();
+            // Wings downloads in the background, so the POST returns right away.
+            // Keep the indicator up briefly, then refresh again so the new file
+            // appears without a manual reload.
+            setTimeout(() => { refresh(); finishActivity(); }, 4000);
+        },
+        onError: (e) => failActivity(e instanceof Error ? e.message : 'Download failed'),
     });
 
     const [pullOpen, setPullOpen] = useState(false);

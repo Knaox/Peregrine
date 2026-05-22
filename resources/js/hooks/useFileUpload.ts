@@ -7,7 +7,7 @@ export function useFileUpload(serverId: number) {
     const queryClient = useQueryClient();
     // Subscribe to the global store so the progress survives navigating away
     // from the Files page (the upload keeps running in the background).
-    const isUploading = useUploadStore((s) => s.isUploading);
+    const isUploading = useUploadStore((s) => s.active);
     const percent = useUploadStore((s) => s.percent);
     const error = useUploadStore((s) => s.error);
 
@@ -21,7 +21,7 @@ export function useFileUpload(serverId: number) {
         // Aggregate % is driven by the sum of file sizes, NOT the per-batch XHR
         // `total` (which includes multipart overhead and resets each batch).
         const totalBytes = files.reduce((sum, f) => sum + f.size, 0) || 1;
-        store.start(files.length, currentDirectory);
+        store.startUpload(files.length, currentDirectory);
 
         try {
             const uploadUrl = await fetchUploadUrl(serverId);
