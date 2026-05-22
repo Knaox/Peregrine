@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { LoginParticles } from '@/components/LoginParticles';
 
 export function InviteAcceptPage() {
-    const { t } = useTranslation();
+    const { t } = useTranslation('invitations');
     const { token } = useParams<{ token: string }>();
     const navigate = useNavigate();
     const { user, isAuthenticated, logout } = useAuthStore();
@@ -27,10 +27,10 @@ export function InviteAcceptPage() {
     const [passwordConfirm, setPasswordConfirm] = useState('');
     const [error, setError] = useState('');
 
-    if (!token) return <ErrorState message={t('invitations.accept.invalid')} branding={branding} />;
+    if (!token) return <ErrorState message={t('accept.invalid')} branding={branding} />;
     if (isLoading) return <LoadingState branding={branding} />;
-    if (isError || !invitation) return <ErrorState message={t('invitations.accept.expired')} branding={branding} />;
-    if (!invitation.is_active) return <ErrorState message={invitation.is_accepted ? t('invitations.accept.already_accepted') : t('invitations.accept.expired')} branding={branding} />;
+    if (isError || !invitation) return <ErrorState message={t('accept.expired')} branding={branding} />;
+    if (!invitation.is_active) return <ErrorState message={invitation.is_accepted ? t('accept.already_accepted') : t('accept.expired')} branding={branding} />;
 
     const emailMatch = isAuthenticated && user?.email?.toLowerCase() === invitation.email.toLowerCase();
     const emailMismatch = isAuthenticated && !emailMatch;
@@ -78,15 +78,15 @@ export function InviteAcceptPage() {
                     style={{ background: 'rgba(22, 19, 30, 0.85)', backdropFilter: 'var(--glass-blur)',
                         border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
 
-                    <h1 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">{t('invitations.accept.title')}</h1>
+                    <h1 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">{t('accept.title')}</h1>
                     <p className="text-sm text-[var(--color-text-secondary)] mb-5">
-                        {t('invitations.accept.invited_to', { server: invitation.server_name, inviter: invitation.inviter_name })}
+                        {t('accept.invited_to', { server: invitation.server_name, inviter: invitation.inviter_name })}
                     </p>
 
                     {/* Permissions */}
                     {invitation.permissions.length > 0 && (
                         <div className="mb-5 rounded-[var(--radius)] p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                            <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">{t('invitations.accept.permissions')}</p>
+                            <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">{t('accept.permissions')}</p>
                             <div className="flex flex-wrap gap-1.5">
                                 {invitation.permissions.map((p) => (
                                     <span key={p.key} className="rounded-[var(--radius-sm)] px-2 py-0.5 text-[11px] font-medium"
@@ -100,7 +100,7 @@ export function InviteAcceptPage() {
 
                     {/* Expiry */}
                     <p className="text-xs text-[var(--color-text-muted)] mb-5">
-                        {t('invitations.accept.expires', { date: new Date(invitation.expires_at).toLocaleDateString() })}
+                        {t('accept.expires', { date: new Date(invitation.expires_at).toLocaleDateString() })}
                     </p>
 
                     {/* Error */}
@@ -113,7 +113,7 @@ export function InviteAcceptPage() {
                     {/* Case 1: Authenticated + email match → accept button */}
                     {emailMatch && (
                         <Button variant="primary" isLoading={acceptMutation.isPending} onClick={handleAccept} className="w-full">
-                            {t('invitations.accept.button')}
+                            {t('accept.button')}
                         </Button>
                     )}
 
@@ -121,10 +121,10 @@ export function InviteAcceptPage() {
                     {emailMismatch && (
                         <div className="text-center space-y-3">
                             <p className="text-sm text-[var(--color-warning)]">
-                                {t('invitations.accept.wrong_email', { current: user?.email, expected: invitation.email })}
+                                {t('accept.wrong_email', { current: user?.email, expected: invitation.email })}
                             </p>
                             <Button variant="secondary" onClick={() => { void logout(); }} className="w-full">
-                                {t('invitations.accept.logout')}
+                                {t('accept.logout')}
                             </Button>
                         </div>
                     )}
@@ -137,33 +137,33 @@ export function InviteAcceptPage() {
                                 <button type="button" onClick={() => setActiveTab('register')}
                                     className={clsx('flex-1 py-2 text-sm font-medium rounded-[var(--radius)] cursor-pointer transition-colors',
                                         activeTab === 'register' ? 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]')}>
-                                    {t('invitations.accept.create_account')}
+                                    {t('accept.create_account')}
                                 </button>
                                 <button type="button" onClick={() => setActiveTab('login')}
                                     className={clsx('flex-1 py-2 text-sm font-medium rounded-[var(--radius)] cursor-pointer transition-colors',
                                         activeTab === 'login' ? 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]')}>
-                                    {t('invitations.accept.login')}
+                                    {t('accept.login')}
                                 </button>
                             </div>
 
                             {activeTab === 'register' && (
                                 <form onSubmit={handleRegister} className="space-y-3">
-                                    <InputField label={t('invitations.accept.email')} value={invitation.email} disabled />
-                                    <InputField label={t('invitations.accept.name')} value={name} onChange={setName} required />
-                                    <InputField label={t('invitations.accept.password')} type="password" value={password} onChange={setPassword} required />
-                                    <InputField label={t('invitations.accept.password_confirm')} type="password" value={passwordConfirm} onChange={setPasswordConfirm} required />
+                                    <InputField label={t('accept.email')} value={invitation.email} disabled />
+                                    <InputField label={t('accept.name')} value={name} onChange={setName} required />
+                                    <InputField label={t('accept.password')} type="password" value={password} onChange={setPassword} required />
+                                    <InputField label={t('accept.password_confirm')} type="password" value={passwordConfirm} onChange={setPasswordConfirm} required />
                                     <Button type="submit" variant="primary" isLoading={registerMutation.isPending} className="w-full">
-                                        {t('invitations.accept.register_and_accept')}
+                                        {t('accept.register_and_accept')}
                                     </Button>
                                 </form>
                             )}
 
                             {activeTab === 'login' && (
                                 <div className="text-center space-y-3">
-                                    <p className="text-sm text-[var(--color-text-secondary)]">{t('invitations.accept.login_hint')}</p>
+                                    <p className="text-sm text-[var(--color-text-secondary)]">{t('accept.login_hint')}</p>
                                     <Link to={`/login?redirect=/invite/${token}`}
                                         className="inline-block w-full rounded-[var(--radius)] bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white text-center transition-colors hover:bg-[var(--color-primary-hover)]">
-                                        {t('invitations.accept.go_to_login')}
+                                        {t('accept.go_to_login')}
                                     </Link>
 
                                     {/* SSO placeholder — hidden behind feature flag */}
@@ -208,7 +208,7 @@ function LoadingState({ branding }: { branding: { logo_url: string; app_name: st
 }
 
 function ErrorState({ message, branding }: { message: string; branding: { logo_url: string; app_name: string } }) {
-    const { t } = useTranslation();
+    const { t } = useTranslation('invitations');
 
     return (
         <div className="flex min-h-screen items-center justify-center px-4" style={{ background: 'var(--color-background)' }}>
@@ -216,7 +216,7 @@ function ErrorState({ message, branding }: { message: string; branding: { logo_u
                 <img src={branding.logo_url} alt={branding.app_name} className="mx-auto h-10 mb-6 object-contain" />
                 <p className="text-[var(--color-text-secondary)] mb-4">{message}</p>
                 <Link to="/dashboard" className="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors">
-                    {t('invitations.accept.go_home')}
+                    {t('accept.go_home')}
                 </Link>
             </div>
         </div>
