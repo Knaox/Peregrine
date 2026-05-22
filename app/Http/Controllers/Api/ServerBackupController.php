@@ -21,14 +21,23 @@ class ServerBackupController extends Controller
     {
         $this->authorize('readBackup', $server);
 
-        $data = Cache::remember("server_backups:{$server->identifier}", 120, function () use ($server): array {
-            $backups = $this->backupService->listBackups($server->identifier);
+        $key = "server_backups:{$server->identifier}";
+        $data = Cache::get($key);
 
-            return array_map(
-                fn (array $backup) => $backup['attributes'] ?? $backup,
-                $backups,
+        if ($data === null) {
+            $data = array_map(
+                fn (array $backup): array => $backup['attributes'] ?? $backup,
+                $this->backupService->listBackups($server->identifier),
             );
-        });
+
+            // Adaptive TTL: while a backup is still running (no completed_at)
+            // cache only briefly so the polling UI flips it to "done" within
+            // seconds; otherwise cache longer since the list won't change until
+            // the next create/delete. Short TTL stays under Pelican's per-server
+            // throttle (~4 req/min).
+            $hasInProgress = collect($data)->contains(fn (array $b): bool => empty($b['completed_at']));
+            Cache::put($key, $data, $hasInProgress ? 15 : 120);
+        }
 
         return response()->json(['data' => $data]);
     }
