@@ -193,6 +193,7 @@ Route::middleware('auth')->group(function () {
     Route::post('servers/{server}/schedules/{schedule}/execute', [ServerScheduleController::class, 'execute']);
     Route::delete('servers/{server}/schedules/{schedule}', [ServerScheduleController::class, 'destroy']);
     Route::post('servers/{server}/schedules/{schedule}/tasks', [ServerScheduleController::class, 'storeTask']);
+    Route::post('servers/{server}/schedules/{schedule}/tasks/{task}', [ServerScheduleController::class, 'updateTask']);
     Route::delete('servers/{server}/schedules/{schedule}/tasks/{task}', [ServerScheduleController::class, 'destroyTask']);
 
     // Server network

@@ -37,6 +37,13 @@ export async function createTask(serverId: number, scheduleId: number, payload: 
     });
 }
 
+export async function updateTask(serverId: number, scheduleId: number, taskId: number, payload: Record<string, unknown>): Promise<void> {
+    await request(`/api/servers/${serverId}/schedules/${scheduleId}/tasks/${taskId}`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+}
+
 export async function deleteTask(serverId: number, scheduleId: number, taskId: number): Promise<void> {
     await request(`/api/servers/${serverId}/schedules/${scheduleId}/tasks/${taskId}`, { method: 'DELETE' });
 }

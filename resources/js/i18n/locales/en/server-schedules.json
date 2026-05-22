@@ -31,6 +31,7 @@
         "task_payload": "Payload",
         "task_offset": "Time Offset (seconds)",
         "task_delete": "Delete Task",
+        "task_edit": "Edit Task",
         "task_deleted": "Task deleted.",
         "task_created": "Task created.",
         "preset_label": "Template",

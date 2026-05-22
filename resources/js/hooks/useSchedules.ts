@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchSchedules, createSchedule, updateSchedule, executeSchedule, deleteSchedule, createTask, deleteTask } from '@/services/scheduleApi';
+import { fetchSchedules, createSchedule, updateSchedule, executeSchedule, deleteSchedule, createTask, updateTask, deleteTask } from '@/services/scheduleApi';
 
 export function useSchedules(serverId: number) {
     const queryClient = useQueryClient();
@@ -38,11 +38,17 @@ export function useSchedules(serverId: number) {
         onSuccess: () => { void queryClient.invalidateQueries({ queryKey }); },
     });
 
+    const editTask = useMutation({
+        mutationFn: (data: { scheduleId: number; taskId: number; payload: Record<string, unknown> }) =>
+            updateTask(serverId, data.scheduleId, data.taskId, data.payload),
+        onSuccess: () => { void queryClient.invalidateQueries({ queryKey }); },
+    });
+
     const removeTask = useMutation({
         mutationFn: (data: { scheduleId: number; taskId: number }) =>
             deleteTask(serverId, data.scheduleId, data.taskId),
         onSuccess: () => { void queryClient.invalidateQueries({ queryKey }); },
     });
 
-    return { ...list, create, update, execute, remove, addTask, removeTask };
+    return { ...list, create, update, execute, remove, addTask, editTask, removeTask };
 }

@@ -8,6 +8,7 @@ use App\Http\Requests\Server\CreateScheduleRequest;
 use App\Http\Requests\Server\CreateTaskRequest;
 use App\Models\Server;
 use App\Services\Pelican\PelicanScheduleService;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
@@ -42,6 +43,7 @@ class ServerScheduleController extends Controller
                     $rawTasks,
                 );
                 unset($attrs['relationships']);
+
                 return $attrs;
             }, $schedules);
         });
@@ -56,7 +58,7 @@ class ServerScheduleController extends Controller
                 $server->identifier,
                 $request->validated(),
             );
-        } catch (\Illuminate\Http\Client\RequestException $e) {
+        } catch (RequestException $e) {
             return response()->json(['message' => $e->response->json('errors.0.detail') ?? 'Pelican error'], $e->response->status());
         }
 
@@ -116,7 +118,7 @@ class ServerScheduleController extends Controller
     {
         $data = $request->validated();
         // Pelican requires sequence_id — auto-set to next available
-        if (!isset($data['sequence_id'])) {
+        if (! isset($data['sequence_id'])) {
             $data['sequence_id'] = 1;
         }
 
@@ -134,6 +136,28 @@ class ServerScheduleController extends Controller
         ]);
 
         return response()->json(['data' => $result], 201);
+    }
+
+    public function updateTask(CreateTaskRequest $request, Server $server, int $schedule, int $task): JsonResponse
+    {
+        $data = $request->validated();
+
+        $result = $this->scheduleService->updateTask(
+            $server->identifier,
+            $schedule,
+            $task,
+            $data,
+        );
+
+        Cache::forget("server_schedules:{$server->identifier}");
+
+        $this->audit($server, 'server.schedule.task.update', [
+            'schedule_id' => $schedule,
+            'task_id' => $task,
+            'action' => $data['action'] ?? null,
+        ]);
+
+        return response()->json(['data' => $result]);
     }
 
     public function destroyTask(Server $server, int $schedule, int $task): JsonResponse

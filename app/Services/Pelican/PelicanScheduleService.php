@@ -101,6 +101,24 @@ class PelicanScheduleService
     }
 
     /**
+     * Update an existing task on a schedule. Pelican uses POST (not PATCH) on
+     * the task URL; omitting sequence_id leaves the task's order untouched.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     *
+     * @throws RequestException
+     */
+    public function updateTask(string $serverIdentifier, int $scheduleId, int $taskId, array $data): array
+    {
+        $response = $this->request()
+            ->post("/api/client/servers/{$serverIdentifier}/schedules/{$scheduleId}/tasks/{$taskId}", $data)
+            ->throw();
+
+        return $response->json('attributes') ?? $response->json();
+    }
+
+    /**
      * Delete a task from a schedule.
      *
      * @throws RequestException

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { m, AnimatePresence } from 'motion/react';
 import { useSchedules } from '@/hooks/useSchedules';
 import { Button } from '@/components/ui/Button';
+import type { ScheduleTask } from '@/types/Schedule';
 import { useNamespace } from '@/i18n/useNamespace';
 
 const INPUT_CLS = 'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none';
@@ -48,22 +49,34 @@ export function actionIcon(action: string) {
 interface AddTaskFormProps {
     serverId: number;
     scheduleId: number;
+    /** When provided, the form edits this task instead of adding a new one. */
+    task?: ScheduleTask;
     onDone: () => void;
 }
 
-export function AddTaskForm({ serverId, scheduleId, onDone }: AddTaskFormProps) {
+export function AddTaskForm({ serverId, scheduleId, task, onDone }: AddTaskFormProps) {
     useNamespace(["server-schedules"] as const);
     const { t } = useTranslation();
-    const { addTask } = useSchedules(serverId);
-    const [action, setAction] = useState<'command' | 'power' | 'backup'>('command');
-    const [payload, setPayload] = useState('');
-    const [offset, setOffset] = useState(0);
+    const { addTask, editTask } = useSchedules(serverId);
+    const isEdit = !!task;
+    const [action, setAction] = useState<'command' | 'power' | 'backup'>(task?.action ?? 'command');
+    const [payload, setPayload] = useState(task?.payload ?? '');
+    const [offset, setOffset] = useState(task?.time_offset ?? 0);
+    const mutation = isEdit ? editTask : addTask;
 
     const handleSubmit = () => {
-        addTask.mutate(
-            { scheduleId, payload: { action, payload: action === 'backup' ? '' : payload, time_offset: offset } },
-            { onSuccess: () => { setPayload(''); setOffset(0); onDone(); } },
-        );
+        const taskPayload = { action, payload: action === 'backup' ? '' : payload, time_offset: offset };
+        if (isEdit && task) {
+            editTask.mutate(
+                { scheduleId, taskId: task.id, payload: taskPayload },
+                { onSuccess: () => { onDone(); } },
+            );
+        } else {
+            addTask.mutate(
+                { scheduleId, payload: taskPayload },
+                { onSuccess: () => { setPayload(''); setOffset(0); onDone(); } },
+            );
+        }
     };
 
     return (
@@ -79,7 +92,7 @@ export function AddTaskForm({ serverId, scheduleId, onDone }: AddTaskFormProps) 
                     <svg className="size-4 text-[var(--color-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
                     </svg>
-                    <p className="text-xs font-semibold text-[var(--color-text-secondary)]">{t('server-schedules:schedules.add_task')}</p>
+                    <p className="text-xs font-semibold text-[var(--color-text-secondary)]">{t(isEdit ? 'server-schedules:schedules.task_edit' : 'server-schedules:schedules.add_task')}</p>
                 </div>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
                     <div>
@@ -122,7 +135,7 @@ export function AddTaskForm({ serverId, scheduleId, onDone }: AddTaskFormProps) 
                 </div>
                 <div className="mt-4 flex justify-end gap-2">
                     <Button variant="ghost" size="sm" onClick={onDone}>{t('common:cancel')}</Button>
-                    <Button variant="primary" size="sm" isLoading={addTask.isPending} onClick={handleSubmit}>{t('server-schedules:schedules.add_task')}</Button>
+                    <Button variant="primary" size="sm" isLoading={mutation.isPending} onClick={handleSubmit}>{t(isEdit ? 'server-schedules:schedules.task_edit' : 'server-schedules:schedules.add_task')}</Button>
                 </div>
             </div>
         </m.div>

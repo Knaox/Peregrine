@@ -31,6 +31,7 @@
         "task_payload": "Contenu",
         "task_offset": "Délai (secondes)",
         "task_delete": "Supprimer l'action",
+        "task_edit": "Modifier l'action",
         "task_deleted": "Action supprimée.",
         "task_created": "Action créée.",
         "preset_label": "Modèle",

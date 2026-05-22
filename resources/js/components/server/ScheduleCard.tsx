@@ -54,6 +54,7 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
     const canDelete = perms.has('schedule.delete');
     const [expanded, setExpanded] = useState(false);
     const [showAddTask, setShowAddTask] = useState(false);
+    const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
 
     const actionLabel = (action: string) => {
         if (action === 'command') return t('server-schedules:schedules.task_command');
@@ -123,21 +124,30 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                     >
                         <div className="mt-4 space-y-2 border-t pt-4" style={{ borderColor: 'var(--color-border)' }}>
                             {(schedule.tasks ?? []).map((task) => (
-                                <div key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-[var(--radius)] px-3 py-2 glass-card-enhanced">
-                                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                                        <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-primary)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--color-primary)]">
-                                            {actionIcon(task.action)}
-                                            {actionLabel(task.action)}
-                                        </span>
-                                        {task.payload && <code className="text-xs text-[var(--color-text-secondary)]" style={{ fontFamily: 'var(--font-mono)' }}>{task.payload}</code>}
-                                        {task.time_offset > 0 && <span className="text-[10px] text-[var(--color-text-muted)]">+{task.time_offset}s</span>}
+                                editingTaskId === task.id ? (
+                                    <AddTaskForm key={task.id} serverId={serverId} scheduleId={schedule.id} task={task} onDone={() => setEditingTaskId(null)} />
+                                ) : (
+                                    <div key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-[var(--radius)] px-3 py-2 glass-card-enhanced">
+                                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                            <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-primary)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--color-primary)]">
+                                                {actionIcon(task.action)}
+                                                {actionLabel(task.action)}
+                                            </span>
+                                            {task.payload && <code className="text-xs text-[var(--color-text-secondary)]" style={{ fontFamily: 'var(--font-mono)' }}>{task.payload}</code>}
+                                            {task.time_offset > 0 && <span className="text-[10px] text-[var(--color-text-muted)]">+{task.time_offset}s</span>}
+                                        </div>
+                                        {canUpdate && (
+                                            <div className="flex items-center gap-1">
+                                                <Button variant="ghost" size="sm" onClick={() => setEditingTaskId(task.id)}>
+                                                    {t('server-schedules:schedules.task_edit')}
+                                                </Button>
+                                                <Button variant="ghost" size="sm" isLoading={removeTask.isPending} onClick={() => removeTask.mutate({ scheduleId: schedule.id, taskId: task.id })}>
+                                                    {t('server-schedules:schedules.task_delete')}
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
-                                    {canUpdate && (
-                                        <Button variant="ghost" size="sm" isLoading={removeTask.isPending} onClick={() => removeTask.mutate({ scheduleId: schedule.id, taskId: task.id })}>
-                                            {t('server-schedules:schedules.task_delete')}
-                                        </Button>
-                                    )}
-                                </div>
+                                )
                             ))}
 
                             {canUpdate && (
