@@ -20,6 +20,7 @@ import { FileBulkBar } from '@/components/files/FileBulkBar';
 import { FilePullModal } from '@/components/files/FilePullModal';
 import { withServerConflictGate } from '@/components/server/withServerConflictGate';
 import { useUploadStore } from '@/stores/uploadStore';
+import { isArchive } from '@/utils/archive';
 import { useNamespace } from '@/i18n/useNamespace';
 
 function ServerFilesPageImpl() {
@@ -128,6 +129,10 @@ function ServerFilesPageImpl() {
         if (window.confirm(t('server-files:files.confirm_delete', { name: `${names.length} files` }))) deleteMutation.mutate(names);
     };
     const handleBulkCompress = () => { if (canArchive) compressMutation.mutate(Array.from(selectedFiles)); };
+    // A single selected archive should offer "Extract" rather than "Compress".
+    const selectedNames = Array.from(selectedFiles);
+    const singleArchiveSelected = selectedNames.length === 1 && isArchive(selectedNames[0]!);
+    const handleBulkExtract = () => { if (canArchive && singleArchiveSelected) decompressMutation.mutate(selectedNames[0]!); };
     const handleNewFile = () => {
         if (!canCreate) return;
         const name = window.prompt(t('server-files:files.create_name'));
@@ -225,7 +230,9 @@ function ServerFilesPageImpl() {
 
             <FileBulkBar
                 selectedCount={selectedFiles.size} onDelete={handleBulkDelete} onCompress={handleBulkCompress}
-                onDeselectAll={deselectAll} isDeleting={deleteMutation.isPending} isCompressing={compressMutation.isPending}
+                onExtract={handleBulkExtract} onDeselectAll={deselectAll}
+                isDeleting={deleteMutation.isPending} isCompressing={compressMutation.isPending}
+                isExtracting={decompressMutation.isPending} canExtract={singleArchiveSelected}
                 canDelete={canDeleteFiles} canArchive={canArchive}
             />
 

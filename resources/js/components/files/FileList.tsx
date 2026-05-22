@@ -5,13 +5,8 @@ import { type FileListProps } from '@/components/files/FileList.props';
 import { FileActionMenu } from '@/components/files/FileActionMenu';
 import { Spinner } from '@/components/ui/Spinner';
 import { formatBytes } from '@/utils/format';
+import { isArchive } from '@/utils/archive';
 import { useNamespace } from '@/i18n/useNamespace';
-
-const ARCHIVE_EXTENSIONS = ['.zip', '.tar', '.tar.gz', '.tar.bz2', '.tgz'];
-
-function isArchive(name: string): boolean {
-    return ARCHIVE_EXTENSIONS.some((ext) => name.toLowerCase().endsWith(ext));
-}
 
 function buildPath(directory: string, name: string): string {
     return directory === '/' ? `/${name}` : `${directory}/${name}`;

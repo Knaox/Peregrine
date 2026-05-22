@@ -7,14 +7,19 @@ interface FileBulkBarProps {
     selectedCount: number;
     onDelete: () => void;
     onCompress: () => void;
+    onExtract: () => void;
     onDeselectAll: () => void;
     isDeleting: boolean;
     isCompressing: boolean;
+    isExtracting: boolean;
+    // True when exactly one archive is selected — show "Extract" instead of
+    // "Compress" (you can only extract a single archive at a time).
+    canExtract?: boolean;
     canDelete?: boolean;
     canArchive?: boolean;
 }
 
-export function FileBulkBar({ selectedCount, onDelete, onCompress, onDeselectAll, isDeleting, isCompressing, canDelete = true, canArchive = true }: FileBulkBarProps) {
+export function FileBulkBar({ selectedCount, onDelete, onCompress, onExtract, onDeselectAll, isDeleting, isCompressing, isExtracting, canExtract = false, canDelete = true, canArchive = true }: FileBulkBarProps) {
     useNamespace(["server-files"] as const);
     const { t } = useTranslation();
 
@@ -37,7 +42,12 @@ export function FileBulkBar({ selectedCount, onDelete, onCompress, onDeselectAll
                     <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                         {t('server-files:files.selected_count', { count: selectedCount })}
                     </span>
-                    {canArchive && (
+                    {canArchive && canExtract && (
+                        <Button variant="secondary" size="sm" isLoading={isExtracting} onClick={onExtract}>
+                            {t('server-files:files.decompress')}
+                        </Button>
+                    )}
+                    {canArchive && !canExtract && (
                         <Button variant="secondary" size="sm" isLoading={isCompressing} onClick={onCompress}>
                             {t('server-files:files.compress')}
                         </Button>
