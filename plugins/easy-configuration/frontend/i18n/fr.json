@@ -15,7 +15,40 @@
     },
     "section": {
         "title": "Configuration du jeu",
-        "subtitle": "Ajustez les paramètres de votre serveur sans toucher à un fichier de config."
+        "subtitle": "Ajustez les paramètres de votre serveur sans toucher à un fichier de config.",
+        "search": "Rechercher un paramètre...",
+        "general": "Général",
+        "no_results": "Aucun paramètre ne correspond à votre recherche."
+    },
+    "save": {
+        "save": "Enregistrer",
+        "saved": "Enregistré",
+        "unsaved": "Modifications non enregistrées",
+        "error": "Échec de l'enregistrement. Veuillez réessayer.",
+        "fix_invalid": "Corrigez les valeurs en surbrillance avant d'enregistrer."
+    },
+    "overlay": {
+        "running_title": "Arrêtez le serveur pour modifier",
+        "running_desc": "Le serveur doit être hors ligne avant de pouvoir modifier sa configuration en toute sécurité.",
+        "stop_button": "Arrêter le serveur"
+    },
+    "file": {
+        "missing": "Aucun fichier de configuration trouvé pour {{path}}.",
+        "missing_badge": "Absent"
+    },
+    "validation": {
+        "invalid_value": "Valeur invalide pour {{param}} — {{type}} attendu.",
+        "type": {
+            "number": "un nombre",
+            "min": "une valeur plus élevée",
+            "max": "une valeur plus basse",
+            "integer": "un nombre entier",
+            "option": "une des options autorisées",
+            "boolean": "une valeur vrai/faux",
+            "length": "une valeur plus courte",
+            "format": "le format requis",
+            "color": "une couleur hexadécimale"
+        }
     },
     "field": {
         "auto_detected": "Auto",

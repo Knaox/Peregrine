@@ -15,7 +15,40 @@
     },
     "section": {
         "title": "Game configuration",
-        "subtitle": "Tweak your server settings without touching a config file."
+        "subtitle": "Tweak your server settings without touching a config file.",
+        "search": "Search a setting...",
+        "general": "General",
+        "no_results": "No setting matches your search."
+    },
+    "save": {
+        "save": "Save",
+        "saved": "Saved",
+        "unsaved": "Unsaved changes",
+        "error": "Save failed. Please try again.",
+        "fix_invalid": "Fix the highlighted values before saving."
+    },
+    "overlay": {
+        "running_title": "Stop the server to edit",
+        "running_desc": "The server must be offline before its configuration can be changed safely.",
+        "stop_button": "Stop the server"
+    },
+    "file": {
+        "missing": "No configuration file found at {{path}}.",
+        "missing_badge": "Missing"
+    },
+    "validation": {
+        "invalid_value": "Invalid value for {{param}} — expected {{type}}.",
+        "type": {
+            "number": "a number",
+            "min": "a higher value",
+            "max": "a lower value",
+            "integer": "a whole number",
+            "option": "one of the allowed options",
+            "boolean": "a true/false value",
+            "length": "a shorter value",
+            "format": "the required format",
+            "color": "a hex colour"
+        }
     },
     "field": {
         "auto_detected": "Auto",

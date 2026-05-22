@@ -9,19 +9,20 @@ use Illuminate\Http\Request;
 
 /**
  * Server lookup + permission gating shared by the plugin's server-facing
- * controllers. Resolves by public `identifier` (the panel's plugin contract),
- * scoped to servers the caller can access. Admins and owners bypass the
- * granular check; subusers need the Easy Configuration permission, falling back
- * to the matching core file permission when Invitations isn't managing ours.
+ * controllers. Resolves by numeric server id — the React shell routes by
+ * `server.id` and passes it to `registerServerHomeSection({ serverId })` — then
+ * uses `$server->identifier` for the actual Pelican calls. Scoped to servers
+ * the caller can access. Admins and owners bypass the granular check; subusers
+ * need the Easy Configuration permission, falling back to the matching core
+ * file permission when Invitations isn't managing ours.
  */
 trait ResolvesServerAccess
 {
-    protected function resolveServer(string $identifier, Request $request): Server
+    protected function resolveServer(string $id, Request $request): Server
     {
         return Server::query()
-            ->where('identifier', $identifier)
             ->accessibleBy($request->user())
-            ->firstOrFail();
+            ->findOrFail((int) $id);
     }
 
     protected function authorizeServer(Request $request, Server $server, string $permission, ?string $fallback = null): void
