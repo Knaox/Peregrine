@@ -32,8 +32,14 @@ function BackupIcon() {
     );
 }
 
+/**
+ * Pure render helper — NOT a component and NOT a hook. It's called inline
+ * (inside JSX and inside `.map()` over a schedule's tasks), so it must never
+ * call a hook: doing so made the number of hooks vary between renders and
+ * threw React error #310. The `server-schedules` namespace is loaded by the
+ * components that use this (AddTaskForm + ScheduleCard), not here.
+ */
 export function actionIcon(action: string) {
-    useNamespace(["server-schedules"] as const);
     if (action === 'command') return <CommandIcon />;
     if (action === 'power') return <PowerIcon />;
     return <BackupIcon />;
@@ -46,6 +52,7 @@ interface AddTaskFormProps {
 }
 
 export function AddTaskForm({ serverId, scheduleId, onDone }: AddTaskFormProps) {
+    useNamespace(["server-schedules"] as const);
     const { t } = useTranslation();
     const { addTask } = useSchedules(serverId);
     const [action, setAction] = useState<'command' | 'power' | 'backup'>('command');
