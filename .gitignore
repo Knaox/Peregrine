@@ -40,6 +40,13 @@ public/fonts/filament/
 # without a pnpm build), but node_modules stays ignored.
 /plugins/invitations/frontend/node_modules
 
+# Easy Configuration — first-party plugin shipped through this repo so it can
+# be forked from GitHub (its templates are meant to be shared). Mirrors the
+# invitations exception above: sources + built bundle tracked, deps ignored.
+!/plugins/easy-configuration/
+!/plugins/easy-configuration/**
+/plugins/easy-configuration/frontend/node_modules
+
 # Plugin asset symlinks — created at activation time by PluginManager,
 # never committed (point to absolute host paths).
 /public/plugins/

@@ -1,0 +1,7 @@
+{
+    "plugin_name": "Configuration facile",
+    "section": {
+        "title": "Configuration du jeu",
+        "subtitle": "Ajustez les paramètres de votre serveur sans toucher à un fichier de config."
+    }
+}

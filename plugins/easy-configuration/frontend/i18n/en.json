@@ -1,0 +1,7 @@
+{
+    "plugin_name": "Easy Configuration",
+    "section": {
+        "title": "Game configuration",
+        "subtitle": "Tweak your server settings without touching a config file."
+    }
+}

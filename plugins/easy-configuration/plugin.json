@@ -1,0 +1,26 @@
+{
+    "id": "easy-configuration",
+    "name": "Easy Configuration",
+    "version": "1.0.0",
+    "description": "Edit your server's game configuration files (server.properties, GameUserSettings.ini, config.yml, ...) through a clean Nitrado-style UI - sliders, toggles, dropdowns. Copy a configuration across your servers and schedule temporary value boosts. Templates are pure render schemas, shareable as JSON.",
+    "author": "knaox",
+    "vendor": "peregrine",
+    "license": "MIT",
+    "min_peregrine_version": "1.0.0",
+    "bundled": false,
+    "service_provider": "EasyConfigurationServiceProvider",
+    "manage_url": "/plugins/easy-configuration",
+    "frontend": {
+        "bundle": "frontend/dist/bundle.js",
+        "nav": [],
+        "server_home_sections": [
+            {
+                "id": "easy-config",
+                "order": 40,
+                "required_permission": "easyconfig.read",
+                "requires_egg_ids": []
+            }
+        ]
+    },
+    "settings_schema": []
+}
