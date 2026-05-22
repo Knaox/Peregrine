@@ -4,13 +4,11 @@ use App\Models\Server;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Route;
 use Plugins\Invitations\Models\Invitation;
 use Plugins\Invitations\Services\InvitationService;
+use Plugins\Invitations\Services\PelicanSubuserService;
 use Plugins\Invitations\Services\PermissionRegistry;
-use Illuminate\Support\Facades\Route;
 
 // -------------------------------------------------------------------------
 // Authenticated routes (server owner)
@@ -19,6 +17,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('servers/{serverIdentifier}/invitations', function (string $serverIdentifier, Request $request): JsonResponse {
         $server = Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
+
+        if (! $request->user()->hasServerPermission($server, 'user.read')) {
+            abort(403);
+        }
 
         $invitations = Invitation::where('server_id', $server->id)
             ->active()
@@ -52,7 +54,7 @@ Route::middleware('auth')->group(function () {
             $invitation = $service->create($server, $request->user(), $validated['email'], $validated['permissions']);
 
             return response()->json(['message' => __('invitations::messages.success.invitation_sent'), 'id' => $invitation->id], 201);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
     });
@@ -88,7 +90,7 @@ Route::middleware('auth')->group(function () {
 
         try {
             app(InvitationService::class)->resend($invitation);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
 
@@ -131,8 +133,12 @@ Route::middleware('auth')->group(function () {
     Route::get('servers/{serverIdentifier}/subusers', function (string $serverIdentifier, Request $request): JsonResponse {
         $server = Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
 
+        if (! $request->user()->hasServerPermission($server, 'user.read')) {
+            abort(403);
+        }
+
         try {
-            $subusers = app(\Plugins\Invitations\Services\PelicanSubuserService::class)->listSubusers($serverIdentifier);
+            $subusers = app(PelicanSubuserService::class)->listSubusers($serverIdentifier);
             $myEmail = strtolower($request->user()->email);
 
             // Pre-load the local pivot permissions for each matched user in one query.
@@ -143,7 +149,7 @@ Route::middleware('auth')->group(function () {
             $localByEmail = [];
             if (! empty($emails)) {
                 $users = User::whereIn('email', $emails)->get(['id', 'email']);
-                $pivots = \DB::table('server_user')
+                $pivots = DB::table('server_user')
                     ->whereIn('user_id', $users->pluck('id'))
                     ->where('server_id', $server->id)
                     ->get(['user_id', 'permissions']);
@@ -165,11 +171,12 @@ Route::middleware('auth')->group(function () {
                 $localPerms = $localEmail ? ($localByEmail[$localEmail] ?? []) : [];
                 $pelicanPerms = isset($sub['permissions']) && is_array($sub['permissions']) ? $sub['permissions'] : [];
                 $sub['permissions'] = array_values(array_unique(array_merge($pelicanPerms, $localPerms)));
+
                 return $sub;
             }, $subusers);
 
             return response()->json(['data' => $subusers]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return response()->json(['data' => [], 'error' => $e->getMessage()]);
         }
     });
@@ -187,7 +194,7 @@ Route::middleware('auth')->group(function () {
             'permissions.*' => ['string'],
         ]);
 
-        $subusers = app(\Plugins\Invitations\Services\PelicanSubuserService::class)->listSubusers($serverIdentifier);
+        $subusers = app(PelicanSubuserService::class)->listSubusers($serverIdentifier);
         $target = null;
         foreach ($subusers as $sub) {
             if (($sub['uuid'] ?? '') === $subuserUuid) {
@@ -203,13 +210,13 @@ Route::middleware('auth')->group(function () {
         }
 
         try {
-            app(\Plugins\Invitations\Services\PelicanSubuserService::class)->updateSubuser($serverIdentifier, $subuserUuid, $validated['permissions']);
+            app(PelicanSubuserService::class)->updateSubuser($serverIdentifier, $subuserUuid, $validated['permissions']);
 
             // Sync local pivot
             if ($target && ! empty($target['email'])) {
                 $localUser = User::where('email', $target['email'])->first();
                 if ($localUser) {
-                    \DB::table('server_user')
+                    DB::table('server_user')
                         ->where('user_id', $localUser->id)
                         ->where('server_id', $server->id)
                         ->update(['permissions' => json_encode($validated['permissions']), 'updated_at' => now()]);
@@ -217,7 +224,7 @@ Route::middleware('auth')->group(function () {
             }
 
             return response()->json(['message' => __('invitations::messages.success.permissions_updated')]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
     });
@@ -230,7 +237,7 @@ Route::middleware('auth')->group(function () {
             abort(403);
         }
 
-        $subusers = app(\Plugins\Invitations\Services\PelicanSubuserService::class)->listSubusers($serverIdentifier);
+        $subusers = app(PelicanSubuserService::class)->listSubusers($serverIdentifier);
         foreach ($subusers as $sub) {
             if (($sub['uuid'] ?? '') === $subuserUuid
                 && isset($sub['email'])
@@ -240,16 +247,20 @@ Route::middleware('auth')->group(function () {
         }
 
         try {
-            app(\Plugins\Invitations\Services\PelicanSubuserService::class)->deleteSubuser($serverIdentifier, $subuserUuid);
+            app(PelicanSubuserService::class)->deleteSubuser($serverIdentifier, $subuserUuid);
 
             return response()->json(['message' => 'Subuser removed.']);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
     });
 
     Route::get('servers/{serverIdentifier}/permissions', function (string $serverIdentifier, Request $request): JsonResponse {
         $server = Server::where('identifier', $serverIdentifier)->accessibleBy($request->user())->firstOrFail();
+
+        if (! $request->user()->hasServerPermission($server, 'user.read')) {
+            abort(403);
+        }
 
         $locale = $request->header('Accept-Language', 'en');
         $locale = str_starts_with($locale, 'fr') ? 'fr' : 'en';
@@ -269,7 +280,7 @@ Route::middleware('auth')->group(function () {
             $invitation = $service->accept($token, $request->user());
 
             return response()->json(['message' => 'Invitation accepted.', 'server_id' => $invitation->server_id]);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
     });
