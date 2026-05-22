@@ -149,7 +149,7 @@ class PermissionRegistry
      */
     private const CORE_GROUP_ORDER = [
         'overview', 'control', 'user', 'file', 'backup',
-        'database', 'schedule', 'allocation', 'startup', 'settings',
+        'database', 'schedule', 'allocation', 'settings',
     ];
 
     /**
@@ -196,13 +196,19 @@ class PermissionRegistry
     public function registerPelicanDefaults(): void
     {
         // Peregrine-specific permissions for the Overview page
+        // Startup variables live on the Overview page (no dedicated tab any
+        // more), so their permissions are grouped here and labelled "server
+        // configuration" to match what the user sees. The `startup.*` keys are
+        // kept (policy + frontend rely on them) — only the grouping/labels change.
         $this->registerGroup('overview', [
             'en' => 'Overview Page',
             'fr' => 'Page Vue d\'ensemble',
         ], [
             'overview.read' => ['en' => 'View overview page', 'fr' => 'Voir la page vue d\'ensemble'],
             'overview.stats' => ['en' => 'View resource stats (CPU, RAM, Disk)', 'fr' => 'Voir les statistiques (CPU, RAM, Disque)'],
-            'overview.server-info' => ['en' => 'View server configuration', 'fr' => 'Voir la configuration du serveur'],
+            'overview.server-info' => ['en' => 'View server details', 'fr' => 'Voir les informations du serveur'],
+            'startup.read' => ['en' => 'View server configuration', 'fr' => 'Voir la configuration du serveur'],
+            'startup.update' => ['en' => 'Edit server configuration', 'fr' => 'Modifier la configuration du serveur'],
         ]);
 
         $this->registerGroup('control', [
@@ -278,14 +284,6 @@ class PermissionRegistry
             'allocation.create' => ['en' => 'Add allocations', 'fr' => 'Ajouter des allocations'],
             'allocation.update' => ['en' => 'Edit allocations', 'fr' => 'Modifier les allocations'],
             'allocation.delete' => ['en' => 'Delete allocations', 'fr' => 'Supprimer les allocations'],
-        ]);
-
-        $this->registerGroup('startup', [
-            'en' => 'Startup',
-            'fr' => 'Démarrage',
-        ], [
-            'startup.read' => ['en' => 'View startup variables', 'fr' => 'Voir les variables de démarrage'],
-            'startup.update' => ['en' => 'Edit startup variables', 'fr' => 'Modifier les variables de démarrage'],
         ]);
 
         $this->registerGroup('settings', [
