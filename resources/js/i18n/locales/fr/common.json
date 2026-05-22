@@ -38,5 +38,27 @@
         "primary": "Primary navigation",
         "close": "Close menu",
         "open": "Open menu"
+    },
+    "accept": {
+        "title": "Invitation serveur",
+        "invited_to": "{{inviter}} vous a invité à rejoindre {{server}}.",
+        "permissions": "Permissions que vous recevrez :",
+        "expires": "Cette invitation expire le {{date}}.",
+        "button": "Accepter l'invitation",
+        "wrong_email": "Vous êtes connecté en tant que {{current}}, mais cette invitation est pour {{expected}}.",
+        "logout": "Se déconnecter",
+        "create_account": "Créer un compte",
+        "login": "Se connecter",
+        "login_hint": "Connectez-vous avec votre compte existant, puis acceptez l'invitation.",
+        "go_to_login": "Aller à la connexion",
+        "register_and_accept": "Créer un compte et accepter",
+        "name": "Nom",
+        "email": "Email",
+        "password": "Mot de passe",
+        "password_confirm": "Confirmer le mot de passe",
+        "invalid": "Lien d'invitation invalide.",
+        "expired": "Cette invitation a expiré ou a été révoquée.",
+        "already_accepted": "Cette invitation a déjà été acceptée.",
+        "go_home": "Aller au tableau de bord"
     }
 }

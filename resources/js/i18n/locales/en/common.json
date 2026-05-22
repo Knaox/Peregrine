@@ -38,5 +38,27 @@
         "primary": "Primary navigation",
         "close": "Close menu",
         "open": "Open menu"
+    },
+    "accept": {
+        "title": "Server invitation",
+        "invited_to": "{{inviter}} invited you to join {{server}}.",
+        "permissions": "Permissions you will receive:",
+        "expires": "This invitation expires on {{date}}.",
+        "button": "Accept invitation",
+        "wrong_email": "You are logged in as {{current}}, but this invitation is for {{expected}}.",
+        "logout": "Log out",
+        "create_account": "Create account",
+        "login": "Sign in",
+        "login_hint": "Log in with your existing account, then accept the invitation.",
+        "go_to_login": "Go to login",
+        "register_and_accept": "Create account and accept",
+        "name": "Name",
+        "email": "Email",
+        "password": "Password",
+        "password_confirm": "Confirm password",
+        "invalid": "Invalid invitation link.",
+        "expired": "This invitation has expired or has been revoked.",
+        "already_accepted": "This invitation has already been accepted.",
+        "go_home": "Go to dashboard"
     }
 }

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { LoginParticles } from '@/components/LoginParticles';
 
 export function InviteAcceptPage() {
-    const { t } = useTranslation('invitations');
+    const { t } = useTranslation();
     const { token } = useParams<{ token: string }>();
     const navigate = useNavigate();
     const { user, isAuthenticated, logout } = useAuthStore();
@@ -212,7 +212,7 @@ function LoadingState({ branding }: { branding: { logo_url: string; app_name: st
 }
 
 function ErrorState({ message, branding }: { message: string; branding: { logo_url: string; app_name: string } }) {
-    const { t } = useTranslation('invitations');
+    const { t } = useTranslation();
 
     return (
         <div className="flex min-h-screen items-center justify-center px-4" style={{ background: 'var(--color-background)' }}>
