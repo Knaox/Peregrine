@@ -32,6 +32,7 @@
         "task_offset": "Délai (secondes)",
         "task_delete": "Supprimer l'action",
         "task_edit": "Modifier l'action",
+        "edit_schedule": "Modifier la planification",
         "task_deleted": "Action supprimée.",
         "task_created": "Action créée.",
         "preset_label": "Modèle",

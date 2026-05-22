@@ -32,6 +32,7 @@
         "task_offset": "Time Offset (seconds)",
         "task_delete": "Delete Task",
         "task_edit": "Edit Task",
+        "edit_schedule": "Edit schedule",
         "task_deleted": "Task deleted.",
         "task_created": "Task created.",
         "preset_label": "Template",

@@ -7,6 +7,7 @@ import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { formatDate } from '@/utils/format';
 import { Button } from '@/components/ui/Button';
 import { AddTaskForm, actionIcon } from '@/components/server/AddTaskForm';
+import { EditScheduleForm } from '@/components/server/EditScheduleForm';
 import type { Schedule } from '@/types/Schedule';
 import { useNamespace } from '@/i18n/useNamespace';
 
@@ -55,6 +56,7 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
     const [expanded, setExpanded] = useState(false);
     const [showAddTask, setShowAddTask] = useState(false);
     const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+    const [editing, setEditing] = useState(false);
 
     const actionLabel = (action: string) => {
         if (action === 'command') return t('server-schedules:schedules.task_command');
@@ -104,6 +106,11 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                             {t('server-schedules:schedules.run_now')}
                         </Button>
                     )}
+                    {canUpdate && (
+                        <Button variant="ghost" size="sm" onClick={() => setEditing((v) => !v)}>
+                            {t('server-schedules:schedules.edit_schedule')}
+                        </Button>
+                    )}
                     {canDelete && (
                         <Button variant="danger" size="sm" isLoading={remove.isPending} onClick={() => {
                             if (window.confirm(t('server-schedules:schedules.confirm_delete', { name: schedule.name }))) remove.mutate(schedule.id);
@@ -111,6 +118,13 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                     )}
                 </div>
             </div>
+
+            {/* Edit schedule settings (name, cron, active, only-when-online) */}
+            <AnimatePresence>
+                {editing && (
+                    <EditScheduleForm serverId={serverId} schedule={schedule} onDone={() => setEditing(false)} />
+                )}
+            </AnimatePresence>
 
             {/* Tasks expand/collapse */}
             <AnimatePresence>
