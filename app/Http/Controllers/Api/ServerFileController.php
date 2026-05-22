@@ -14,6 +14,7 @@ use App\Http\Requests\Server\FileRenameRequest;
 use App\Http\Requests\Server\FileWriteRequest;
 use App\Models\Server;
 use App\Services\Pelican\PelicanFileService;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -35,10 +36,11 @@ class ServerFileController extends Controller
         // Flatten and ensure is_directory is set (Pelican may not include it)
         $files = array_map(function (array $file): array {
             $attrs = $file['attributes'] ?? $file;
-            if (!isset($attrs['is_directory'])) {
+            if (! isset($attrs['is_directory'])) {
                 $attrs['is_directory'] = ($attrs['mimetype'] ?? '') === 'inode/directory'
                     || (isset($attrs['is_file']) && $attrs['is_file'] === false);
             }
+
             return $attrs;
         }, $rawFiles);
 
@@ -50,7 +52,7 @@ class ServerFileController extends Controller
         $this->authorize('readFileContent', $server);
 
         $file = $request->query('file');
-        if (!$file) {
+        if (! $file) {
             return response('File path required', 422);
         }
 
@@ -73,7 +75,7 @@ class ServerFileController extends Controller
                 // valid empty body (creates an empty file).
                 (string) ($validated['content'] ?? ''),
             );
-        } catch (\Illuminate\Http\Client\RequestException $e) {
+        } catch (RequestException $e) {
             // Surface the real Pelican / Wings error instead of letting it
             // bubble up as a generic 500. The frontend's API error layer
             // shows the body, so the operator sees what went wrong.
@@ -84,6 +86,7 @@ class ServerFileController extends Controller
                 'pelican_status' => $e->response?->status(),
                 'pelican_body' => $e->response?->body(),
             ]);
+
             return response()->json([
                 'error' => 'pelican_rejected',
                 'pelican_status' => $e->response?->status(),
@@ -105,7 +108,7 @@ class ServerFileController extends Controller
         foreach ($validated['files'] as $file) {
             $this->clientService->renameFile(
                 $server->identifier,
-                $validated['root'] . '/' . $file['from'],
+                $validated['root'].'/'.$file['from'],
                 $file['to'],
             );
         }
@@ -122,7 +125,7 @@ class ServerFileController extends Controller
         foreach ($validated['files'] as $file) {
             $this->clientService->deleteFile(
                 $server->identifier,
-                $validated['root'] . '/' . $file,
+                $validated['root'].'/'.$file,
             );
         }
 
@@ -135,9 +138,31 @@ class ServerFileController extends Controller
     {
         $validated = $request->validated();
 
-        $this->clientService->compressFiles($server->identifier, $validated['files']);
+        try {
+            $this->clientService->compressFiles(
+                $server->identifier,
+                $validated['root'],
+                $validated['files'],
+            );
+        } catch (RequestException $e) {
+            // Surface the real Pelican / Wings error (e.g. a missing file under
+            // `root`) instead of letting it bubble up as a generic 500.
+            \Log::warning('compressFiles: Pelican returned an error', [
+                'server' => $server->identifier,
+                'root' => $validated['root'],
+                'count' => count($validated['files']),
+                'pelican_status' => $e->response?->status(),
+                'pelican_body' => $e->response?->body(),
+            ]);
 
-        $this->audit($request, $server, 'server.file.compress', ['count' => count($validated['files'])]);
+            return response()->json([
+                'error' => 'pelican_rejected',
+                'pelican_status' => $e->response?->status(),
+                'pelican_body' => $e->response?->json() ?? $e->response?->body(),
+            ], $e->response?->status() ?? 500);
+        }
+
+        $this->audit($request, $server, 'server.file.compress', ['root' => $validated['root'], 'count' => count($validated['files'])]);
 
         return response()->json(['success' => true]);
     }
@@ -148,7 +173,7 @@ class ServerFileController extends Controller
 
         $this->clientService->decompressFiles(
             $server->identifier,
-            $validated['root'] . '/' . $validated['file'],
+            $validated['root'].'/'.$validated['file'],
         );
 
         $this->audit($request, $server, 'server.file.decompress', ['file' => $validated['file']]);
@@ -185,7 +210,7 @@ class ServerFileController extends Controller
         $this->authorize('readFile', $server);
 
         $file = $request->query('file');
-        if (!$file) {
+        if (! $file) {
             return response()->json(['error' => 'File path required'], 422);
         }
 
@@ -201,7 +226,7 @@ class ServerFileController extends Controller
         $this->authorize('createFile', $server);
 
         $location = $request->input('location');
-        if (!$location) {
+        if (! $location) {
             return response()->json(['error' => 'Location required'], 422);
         }
 
@@ -222,6 +247,7 @@ class ServerFileController extends Controller
             if (is_string($mode)) {
                 $mode = (int) octdec(ltrim($mode, '0') ?: '0');
             }
+
             return ['file' => $f['file'], 'mode' => (int) $mode];
         }, $validated['files']);
 

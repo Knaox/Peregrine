@@ -3,7 +3,6 @@
 namespace App\Services\Pelican;
 
 use App\Services\Pelican\Concerns\MakesClientRequests;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
 class PelicanFileService
@@ -47,12 +46,21 @@ class PelicanFileService
             ])->throw();
     }
 
-    /** @param string[] $files */
-    public function compressFiles(string $serverIdentifier, array $files): void
+    /**
+     * Compress files/folders into an archive. Pelican expects `files` as names
+     * relative to `root` (same convention as delete/decompress), so the caller
+     * MUST pass the directory the selection lives in — hardcoding `/` here only
+     * worked at the filesystem root and 500'd everywhere else.
+     *
+     * @param  string[]  $files
+     */
+    public function compressFiles(string $serverIdentifier, string $root, array $files): void
     {
-        $this->request()
-            ->post("/api/client/servers/{$serverIdentifier}/files/compress", ['root' => '/', 'files' => $files])
-            ->throw();
+        $this->request()->timeout(300)
+            ->post("/api/client/servers/{$serverIdentifier}/files/compress", [
+                'root' => $root === '' || $root === '.' ? '/' : $root,
+                'files' => $files,
+            ])->throw();
     }
 
     /**
@@ -72,7 +80,7 @@ class PelicanFileService
     public function writeFile(string $serverIdentifier, string $filePath, string $content): void
     {
         Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->clientApiKey(),
+            'Authorization' => 'Bearer '.$this->clientApiKey(),
             'Accept' => 'application/json',
             'Content-Type' => 'text/plain',
             'Content-Length' => (string) strlen($content),
@@ -80,7 +88,7 @@ class PelicanFileService
             ->withBody($content, 'text/plain')
             ->retry(3, 100)
             ->baseUrl($this->baseUrl())
-            ->post("/api/client/servers/{$serverIdentifier}/files/write?file=" . urlencode($filePath))
+            ->post("/api/client/servers/{$serverIdentifier}/files/write?file=".urlencode($filePath))
             ->throw();
     }
 
@@ -126,7 +134,7 @@ class PelicanFileService
     /**
      * Batch chmod. $files is an array of ['file' => string, 'mode' => int|string].
      *
-     * @param array<int, array{file: string, mode: int|string}> $files
+     * @param  array<int, array{file: string, mode: int|string}>  $files
      */
     public function chmodFiles(string $serverIdentifier, string $root, array $files): void
     {
