@@ -80,6 +80,7 @@ class ServerController extends Controller
         $sftpDetails = null;
 
         $limits = null;
+        $featureLimits = null;
 
         if ($server->identifier) {
             $allocation = $this->getCachedAllocation($server->identifier);
@@ -92,7 +93,7 @@ class ServerController extends Controller
             if ($rawData === null) {
                 try {
                     $rawData = $this->clientService->getRawServer($server->identifier);
-                    if (!empty($rawData)) {
+                    if (! empty($rawData)) {
                         Cache::put($cacheKey, $rawData, 900);
                     }
                 } catch (\Throwable) {
@@ -105,16 +106,28 @@ class ServerController extends Controller
             $sftpDetails = [
                 'ip' => $sftpRaw['alias'] ?? $sftpRaw['ip'] ?? $allocation['ip'] ?? null,
                 'port' => $sftpRaw['port'] ?? 2022,
-                'username' => $pelicanUsername . '.' . $server->identifier,
+                'username' => $pelicanUsername.'.'.$server->identifier,
             ];
 
             // Extract server limits from Pelican API response
             $rawLimits = $rawData['limits'] ?? [];
-            if (!empty($rawLimits)) {
+            if (! empty($rawLimits)) {
                 $limits = [
                     'memory' => $rawLimits['memory'] ?? 0,
                     'cpu' => $rawLimits['cpu'] ?? 0,
                     'disk' => $rawLimits['disk'] ?? 0,
+                ];
+            }
+
+            // Feature quotas come from Pelican (the actual provisioned server),
+            // NOT the catalog ServerConfiguration — so they show even when the
+            // server has no config row attached.
+            $rawFeatureLimits = $rawData['feature_limits'] ?? [];
+            if (! empty($rawFeatureLimits)) {
+                $featureLimits = [
+                    'allocations' => (int) ($rawFeatureLimits['allocations'] ?? 0),
+                    'backups' => (int) ($rawFeatureLimits['backups'] ?? 0),
+                    'databases' => (int) ($rawFeatureLimits['databases'] ?? 0),
                 ];
             }
         }
@@ -127,6 +140,7 @@ class ServerController extends Controller
             'allocation' => $allocation,
             'sftp_details' => $sftpDetails,
             'limits' => $limits,
+            'feature_limits' => $featureLimits,
             'role' => $role,
             'permissions' => $permissions,
         ]);
@@ -136,6 +150,7 @@ class ServerController extends Controller
     {
         $this->authorize('readStartup', $server);
         $variables = $this->clientService->getStartupVariables($server->identifier);
+
         return response()->json(['data' => $variables]);
     }
 
@@ -295,11 +310,13 @@ class ServerController extends Controller
                 }
                 if (count($allocations) > 0) {
                     $attrs = $allocations[0]['attributes'] ?? $allocations[0];
+
                     return ['ip' => $attrs['ip_alias'] ?? $attrs['ip'], 'port' => $attrs['port']];
                 }
             } catch (\Throwable) {
                 // Pelican unreachable
             }
+
             return null;
         });
     }

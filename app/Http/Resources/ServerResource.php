@@ -30,14 +30,6 @@ class ServerResource extends JsonResource
                 'cpu' => $this->serverConfiguration->cpu,
                 'disk' => $this->serverConfiguration->disk,
             ]),
-            // Per-server feature quotas from the technical catalog — lets the UI
-            // show "X of Y used / Z left" and gate create actions once a limit
-            // is hit. Omitted when the config row isn't loaded/attached.
-            'feature_limits' => $this->whenLoaded('serverConfiguration', fn () => [
-                'allocations' => (int) $this->serverConfiguration->feature_limits_allocations,
-                'backups' => (int) $this->serverConfiguration->feature_limits_backups,
-                'databases' => (int) $this->serverConfiguration->feature_limits_databases,
-            ]),
             'role' => $access['role'] ?? null,
             'permissions' => $access === null
                 ? null
