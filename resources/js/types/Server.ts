@@ -31,6 +31,12 @@ export interface Server {
         cpu: number;
         disk: number;
     } | null;
+    /** Per-server feature quotas from the technical catalog (ServerConfiguration). */
+    feature_limits?: {
+        allocations: number;
+        backups: number;
+        databases: number;
+    } | null;
     created_at: string;
     /** User's role on this server: owner has all permissions, subuser has limited */
     role?: 'owner' | 'subuser';
