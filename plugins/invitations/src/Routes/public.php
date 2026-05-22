@@ -53,6 +53,9 @@ Route::middleware('throttle:30,1')->group(function () {
             'is_active' => $invitation->isActive(),
             'is_accepted' => $invitation->accepted_at !== null,
             'is_revoked' => $invitation->revoked_at !== null,
+            // Lets the accept page skip the register form and send a known
+            // account straight to login instead of failing on submit (422).
+            'user_exists' => User::where('email', $invitation->email)->exists(),
         ]);
     });
 
@@ -89,7 +92,7 @@ Route::middleware('throttle:30,1')->group(function () {
             $service->accept($token, $user);
 
             return response()->json(['message' => __('invitations::messages.success.account_created_and_accepted')], 201);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
     });

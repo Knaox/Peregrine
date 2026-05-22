@@ -10,6 +10,8 @@ interface InvitationPublic {
     is_active: boolean;
     is_accepted: boolean;
     is_revoked: boolean;
+    /** True when the invited email already has a Peregrine account → show login, not register. */
+    user_exists: boolean;
 }
 
 interface AcceptResponse {

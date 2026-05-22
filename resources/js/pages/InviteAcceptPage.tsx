@@ -132,21 +132,25 @@ export function InviteAcceptPage() {
                     {/* Case 3: Not authenticated */}
                     {!isAuthenticated && (
                         <div>
-                            {/* Tabs */}
-                            <div className="flex gap-2 mb-4">
-                                <button type="button" onClick={() => setActiveTab('register')}
-                                    className={clsx('flex-1 py-2 text-sm font-medium rounded-[var(--radius)] cursor-pointer transition-colors',
-                                        activeTab === 'register' ? 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]')}>
-                                    {t('accept.create_account')}
-                                </button>
-                                <button type="button" onClick={() => setActiveTab('login')}
-                                    className={clsx('flex-1 py-2 text-sm font-medium rounded-[var(--radius)] cursor-pointer transition-colors',
-                                        activeTab === 'login' ? 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]')}>
-                                    {t('accept.login')}
-                                </button>
-                            </div>
+                            {/* Tabs — hidden once we know the email already
+                                has an account: there's nothing to register, so
+                                we show the login prompt only. */}
+                            {!invitation.user_exists && (
+                                <div className="flex gap-2 mb-4">
+                                    <button type="button" onClick={() => setActiveTab('register')}
+                                        className={clsx('flex-1 py-2 text-sm font-medium rounded-[var(--radius)] cursor-pointer transition-colors',
+                                            activeTab === 'register' ? 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]')}>
+                                        {t('accept.create_account')}
+                                    </button>
+                                    <button type="button" onClick={() => setActiveTab('login')}
+                                        className={clsx('flex-1 py-2 text-sm font-medium rounded-[var(--radius)] cursor-pointer transition-colors',
+                                            activeTab === 'login' ? 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]')}>
+                                        {t('accept.login')}
+                                    </button>
+                                </div>
+                            )}
 
-                            {activeTab === 'register' && (
+                            {!invitation.user_exists && activeTab === 'register' && (
                                 <form onSubmit={handleRegister} className="space-y-3">
                                     <InputField label={t('accept.email')} value={invitation.email} disabled />
                                     <InputField label={t('accept.name')} value={name} onChange={setName} required />
@@ -158,7 +162,7 @@ export function InviteAcceptPage() {
                                 </form>
                             )}
 
-                            {activeTab === 'login' && (
+                            {(invitation.user_exists || activeTab === 'login') && (
                                 <div className="text-center space-y-3">
                                     <p className="text-sm text-[var(--color-text-secondary)]">{t('accept.login_hint')}</p>
                                     <Link to={`/login?redirect=/invite/${token}`}
