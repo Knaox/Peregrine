@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Plugins\EasyConfiguration;
 
 use App\Services\Plugin\ManifestEnricherRegistry;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Plugins\EasyConfiguration\Console\CheckBoostsCommand;
 use Plugins\EasyConfiguration\Console\SyncTemplatesCommand;
 use Plugins\EasyConfiguration\Services\Parsing\ParserRegistry;
 use Plugins\EasyConfiguration\Services\Permissions\PermissionContributor;
@@ -47,7 +49,7 @@ class EasyConfigurationServiceProvider extends ServiceProvider
         $this->app->singleton(TemplateLoader::class);
         $this->app->singleton(TemplateRegistry::class);
 
-        $this->commands([SyncTemplatesCommand::class]);
+        $this->commands([SyncTemplatesCommand::class, CheckBoostsCommand::class]);
     }
 
     public function boot(): void
@@ -61,6 +63,21 @@ class EasyConfigurationServiceProvider extends ServiceProvider
 
         $this->app->make(PermissionContributor::class)->register();
         $this->registerManifestEnricher();
+        $this->registerSchedule();
+    }
+
+    /**
+     * Tick the boost scheduler every minute (single-server, non-overlapping):
+     * applies due boosts and ends expired ones via queued jobs.
+     */
+    private function registerSchedule(): void
+    {
+        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule): void {
+            $schedule->command('easy-config:check-boosts')
+                ->everyMinute()
+                ->withoutOverlapping()
+                ->onOneServer();
+        });
     }
 
     /**

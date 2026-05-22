@@ -81,7 +81,7 @@ final class CopyController
             ->all();
 
         $batchId = (string) Str::uuid();
-        CopyConfigJob::dispatch($batchId, $source->id, $targetIds, $validated['files'], $user?->id);
+        CopyConfigJob::dispatch($batchId, $source->id, $targetIds, $validated['files'], $user?->id, (bool) ($validated['copy_boosts'] ?? false));
 
         return response()->json(['data' => ['batch_id' => $batchId, 'targets' => count($targetIds)]]);
     }

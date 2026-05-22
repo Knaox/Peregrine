@@ -3,6 +3,7 @@ import { fieldKeyOf } from '../lib/fieldKey';
 import { pickLabel, useT } from '../lib/i18n';
 import type { ConfigFile, ConfigParam } from '../types';
 import { Badge, Card, EmptyState } from '../ui/surfaces';
+import { BoostBadge } from './boost/BoostBadge';
 import type { EditorController } from './controller';
 import { SectionGroup } from './SectionGroup';
 
@@ -50,6 +51,7 @@ export function FileCard({ file, controller, serverId }: { file: ConfigFile; con
                 disabled={controller.disabled}
                 onChange={(value) => controller.onChange(key, param, value)}
                 onReset={() => controller.onReset(key, param)}
+                boost={param.boost ? <BoostBadge boost={param.boost} /> : undefined}
             />
         );
     };

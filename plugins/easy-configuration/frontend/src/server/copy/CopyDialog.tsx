@@ -5,7 +5,9 @@ import { useT } from '../../lib/i18n';
 import type { ConfigTemplate } from '../../types';
 import { Button } from '../../ui/Button';
 import { Dialog } from '../../ui/Dialog';
+import { Toggle } from '../../ui/inputs';
 import { useToast } from '../../ui/Toast';
+import { useBoosts } from '../boost/useBoosts';
 import { CopyParams } from './CopyParams';
 import { CopyReview } from './CopyReview';
 import { CopyTargets } from './CopyTargets';
@@ -35,8 +37,10 @@ export function CopyDialog({ open, onClose, serverId, templates }: { open: boole
     const [paramsSel, setParamsSel] = useState<Record<string, boolean>>({});
     const [batchId, setBatchId] = useState<string | null>(null);
     const [expected, setExpected] = useState(0);
+    const [copyBoosts, setCopyBoosts] = useState(false);
 
     const targetsQuery = useCopyTargets(serverId, open);
+    const sourceBoosts = useBoosts(serverId);
     const start = useStartCopy(serverId);
     const logQuery = useCopyLog(serverId, batchId, expected);
 
@@ -67,6 +71,7 @@ export function CopyDialog({ open, onClose, serverId, templates }: { open: boole
         setParamsSel({});
         setBatchId(null);
         setExpected(0);
+        setCopyBoosts(false);
     };
 
     const handleClose = (): void => {
@@ -89,7 +94,7 @@ export function CopyDialog({ open, onClose, serverId, templates }: { open: boole
 
     const confirm = (): void => {
         start.mutate(
-            { targets: [...targetsSel], files, copy_boosts: false },
+            { targets: [...targetsSel], files, copy_boosts: copyBoosts },
             {
                 onSuccess: (data) => {
                     setBatchId(data.batch_id);
@@ -134,7 +139,17 @@ export function CopyDialog({ open, onClose, serverId, templates }: { open: boole
 
                 {step === 1 && <CopyTargets targets={targetsQuery.data ?? []} selected={targetsSel} onToggle={toggleTarget} loading={targetsQuery.isLoading} />}
                 {step === 2 && <CopyParams templates={templates} selected={paramsSel} setSelected={setParamsSel} />}
-                {step === 3 && <CopyReview targetNames={targetNames} paramCount={paramCount} started={batchId !== null} rows={rows} expected={expected} done={done} />}
+                {step === 3 && (
+                    <div className="ec-stack">
+                        {batchId === null && (sourceBoosts.data?.length ?? 0) > 0 && (
+                            <label className="ec-row" style={{ cursor: 'pointer' }}>
+                                <Toggle checked={copyBoosts} onChange={setCopyBoosts} label={t('copy.copy_boosts')} />
+                                <span className="ec-field-desc">{t('copy.copy_boosts')}</span>
+                            </label>
+                        )}
+                        <CopyReview targetNames={targetNames} paramCount={paramCount} started={batchId !== null} rows={rows} expected={expected} done={done} />
+                    </div>
+                )}
             </div>
         </Dialog>
     );

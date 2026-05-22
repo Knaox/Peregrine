@@ -1,13 +1,16 @@
 import { Copy, Search, SlidersHorizontal } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { backendFieldKey, fieldKeyOf } from '../lib/fieldKey';
+import { backendFieldKey, fieldKey, fieldKeyOf } from '../lib/fieldKey';
 import { pickLabel, useT } from '../lib/i18n';
 import { validateValue } from '../lib/validate';
 import type { ApiError } from '../shared';
 import type { ConfigParam, ConfigTemplate } from '../types';
 import { Button } from '../ui/Button';
-import { Input } from '../ui/inputs';
+import { Input, Toggle } from '../ui/inputs';
 import { useToast } from '../ui/Toast';
+import { BoostDialog, type BoostableParam } from './boost/BoostDialog';
+import { BoostPanel } from './boost/BoostPanel';
+import { useBoosts } from './boost/useBoosts';
 import type { EditorController } from './controller';
 import { CopyDialog } from './copy/CopyDialog';
 import { FileCard } from './FileCard';
@@ -42,6 +45,40 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
     const [justSaved, setJustSaved] = useState(false);
     const [search, setSearch] = useState('');
     const [copyOpen, setCopyOpen] = useState(false);
+    const [boostMode, setBoostMode] = useState(false);
+    const [boostOpen, setBoostOpen] = useState(false);
+    const boosts = useBoosts(serverId);
+
+    const boostEnabled = templates.some((template) => template.boost_enabled);
+    const boostableParams = useMemo<BoostableParam[]>(() => {
+        const boosted = new Set((boosts.data ?? []).flatMap((boost) => boost.parameters.map((p) => fieldKey(p.file_id, p.section, p.key))));
+        const out: BoostableParam[] = [];
+        for (const template of templates) {
+            if (!template.boost_enabled) {
+                continue;
+            }
+            for (const file of template.files) {
+                for (const param of file.parameters) {
+                    if ((param.display_type !== 'number' && param.display_type !== 'slider') || template.boost_blacklist.includes(param.key)) {
+                        continue;
+                    }
+                    if (boosted.has(fieldKey(file.id, param.section, param.key))) {
+                        continue;
+                    }
+                    out.push({
+                        template_id: template.id,
+                        file_id: file.id,
+                        section: param.section,
+                        key: param.key,
+                        label: pickLabel(param.label, lang, param.key),
+                        max: typeof param.config.max === 'number' ? param.config.max : undefined,
+                    });
+                }
+            }
+        }
+
+        return out;
+    }, [templates, boosts.data, lang]);
 
     const dirtyKeys = useMemo(() => Object.keys(values).filter((key) => values[key] !== original[key]), [values, original]);
     const isDirty = dirtyKeys.length > 0;
@@ -155,10 +192,20 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
                         <p className="ec-subtitle">{t('section.subtitle')}</p>
                     </div>
                 </div>
-                <Button variant="secondary" onClick={() => setCopyOpen(true)}>
-                    <Copy size={15} /> {t('copy.button')}
-                </Button>
+                <div className="ec-row">
+                    {boostEnabled && (
+                        <label className="ec-row" style={{ cursor: 'pointer' }}>
+                            <span className="ec-field-desc ec-secondary">{t('boost.mode')}</span>
+                            <Toggle checked={boostMode} onChange={setBoostMode} label={t('boost.mode')} />
+                        </label>
+                    )}
+                    <Button variant="secondary" onClick={() => setCopyOpen(true)}>
+                        <Copy size={15} /> {t('copy.button')}
+                    </Button>
+                </div>
             </div>
+
+            {boostEnabled && boostMode && <BoostPanel serverId={serverId} boosts={boosts.data ?? []} onNew={() => setBoostOpen(true)} />}
 
             <div className="ec-search">
                 <span className="ec-search-icon">
@@ -174,6 +221,7 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
             {(isDirty || justSaved) && !disabled && <FloatingSaveBar saving={save.isPending} saved={justSaved} onSave={doSave} />}
 
             <CopyDialog open={copyOpen} onClose={() => setCopyOpen(false)} serverId={serverId} templates={templates} />
+            <BoostDialog open={boostOpen} onClose={() => setBoostOpen(false)} serverId={serverId} params={boostableParams} />
         </div>
     );
 }

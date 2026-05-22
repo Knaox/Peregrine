@@ -5,14 +5,16 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\EggCatalogController;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\TemplateController;
+use Plugins\EasyConfiguration\Http\Controllers\BoostController;
 use Plugins\EasyConfiguration\Http\Controllers\CopyController;
 use Plugins\EasyConfiguration\Http\Controllers\ServerConfigController;
 use Plugins\EasyConfiguration\Http\Middleware\EnsureAdmin;
 
 /**
  * Routes mounted under `/api/plugins/easy-configuration` by the ServiceProvider.
- * Server lookup uses the public `identifier`. Group `throttle:240,1` keeps live
- * editing (read on open, save, status polling) clear of the api default cap.
+ * `{server}` is the numeric server id (the React shell routes by server.id).
+ * Group `throttle:240,1` keeps live editing (read on open, save, status polling)
+ * clear of the api default cap.
  */
 Route::middleware(['auth', 'throttle:240,1'])->group(function (): void {
     // Player-facing server config + power (permission-gated in the controller).
@@ -25,6 +27,12 @@ Route::middleware(['auth', 'throttle:240,1'])->group(function (): void {
     Route::get('servers/{server}/copy/targets', [CopyController::class, 'targets']);
     Route::post('servers/{server}/copy', [CopyController::class, 'store']);
     Route::get('servers/{server}/copy/log', [CopyController::class, 'log']);
+
+    // Boost scheduling.
+    Route::get('servers/{server}/boosts', [BoostController::class, 'index']);
+    Route::post('servers/{server}/boosts', [BoostController::class, 'store']);
+    Route::get('servers/{server}/boosts/history', [BoostController::class, 'history']);
+    Route::delete('servers/{server}/boosts/{boost}', [BoostController::class, 'destroy']);
 
     // Admin template management (is_admin enforced server-side).
     Route::middleware(EnsureAdmin::class)->prefix('admin')->group(function (): void {

@@ -67,7 +67,42 @@
         "preview_summary": "{{params}} paramètres seront copiés sur {{servers}} serveurs.",
         "in_progress": "Copie en cours...",
         "recap_success": "Copié sur {{ok}} serveurs.",
-        "recap_partial": "Succès sur {{ok}} serveurs, échec sur {{fail}}."
+        "recap_partial": "Succès sur {{ok}} serveurs, échec sur {{fail}}.",
+        "copy_boosts": "Copier aussi les boosts actifs et planifiés"
+    },
+    "boost": {
+        "mode": "Planification de boosts",
+        "panel_title": "Boosts",
+        "new": "Nouveau boost",
+        "new_title": "Planifier un boost",
+        "schedule": "Planifier",
+        "none": "Aucun boost actif ou planifié.",
+        "history": "Historique",
+        "no_history": "Aucun boost passé.",
+        "multiplier": "Multiplicateur",
+        "start_at": "Début",
+        "end_at": "Fin",
+        "parameters": "Paramètres à booster",
+        "max_cap": "Plafond max",
+        "no_boostable": "Aucun paramètre numérique boostable disponible.",
+        "restart_warning": "Les serveurs concernés sont automatiquement arrêtés à l'activation et à la fin du boost pour appliquer les changements proprement.",
+        "invalid": "Sélectionnez au moins un paramètre et un multiplicateur supérieur à 0.",
+        "created": "Boost planifié.",
+        "create_failed": "Le boost n'a pas pu être planifié.",
+        "overlap": "Un boost couvre déjà l'un de ces paramètres. Annulez-le d'abord.",
+        "confirm_cancel": "Annuler ce boost ?",
+        "param_count": "{{count}} paramètres",
+        "active_tip": "Boost actif x{{mult}} jusqu'au {{end}}, valeur effective : {{value}}",
+        "planned_tip": "Boost x{{mult}} prévu le {{start}}",
+        "status": {
+            "pending": "Planifié",
+            "active": "Actif"
+        },
+        "final": {
+            "completed": "Terminé",
+            "cancelled": "Annulé",
+            "failed": "Échoué"
+        }
     },
     "admin": {
         "unauthorized": "Un accès administrateur est requis pour gérer les templates.",

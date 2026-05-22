@@ -67,7 +67,42 @@
         "preview_summary": "{{params}} parameters will be copied to {{servers}} servers.",
         "in_progress": "Copy in progress...",
         "recap_success": "Copied to {{ok}} servers.",
-        "recap_partial": "Success on {{ok}} servers, failed on {{fail}}."
+        "recap_partial": "Success on {{ok}} servers, failed on {{fail}}.",
+        "copy_boosts": "Also copy active and scheduled boosts"
+    },
+    "boost": {
+        "mode": "Boost scheduling",
+        "panel_title": "Boosts",
+        "new": "New boost",
+        "new_title": "Schedule a boost",
+        "schedule": "Schedule",
+        "none": "No active or scheduled boost.",
+        "history": "History",
+        "no_history": "No past boosts.",
+        "multiplier": "Multiplier",
+        "start_at": "Starts at",
+        "end_at": "Ends at",
+        "parameters": "Parameters to boost",
+        "max_cap": "Max cap",
+        "no_boostable": "No boostable numeric parameters available.",
+        "restart_warning": "Affected servers are automatically stopped when the boost starts and ends to apply the changes cleanly.",
+        "invalid": "Pick at least one parameter and a multiplier above 0.",
+        "created": "Boost scheduled.",
+        "create_failed": "The boost could not be scheduled.",
+        "overlap": "A boost already covers one of these parameters. Cancel it first.",
+        "confirm_cancel": "Cancel this boost?",
+        "param_count": "{{count}} parameters",
+        "active_tip": "Active boost x{{mult}} until {{end}}, effective value: {{value}}",
+        "planned_tip": "Boost x{{mult}} scheduled for {{start}}",
+        "status": {
+            "pending": "Scheduled",
+            "active": "Active"
+        },
+        "final": {
+            "completed": "Completed",
+            "cancelled": "Cancelled",
+            "failed": "Failed"
+        }
     },
     "admin": {
         "unauthorized": "You need administrator access to manage templates.",
