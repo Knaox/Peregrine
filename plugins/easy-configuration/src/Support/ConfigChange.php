@@ -16,5 +16,8 @@ final class ConfigChange
         public readonly string $key,
         public readonly string $value,
         public readonly ?string $section = null,
+        // Which occurrence of a repeated (section, key) to write — 0 for the
+        // common single-occurrence case.
+        public readonly int $occurrence = 0,
     ) {}
 }

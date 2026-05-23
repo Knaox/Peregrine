@@ -19,9 +19,9 @@ use Plugins\EasyConfiguration\Models\BoostSchedule;
 final class BoostService
 {
     /**
-     * @param  list<array{file_id: string, section?: string|null, key: string, max_cap?: float|null}>  $params
+     * @param  list<array{file_id: string, section?: string|null, key: string, max_cap?: float|null, invert?: bool}>  $params
      */
-    public function create(Server $server, string $templateId, float $multiplier, Carbon $startAt, Carbon $endAt, array $params, ?int $userId): BoostSchedule
+    public function create(Server $server, string $templateId, float $multiplier, Carbon $startAt, Carbon $endAt, array $params, ?int $userId, ?string $recurrence = null, ?Carbon $recurrenceUntil = null): BoostSchedule
     {
         $this->assertNoOverlap($server, $params);
 
@@ -32,13 +32,65 @@ final class BoostService
             'start_at' => $startAt,
             'end_at' => $endAt,
             'status' => 'pending',
-            'parameters' => array_map(static fn (array $param): array => [
-                'file_id' => $param['file_id'],
-                'section' => $param['section'] ?? null,
-                'key' => $param['key'],
-                'max_cap' => $param['max_cap'] ?? null,
-            ], $params),
+            'recurrence' => $recurrence,
+            'recurrence_until' => $recurrenceUntil,
+            'parameters' => $this->normaliseParams($params),
             'created_by' => $userId,
+        ]);
+    }
+
+    /**
+     * Update a still-pending boost (multiplier / window / recurrence / per-param
+     * caps). Active or finished boosts are not editable — they must be cancelled
+     * and re-created. Overlap is re-checked, excluding the boost being edited.
+     *
+     * @param  list<array{file_id: string, section?: string|null, key: string, max_cap?: float|null, invert?: bool}>  $params
+     */
+    public function update(BoostSchedule $boost, float $multiplier, Carbon $startAt, Carbon $endAt, array $params, ?string $recurrence = null, ?Carbon $recurrenceUntil = null): BoostSchedule
+    {
+        $server = Server::findOrFail($boost->server_id);
+        $this->assertNoOverlap($server, $params, $boost->id);
+
+        $boost->update([
+            'multiplier' => $multiplier,
+            'start_at' => $startAt,
+            'end_at' => $endAt,
+            'recurrence' => $recurrence,
+            'recurrence_until' => $recurrenceUntil,
+            'parameters' => $this->normaliseParams($params),
+        ]);
+
+        return $boost;
+    }
+
+    /**
+     * After a recurring boost completes, create the next occurrence (same window
+     * shifted by one interval) unless we've passed `recurrence_until`. Skips any
+     * windows already in the past (e.g. scheduler downtime) to the next future
+     * one. No overlap check: the just-completed boost has freed its parameters.
+     */
+    public function rearm(BoostSchedule $boost): ?BoostSchedule
+    {
+        if ($boost->recurrence === null) {
+            return null;
+        }
+
+        [$startAt, $endAt] = (new BoostRecurrence)->nextWindow($boost->start_at, $boost->end_at, $boost->recurrence);
+        if ($boost->recurrence_until !== null && $startAt->greaterThan($boost->recurrence_until)) {
+            return null;
+        }
+
+        return BoostSchedule::create([
+            'server_id' => $boost->server_id,
+            'template_id' => $boost->template_id,
+            'multiplier' => $boost->multiplier,
+            'start_at' => $startAt,
+            'end_at' => $endAt,
+            'status' => 'pending',
+            'recurrence' => $boost->recurrence,
+            'recurrence_until' => $boost->recurrence_until,
+            'parameters' => $this->normaliseParams($boost->parameters),
+            'created_by' => $boost->created_by,
         ]);
     }
 
@@ -52,7 +104,13 @@ final class BoostService
         }
 
         if ($boost->status === 'active') {
-            // Safe restore path: stop -> write originals -> start, then archive.
+            // Flip to a transient "cancelling" status SYNCHRONOUSLY first: the
+            // list endpoint then reflects the transition on its next poll, and
+            // the scheduler (which only matches status='active') can no longer
+            // also dispatch a "completed" end — which would otherwise re-arm a
+            // recurring boost we're trying to stop. The job then does the safe
+            // restore path: stop -> write originals -> start, then archive.
+            $boost->update(['status' => 'cancelling']);
             EndBoostJob::dispatch($boost->id, 'cancelled');
         }
     }
@@ -76,9 +134,9 @@ final class BoostService
     }
 
     /**
-     * @param  list<array{file_id: string, section?: string|null, key: string, max_cap?: float|null}>  $params
+     * @param  list<array{file_id: string, section?: string|null, key: string, max_cap?: float|null, invert?: bool}>  $params
      */
-    private function assertNoOverlap(Server $server, array $params): void
+    private function assertNoOverlap(Server $server, array $params, ?int $excludeId = null): void
     {
         $wanted = [];
         foreach ($params as $param) {
@@ -86,12 +144,34 @@ final class BoostService
         }
 
         foreach (BoostSchedule::query()->where('server_id', $server->id)->live()->get() as $existing) {
+            if ($excludeId !== null && $existing->id === $excludeId) {
+                continue;
+            }
             foreach ($existing->parameters as $existingParam) {
                 if (isset($wanted[$this->identity($existingParam['file_id'], $existingParam['section'] ?? null, $existingParam['key'])])) {
                     throw new BoostOverlapException($existing);
                 }
             }
         }
+    }
+
+    /**
+     * Strip runtime snapshots (original_value / boosted_value) and keep only the
+     * stored shape: file_id, section, key, max_cap, invert. `invert` flags a
+     * per-parameter "deboost" (divide instead of multiply).
+     *
+     * @param  list<array<string, mixed>>  $params
+     * @return list<array{file_id: string, section: string|null, key: string, max_cap: float|null, invert: bool}>
+     */
+    private function normaliseParams(array $params): array
+    {
+        return array_map(static fn (array $param): array => [
+            'file_id' => (string) $param['file_id'],
+            'section' => $param['section'] ?? null,
+            'key' => (string) $param['key'],
+            'max_cap' => isset($param['max_cap']) && is_numeric($param['max_cap']) ? (float) $param['max_cap'] : null,
+            'invert' => ! empty($param['invert']),
+        ], $params);
     }
 
     private function identity(string $fileId, ?string $section, string $key): string

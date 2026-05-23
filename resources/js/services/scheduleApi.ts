@@ -1,6 +1,15 @@
 import type { Schedule } from '@/types/Schedule';
 import { request } from '@/services/http';
 
+/** Per-target outcome returned by the copy-to-other-servers endpoint. */
+export interface CopyScheduleResult {
+    server_id: number;
+    server_name: string;
+    success: boolean;
+    error: string | null;
+    schedule_id: number | null;
+}
+
 export async function fetchSchedules(serverId: number): Promise<Schedule[]> {
     const { data } = await request<{ data: Schedule[] }>(`/api/servers/${serverId}/schedules`);
     return data;
@@ -46,4 +55,12 @@ export async function updateTask(serverId: number, scheduleId: number, taskId: n
 
 export async function deleteTask(serverId: number, scheduleId: number, taskId: number): Promise<void> {
     await request(`/api/servers/${serverId}/schedules/${scheduleId}/tasks/${taskId}`, { method: 'DELETE' });
+}
+
+export async function copySchedule(serverId: number, scheduleId: number, targetServerIds: number[]): Promise<CopyScheduleResult[]> {
+    const { data } = await request<{ data: CopyScheduleResult[] }>(`/api/servers/${serverId}/schedules/${scheduleId}/copy`, {
+        method: 'POST',
+        body: JSON.stringify({ target_server_ids: targetServerIds }),
+    });
+    return data;
 }

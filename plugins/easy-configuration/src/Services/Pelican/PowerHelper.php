@@ -42,6 +42,18 @@ final class PowerHelper
         return false;
     }
 
+    /**
+     * Whether the server is currently anything other than `offline`. Used to
+     * decide if a boost apply/restore needs the stop→write→start envelope at all
+     * (an already-offline server is written in place and left off). An API error
+     * (state unknown) is treated as running, so we still go through the safe
+     * stop-and-wait path rather than writing a possibly-live file.
+     */
+    public function isRunning(Server $server): bool
+    {
+        return $this->state($server) !== 'offline';
+    }
+
     public function start(Server $server): void
     {
         try {

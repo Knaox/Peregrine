@@ -136,6 +136,18 @@ Route::get('/plugins/{pluginId}/bundle.js', [PluginController::class, 'bundle'])
 Route::get('/plugins/{pluginId}/icon.svg', [PluginController::class, 'icon'])
     ->where('pluginId', '[a-z0-9][a-z0-9-]*');
 
+// Plugin admin SPA pages. A plugin's `manage_url` (and any client-side
+// sub-route under it) is a React Router path — handled by `/plugins/:pluginId/*`
+// in app.tsx — NOT a static asset. The main catch-all below deliberately
+// excludes `plugins` so a missing plugin *asset* returns a clean 404 instead of
+// HTML, but that also swallowed these page routes (a hard refresh / direct link
+// to /plugins/{id}/manage returned 404). Serve the SPA shell here so React
+// Router can mount the registered admin app. The `/manage` segment also keeps
+// the page off the public/plugins/{id} asset symlink (nginx 403s the bare dir).
+Route::view('/plugins/{pluginId}/manage/{any?}', 'app')
+    ->where('pluginId', '[a-z0-9][a-z0-9-]*')
+    ->where('any', '.*');
+
 // Main SPA (catch-all for React Router — excludes admin, api, docs, livewire,
 // sanctum, filament, storage, up, plugins). `plugins` is excluded so a missing
 // plugin asset returns a clean 404 instead of HTML masquerading as JS/CSS.

@@ -28,10 +28,19 @@ live recap). Runs as a background job; per-server success/failure is reported.
 
 ### 3. Boost
 Schedule a temporary multiplication of selected numeric values over a date
-window. Servers are stopped and restarted cleanly to apply and to restore. A
-value is capped to the lower of the per-parameter `max_cap` and the template
-`max`. One boost per parameter; editing the baseline during an active boost
-re-applies the capped value and is restored when the boost ends.
+window, optionally **recurring** (daily / weekly / monthly, until a date or
+indefinitely). When the boost runs, a running server is stopped cleanly (the
+applier waits for the confirmed `offline` state), the values are written, and the
+server is restarted — an already-offline server is boosted without a restart. A
+value is capped to the lower of the per-parameter `max_cap` (set by the user when
+selecting the value) and the template `max`. One boost per parameter; pending
+boosts are editable, an active boost must be cancelled and re-created.
+
+> **Requires the Laravel scheduler.** Boosts are armed by `easy-config:check-boosts`
+> (every minute). In production add the standard cron
+> `* * * * * cd /path && php artisan schedule:run >> /dev/null 2>&1`; locally,
+> `composer run dev` now runs `php artisan schedule:work` for you. Without the
+> scheduler a boost stays "scheduled" forever.
 
 ## Lossless round-trip
 Reading uses a typed parser; **writing substitutes only the changed value token
@@ -58,7 +67,11 @@ to refresh the cache (the admin UI re-syncs automatically on every change).
 ### Template JSON
 
 See `schema/easy-config-template.v1.json` (JSON Schema) and the ready-to-fork
-examples in `samples/` (Minecraft Vanilla, ARK, Paper, Rust). Minimal shape:
+examples in `samples/` (Minecraft Vanilla, ARK, Paper, Rust). For the **full
+field reference + a complete, AI-ready example**, see
+[`docs/TEMPLATE_AUTHORING.md`](docs/TEMPLATE_AUTHORING.md) and
+[`samples/example-template.json`](samples/example-template.json) (every field
+type, sections, an env-var link, columns and boost). Minimal shape:
 
 ```json
 {

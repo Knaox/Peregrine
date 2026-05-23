@@ -28,6 +28,7 @@ class SaveConfigRequest extends FormRequest
             'files.*.values.*.key' => ['required', 'string', 'max:255'],
             'files.*.values.*.section' => ['nullable', 'string', 'max:255'],
             'files.*.values.*.value' => ['present'],
+            'files.*.values.*.occurrence' => ['sometimes', 'integer', 'min:0'],
         ];
     }
 }

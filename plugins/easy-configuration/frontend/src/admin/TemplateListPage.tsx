@@ -1,4 +1,4 @@
-import { Download, FilePlus2, Pencil, Trash2, Upload } from 'lucide-react';
+import { Download, FilePlus2, LayoutTemplate, Pencil, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pickLabel, useT } from '../lib/i18n';
@@ -59,6 +59,9 @@ export function TemplateListPage() {
                     <p className="ec-subtitle">{t('admin.list.subtitle')}</p>
                 </div>
                 <div className="ec-row">
+                    <Button variant="ghost" onClick={() => navigate(`${ADMIN_PATH}/example`)}>
+                        <LayoutTemplate size={15} /> {t('admin.list.example')}
+                    </Button>
                     <Button variant="secondary" onClick={() => setImportOpen(true)}>
                         <Upload size={15} /> {t('admin.list.import')}
                     </Button>

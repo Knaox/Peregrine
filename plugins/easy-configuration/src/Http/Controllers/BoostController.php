@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Plugins\EasyConfiguration\Exceptions\BoostOverlapException;
 use Plugins\EasyConfiguration\Http\Concerns\ResolvesServerAccess;
 use Plugins\EasyConfiguration\Http\Requests\CreateBoostRequest;
+use Plugins\EasyConfiguration\Http\Requests\UpdateBoostRequest;
 use Plugins\EasyConfiguration\Models\BoostHistory;
 use Plugins\EasyConfiguration\Models\BoostSchedule;
 use Plugins\EasyConfiguration\Services\Boost\BoostService;
@@ -44,7 +45,7 @@ final class BoostController
     public function store(CreateBoostRequest $request, string $server): JsonResponse
     {
         $model = $this->resolveServer($server, $request);
-        $this->authorizeServer($request, $model, 'easyconfig.write', 'file.update');
+        $this->authorizeServer($request, $model, 'easyconfig.boost', 'file.update');
 
         $validated = $request->validated();
         $definition = $this->registry->definition($validated['template_id']);
@@ -66,6 +67,8 @@ final class BoostController
                 Carbon::parse($validated['end_at']),
                 $validated['parameters'],
                 $request->user()?->id,
+                $validated['recurrence'] ?? null,
+                isset($validated['recurrence_until']) ? Carbon::parse($validated['recurrence_until']) : null,
             );
         } catch (BoostOverlapException $e) {
             return response()->json(['error' => [
@@ -77,10 +80,54 @@ final class BoostController
         return response()->json(['data' => $this->serialize($boost)], 201);
     }
 
+    public function update(UpdateBoostRequest $request, string $server, int $boost): JsonResponse
+    {
+        $model = $this->resolveServer($server, $request);
+        $this->authorizeServer($request, $model, 'easyconfig.boost', 'file.update');
+
+        $schedule = BoostSchedule::query()->where('server_id', $model->id)->find($boost);
+        if ($schedule === null) {
+            abort(404);
+        }
+        if ($schedule->status !== 'pending') {
+            return response()->json(['error' => ['code' => 'not_editable']], 422);
+        }
+
+        $validated = $request->validated();
+        $definition = $this->registry->definition($validated['template_id']);
+        if ($definition === null || ! $definition->boostEnabled()) {
+            return response()->json(['error' => ['code' => 'boost_not_allowed']], 422);
+        }
+
+        $invalid = $this->firstNonBoostable($definition, $validated['parameters']);
+        if ($invalid !== null) {
+            return response()->json(['error' => ['code' => 'not_boostable', 'parameter' => $invalid]], 422);
+        }
+
+        try {
+            $updated = $this->boosts->update(
+                $schedule,
+                (float) $validated['multiplier'],
+                Carbon::parse($validated['start_at']),
+                Carbon::parse($validated['end_at']),
+                $validated['parameters'],
+                $validated['recurrence'] ?? null,
+                isset($validated['recurrence_until']) ? Carbon::parse($validated['recurrence_until']) : null,
+            );
+        } catch (BoostOverlapException $e) {
+            return response()->json(['error' => [
+                'code' => 'boost_overlap',
+                'conflict' => ['start_at' => $e->conflict->start_at, 'end_at' => $e->conflict->end_at],
+            ]], 422);
+        }
+
+        return response()->json(['data' => $this->serialize($updated)]);
+    }
+
     public function destroy(Request $request, string $server, int $boost): JsonResponse
     {
         $model = $this->resolveServer($server, $request);
-        $this->authorizeServer($request, $model, 'easyconfig.write', 'file.update');
+        $this->authorizeServer($request, $model, 'easyconfig.boost', 'file.update');
 
         $schedule = BoostSchedule::query()->where('server_id', $model->id)->find($boost);
         if ($schedule === null) {
@@ -121,6 +168,8 @@ final class BoostController
             'multiplier' => $boost->multiplier,
             'start_at' => $boost->start_at,
             'end_at' => $boost->end_at,
+            'recurrence' => $boost->recurrence,
+            'recurrence_until' => $boost->recurrence_until,
             'status' => $boost->status,
             'parameters' => $boost->parameters,
             'applied_at' => $boost->applied_at,

@@ -18,7 +18,7 @@ final class ConfigChangeBuilder
 
     /**
      * @param  array<string, mixed>  $fileDef
-     * @param  list<array{key: string, section?: string|null, value: string}>  $values
+     * @param  list<array{key: string, section?: string|null, value: string, occurrence?: int}>  $values
      * @return array{changes: list<ConfigChange>, errors: array<string, string>}
      */
     public function build(array $fileDef, array $values): array
@@ -34,6 +34,7 @@ final class ConfigChangeBuilder
             }
             $section = isset($value['section']) && is_string($value['section']) ? $value['section'] : null;
             $raw = (string) ($value['value'] ?? '');
+            $occurrence = isset($value['occurrence']) && is_numeric($value['occurrence']) ? (int) $value['occurrence'] : 0;
             $composite = ($section ?? '')."\x1f".$key;
 
             $def = $defs[$composite] ?? null;
@@ -46,7 +47,7 @@ final class ConfigChangeBuilder
                 }
             }
 
-            $changes[] = new ConfigChange($key, $raw, $section);
+            $changes[] = new ConfigChange($key, $raw, $section, $occurrence);
         }
 
         return ['changes' => $changes, 'errors' => $errors];

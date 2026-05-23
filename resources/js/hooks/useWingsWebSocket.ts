@@ -195,7 +195,14 @@ export function useWingsWebSocket(
                     break;
 
                 case 'status':
-                    if (data.args[0]) setServerState(data.args[0]);
+                    if (data.args[0]) {
+                        setServerState(data.args[0]);
+                        // Re-broadcast the live power state so any plugin bundle
+                        // can react (e.g. lock an editor) the instant the server
+                        // starts/stops, reusing this single Wings connection
+                        // instead of opening its own.
+                        window.dispatchEvent(new CustomEvent('peregrine:server-power', { detail: { serverId, state: data.args[0] } }));
+                    }
                     break;
 
                 case 'stats':
@@ -212,7 +219,10 @@ export function useWingsWebSocket(
                                 network_tx: net?.tx_bytes ?? 0,
                                 uptime: (s.uptime as number) ?? 0,
                             });
-                            if (s.state) setServerState(s.state as string);
+                            if (s.state) {
+                                setServerState(s.state as string);
+                                window.dispatchEvent(new CustomEvent('peregrine:server-power', { detail: { serverId, state: s.state } }));
+                            }
                         } catch { /* ignore */ }
                     }
                     break;

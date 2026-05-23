@@ -64,4 +64,19 @@ final class TomlFormatTest extends TestCase
 
         self::assertSame(str_replace('enableMod = true', 'enableMod = false', $sample), $result);
     }
+
+    public function test_it_appends_into_a_last_table_without_a_trailing_newline(): void
+    {
+        // No trailing newline on the final line: the appended key must start on
+        // its own line, not glue onto it.
+        $raw = "[general]\nenableMod = true\nname = \"server\"";
+
+        $result = (new TomlFormat)->apply($raw, [
+            new ConfigChange('maxEntities', '100', 'general'),
+        ]);
+
+        self::assertStringNotContainsString('"server"maxEntities', $result);
+        self::assertSame('100', (new TomlFormat)->parse($result)->get('maxEntities', 'general')?->value);
+        self::assertSame('server', (new TomlFormat)->parse($result)->get('name', 'general')?->value);
+    }
 }

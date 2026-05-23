@@ -85,6 +85,14 @@ export const baseCss = `
 .ec-badge-success { background: rgba(var(--color-success-rgb), 0.15); color: var(--color-success); }
 .ec-badge-muted { background: var(--surface-overlay-soft); color: var(--color-text-secondary); }
 
+.ec-callout { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.7rem 0.85rem; border-radius: var(--radius);
+    font-size: 0.8125rem; line-height: 1.45; color: var(--color-text-primary); }
+.ec-callout-icon { flex-shrink: 0; margin-top: 0.05rem; }
+.ec-callout-warning { background: rgba(var(--color-warning-rgb), 0.12); border: 1px solid rgba(var(--color-warning-rgb), 0.35); border-left-width: 3px; }
+.ec-callout-warning .ec-callout-icon { color: var(--color-warning); }
+.ec-callout-info { background: rgba(var(--color-info-rgb), 0.1); border: 1px solid rgba(var(--color-info-rgb), 0.3); border-left-width: 3px; }
+.ec-callout-info .ec-callout-icon { color: var(--color-info); }
+
 .ec-spinner { width: 1rem; height: 1rem; border-radius: var(--radius-full);
     border: 2px solid var(--surface-overlay-strong); border-top-color: var(--color-primary);
     animation: ec-spin 0.7s linear infinite; display: inline-block; }

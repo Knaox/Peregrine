@@ -63,6 +63,22 @@ final class IniFormatTest extends TestCase
         self::assertNull($reparsed->get('MaxPlayers', '/script/shootergame.shootergamemode'));
     }
 
+    public function test_it_appends_into_a_last_section_without_a_trailing_newline(): void
+    {
+        // No trailing newline on the final line: the appended key must start on
+        // its own line, not glue onto it (regression: "ServerPVE=FalseMaxPlayers=70").
+        $raw = "[ServerSettings]\nDifficultyOffset=0.2\nServerPVE=False";
+
+        $result = (new IniFormat)->apply($raw, [
+            new ConfigChange('MaxPlayers', '70', 'ServerSettings'),
+        ]);
+
+        self::assertStringNotContainsString('FalseMaxPlayers', $result);
+        self::assertStringContainsString("ServerPVE=False\nMaxPlayers=70", $result);
+        self::assertSame('70', (new IniFormat)->parse($result)->get('MaxPlayers', 'ServerSettings')?->value);
+        self::assertSame('False', (new IniFormat)->parse($result)->get('ServerPVE', 'ServerSettings')?->value);
+    }
+
     public function test_it_appends_a_brand_new_section(): void
     {
         $result = (new IniFormat)->apply($this->sample(), [
@@ -71,5 +87,59 @@ final class IniFormatTest extends TestCase
 
         self::assertStringContainsString('[CustomSection]', $result);
         self::assertSame('Bar', (new IniFormat)->parse($result)->get('Foo', 'CustomSection')?->value);
+    }
+
+    public function test_it_indexes_repeated_keys_with_their_occurrence(): void
+    {
+        $raw = implode("\n", [
+            '[/script/shootergame.shootergamemode]',
+            'ConfigOverrideItemMaxQuantity=A',
+            'ConfigOverrideItemMaxQuantity=B',
+            'ConfigOverrideItemMaxQuantity=C',
+            '',
+        ]);
+
+        $repeats = array_values(array_filter(
+            (new IniFormat)->parse($raw)->parameters,
+            static fn ($p): bool => $p->key === 'ConfigOverrideItemMaxQuantity',
+        ));
+
+        self::assertCount(3, $repeats);
+        self::assertSame([0, 1, 2], array_map(static fn ($p): int => $p->occurrence, $repeats));
+        self::assertSame(['A', 'B', 'C'], array_map(static fn ($p): string => $p->value, $repeats));
+    }
+
+    public function test_apply_updates_only_the_targeted_occurrence(): void
+    {
+        $raw = implode("\n", ['[Section]', 'Key=A', 'Key=B', 'Key=C', '']);
+
+        $result = (new IniFormat)->apply($raw, [
+            new ConfigChange('Key', 'B2', 'Section', 1),
+        ]);
+
+        $values = array_map(
+            static fn ($p): string => $p->value,
+            array_values(array_filter((new IniFormat)->parse($result)->parameters, static fn ($p): bool => $p->key === 'Key')),
+        );
+
+        self::assertSame(['A', 'B2', 'C'], $values);
+    }
+
+    public function test_apply_appends_a_new_occurrence_beyond_the_existing_ones(): void
+    {
+        // The "add a repeatable key" flow targets occurrence = count of existing
+        // copies, so the writer APPENDS a new line instead of overwriting one.
+        $raw = implode("\n", ['[Section]', 'Key=A', 'Key=B', 'Key=C', '']);
+
+        $result = (new IniFormat)->apply($raw, [
+            new ConfigChange('Key', 'D', 'Section', 3),
+        ]);
+
+        $values = array_map(
+            static fn ($p): string => $p->value,
+            array_values(array_filter((new IniFormat)->parse($result)->parameters, static fn ($p): bool => $p->key === 'Key')),
+        );
+
+        self::assertSame(['A', 'B', 'C', 'D'], $values);
     }
 }

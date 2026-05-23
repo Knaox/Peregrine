@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Plugins\EasyConfiguration\Services\Config;
 
 use App\Models\Server;
+use App\Services\Pelican\PelicanClientService;
 use App\Services\Pelican\PelicanFileService;
 use Plugins\EasyConfiguration\Models\BoostSchedule;
 use Plugins\EasyConfiguration\Services\Boost\BoostCalculator;
@@ -34,6 +35,7 @@ final class ConfigWriterService
         private readonly PelicanFileService $files,
         private readonly BoostLookup $boosts,
         private readonly BoostCalculator $calculator,
+        private readonly PelicanClientService $client,
     ) {}
 
     /**
@@ -47,6 +49,7 @@ final class ConfigWriterService
         $errors = [];
         $plans = [];
         $baselineUpdates = [];
+        $envUpdates = [];
 
         foreach ($fileInputs as $input) {
             $fileId = (string) ($input['id'] ?? '');
@@ -66,13 +69,17 @@ final class ConfigWriterService
 
             $changes = array_map(fn (ConfigChange $change): ConfigChange => $this->applyBoost($change, $fileId, $def, $boostMap, $baselineUpdates), $built['changes']);
 
+            // A parameter may declare an `env_var`: the value written to the file
+            // is also pushed to the server's Pelican startup variable.
+            $envUpdates = array_merge($envUpdates, self::envUpdatesForFile($def, $changes));
+
             $format = (string) $def['format'];
             $path = (string) $def['path'];
             $plans[] = ['path' => $path, 'content' => $this->parsers->get($format)->apply($this->read($server, $path), $changes)];
         }
 
         if ($errors !== []) {
-            return ['written' => 0, 'errors' => $errors];
+            return ['written' => 0, 'errors' => $errors, 'env_synced' => 0, 'env_errors' => []];
         }
 
         $written = 0;
@@ -82,8 +89,55 @@ final class ConfigWriterService
         }
 
         $this->persistBaselines($baselineUpdates);
+        $env = $this->syncEnvVars($server, $envUpdates);
 
-        return ['written' => $written, 'errors' => []];
+        return ['written' => $written, 'errors' => [], 'env_synced' => $env['synced'], 'env_errors' => $env['errors']];
+    }
+
+    /**
+     * Map the parameters being written to the Pelican env vars they declare an
+     * `env_var` link to. Pure + static so it's unit-testable without Pelican.
+     *
+     * @param  array<string, mixed>  $def
+     * @param  list<ConfigChange>  $changes
+     * @return array<string, string>  env_variable => value
+     */
+    public static function envUpdatesForFile(array $def, array $changes): array
+    {
+        $updates = [];
+        foreach ($changes as $change) {
+            $envVar = self::paramDef($def, $change->section, $change->key)['env_var'] ?? null;
+            if (is_string($envVar) && $envVar !== '') {
+                $updates[$envVar] = $change->value;
+            }
+        }
+
+        return $updates;
+    }
+
+    /**
+     * Push linked env vars to Pelican. Best-effort: a failure on one variable
+     * is reported and recorded but never rolls back the file writes that
+     * already succeeded.
+     *
+     * @param  array<string, string>  $updates
+     * @return array{synced: int, errors: array<string, string>}
+     */
+    private function syncEnvVars(Server $server, array $updates): array
+    {
+        $synced = 0;
+        $errors = [];
+        foreach ($updates as $key => $value) {
+            try {
+                $this->client->updateStartupVariable($server->identifier, $key, $value);
+                $synced++;
+            } catch (Throwable $e) {
+                report($e);
+                $errors[$key] = 'sync_failed';
+            }
+        }
+
+        return ['synced' => $synced, 'errors' => $errors];
     }
 
     /**
@@ -99,7 +153,7 @@ final class ConfigWriterService
             return $change;
         }
 
-        $paramDef = $this->paramDef($def, $change->section, $change->key);
+        $paramDef = self::paramDef($def, $change->section, $change->key);
         $boosted = $this->calculator->format(
             $this->calculator->compute(
                 is_numeric($change->value) ? (float) $change->value : 0.0,
@@ -143,7 +197,7 @@ final class ConfigWriterService
      * @param  array<string, mixed>  $def
      * @return array<string, mixed>
      */
-    private function paramDef(array $def, ?string $section, string $key): array
+    private static function paramDef(array $def, ?string $section, string $key): array
     {
         $params = is_array($def['parameters'] ?? null) ? $def['parameters'] : [];
         if ($section !== null && is_array($params[$section][$key] ?? null)) {

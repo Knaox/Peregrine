@@ -30,6 +30,7 @@ final class IniFormat implements ConfigFormat
     {
         $parameters = [];
         $section = null;
+        $counts = []; // "section\x1fkey" => occurrences seen so far
 
         foreach ($this->splitLines($this->stripBom($raw)) as $chunk) {
             $body = $this->bodyOf($chunk);
@@ -46,7 +47,10 @@ final class IniFormat implements ConfigFormat
             }
 
             $key = trim(substr($body, 0, $eq));
-            $parameters[] = new ConfigParameter($key, trim(substr($body, $eq + 1)), $section);
+            $id = ($section ?? '')."\x1f".$key;
+            $occurrence = $counts[$id] ?? 0;
+            $counts[$id] = $occurrence + 1;
+            $parameters[] = new ConfigParameter($key, trim(substr($body, $eq + 1)), $section, $occurrence);
         }
 
         return new ParsedConfig($parameters);
@@ -58,14 +62,15 @@ final class IniFormat implements ConfigFormat
             return $raw;
         }
 
-        /** @var array<string, array<string, string>> $pending sectionKey => [key => value] */
+        /** @var array<string, array<string, array<int, string>>> $pending sectionKey => key => [occurrence => value] */
         $pending = [];
         foreach ($changes as $change) {
-            $pending[$change->section ?? ''][$change->key] = $change->value;
+            $pending[$change->section ?? ''][$change->key][$change->occurrence] = $change->value;
         }
 
         $eol = $this->dominantEol($raw);
         $section = null;
+        $seen = []; // sectionKey => key => occurrences walked so far
         $out = [];
 
         foreach ($this->splitLines($raw) as $chunk) {
@@ -83,15 +88,22 @@ final class IniFormat implements ConfigFormat
 
             $eq = $this->keyEquals($body);
             $sk = $section ?? '';
-            if ($eq !== null && isset($pending[$sk][trim(substr($body, 0, $eq))])) {
+            if ($eq !== null) {
                 $key = trim(substr($body, 0, $eq));
-                $head = substr($body, 0, $eq + 1);
-                $rest = substr($body, $eq + 1);
-                $lead = substr($rest, 0, strlen($rest) - strlen(ltrim($rest)));
-                $out[] = $head.$lead.$pending[$sk][$key].$lineEol;
-                unset($pending[$sk][$key]);
+                $occurrence = $seen[$sk][$key] ?? 0;
+                $seen[$sk][$key] = $occurrence + 1;
+                if (isset($pending[$sk][$key][$occurrence])) {
+                    $head = substr($body, 0, $eq + 1);
+                    $rest = substr($body, $eq + 1);
+                    $lead = substr($rest, 0, strlen($rest) - strlen(ltrim($rest)));
+                    $out[] = $head.$lead.$pending[$sk][$key][$occurrence].$lineEol;
+                    unset($pending[$sk][$key][$occurrence]);
+                    if ($pending[$sk][$key] === []) {
+                        unset($pending[$sk][$key]);
+                    }
 
-                continue;
+                    continue;
+                }
             }
 
             $out[] = $chunk;
@@ -108,8 +120,10 @@ final class IniFormat implements ConfigFormat
             if ($sk !== '') {
                 $result = $this->appendLine($result, '['.$sk.']', $eol);
             }
-            foreach ($entries as $key => $value) {
-                $result = $this->appendLine($result, $key.'='.$value, $eol);
+            foreach ($entries as $key => $occValues) {
+                foreach ($occValues as $value) {
+                    $result = $this->appendLine($result, $key.'='.$value, $eol);
+                }
             }
         }
 
@@ -121,7 +135,7 @@ final class IniFormat implements ConfigFormat
      * (right before we move on to the next header / EOF), then clear them.
      *
      * @param  list<string>  $out
-     * @param  array<string, array<string, string>>  $pending
+     * @param  array<string, array<string, array<int, string>>>  $pending
      */
     private function flushSection(array &$out, array &$pending, ?string $section, string $eol): void
     {
@@ -130,8 +144,11 @@ final class IniFormat implements ConfigFormat
             return;
         }
 
-        foreach ($pending[$sk] as $key => $value) {
-            $out[] = $key.'='.$value.$eol;
+        $this->ensureTrailingEol($out, $eol);
+        foreach ($pending[$sk] as $key => $occValues) {
+            foreach ($occValues as $value) {
+                $out[] = $key.'='.$value.$eol;
+            }
         }
         $pending[$sk] = [];
     }

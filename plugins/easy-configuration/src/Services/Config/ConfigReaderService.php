@@ -60,6 +60,7 @@ final class ConfigReaderService
                 'description' => $definition->description(),
                 'boost_enabled' => $definition->boostEnabled(),
                 'boost_blacklist' => $definition->boostBlacklist(),
+                'columns' => $definition->columns(),
                 'files' => $files,
             ];
         }
@@ -100,6 +101,7 @@ final class ConfigReaderService
             'format' => $format,
             'exists' => $exists,
             'sectioned' => $merged['sectioned'],
+            'section_labels' => is_array($fileDef['section_labels'] ?? null) ? $fileDef['section_labels'] : null,
             'parameters' => $parameters,
         ];
     }
@@ -134,6 +136,7 @@ final class ConfigReaderService
             'id' => $boost['id'],
             'status' => $boost['status'],
             'multiplier' => $boost['multiplier'],
+            'invert' => ! empty($boost['invert']),
             'effective_value' => $effective,
             'start_at' => $boost['start_at'],
             'end_at' => $boost['end_at'],
@@ -153,6 +156,8 @@ final class ConfigReaderService
             (float) $boost['multiplier'],
             isset($boost['max_cap']) && is_numeric($boost['max_cap']) ? (float) $boost['max_cap'] : null,
             isset($config['max']) && is_numeric($config['max']) ? (float) $config['max'] : null,
+            ! empty($boost['invert']),
+            isset($config['min']) && is_numeric($config['min']) ? (float) $config['min'] : null,
         );
 
         return $this->calculator->format($value, (bool) ($config['float'] ?? false));

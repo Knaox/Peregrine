@@ -44,9 +44,10 @@
             "properties": {
                 "id": { "type": "string" },
                 "path": { "type": "string" },
-                "format": { "enum": ["properties", "ini", "yaml", "json", "toml"] },
+                "format": { "enum": ["properties", "ini", "yaml", "json", "toml", "palworld", "theforest"] },
                 "enabled": { "type": "boolean", "default": true },
                 "section_whitelist": { "type": "array", "items": { "type": "string" } },
+                "section_labels": { "type": "object", "description": "Friendly FR/EN names per native section, keyed by raw section name.", "additionalProperties": { "$ref": "#/$defs/localeLabel" } },
                 "label": { "$ref": "#/$defs/localeLabel" },
                 "parameters": {
                     "type": "object",
@@ -91,7 +92,8 @@
                     }
                 },
                 "label": { "$ref": "#/$defs/localeLabel" },
-                "description": { "$ref": "#/$defs/localeLabel" }
+                "description": { "$ref": "#/$defs/localeLabel" },
+                "env_var": { "type": "string", "description": "Pelican env variable (env_variable name) to also update when this parameter is written." }
             }
         }
     }

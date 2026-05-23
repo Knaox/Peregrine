@@ -9,7 +9,10 @@ export function fieldKey(fileId: string, section: string | null, key: string): s
 }
 
 export function fieldKeyOf(fileId: string, param: ConfigParam): string {
-    return fieldKey(fileId, param.section, param.key);
+    const base = fieldKey(fileId, param.section, param.key);
+    // Repeated keys (occurrence > 0) get a unique suffix so each line has its own
+    // editor state + React key; occurrence 0 stays unchanged (no regression).
+    return param.occurrence && param.occurrence > 0 ? `${base}${SEP}${param.occurrence}` : base;
 }
 
 /** The backend reports field errors keyed by "section{SEP}key" within a file; prefix with the file id. */

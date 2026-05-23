@@ -15,6 +15,8 @@ class Invitation extends Model
     /** @var list<string> */
     protected $fillable = [
         'token',
+        'batch_id',
+        'is_batch_leader',
         'email',
         'server_id',
         'permissions',
@@ -30,6 +32,7 @@ class Invitation extends Model
     {
         return [
             'permissions' => 'array',
+            'is_batch_leader' => 'boolean',
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
             'revoked_at' => 'datetime',
@@ -57,7 +60,7 @@ class Invitation extends Model
     /**
      * Scope: active invitations (not accepted, not revoked, not expired).
      *
-     * @param Builder<Invitation> $query
+     * @param  Builder<Invitation>  $query
      * @return Builder<Invitation>
      */
     public function scopeActive(Builder $query): Builder
@@ -71,12 +74,23 @@ class Invitation extends Model
     /**
      * Scope: filter by email.
      *
-     * @param Builder<Invitation> $query
+     * @param  Builder<Invitation>  $query
      * @return Builder<Invitation>
      */
     public function scopeForEmail(Builder $query, string $email): Builder
     {
         return $query->where('email', strtolower($email));
+    }
+
+    /**
+     * Scope: all invitations belonging to the same multi-server batch.
+     *
+     * @param  Builder<Invitation>  $query
+     * @return Builder<Invitation>
+     */
+    public function scopeForBatch(Builder $query, string $batchId): Builder
+    {
+        return $query->where('batch_id', $batchId);
     }
 
     public function isActive(): bool

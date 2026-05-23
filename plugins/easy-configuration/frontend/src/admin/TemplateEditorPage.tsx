@@ -3,24 +3,12 @@ import { useT } from '../lib/i18n';
 import { type ApiError } from '../shared';
 import { Card, EmptyState, Spinner } from '../ui/surfaces';
 import { EditorForm, type Draft } from './editor/EditorForm';
-import { useTemplateDetail } from './hooks/useTemplates';
+import { useExampleTemplate, useTemplateDetail } from './hooks/useTemplates';
 
-const STARTER_FILES = `[
-  {
-    "id": "server-properties",
-    "path": "server.properties",
-    "format": "properties",
-    "enabled": true,
-    "label": { "en": "Server properties", "fr": "Propriétés serveur" },
-    "parameters": {
-      "max-players": {
-        "display_type": "slider",
-        "config": { "min": 1, "max": 100, "step": 1 },
-        "label": { "en": "Max players", "fr": "Joueurs max" }
-      }
-    }
-  }
-]`;
+// A new template starts with no files — the admin imports real ones from a
+// server (or pastes JSON). A fake starter file used to stay attached even when
+// it didn't match the server, which was confusing.
+const STARTER_FILES = '[]';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -42,6 +30,7 @@ function blankDraft(): Draft {
         targetEggs: [],
         boostEnabled: false,
         blacklist: '',
+        columns: 1,
         filesJson: STARTER_FILES,
     };
 }
@@ -68,15 +57,35 @@ function draftFrom(id: string, def: Record<string, unknown> | null): Draft {
         targetEggs: eggs,
         boostEnabled: boost.enabled === true,
         blacklist: blacklist.join(', '),
+        columns: typeof def.columns === 'number' ? def.columns : 1,
         filesJson: JSON.stringify(def.files ?? [], null, 2),
     };
 }
 
-export function TemplateEditorPage() {
+export function TemplateEditorPage({ example = false }: { example?: boolean } = {}) {
     const { t } = useT();
     const { templateId } = useParams<{ templateId: string }>();
-    const isNew = templateId === undefined;
-    const detail = useTemplateDetail(isNew ? null : (templateId ?? null));
+    const isNew = !example && templateId === undefined;
+    const detail = useTemplateDetail(example || isNew ? null : (templateId ?? null));
+    const exampleQuery = useExampleTemplate(example);
+
+    // "Open the example" route: seed the editor with the bundled reference
+    // template as a NEW, fully-editable draft (Edit / Visual / Preview tabs).
+    if (example) {
+        if (exampleQuery.isLoading || exampleQuery.data === undefined) {
+            return (
+                <div className="ec-page">
+                    <div className="ec-row ec-muted">
+                        <Spinner /> {t('common.loading')}
+                    </div>
+                </div>
+            );
+        }
+        const def = exampleQuery.data;
+        const id = typeof def.id === 'string' ? def.id : 'example-template';
+
+        return <EditorForm initial={draftFrom(id, def)} isNew />;
+    }
 
     if (isNew) {
         return <EditorForm initial={blankDraft()} isNew />;

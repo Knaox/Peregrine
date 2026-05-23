@@ -1,4 +1,21 @@
-import type { ConfigParam } from '../types';
+import type { ConfigParam, ParamConfig } from '../types';
+
+/**
+ * Whether a number/slider field accepts decimals. True when explicitly flagged
+ * `float`, or inferred from a fractional `step` (e.g. 0.1) or a decimal default
+ * — so a multiplier slider doesn't reject "1.5" just because nobody set `float`.
+ */
+function allowsDecimals(config: ParamConfig): boolean {
+    if (config.float) {
+        return true;
+    }
+    if (typeof config.step === 'number' && !Number.isInteger(config.step)) {
+        return true;
+    }
+    const def = config.default;
+
+    return (typeof def === 'number' && !Number.isInteger(def)) || (typeof def === 'string' && def.includes('.'));
+}
 
 /**
  * Client-side mirror of the backend ConfigValueValidator. Returns a short
@@ -15,13 +32,18 @@ export function validateValue(param: ConfigParam, value: string): string | null 
                 return 'number';
             }
             const numeric = Number(value);
-            if (config.min !== undefined && numeric < config.min) {
+            // `min`/`max` are soft caps for manual input: a player may type below
+            // the slider min or above its max — UNLESS the parameter is linked to
+            // an env var, where both are hard caps (they drive the synced Pelican
+            // variable). Symmetric so a player can override either bound.
+            const envLinked = typeof param.env_var === 'string' && param.env_var !== '';
+            if (envLinked && config.min !== undefined && numeric < config.min) {
                 return 'min';
             }
-            if (config.max !== undefined && numeric > config.max) {
+            if (envLinked && config.max !== undefined && numeric > config.max) {
                 return 'max';
             }
-            if (!config.float && value.includes('.')) {
+            if (!allowsDecimals(config) && value.includes('.')) {
                 return 'integer';
             }
 

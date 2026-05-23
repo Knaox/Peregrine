@@ -23,6 +23,12 @@ const InfoIcon = (
     </svg>
 );
 
+const LinkIcon = (
+    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5M10.172 13.828a4 4 0 010-5.656l3-3a4 4 0 015.656 5.656l-1.5 1.5" />
+    </svg>
+);
+
 function isBooleanRule(rules: string): boolean {
     return /\bboolean\b/.test(rules) || /\bin:[01],[01]\b/.test(rules);
 }
@@ -74,9 +80,21 @@ function VariableCard({
                         {variable.env_variable}
                     </p>
                 </div>
-                {!variable.is_editable && (
-                    <span title={t('server-shell:variables.not_editable')}>{LockIcon}</span>
-                )}
+                <div className="flex items-center gap-1.5 shrink-0">
+                    {variable.claimed && (
+                        <span
+                            className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded"
+                            style={{ background: 'rgba(var(--color-primary-rgb), 0.15)', color: 'var(--color-primary)' }}
+                            title={t('server-shell:variables.linked_hint')}
+                        >
+                            {LinkIcon}
+                            {t('server-shell:variables.linked')}
+                        </span>
+                    )}
+                    {!variable.is_editable && (
+                        <span title={t('server-shell:variables.not_editable')}>{LockIcon}</span>
+                    )}
+                </div>
             </div>
 
             {isBoolean ? (

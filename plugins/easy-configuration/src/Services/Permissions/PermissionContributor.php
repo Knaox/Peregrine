@@ -4,26 +4,30 @@ declare(strict_types=1);
 
 namespace Plugins\EasyConfiguration\Services\Permissions;
 
-use App\Models\Server;
 use Illuminate\Support\Facades\Log;
-use Plugins\EasyConfiguration\Services\Templates\TemplateRegistry;
 use ReflectionMethod;
 use Throwable;
 
 /**
- * Registers the `easyconfig` subuser permission group in the Invitations
- * PermissionRegistry, using the established 3-guard pattern so the plugin works
- * standalone (owners/admins) and gains subuser gating only when Invitations is
- * active:
+ * Adds the Easy Configuration permissions to the Invitations "Overview Page"
+ * group. The editor lives on the server overview/home page, so its permissions
+ * belong alongside the other overview-page permissions rather than in a group of
+ * their own. Uses the established guard pattern so the plugin works standalone
+ * (owners/admins) and only contributes to the picker when Invitations is active:
  *   1. class_exists  — Invitations PSR-4 is registered only when it's active.
- *   2. reflection    — only forward `availableForServer` if that build accepts it.
+ *   2. reflection    — only forward `advanced` if that Invitations build accepts it.
  *   3. try/catch     — never crash the host on an Invitations contract change.
+ *
+ * Registering with an existing group key MERGES our permissions into it. We pass
+ * the exact label core uses so the result is correct whichever provider boots
+ * first (the merge keeps the first registration's label/filter), and we
+ * deliberately pass NO per-server filter: the overview group is always shown, so
+ * our permissions ride along with it — and a filter set here while creating the
+ * group first would wrongly hide the whole overview group for template-less eggs.
  */
 final class PermissionContributor
 {
     private const REGISTRY = '\\Plugins\\Invitations\\Services\\PermissionRegistry';
-
-    public function __construct(private readonly TemplateRegistry $registry) {}
 
     public function register(): void
     {
@@ -34,25 +38,26 @@ final class PermissionContributor
         try {
             $registry = (self::REGISTRY)::getInstance();
 
-            $supportsFilter = false;
+            $supportsAdvanced = false;
             foreach ((new ReflectionMethod($registry, 'registerGroup'))->getParameters() as $parameter) {
-                if ($parameter->getName() === 'availableForServer') {
-                    $supportsFilter = true;
-                    break;
+                if ($parameter->getName() === 'advanced') {
+                    $supportsAdvanced = true;
                 }
             }
 
             $args = [
-                'groupKey' => 'easyconfig',
-                'groupLabel' => ['en' => 'Game configuration', 'fr' => 'Configuration du jeu'],
+                'groupKey' => 'overview',
+                'groupLabel' => ['en' => 'Overview Page', 'fr' => 'Page Vue d\'ensemble'],
                 'permissions' => [
                     'easyconfig.read' => ['en' => 'View game configuration', 'fr' => 'Consulter la configuration du jeu'],
                     'easyconfig.write' => ['en' => 'Edit game configuration', 'fr' => 'Modifier la configuration du jeu'],
+                    'easyconfig.copy' => ['en' => 'Copy configuration to other servers', 'fr' => 'Copier la configuration vers d\'autres serveurs'],
+                    'easyconfig.boost' => ['en' => 'Configure value boosts', 'fr' => 'Configurer les boosts de valeurs'],
                 ],
             ];
 
-            if ($supportsFilter) {
-                $args['availableForServer'] = fn (Server $server): bool => $this->eggHasTemplate($server);
+            if ($supportsAdvanced) {
+                $args['advanced'] = ['easyconfig.copy', 'easyconfig.boost'];
             }
 
             $registry->registerGroup(...$args);
@@ -61,15 +66,6 @@ final class PermissionContributor
                 'exception' => $e::class,
                 'message' => $e->getMessage(),
             ]);
-        }
-    }
-
-    private function eggHasTemplate(Server $server): bool
-    {
-        try {
-            return $this->registry->forEgg((int) $server->egg_id)->isNotEmpty();
-        } catch (Throwable) {
-            return false;
         }
     }
 }

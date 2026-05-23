@@ -69,4 +69,20 @@ trait EditsRawLines
 
         return $raw.$line.$eol;
     }
+
+    /**
+     * Same guarantee as appendLine, but for the chunk buffer used while
+     * rewriting: ensure the last buffered chunk ends with a newline before more
+     * lines are pushed, so an injected key never glues onto a no-EOL last line
+     * (e.g. a file with no trailing newline, or the last section's final line).
+     *
+     * @param  list<string>  $out
+     */
+    protected function ensureTrailingEol(array &$out, string $eol): void
+    {
+        $last = array_key_last($out);
+        if ($last !== null && $out[$last] !== '' && ! str_ends_with($out[$last], "\n")) {
+            $out[$last] .= $eol;
+        }
+    }
 }

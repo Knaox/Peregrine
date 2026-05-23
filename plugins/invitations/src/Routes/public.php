@@ -44,9 +44,23 @@ Route::middleware('throttle:30,1')->group(function () {
             }
         }
 
+        // Every server this link grants access to: the whole batch when the
+        // invitation is part of a multi-server batch, otherwise just this one.
+        $servers = $invitation->batch_id
+            ? Invitation::where('batch_id', $invitation->batch_id)
+                ->with('server:id,name')
+                ->get()
+                ->map(fn (Invitation $inv): ?string => $inv->server?->name)
+                ->filter()
+                ->values()
+                ->all()
+            : array_values(array_filter([$invitation->server?->name]));
+
         return response()->json([
             'email' => $invitation->email,
             'server_name' => $invitation->server?->name,
+            'servers' => $servers,
+            'server_count' => count($servers),
             'inviter_name' => $invitation->inviter?->name,
             'permissions' => $permissionLabels,
             'expires_at' => $invitation->expires_at?->toISOString(),

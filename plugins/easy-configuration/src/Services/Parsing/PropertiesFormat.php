@@ -25,6 +25,7 @@ final class PropertiesFormat implements ConfigFormat
     public function parse(string $raw): ParsedConfig
     {
         $parameters = [];
+        $counts = []; // key => occurrences seen so far
 
         foreach ($this->splitLines($this->stripBom($raw)) as $chunk) {
             $body = $this->bodyOf($chunk);
@@ -34,7 +35,9 @@ final class PropertiesFormat implements ConfigFormat
             }
 
             $key = trim(substr($body, 0, $sep));
-            $parameters[] = new ConfigParameter($key, trim(substr($body, $sep + 1)));
+            $occurrence = $counts[$key] ?? 0;
+            $counts[$key] = $occurrence + 1;
+            $parameters[] = new ConfigParameter($key, trim(substr($body, $sep + 1)), null, $occurrence);
         }
 
         return new ParsedConfig($parameters);
@@ -46,13 +49,14 @@ final class PropertiesFormat implements ConfigFormat
             return $raw;
         }
 
-        /** @var array<string, string> $pending key => value */
+        /** @var array<string, array<int, string>> $pending key => [occurrence => value] */
         $pending = [];
         foreach ($changes as $change) {
-            $pending[$change->key] = $change->value;
+            $pending[$change->key][$change->occurrence] = $change->value;
         }
 
         $chunks = $this->splitLines($raw);
+        $seen = []; // key => occurrences walked so far
         foreach ($chunks as $i => $chunk) {
             $eol = $this->eolOf($chunk);
             $body = $this->bodyOf($chunk);
@@ -62,7 +66,9 @@ final class PropertiesFormat implements ConfigFormat
             }
 
             $key = trim(substr($body, 0, $sep));
-            if (! array_key_exists($key, $pending)) {
+            $occurrence = $seen[$key] ?? 0;
+            $seen[$key] = $occurrence + 1;
+            if (! isset($pending[$key][$occurrence])) {
                 continue;
             }
 
@@ -71,15 +77,20 @@ final class PropertiesFormat implements ConfigFormat
             $head = substr($body, 0, $sep + 1);
             $rest = substr($body, $sep + 1);
             $lead = substr($rest, 0, strlen($rest) - strlen(ltrim($rest)));
-            $chunks[$i] = $head.$lead.$pending[$key].$eol;
-            unset($pending[$key]);
+            $chunks[$i] = $head.$lead.$pending[$key][$occurrence].$eol;
+            unset($pending[$key][$occurrence]);
+            if ($pending[$key] === []) {
+                unset($pending[$key]);
+            }
         }
 
         $result = implode('', $chunks);
 
         $appendEol = $this->dominantEol($raw);
-        foreach ($pending as $key => $value) {
-            $result = $this->appendLine($result, $key.'='.$value, $appendEol);
+        foreach ($pending as $key => $occValues) {
+            foreach ($occValues as $value) {
+                $result = $this->appendLine($result, $key.'='.$value, $appendEol);
+            }
         }
 
         return $result;

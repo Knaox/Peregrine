@@ -4,6 +4,9 @@ import { request } from '@/services/http';
 interface InvitationPublic {
     email: string;
     server_name: string;
+    /** All servers this invite grants access to (1 for a normal invite, N for a multi-server batch). */
+    servers?: string[];
+    server_count?: number;
     inviter_name: string;
     permissions: Array<{ key: string; label: string }>;
     expires_at: string;
@@ -16,7 +19,10 @@ interface InvitationPublic {
 
 interface AcceptResponse {
     message: string;
+    /** First server accepted — used for the post-accept redirect. */
     server_id: number;
+    /** Every server accepted in a multi-server batch. */
+    server_ids?: number[];
 }
 
 interface RegisterData {

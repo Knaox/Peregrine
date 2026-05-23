@@ -32,7 +32,7 @@ export function useCopyTargets(serverId: number, enabled: boolean) {
 
 export function useStartCopy(serverId: number) {
     return useMutation({
-        mutationFn: (payload: { targets: number[]; files: CopyFilePayload[]; copy_boosts: boolean }) =>
+        mutationFn: (payload: { targets: number[]; files: CopyFilePayload[]; copy_boosts: boolean; copy_env_vars: boolean; env_vars: string[] }) =>
             api<{ data: { batch_id: string; targets: number } }>(`${BASE}/servers/${serverId}/copy`, {
                 method: 'POST',
                 body: JSON.stringify(payload),

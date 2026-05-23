@@ -5,14 +5,31 @@
         "email": "Adresse email",
         "email_placeholder": "utilisateur@exemple.com",
         "permissions": "Permissions",
+        "advanced_permissions": "Permissions avancées",
         "no_permissions": "Veuillez sélectionner au moins une permission.",
         "send": "Envoyer l'invitation",
         "active_invitations": "Invitations actives",
         "expires": "Expire le",
-        "revoke": "Révoquer"
+        "revoke": "Révoquer",
+        "subtitle": "Envoyez une invitation par email pour donner accès à quelqu'un.",
+        "select_all": "Tout sélectionner",
+        "loading_permissions": "Chargement des permissions…",
+        "servers": "Serveurs",
+        "servers_more": "Inviter aussi sur d'autres serveurs",
+        "servers_hint": "Choisissez les serveurs où inviter cet utilisateur — mêmes permissions pour chacun, dans un seul email.",
+        "servers_hint_invite": "Ce serveur est toujours inclus — choisissez d'autres serveurs si besoin. Mêmes permissions pour chacun.",
+        "select_all_servers": "Tous les serveurs",
+        "no_other_servers": "Aucun autre serveur avec le même egg.",
+        "no_servers": "Sélectionnez au moins un serveur."
     },
     "actions": {
         "resend": "Renvoyer"
+    },
+    "copy": {
+        "button": "Copier l'accès",
+        "title": "Copier l'accès vers d'autres serveurs",
+        "subtitle": "Invitez cet utilisateur sur d'autres serveurs avec les mêmes permissions. Il reçoit un seul email.",
+        "send": "Envoyer les invitations"
     },
     "page": {
         "title": "Utilisateurs & Invitations",
@@ -27,7 +44,8 @@
         "status_active": "Actif",
         "remove": "Retirer",
         "confirm_remove": "Retirer cet utilisateur du serveur ?",
-        "you": "Vous"
+        "you": "Vous",
+        "multi_server": "Multi-serveurs"
     },
     "edit": {
         "button": "Modifier",

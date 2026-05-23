@@ -39,6 +39,8 @@
         "saved": "Variable enregistrée.",
         "save": "Enregistrer",
         "not_editable": "Non modifiable",
+        "linked": "Lié",
+        "linked_hint": "Cette variable est gérée par un plugin.",
         "advanced": "Configuration avancée",
         "advanced_count": "{{count}} fichier(s)"
     },

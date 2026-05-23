@@ -26,11 +26,14 @@ class CreateBoostRequest extends FormRequest
             'multiplier' => ['required', 'numeric', 'gt:0'],
             'start_at' => ['required', 'date'],
             'end_at' => ['required', 'date', 'after:start_at'],
+            'recurrence' => ['nullable', 'in:daily,weekly,monthly'],
+            'recurrence_until' => ['nullable', 'date', 'after:end_at'],
             'parameters' => ['required', 'array', 'min:1'],
             'parameters.*.file_id' => ['required', 'string', 'max:255'],
             'parameters.*.section' => ['nullable', 'string', 'max:255'],
             'parameters.*.key' => ['required', 'string', 'max:255'],
             'parameters.*.max_cap' => ['nullable', 'numeric'],
+            'parameters.*.invert' => ['sometimes', 'boolean'],
         ];
     }
 }

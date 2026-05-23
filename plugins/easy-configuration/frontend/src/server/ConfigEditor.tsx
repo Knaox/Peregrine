@@ -1,26 +1,70 @@
 import { Copy, Search, SlidersHorizontal } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { backendFieldKey, fieldKey, fieldKeyOf } from '../lib/fieldKey';
+import { backendFieldKey, fieldKeyOf } from '../lib/fieldKey';
 import { pickLabel, useT } from '../lib/i18n';
 import { validateValue } from '../lib/validate';
 import type { ApiError } from '../shared';
-import type { ConfigParam, ConfigTemplate } from '../types';
+import type { ConfigParam, ConfigPermissions, ConfigTemplate, ServerState } from '../types';
 import { Button } from '../ui/Button';
 import { Input, Toggle } from '../ui/inputs';
 import { useToast } from '../ui/Toast';
-import { BoostDialog, type BoostableParam } from './boost/BoostDialog';
-import { BoostPanel } from './boost/BoostPanel';
+import { BoostSection } from './boost/BoostSection';
 import { useBoosts } from './boost/useBoosts';
+import { useBoostSelection } from './boost/useBoostSelection';
 import type { EditorController } from './controller';
 import { CopyDialog } from './copy/CopyDialog';
 import { FileCard } from './FileCard';
 import { FloatingSaveBar } from './FloatingSaveBar';
 import { useSaveConfig, type SaveFilePayload } from './hooks/useServerConfig';
+import { RunningOverlay } from './RunningOverlay';
 
-export function ConfigEditor({ serverId, templates, disabled }: { serverId: number; templates: ConfigTemplate[]; disabled: boolean }) {
+/**
+ * Add keys present in `source` but missing from `target`, preserving every
+ * existing entry (so unsaved edits survive). Returns the same reference when
+ * nothing is added, to avoid a needless re-render.
+ */
+function mergeMissing(target: Record<string, string>, source: Record<string, string>): Record<string, string> {
+    let merged: Record<string, string> | null = null;
+    for (const [key, value] of Object.entries(source)) {
+        if (!(key in target)) {
+            merged ??= { ...target };
+            merged[key] = value;
+        }
+    }
+
+    return merged ?? target;
+}
+
+export function ConfigEditor({
+    serverId,
+    templates,
+    disabled,
+    permissions,
+    state,
+    stopping,
+    onStop,
+}: {
+    serverId: number;
+    templates: ConfigTemplate[];
+    /** Server is running → the config area is collapsed + overlaid (edit offline only). */
+    disabled: boolean;
+    permissions?: ConfigPermissions;
+    state: ServerState;
+    stopping: boolean;
+    onStop: () => void;
+}) {
     const { t, lang } = useT();
     const toast = useToast();
     const save = useSaveConfig(serverId);
+
+    // No payload `permissions` → owner/admin (full access). Subusers get the
+    // explicit flags from the backend so we can render read-only / hide actions.
+    const canWrite = permissions?.write ?? true;
+    const canCopy = permissions?.copy ?? true;
+    const canBoost = permissions?.boost ?? true;
+    // Controls are frozen when the server is running (overlay) or the caller only
+    // has read access. The overlay + section collapse track running only.
+    const readOnly = disabled || !canWrite;
 
     const { initial, index } = useMemo(() => {
         const initialValues: Record<string, string> = {};
@@ -59,40 +103,17 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
         }
     };
     const [copyOpen, setCopyOpen] = useState(false);
-    const [boostMode, setBoostMode] = useState(false);
-    const [boostOpen, setBoostOpen] = useState(false);
     const boosts = useBoosts(serverId);
+    const boost = useBoostSelection(templates, boosts.data, lang, canBoost);
 
-    const boostEnabled = templates.some((template) => template.boost_enabled);
-    const boostableParams = useMemo<BoostableParam[]>(() => {
-        const boosted = new Set((boosts.data ?? []).flatMap((boost) => boost.parameters.map((p) => fieldKey(p.file_id, p.section, p.key))));
-        const out: BoostableParam[] = [];
-        for (const template of templates) {
-            if (!template.boost_enabled) {
-                continue;
-            }
-            for (const file of template.files) {
-                for (const param of file.parameters) {
-                    if ((param.display_type !== 'number' && param.display_type !== 'slider') || template.boost_blacklist.includes(param.key)) {
-                        continue;
-                    }
-                    if (boosted.has(fieldKey(file.id, param.section, param.key))) {
-                        continue;
-                    }
-                    out.push({
-                        template_id: template.id,
-                        file_id: file.id,
-                        section: param.section,
-                        key: param.key,
-                        label: pickLabel(param.label, lang, param.key),
-                        max: typeof param.config.max === 'number' ? param.config.max : undefined,
-                    });
-                }
-            }
-        }
-
-        return out;
-    }, [templates, boosts.data, lang]);
+    // A refetch (e.g. after adding a parameter) brings new keys in `initial`.
+    // Merge their values into local state so they render with their value —
+    // without clobbering unsaved edits to existing fields. `original` gets them
+    // too, so a freshly added parameter isn't flagged dirty.
+    useEffect(() => {
+        setValues((current) => mergeMissing(current, initial));
+        setOriginal((current) => mergeMissing(current, initial));
+    }, [initial]);
 
     const dirtyKeys = useMemo(() => Object.keys(values).filter((key) => values[key] !== original[key]), [values, original]);
     const isDirty = dirtyKeys.length > 0;
@@ -121,7 +142,7 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
     );
 
     const doSave = useCallback(() => {
-        if (!isDirty || disabled || save.isPending) {
+        if (!isDirty || readOnly || save.isPending) {
             return;
         }
         if (hasInvalid) {
@@ -137,7 +158,7 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
                 continue;
             }
             const list = byFile.get(entry.fileId) ?? [];
-            list.push({ key: entry.param.key, section: entry.param.section, value: values[key] ?? '' });
+            list.push({ key: entry.param.key, section: entry.param.section, value: values[key] ?? '', occurrence: entry.param.occurrence ?? 0 });
             byFile.set(entry.fileId, list);
         }
 
@@ -167,7 +188,7 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
                 toast.error(t('save.error'));
             },
         });
-    }, [isDirty, disabled, hasInvalid, dirtyKeys, index, values, save, toast, t]);
+    }, [isDirty, readOnly, hasInvalid, dirtyKeys, index, values, save, toast, t]);
 
     useEffect(() => {
         const onKey = (event: KeyboardEvent): void => {
@@ -186,13 +207,23 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
         isDirty: (key) => values[key] !== original[key],
         isSaved: (key) => savedKeys.has(key),
         isInvalid: (key) => invalid[key] ?? false,
-        disabled,
+        disabled: readOnly,
         search,
         onChange,
         onReset,
+        boostMode: boost.boostMode,
+        isBoostable: boost.isBoostable,
+        isBoostSelected: boost.isBoostSelected,
+        isBoostLocked: boost.isBoostLocked,
+        toggleBoost: boost.toggleBoost,
+        isBoostDivide: boost.isBoostDivide,
+        toggleDivide: boost.toggleDivide,
+        canManageTemplate: permissions?.manage_templates ?? false,
     };
 
-    const fileCards = templates.flatMap((template) => template.files.map((file) => ({ key: `${template.id}:${file.id}`, file })));
+    const fileCards = templates.flatMap((template) =>
+        template.files.map((file) => ({ key: `${template.id}:${file.id}`, file, columns: template.columns, templateId: template.id })),
+    );
 
     return (
         <div className="ec-stack">
@@ -205,37 +236,53 @@ export function ConfigEditor({ serverId, templates, disabled }: { serverId: numb
                         <h2 className="ec-title">{t('section.title')}</h2>
                         <p className="ec-subtitle">{t('section.subtitle')}</p>
                     </div>
+                    {!canWrite && <span className="ec-badge ec-badge-muted">{t('section.read_only')}</span>}
                 </div>
                 <div className="ec-row">
-                    {boostEnabled && (
+                    {boost.boostEnabled && (
                         <label className="ec-row" style={{ cursor: 'pointer' }}>
                             <span className="ec-field-desc ec-secondary">{t('boost.mode')}</span>
-                            <Toggle checked={boostMode} onChange={setBoostMode} label={t('boost.mode')} />
+                            <Toggle checked={boost.boostMode} onChange={boost.setMode} label={t('boost.mode')} />
                         </label>
                     )}
-                    <Button variant="secondary" onClick={() => setCopyOpen(true)}>
-                        <Copy size={15} /> {t('copy.button')}
-                    </Button>
+                    {canCopy && (
+                        <Button variant="secondary" onClick={() => setCopyOpen(true)}>
+                            <Copy size={15} /> {t('copy.button')}
+                        </Button>
+                    )}
                 </div>
             </div>
 
-            {boostEnabled && boostMode && <BoostPanel serverId={serverId} boosts={boosts.data ?? []} onNew={() => setBoostOpen(true)} />}
+            {/* Boost management stays accessible even while the server runs. */}
+            {boost.boostEnabled && (
+                <BoostSection
+                    serverId={serverId}
+                    boosts={boosts.data ?? []}
+                    selectedParams={boost.selectedBoostParams}
+                    selectedCount={boost.selectedBoostParams.length}
+                />
+            )}
 
-            <div className="ec-search">
-                <span className="ec-search-icon">
-                    <Search size={14} />
-                </span>
-                <Input value={search} placeholder={t('section.search')} onChange={(event) => setSearch(event.target.value)} />
+            {/* Config area: locked (collapsed + overlay) while the server runs. */}
+            <div className="ec-relative">
+                <div className="ec-stack">
+                    <div className="ec-search">
+                        <span className="ec-search-icon">
+                            <Search size={14} />
+                        </span>
+                        <Input value={search} placeholder={t('section.search')} onChange={(event) => setSearch(event.target.value)} />
+                    </div>
+
+                    {fileCards.map(({ key, file, columns, templateId }) => (
+                        <FileCard key={key} file={file} controller={controller} serverId={serverId} templateId={templateId} forceCollapsed={disabled} columns={columns} />
+                    ))}
+                </div>
+                {disabled && <RunningOverlay state={state} stopping={stopping} onStop={onStop} />}
             </div>
 
-            {fileCards.map(({ key, file }) => (
-                <FileCard key={key} file={file} controller={controller} serverId={serverId} />
-            ))}
-
-            {(isDirty || justSaved) && !disabled && <FloatingSaveBar saving={save.isPending} saved={justSaved} onSave={doSave} />}
+            {(isDirty || justSaved) && !readOnly && <FloatingSaveBar saving={save.isPending} saved={justSaved} onSave={doSave} />}
 
             <CopyDialog open={copyOpen} onClose={() => setCopyOpen(false)} serverId={serverId} templates={templates} />
-            <BoostDialog open={boostOpen} onClose={() => setBoostOpen(false)} serverId={serverId} params={boostableParams} />
         </div>
     );
 }

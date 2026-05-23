@@ -66,7 +66,7 @@ final class CopyController
     public function store(CopyConfigRequest $request, string $server): JsonResponse
     {
         $source = $this->resolveServer($server, $request);
-        $this->authorizeServer($request, $source, 'easyconfig.write', 'file.update');
+        $this->authorizeServer($request, $source, 'easyconfig.copy', 'file.update');
 
         $validated = $request->validated();
         $user = $request->user();
@@ -81,7 +81,16 @@ final class CopyController
             ->all();
 
         $batchId = (string) Str::uuid();
-        CopyConfigJob::dispatch($batchId, $source->id, $targetIds, $validated['files'], $user?->id, (bool) ($validated['copy_boosts'] ?? false));
+        CopyConfigJob::dispatch(
+            $batchId,
+            $source->id,
+            $targetIds,
+            $validated['files'],
+            $user?->id,
+            (bool) ($validated['copy_boosts'] ?? false),
+            (bool) ($validated['copy_env_vars'] ?? false),
+            array_values(array_filter((array) ($validated['env_vars'] ?? []))),
+        );
 
         return response()->json(['data' => ['batch_id' => $batchId, 'targets' => count($targetIds)]]);
     }

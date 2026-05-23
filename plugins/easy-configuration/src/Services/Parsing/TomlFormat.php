@@ -129,6 +129,7 @@ final class TomlFormat implements ConfigFormat
             return;
         }
 
+        $this->ensureTrailingEol($out, $eol);
         foreach ($pending[$tk] as $key => $value) {
             $out[] = $key.' = '.$this->rewriteToken('', $value).$eol;
         }

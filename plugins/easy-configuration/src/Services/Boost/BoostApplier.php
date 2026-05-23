@@ -43,7 +43,11 @@ final class BoostApplier
             return false;
         }
 
-        if (! $this->power->stopAndWait($server)) {
+        // Only take the server down if it is up: a running server is stopped and
+        // we wait for the confirmed `offline` state before writing; an already
+        // offline server is written in place and left off (no restart later).
+        $wasRunning = $this->power->isRunning($server);
+        if ($wasRunning && ! $this->power->stopAndWait($server)) {
             $this->fail($boost, 'Server did not stop within the timeout');
 
             return false;
@@ -77,6 +81,8 @@ final class BoostApplier
                     (float) $boost->multiplier,
                     isset($param['max_cap']) && is_numeric($param['max_cap']) ? (float) $param['max_cap'] : null,
                     isset($def['config']['max']) && is_numeric($def['config']['max']) ? (float) $def['config']['max'] : null,
+                    ! empty($param['invert']),
+                    isset($def['config']['min']) && is_numeric($def['config']['min']) ? (float) $def['config']['min'] : null,
                 );
                 $boostedString = $this->calculator->format($boosted, (bool) ($def['config']['float'] ?? false));
 
@@ -95,7 +101,9 @@ final class BoostApplier
         $boost->last_error = null;
         $boost->save();
 
-        $this->power->start($server);
+        if ($wasRunning) {
+            $this->power->start($server);
+        }
 
         return true;
     }
@@ -105,7 +113,8 @@ final class BoostApplier
         $server = Server::find($boost->server_id);
 
         if ($server !== null) {
-            $offline = $this->power->stopAndWait($server);
+            $wasRunning = $this->power->isRunning($server);
+            $offline = ! $wasRunning || $this->power->stopAndWait($server);
             $definition = $this->registry->definition($boost->template_id);
 
             foreach ($this->groupByFile($boost->parameters) as $fileId => $params) {
@@ -130,7 +139,9 @@ final class BoostApplier
                 Log::warning('easy-config: restored boost originals without a confirmed stop', ['boost' => $boost->id]);
             }
 
-            $this->power->start($server);
+            if ($wasRunning) {
+                $this->power->start($server);
+            }
         }
 
         $boost->status = $finalStatus === 'cancelled' ? 'cancelled' : 'completed';
@@ -138,6 +149,13 @@ final class BoostApplier
         $boost->save();
 
         $this->boosts->archive($boost, $boost->status);
+
+        // A recurring boost re-arms its next occurrence only when it completes
+        // naturally — cancelling a boost stops the series.
+        if ($boost->status === 'completed') {
+            $this->boosts->rearm($boost);
+        }
+
         $boost->delete();
     }
 

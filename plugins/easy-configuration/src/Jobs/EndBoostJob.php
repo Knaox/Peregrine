@@ -31,7 +31,10 @@ final class EndBoostJob implements ShouldQueue
     public function handle(BoostApplier $applier): void
     {
         $boost = BoostSchedule::find($this->boostId);
-        if ($boost === null || $boost->status !== 'active') {
+        // 'cancelling' is the synchronous marker set by BoostService::cancel on
+        // an active boost before this job runs; both it and 'active' are valid
+        // entry states to tear a boost down.
+        if ($boost === null || ! in_array($boost->status, ['active', 'cancelling'], true)) {
             return;
         }
 

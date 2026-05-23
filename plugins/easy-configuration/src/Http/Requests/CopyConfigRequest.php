@@ -30,6 +30,9 @@ class CopyConfigRequest extends FormRequest
             'files.*.params.*.key' => ['required', 'string', 'max:255'],
             'files.*.params.*.section' => ['nullable', 'string', 'max:255'],
             'copy_boosts' => ['sometimes', 'boolean'],
+            'copy_env_vars' => ['sometimes', 'boolean'],
+            'env_vars' => ['sometimes', 'array'],
+            'env_vars.*' => ['string', 'max:255'],
         ];
     }
 }

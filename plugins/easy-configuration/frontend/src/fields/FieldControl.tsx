@@ -15,19 +15,22 @@ interface Props {
 export function FieldControl({ param, value, onChange, disabled, invalid }: Props) {
     const { lang } = useT();
     const config = param.config;
+    // Env-linked params hard-cap at `max` (the value also drives the Pelican
+    // variable); others let the player type above the slider max manually.
+    const envLinked = typeof param.env_var === 'string' && param.env_var !== '';
 
     switch (param.display_type) {
         case 'boolean':
             return <BooleanControl config={config} value={value} onChange={onChange} disabled={disabled} />;
         case 'slider':
-            return <SliderControl config={config} value={value} onChange={onChange} disabled={disabled} invalid={invalid} />;
+            return <SliderControl config={config} value={value} onChange={onChange} disabled={disabled} invalid={invalid} envLinked={envLinked} />;
         case 'number':
             return (
                 <Input
                     className="ec-input-narrow"
                     type="number"
-                    min={config.min}
-                    max={config.max}
+                    min={envLinked ? config.min : undefined}
+                    max={envLinked ? config.max : undefined}
                     step={config.step ?? (config.float ? 'any' : 1)}
                     value={value}
                     disabled={disabled}
@@ -79,7 +82,7 @@ function BooleanControl({ config, value, onChange, disabled }: { config: ParamCo
     return <Toggle checked={value === trueValue} disabled={disabled} onChange={(on) => onChange(on ? trueValue : falseValue)} />;
 }
 
-function SliderControl({ config, value, onChange, disabled, invalid }: { config: ParamConfig; value: string; onChange: (v: string) => void; disabled?: boolean; invalid?: boolean }) {
+function SliderControl({ config, value, onChange, disabled, invalid, envLinked }: { config: ParamConfig; value: string; onChange: (v: string) => void; disabled?: boolean; invalid?: boolean; envLinked?: boolean }) {
     const min = config.min ?? 0;
     const max = config.max ?? 100;
     const step = config.step ?? 1;
@@ -99,8 +102,8 @@ function SliderControl({ config, value, onChange, disabled, invalid }: { config:
             <Input
                 className="ec-slider-number"
                 type="number"
-                min={min}
-                max={max}
+                min={envLinked ? min : undefined}
+                max={envLinked ? max : undefined}
                 step={step}
                 value={value}
                 disabled={disabled}

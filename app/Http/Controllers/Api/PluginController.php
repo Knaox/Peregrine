@@ -21,9 +21,13 @@ class PluginController extends Controller
      */
     public function index(): JsonResponse
     {
+        // Never cached: the manifest carries each bundle's content-hashed URL, so
+        // a browser-cached manifest would pin an outdated bundle (stale CSS/JS).
+        // The bundles themselves stay immutable-cached by their hashed URL (see
+        // bundle()), giving a Vite-style "fresh index, hashed assets" setup.
         return response()->json([
             'data' => $this->pluginManager->getActiveManifests(),
-        ]);
+        ])->header('Cache-Control', 'no-store');
     }
 
     /**

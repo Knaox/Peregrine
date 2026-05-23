@@ -25,7 +25,7 @@ class InvitationsServiceProvider extends ServiceProvider
         // string is ready to ship in the JSON response. Mail templates
         // stay in `views/mail/` — they have their own per-locale blade
         // file that ServerInvitationMail picks based on the recipient.
-        $this->loadTranslationsFrom(__DIR__ . '/../lang', 'invitations');
+        $this->loadTranslationsFrom(__DIR__.'/../lang', 'invitations');
 
         // Register permissions as static singleton (container bindings don't persist for dynamic plugins)
         PermissionRegistry::getInstance()->registerPelicanDefaults();
@@ -43,13 +43,13 @@ class InvitationsServiceProvider extends ServiceProvider
         // Register plugin routes (authenticated management + public invitation landing)
         Route::prefix('api/plugins/invitations')
             ->middleware('api')
-            ->group(__DIR__ . '/Routes/api.php');
+            ->group(__DIR__.'/Routes/api.php');
 
         Route::prefix('api/plugins/invitations')
             ->middleware('api')
-            ->group(__DIR__ . '/Routes/public.php');
+            ->group(__DIR__.'/Routes/public.php');
 
         // Register mail views
-        $this->loadViewsFrom(__DIR__ . '/../views', 'plugins.invitations');
+        $this->loadViewsFrom(__DIR__.'/../views', 'plugins.invitations');
     }
 }

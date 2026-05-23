@@ -27,18 +27,28 @@ trait ResolvesServerAccess
 
     protected function authorizeServer(Request $request, Server $server, string $permission, ?string $fallback = null): void
     {
+        if (! $this->canServer($request, $server, $permission, $fallback)) {
+            abort(403);
+        }
+    }
+
+    /**
+     * Boolean form of authorizeServer (no abort) — used to surface the caller's
+     * capabilities to the frontend so it can render read-only / hide actions.
+     */
+    protected function canServer(Request $request, Server $server, string $permission, ?string $fallback = null): bool
+    {
         $user = $request->user();
+        if ($user === null) {
+            return false;
+        }
+        if ($user->is_admin) {
+            return true;
+        }
+        if ($user->hasServerPermission($server, $permission)) {
+            return true;
+        }
 
-        if ($user !== null && $user->is_admin) {
-            return;
-        }
-        if ($user !== null && $user->hasServerPermission($server, $permission)) {
-            return;
-        }
-        if ($user !== null && $fallback !== null && $user->hasServerPermission($server, $fallback)) {
-            return;
-        }
-
-        abort(403);
+        return $fallback !== null && $user->hasServerPermission($server, $fallback);
     }
 }

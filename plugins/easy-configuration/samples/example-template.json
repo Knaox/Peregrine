@@ -1,0 +1,123 @@
+{
+    "$schema": "https://peregrine.dev/schemas/easy-config-template/v1.json",
+    "id": "example-template",
+    "version": "1.0.0",
+    "name": { "fr": "Modèle d'exemple", "en": "Example template" },
+    "description": {
+        "fr": "Modèle de référence montrant chaque type de champ, section, lien de variable d'environnement et le boost. Sert d'exemple complet (à donner à une IA pour générer de nouveaux modèles).",
+        "en": "Reference template showcasing every field type, sections, env-var linking and boost. A complete example (hand it to an AI to generate new templates)."
+    },
+    "author": "Peregrine",
+    "target_eggs": [],
+    "columns": 2,
+    "boost": {
+        "enabled": true,
+        "parameter_blacklist": ["server-name", "server-port"]
+    },
+    "files": [
+        {
+            "id": "server-properties",
+            "path": "server.properties",
+            "format": "properties",
+            "enabled": true,
+            "label": { "fr": "Propriétés du serveur", "en": "Server properties" },
+            "parameters": {
+                "difficulty": {
+                    "display_type": "select",
+                    "config": {
+                        "default": "normal",
+                        "options": [
+                            { "value": "peaceful", "label": { "fr": "Paisible", "en": "Peaceful" } },
+                            { "value": "easy", "label": { "fr": "Facile", "en": "Easy" } },
+                            { "value": "normal", "label": { "fr": "Normal", "en": "Normal" } },
+                            { "value": "hard", "label": { "fr": "Difficile", "en": "Hard" } }
+                        ]
+                    },
+                    "label": { "fr": "Difficulté", "en": "Difficulty" },
+                    "description": { "fr": "Niveau de difficulté du serveur.", "en": "Server difficulty level." }
+                },
+                "max-players": {
+                    "display_type": "slider",
+                    "config": { "min": 1, "max": 100, "step": 1, "default": 20 },
+                    "label": { "fr": "Joueurs max", "en": "Max players" },
+                    "description": { "fr": "Nombre maximum de joueurs simultanés.", "en": "Maximum number of simultaneous players." },
+                    "env_var": "MAX_PLAYERS"
+                },
+                "spawn-multiplier": {
+                    "display_type": "number",
+                    "config": { "min": 0.1, "max": 10, "step": 0.1, "float": true, "default": 1, "suffix": "x" },
+                    "label": { "fr": "Multiplicateur de spawn", "en": "Spawn multiplier" },
+                    "description": { "fr": "Décimales autorisées (float). Un joueur peut saisir au-delà du max.", "en": "Decimals allowed (float). A player may type above the max." }
+                },
+                "pvp": {
+                    "display_type": "boolean",
+                    "config": { "true_value": "true", "false_value": "false", "default": "true" },
+                    "label": { "fr": "PvP activé", "en": "PvP enabled" }
+                },
+                "server-name": {
+                    "display_type": "text",
+                    "config": { "max_length": 64, "regex": "^[\\w .,'!-]+$", "default": "My Server" },
+                    "label": { "fr": "Nom du serveur", "en": "Server name" },
+                    "description": { "fr": "Affiché dans la liste des serveurs.", "en": "Shown in the server list." }
+                },
+                "motd": {
+                    "display_type": "textarea",
+                    "config": { "max_length": 256 },
+                    "label": { "fr": "Message du jour", "en": "Message of the day" }
+                },
+                "team-color": {
+                    "display_type": "color",
+                    "config": { "format": "hex", "default": "#3366ff" },
+                    "label": { "fr": "Couleur d'équipe", "en": "Team colour" }
+                },
+                "enabled-modules": {
+                    "display_type": "multiselect",
+                    "config": {
+                        "separator": ",",
+                        "default": "economy,chat",
+                        "options": [
+                            { "value": "economy", "label": { "fr": "Économie", "en": "Economy" } },
+                            { "value": "chat", "label": { "fr": "Chat", "en": "Chat" } },
+                            { "value": "pvp-arena", "label": { "fr": "Arène PvP", "en": "PvP arena" } }
+                        ]
+                    },
+                    "label": { "fr": "Modules activés", "en": "Enabled modules" },
+                    "description": { "fr": "Valeurs jointes par le séparateur (ex. economy,chat).", "en": "Values joined by the separator (e.g. economy,chat)." }
+                }
+            }
+        },
+        {
+            "id": "game-ini",
+            "path": "Config/Game.ini",
+            "format": "ini",
+            "enabled": true,
+            "label": { "fr": "Réglages de jeu", "en": "Game settings" },
+            "section_labels": {
+                "/script/example.gamesettings": { "fr": "Règles du jeu", "en": "Game rules" },
+                "ServerSettings": { "fr": "Réglages serveur", "en": "Server settings" }
+            },
+            "section_whitelist": ["/script/example.gamesettings", "ServerSettings"],
+            "parameters": {
+                "/script/example.gamesettings": {
+                    "DifficultyOffset": {
+                        "display_type": "slider",
+                        "config": { "min": 0, "max": 1, "step": 0.05, "float": true, "default": 0.2 },
+                        "label": { "fr": "Décalage de difficulté", "en": "Difficulty offset" }
+                    },
+                    "bAllowCheats": {
+                        "display_type": "boolean",
+                        "config": { "true_value": "True", "false_value": "False", "default": "False" },
+                        "label": { "fr": "Autoriser les cheats", "en": "Allow cheats" }
+                    }
+                },
+                "ServerSettings": {
+                    "MaxTickRate": {
+                        "display_type": "number",
+                        "config": { "min": 10, "max": 120, "default": 30, "suffix": "Hz" },
+                        "label": { "fr": "Tick rate max", "en": "Max tick rate" }
+                    }
+                }
+            }
+        }
+    ]
+}

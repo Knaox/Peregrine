@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Plugins\EasyConfiguration;
 
+use App\Models\Server;
 use App\Services\Plugin\ManifestEnricherRegistry;
+use App\Services\Plugin\StartupVariableClaimRegistry;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
@@ -63,7 +65,33 @@ class EasyConfigurationServiceProvider extends ServiceProvider
 
         $this->app->make(PermissionContributor::class)->register();
         $this->registerManifestEnricher();
+        $this->registerStartupVariableClaim();
         $this->registerSchedule();
+    }
+
+    /**
+     * Declare to the core every env var a template parameter links to, so the
+     * core startup-variables page ("Server configuration") badges them as linked
+     * — they're edited there, and hidden from this plugin's own editor to avoid a
+     * duplicate surface. Best-effort + guarded.
+     */
+    private function registerStartupVariableClaim(): void
+    {
+        if (! class_exists(StartupVariableClaimRegistry::class)) {
+            return;
+        }
+
+        try {
+            StartupVariableClaimRegistry::getInstance()->register(self::PLUGIN_ID, function (Server $server): array {
+                try {
+                    return $this->app->make(TemplateRegistry::class)->linkedEnvVars((int) $server->egg_id);
+                } catch (Throwable) {
+                    return [];
+                }
+            });
+        } catch (Throwable) {
+            // Claiming is best-effort; a failure just means no variables are hidden.
+        }
     }
 
     /**

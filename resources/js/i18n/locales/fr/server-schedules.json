@@ -40,6 +40,15 @@
         "preset_restart_12h": "Redémarrage toutes les 12h",
         "preset_backup_daily": "Sauvegarde quotidienne",
         "preset_backup_weekly": "Sauvegarde hebdomadaire",
-        "preset_custom": "Personnalisé (avancé)"
+        "preset_custom": "Personnalisé (avancé)",
+        "copy_to_servers": "Copier vers des serveurs",
+        "copy_title": "Copier la planification vers d'autres serveurs",
+        "copy_subtitle": "Copier « {{name}} » et toutes ses actions vers les serveurs sélectionnés.",
+        "copy_select_all": "Tout sélectionner",
+        "copy_no_targets": "Vous n'avez aucun autre serveur vers lequel copier cette planification.",
+        "copy_confirm": "Copier vers {{n}} serveur(s)",
+        "copy_success": "Copié",
+        "copy_failed": "Échec",
+        "copy_done": "Terminé"
     }
 }

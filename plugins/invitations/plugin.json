@@ -1,8 +1,8 @@
 {
     "id": "invitations",
     "name": "Server Invitations",
-    "version": "1.3.3",
-    "description": "Invite users to your servers by email with granular permissions. Supports editing permissions of active users and pending invitations.",
+    "version": "1.4.0",
+    "description": "Invite users to your servers by email with granular permissions. Invite one user to several servers in a single email (accept-all), copy an existing user's access to other servers, and edit permissions of active users and pending invitations.",
     "author": "Peregrine Team",
     "license": "MIT",
     "min_peregrine_version": "1.0.0",

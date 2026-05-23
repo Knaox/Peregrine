@@ -11,7 +11,7 @@ use Plugins\EasyConfiguration\Models\BoostSchedule;
  * keyed by "fileId\x1fsection\x1fkey". Shared by the config reader (to show the
  * baseline + boost badge) and the writer (Option 2 baseline editing).
  *
- * @phpstan-type BoostInfo array{id: int, status: string, multiplier: float, start_at: mixed, end_at: mixed, original_value: ?string, boosted_value: ?string, max_cap: ?float}
+ * @phpstan-type BoostInfo array{id: int, status: string, multiplier: float, start_at: mixed, end_at: mixed, original_value: ?string, boosted_value: ?string, max_cap: ?float, invert: bool}
  */
 final class BoostLookup
 {
@@ -32,6 +32,7 @@ final class BoostLookup
                     'original_value' => $param['original_value'] ?? null,
                     'boosted_value' => $param['boosted_value'] ?? null,
                     'max_cap' => isset($param['max_cap']) && is_numeric($param['max_cap']) ? (float) $param['max_cap'] : null,
+                    'invert' => ! empty($param['invert']),
                 ];
             }
         }

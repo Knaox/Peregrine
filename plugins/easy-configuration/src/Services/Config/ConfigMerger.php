@@ -31,6 +31,7 @@ final class ConfigMerger
 
         $parameters = [];
         $claimed = [];
+        $templateDefs = [];
 
         foreach ($this->flattenTemplate($fileDef['parameters'] ?? []) as $entry) {
             ['section' => $section, 'key' => $key, 'def' => $def] = $entry;
@@ -39,24 +40,32 @@ final class ConfigMerger
             }
 
             $found = $parsed->get($key, $section);
-            $parameters[] = $this->build($key, $section, $def, $found?->value ?? $this->defaultValue($def), false);
-            $claimed[$this->compositeKey($section, $key)] = true;
+            $parameters[] = $this->build($key, $section, $def, $found?->value ?? $this->defaultValue($def), false, 0);
+            // A template maps to the FIRST occurrence (claim occ 0 only); extra
+            // occurrences of a repeated key are surfaced below, reusing this def.
+            $claimed[$this->compositeKey($section, $key)."\x1f0"] = true;
+            $templateDefs[$this->compositeKey($section, $key)] = $def;
         }
 
         foreach ($parsed->parameters as $param) {
-            if (isset($claimed[$this->compositeKey($param->section, $param->key)])) {
+            $composite = $this->compositeKey($param->section, $param->key);
+            if (isset($claimed[$composite."\x1f".$param->occurrence])) {
                 continue;
             }
             if ($this->filtered($sectioned, $whitelist, $param->section)) {
                 continue;
             }
 
+            // Reuse the template definition for additional occurrences of a
+            // templated key (same control + label); otherwise auto-detect.
+            $tplDef = $templateDefs[$composite] ?? null;
             $parameters[] = $this->build(
                 $param->key,
                 $param->section,
-                ['display_type' => $this->detector->detect($param->value)],
+                $tplDef ?? ['display_type' => $this->detector->detect($param->value)],
                 $param->value,
-                true,
+                $tplDef === null,
+                $param->occurrence,
             );
         }
 
@@ -95,7 +104,7 @@ final class ConfigMerger
      * @param  array<string, mixed>  $def
      * @return array<string, mixed>
      */
-    private function build(string $key, ?string $section, array $def, string $value, bool $inferred): array
+    private function build(string $key, ?string $section, array $def, string $value, bool $inferred, int $occurrence): array
     {
         return [
             'key' => $key,
@@ -106,6 +115,8 @@ final class ConfigMerger
             'description' => $def['description'] ?? null,
             'value' => $value,
             'inferred' => $inferred,
+            'occurrence' => $occurrence,
+            'env_var' => isset($def['env_var']) && $def['env_var'] !== '' ? (string) $def['env_var'] : null,
         ];
     }
 

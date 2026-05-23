@@ -8,6 +8,7 @@ import { formatDate } from '@/utils/format';
 import { Button } from '@/components/ui/Button';
 import { AddTaskForm, actionIcon } from '@/components/server/AddTaskForm';
 import { EditScheduleForm } from '@/components/server/EditScheduleForm';
+import { CopyScheduleDialog } from '@/components/server/CopyScheduleDialog';
 import type { Schedule } from '@/types/Schedule';
 import { useNamespace } from '@/i18n/useNamespace';
 
@@ -53,10 +54,12 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
     const perms = useServerPermissions(server);
     const canUpdate = perms.has('schedule.update');
     const canDelete = perms.has('schedule.delete');
+    const canCopy = perms.has('schedule.read');
     const [expanded, setExpanded] = useState(false);
     const [showAddTask, setShowAddTask] = useState(false);
     const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
     const [editing, setEditing] = useState(false);
+    const [copying, setCopying] = useState(false);
 
     const actionLabel = (action: string) => {
         if (action === 'command') return t('server-schedules:schedules.task_command');
@@ -109,6 +112,11 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                     {canUpdate && (
                         <Button variant="ghost" size="sm" onClick={() => setEditing((v) => !v)}>
                             {t('server-schedules:schedules.edit_schedule')}
+                        </Button>
+                    )}
+                    {canCopy && (
+                        <Button variant="ghost" size="sm" onClick={() => setCopying(true)}>
+                            {t('server-schedules:schedules.copy_to_servers')}
                         </Button>
                     )}
                     {canDelete && (
@@ -179,6 +187,13 @@ export function ScheduleCard({ schedule, serverId }: ScheduleCardProps) {
                             )}
                         </div>
                     </m.div>
+                )}
+            </AnimatePresence>
+
+            {/* Copy this schedule onto one or more other servers */}
+            <AnimatePresence>
+                {copying && (
+                    <CopyScheduleDialog serverId={serverId} schedule={schedule} onClose={() => setCopying(false)} />
                 )}
             </AnimatePresence>
         </m.div>

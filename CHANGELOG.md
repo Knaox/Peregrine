@@ -8,6 +8,23 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.12] — 2026-05-24
+
+### Added
+
+- **Copy a schedule to other servers.** From a server's Schedules page, a schedule — its cron timing **and** every task — can be copied onto one or more of your other servers in a single action. Targets are picked from the servers you can create schedules on (the source excluded), and each target's result is reported independently, so one failure never blocks the others. Tasks are recreated exactly as the manual "create task" flow does (a backup task carries no payload, the sequence is reset) rather than copied verbatim.
+- **Invite a user to several servers in one email.** The Users & Invitations page can now invite the same person to multiple servers at once; they receive a **single** email whose link accepts every server in the batch in one go (accept-all) — provisioning the Pelican subuser and granting access on each. A new **"Copy access"** action on an active user replicates their permission set to your other servers. Multi-server targets are restricted to servers running the **same egg** (permissions are egg-specific). Backed by an additive `batch_id` column — single-server invites behave exactly as before.
+- **Easy Configuration plugin (bundled, auto-activated).** A new first-party plugin that adds a **Game configuration** section to the server overview: edit `server.properties`, `GameUserSettings.ini`, `config.yml`, … through a Nitrado-style UI (sliders, toggles, dropdowns) instead of raw text, with a lossless round-trip that rewrites only the values you changed. Copy a configuration to other servers of the same egg, and schedule temporary — optionally recurring — value **boosts**. Templates are pure, shareable JSON render schemas managed from the admin. Ships with the panel and activates out-of-the-box, like Invitations.
+- **Editable server startup variables.** The server overview surfaces the egg's startup/environment variables for editing, with a registry that lets plugins (mods / modpack installers, …) claim the variables they manage so those are flagged as "linked" instead of offering a duplicate editing surface.
+
+### Changed
+
+- **Users & Invitations — cleaner, faster.** The invite/edit dialogs are now proper centered modals, the permission picker gains a global **"select all"** alongside the per-group toggles, and an invitee who is already signed in (matching email) is **auto-accepted in a single step** — the public invite page now hydrates the session itself, so a logged-in user is no longer bounced through the login screen before accepting.
+
+### Fixed
+
+- **Invitation email templates no longer leak between single- and multi-server sends.** `SettingsService::get(key, default)` caches the resolved value — including the fallback default — per key, so the first caller's default could be served to a later one. The mailer now resolves its default body/subject in PHP, so a batch email always renders its own template.
+
 ## [1.0.0-alpha.11b] — 2026-05-23
 
 ### Fixed

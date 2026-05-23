@@ -72,6 +72,14 @@ final class TemplateDefinition
         return is_array($list) ? array_values(array_map('strval', $list)) : [];
     }
 
+    /** Number of columns the player editor lays parameters out in (1-3, default 1). */
+    public function columns(): int
+    {
+        $columns = $this->data['columns'] ?? 1;
+
+        return is_int($columns) && $columns >= 1 && $columns <= 3 ? $columns : 1;
+    }
+
     /** @return list<array<string, mixed>> */
     public function files(): array
     {

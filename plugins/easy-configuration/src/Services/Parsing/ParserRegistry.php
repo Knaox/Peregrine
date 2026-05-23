@@ -23,6 +23,8 @@ final class ParserRegistry
             new JsonFormat,
             new YamlFormat,
             new TomlFormat,
+            new PalworldFormat,
+            new TheForestFormat,
         ] as $format) {
             $this->formats[$format->format()] = $format;
         }

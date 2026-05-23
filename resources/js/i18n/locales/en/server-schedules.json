@@ -40,6 +40,15 @@
         "preset_restart_12h": "Restart every 12h",
         "preset_backup_daily": "Daily backup",
         "preset_backup_weekly": "Weekly backup",
-        "preset_custom": "Custom (advanced)"
+        "preset_custom": "Custom (advanced)",
+        "copy_to_servers": "Copy to servers",
+        "copy_title": "Copy schedule to other servers",
+        "copy_subtitle": "Copy \"{{name}}\" and all of its tasks to the servers you select.",
+        "copy_select_all": "Select all servers",
+        "copy_no_targets": "You have no other servers to copy this schedule to.",
+        "copy_confirm": "Copy to {{n}} server(s)",
+        "copy_success": "Copied",
+        "copy_failed": "Failed",
+        "copy_done": "Done"
     }
 }

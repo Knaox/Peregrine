@@ -18,8 +18,10 @@ final class ConfigValueValidator
         $type = (string) ($def['display_type'] ?? 'text');
         $config = is_array($def['config'] ?? null) ? $def['config'] : [];
 
+        $envLinked = isset($def['env_var']) && $def['env_var'] !== '';
+
         return match ($type) {
-            'number', 'slider' => $this->number($config, $value),
+            'number', 'slider' => $this->number($config, $value, $envLinked),
             'select' => $this->select($config, $value),
             'multiselect' => $this->multiselect($config, $value),
             'boolean' => $this->boolean($config, $value),
@@ -31,23 +33,46 @@ final class ConfigValueValidator
     }
 
     /** @param array<string, mixed> $config */
-    private function number(array $config, string $value): ?string
+    private function number(array $config, string $value, bool $envLinked = false): ?string
     {
         if (! is_numeric($value)) {
             return 'must be a number';
         }
         $number = (float) $value;
-        if (isset($config['min']) && is_numeric($config['min']) && $number < (float) $config['min']) {
+        // Soft min/max: manual input may go below `min` or above `max`, EXCEPT
+        // for env-linked params, where both bounds are hard-enforced (they bound
+        // the synced Pelican variable). Symmetric so a player can override either.
+        if ($envLinked && isset($config['min']) && is_numeric($config['min']) && $number < (float) $config['min']) {
             return 'below the minimum of '.$config['min'];
         }
-        if (isset($config['max']) && is_numeric($config['max']) && $number > (float) $config['max']) {
+        if ($envLinked && isset($config['max']) && is_numeric($config['max']) && $number > (float) $config['max']) {
             return 'above the maximum of '.$config['max'];
         }
-        if (empty($config['float']) && str_contains($value, '.')) {
+        if (! $this->allowsDecimals($config) && str_contains($value, '.')) {
             return 'must be a whole number';
         }
 
         return null;
+    }
+
+    /**
+     * Whether a number/slider accepts decimals: explicit `float`, or inferred
+     * from a fractional `step` (e.g. 0.1) or a decimal default — so multiplier
+     * sliders aren't forced to whole numbers when nobody set `float`.
+     *
+     * @param  array<string, mixed>  $config
+     */
+    private function allowsDecimals(array $config): bool
+    {
+        if (! empty($config['float'])) {
+            return true;
+        }
+        if (isset($config['step']) && is_numeric($config['step']) && (float) $config['step'] !== floor((float) $config['step'])) {
+            return true;
+        }
+        $default = $config['default'] ?? null;
+
+        return (is_string($default) && str_contains($default, '.')) || is_float($default);
     }
 
     /** @param array<string, mixed> $config */

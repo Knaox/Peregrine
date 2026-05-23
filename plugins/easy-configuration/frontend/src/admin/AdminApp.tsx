@@ -19,6 +19,7 @@ export default function AdminApp() {
                     <Route path="" element={<Navigate to="manage" replace />} />
                     <Route path="manage" element={<TemplateListPage />} />
                     <Route path="manage/new" element={<TemplateEditorPage />} />
+                    <Route path="manage/example" element={<TemplateEditorPage example />} />
                     <Route path="manage/:templateId" element={<TemplateEditorPage />} />
                 </Routes>
             </div>

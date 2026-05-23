@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, BASE } from '../../shared';
-import type { EggOption, TemplateRow } from '../../types';
+import type { EggOption, ServerOption, TemplateRow } from '../../types';
+
+/** Result of importing a config file from a server: a scaffolded template file block. */
+export interface ImportedFile {
+    file: Record<string, unknown>;
+    parameter_count: number;
+}
 
 const LIST_KEY = ['ec-admin-templates'];
 
@@ -26,6 +32,20 @@ export function useTemplateDetail(id: string | null) {
     });
 }
 
+/**
+ * The bundled reference template (`samples/example-template.json`), fetched only
+ * when the admin opens the "example" route. Used to seed the editor with a
+ * complete, schema-valid starting point.
+ */
+export function useExampleTemplate(enabled: boolean) {
+    return useQuery({
+        queryKey: ['ec-admin-example-template'],
+        enabled,
+        staleTime: Infinity,
+        queryFn: () => api<{ data: { definition: Record<string, unknown> } }>(`${BASE}/admin/templates/example`).then((response) => response.data.definition),
+    });
+}
+
 export function useEggCatalog() {
     return useQuery({
         queryKey: ['ec-admin-eggs'],
@@ -46,6 +66,24 @@ export function useSaveTemplate() {
     });
 }
 
+export function useServerCatalog() {
+    return useQuery({
+        queryKey: ['ec-admin-servers'],
+        staleTime: 60_000,
+        queryFn: () => api<{ data: ServerOption[] }>(`${BASE}/admin/servers`).then((response) => response.data),
+    });
+}
+
+export function useImportConfig() {
+    return useMutation({
+        mutationFn: (input: { server_id: number; path: string; format?: string }) =>
+            api<{ data: ImportedFile }>(`${BASE}/admin/import-config`, {
+                method: 'POST',
+                body: JSON.stringify(input),
+            }).then((response) => response.data),
+    });
+}
+
 export function useImportTemplate() {
     const queryClient = useQueryClient();
 
@@ -61,5 +99,35 @@ export function useDeleteTemplate() {
     return useMutation({
         mutationFn: (id: string) => api(`${BASE}/admin/templates/${id}`, { method: 'DELETE' }),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+    });
+}
+
+/** Payload to annotate one discovered parameter into a template file. */
+export interface AnnotateParameterInput {
+    file_id: string;
+    section: string | null;
+    key: string;
+    display_type: string;
+    label?: Record<string, string> | null;
+    description?: Record<string, string> | null;
+    config?: Record<string, unknown> | null;
+    env_var?: string | null;
+}
+
+/**
+ * Promote a discovered (inferred) parameter into the template so it gains a
+ * curated label/description/type for every server of the egg. Invalidates the
+ * server config so the field re-renders documented (no longer inferred).
+ */
+export function useAnnotateTemplateParameter(serverId: number) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ templateId, param }: { templateId: string; param: AnnotateParameterInput }) =>
+            api(`${BASE}/admin/templates/${templateId}/parameters`, { method: 'POST', body: JSON.stringify(param) }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['ec-config', serverId] });
+            void queryClient.invalidateQueries({ queryKey: LIST_KEY });
+        },
     });
 }

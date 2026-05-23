@@ -1,0 +1,394 @@
+{
+    "$schema": "https://peregrine.dev/schemas/easy-config-template/v1.json",
+    "id": "astroneer",
+    "version": "1.0.0",
+    "name": {
+        "en": "Astroneer",
+        "fr": "Astroneer"
+    },
+    "description": {
+        "en": "Full dedicated-server settings for Astroneer — server identity, player slots, access control, performance framerate caps, auto-save and backups, remote console and heartbeat, with clear bilingual labels.",
+        "fr": "Paramètres complets du serveur dédié Astroneer — identité du serveur, places de joueurs, contrôle d'accès, limites de fréquence d'images, sauvegarde automatique et sauvegardes, console distante et battement de cœur, avec des libellés bilingues clairs."
+    },
+    "author": "Peregrine",
+    "target_eggs": [
+        32
+    ],
+    "columns": 2,
+    "boost": {
+        "enabled": false,
+        "parameter_blacklist": []
+    },
+    "files": [
+        {
+            "id": "serversettings",
+            "path": "Astro/Saved/Config/LinuxServer/AstroServerSettings.ini",
+            "format": "ini",
+            "label": {
+                "en": "Server settings",
+                "fr": "Réglages du serveur"
+            },
+            "section_labels": {
+                "/Script/Astro.AstroServerSettings": {
+                    "en": "Server settings",
+                    "fr": "Réglages du serveur"
+                }
+            },
+            "parameters": {
+                "/Script/Astro.AstroServerSettings": {
+                    "ServerName": {
+                        "display_type": "text",
+                        "config": {
+                            "default": "Astroneer Dedicated Server"
+                        },
+                        "label": {
+                            "en": "Server Name",
+                            "fr": "Nom du serveur"
+                        },
+                        "description": {
+                            "en": "The public name of the server as it appears to players in the in-game server list and friends menu.",
+                            "fr": "Le nom public du serveur tel qu'il apparaît aux joueurs dans la liste des serveurs et le menu des amis du jeu."
+                        }
+                    },
+                    "ServerAdvertisedName": {
+                        "display_type": "text",
+                        "config": {
+                            "default": ""
+                        },
+                        "label": {
+                            "en": "Advertised Server Name",
+                            "fr": "Nom de serveur annoncé"
+                        },
+                        "description": {
+                            "en": "Optional name broadcast to the public server browser; leave empty to fall back to the standard Server Name and keep the server unlisted.",
+                            "fr": "Nom optionnel diffusé dans la liste publique des serveurs ; laissez vide pour utiliser le nom du serveur standard et garder le serveur non répertorié."
+                        }
+                    },
+                    "OwnerName": {
+                        "display_type": "text",
+                        "config": {
+                            "default": ""
+                        },
+                        "label": {
+                            "en": "Owner Name",
+                            "fr": "Nom du propriétaire"
+                        },
+                        "description": {
+                            "en": "The platform (Steam) username that will be granted server-owner administrator rights; the first player who connects under this name becomes the owner.",
+                            "fr": "Le nom d'utilisateur de la plateforme (Steam) qui recevra les droits d'administrateur propriétaire du serveur ; le premier joueur qui se connecte sous ce nom en devient le propriétaire."
+                        }
+                    },
+                    "OwnerGuid": {
+                        "display_type": "text",
+                        "config": {
+                            "default": ""
+                        },
+                        "label": {
+                            "en": "Owner GUID",
+                            "fr": "GUID du propriétaire"
+                        },
+                        "description": {
+                            "en": "Unique identifier of the server owner; this is filled in automatically once the owner first connects and should normally be left empty.",
+                            "fr": "Identifiant unique du propriétaire du serveur ; il est rempli automatiquement à la première connexion du propriétaire et doit normalement rester vide."
+                        }
+                    },
+                    "ServerGuid": {
+                        "display_type": "text",
+                        "config": {
+                            "default": ""
+                        },
+                        "label": {
+                            "en": "Server GUID",
+                            "fr": "GUID du serveur"
+                        },
+                        "description": {
+                            "en": "Unique identifier of this server instance; it is generated automatically on first launch and should normally be left empty.",
+                            "fr": "Identifiant unique de cette instance de serveur ; il est généré automatiquement au premier lancement et doit normalement rester vide."
+                        }
+                    },
+                    "PublicIP": {
+                        "display_type": "text",
+                        "config": {
+                            "default": ""
+                        },
+                        "label": {
+                            "en": "Public IP Address",
+                            "fr": "Adresse IP publique"
+                        },
+                        "description": {
+                            "en": "The public IPv4 address players use to reach the server; it must match the host's external IP or clients will fail to connect.",
+                            "fr": "L'adresse IPv4 publique que les joueurs utilisent pour atteindre le serveur ; elle doit correspondre à l'IP externe de l'hôte, sans quoi les clients ne pourront pas se connecter."
+                        }
+                    },
+                    "ServerPassword": {
+                        "display_type": "text",
+                        "config": {
+                            "default": ""
+                        },
+                        "label": {
+                            "en": "Server Password",
+                            "fr": "Mot de passe du serveur"
+                        },
+                        "description": {
+                            "en": "Password players must enter to join the server; leave empty to allow anyone to connect.",
+                            "fr": "Mot de passe que les joueurs doivent saisir pour rejoindre le serveur ; laissez vide pour autoriser tout le monde à se connecter."
+                        }
+                    },
+                    "MaximumPlayerCount": {
+                        "display_type": "slider",
+                        "config": {
+                            "default": "8",
+                            "min": 1,
+                            "max": 32,
+                            "step": 1
+                        },
+                        "label": {
+                            "en": "Maximum Players",
+                            "fr": "Joueurs maximum"
+                        },
+                        "description": {
+                            "en": "Maximum number of players that can be connected at the same time; the official supported limit is 8 and higher values may strain performance.",
+                            "fr": "Nombre maximum de joueurs pouvant être connectés en même temps ; la limite officiellement prise en charge est de 8 et des valeurs plus élevées peuvent nuire aux performances."
+                        }
+                    },
+                    "DenyUnlistedPlayers": {
+                        "display_type": "boolean",
+                        "config": {
+                            "default": "false",
+                            "true_value": "true",
+                            "false_value": "false"
+                        },
+                        "label": {
+                            "en": "Whitelist Only",
+                            "fr": "Liste blanche uniquement"
+                        },
+                        "description": {
+                            "en": "When enabled, only players explicitly added to the server whitelist may join; everyone else is denied access.",
+                            "fr": "Lorsqu'activé, seuls les joueurs explicitement ajoutés à la liste blanche du serveur peuvent rejoindre ; tous les autres se voient refuser l'accès."
+                        }
+                    },
+                    "PlayerActivityTimeout": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "0",
+                            "min": 0,
+                            "max": 86400
+                        },
+                        "label": {
+                            "en": "Player Inactivity Timeout (seconds)",
+                            "fr": "Délai d'inactivité des joueurs (secondes)"
+                        },
+                        "description": {
+                            "en": "Number of seconds an idle player may stay connected before being kicked; set to 0 to never time out inactive players.",
+                            "fr": "Nombre de secondes pendant lesquelles un joueur inactif peut rester connecté avant d'être expulsé ; réglez sur 0 pour ne jamais déconnecter les joueurs inactifs."
+                        }
+                    },
+                    "bDisableServerTravel": {
+                        "display_type": "boolean",
+                        "config": {
+                            "default": "false",
+                            "true_value": "true",
+                            "false_value": "false"
+                        },
+                        "label": {
+                            "en": "Disable Server Travel",
+                            "fr": "Désactiver le voyage serveur"
+                        },
+                        "description": {
+                            "en": "When enabled, players are prevented from triggering server travel between planets via gateways, which can avoid certain travel-related crashes.",
+                            "fr": "Lorsqu'activé, les joueurs ne peuvent pas déclencher de voyage serveur entre planètes via les passerelles, ce qui peut éviter certains plantages liés au voyage."
+                        }
+                    },
+                    "VerbosePlayerProperties": {
+                        "display_type": "boolean",
+                        "config": {
+                            "default": "true",
+                            "true_value": "true",
+                            "false_value": "false"
+                        },
+                        "label": {
+                            "en": "Verbose Player Logging",
+                            "fr": "Journalisation détaillée des joueurs"
+                        },
+                        "description": {
+                            "en": "When enabled, the server writes detailed player information to its logs, which is useful for diagnostics but produces larger log files.",
+                            "fr": "Lorsqu'activé, le serveur consigne des informations détaillées sur les joueurs dans ses journaux, ce qui est utile pour le diagnostic mais génère des fichiers de log plus volumineux."
+                        }
+                    },
+                    "bLoadAutoSave": {
+                        "display_type": "boolean",
+                        "config": {
+                            "default": "true",
+                            "true_value": "true",
+                            "false_value": "false"
+                        },
+                        "label": {
+                            "en": "Load Latest Auto-Save",
+                            "fr": "Charger la dernière sauvegarde automatique"
+                        },
+                        "description": {
+                            "en": "When enabled, the server loads the most recent automatic save on startup instead of the named active save file.",
+                            "fr": "Lorsqu'activé, le serveur charge la sauvegarde automatique la plus récente au démarrage au lieu du fichier de sauvegarde actif nommé."
+                        }
+                    },
+                    "ActiveSaveFileDescriptiveName": {
+                        "display_type": "text",
+                        "config": {
+                            "default": "SAVE_1"
+                        },
+                        "label": {
+                            "en": "Active Save File Name",
+                            "fr": "Nom du fichier de sauvegarde actif"
+                        },
+                        "description": {
+                            "en": "The descriptive name of the save game the server loads and writes to; change it to switch worlds or load an imported save.",
+                            "fr": "Le nom descriptif de la partie sauvegardée que le serveur charge et dans laquelle il écrit ; modifiez-le pour changer de monde ou charger une sauvegarde importée."
+                        }
+                    },
+                    "AutoSaveGameInterval": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "900",
+                            "min": 30,
+                            "max": 86400
+                        },
+                        "label": {
+                            "en": "Auto-Save Interval (seconds)",
+                            "fr": "Intervalle de sauvegarde auto (secondes)"
+                        },
+                        "description": {
+                            "en": "How often, in seconds, the server automatically saves world progress to disk; lower values save more often at a small performance cost.",
+                            "fr": "Fréquence, en secondes, à laquelle le serveur sauvegarde automatiquement la progression du monde sur le disque ; des valeurs plus basses sauvegardent plus souvent au prix d'une légère baisse de performance."
+                        }
+                    },
+                    "BackupSaveGamesInterval": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "7200",
+                            "min": 0,
+                            "max": 604800
+                        },
+                        "label": {
+                            "en": "Backup Interval (seconds)",
+                            "fr": "Intervalle de sauvegarde de secours (secondes)"
+                        },
+                        "description": {
+                            "en": "How often, in seconds, the server creates a separate backup copy of the save game; set to 0 to disable automatic backups.",
+                            "fr": "Fréquence, en secondes, à laquelle le serveur crée une copie de sauvegarde distincte de la partie ; réglez sur 0 pour désactiver les sauvegardes de secours automatiques."
+                        }
+                    },
+                    "bWaitForPlayersBeforeShutdown": {
+                        "display_type": "boolean",
+                        "config": {
+                            "default": "false",
+                            "true_value": "true",
+                            "false_value": "false"
+                        },
+                        "label": {
+                            "en": "Wait for Players Before Shutdown",
+                            "fr": "Attendre les joueurs avant l'arrêt"
+                        },
+                        "description": {
+                            "en": "When enabled, an empty server will idle and wait for players to reconnect rather than shutting itself down automatically.",
+                            "fr": "Lorsqu'activé, un serveur vide reste en veille et attend que des joueurs se reconnectent au lieu de s'arrêter automatiquement."
+                        }
+                    },
+                    "MaxServerFramerate": {
+                        "display_type": "slider",
+                        "config": {
+                            "default": "30",
+                            "min": 1,
+                            "max": 120,
+                            "step": 1
+                        },
+                        "label": {
+                            "en": "Max Server Framerate",
+                            "fr": "Fréquence d'images max du serveur"
+                        },
+                        "description": {
+                            "en": "Caps the simulation tick rate, in frames per second, while players are active; higher values feel smoother but use more CPU.",
+                            "fr": "Limite la fréquence de simulation, en images par seconde, lorsque des joueurs sont actifs ; des valeurs plus élevées sont plus fluides mais consomment plus de processeur."
+                        }
+                    },
+                    "MaxServerIdleFramerate": {
+                        "display_type": "slider",
+                        "config": {
+                            "default": "3",
+                            "min": 1,
+                            "max": 120,
+                            "step": 1
+                        },
+                        "label": {
+                            "en": "Max Idle Framerate",
+                            "fr": "Fréquence d'images max en veille"
+                        },
+                        "description": {
+                            "en": "Caps the simulation tick rate, in frames per second, while no players are connected; keeping this low conserves CPU on an empty server.",
+                            "fr": "Limite la fréquence de simulation, en images par seconde, lorsqu'aucun joueur n'est connecté ; la garder basse économise le processeur sur un serveur vide."
+                        }
+                    },
+                    "ConsolePort": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "1234",
+                            "min": 1,
+                            "max": 65535
+                        },
+                        "label": {
+                            "en": "Remote Console Port",
+                            "fr": "Port de la console distante"
+                        },
+                        "description": {
+                            "en": "Network port on which the server listens for remote console (RCON-style) administration connections.",
+                            "fr": "Port réseau sur lequel le serveur écoute les connexions d'administration de la console distante (de type RCON)."
+                        }
+                    },
+                    "ConsolePassword": {
+                        "display_type": "text",
+                        "config": {
+                            "default": ""
+                        },
+                        "label": {
+                            "en": "Remote Console Password",
+                            "fr": "Mot de passe de la console distante"
+                        },
+                        "description": {
+                            "en": "Password required to authenticate with the remote console; should be long and secret as it grants full administrative control.",
+                            "fr": "Mot de passe requis pour s'authentifier auprès de la console distante ; il doit être long et secret car il donne un contrôle administratif complet."
+                        }
+                    },
+                    "HeartbeatInterval": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "0",
+                            "min": 0,
+                            "max": 86400
+                        },
+                        "label": {
+                            "en": "Heartbeat Interval (seconds)",
+                            "fr": "Intervalle de battement de cœur (secondes)"
+                        },
+                        "description": {
+                            "en": "How often, in seconds, the server emits a heartbeat used by external monitoring tools to detect freezes; set to 0 to disable heartbeats.",
+                            "fr": "Fréquence, en secondes, à laquelle le serveur émet un battement de cœur utilisé par les outils de surveillance externes pour détecter les blocages ; réglez sur 0 pour désactiver les battements de cœur."
+                        }
+                    },
+                    "ShareCode": {
+                        "display_type": "text",
+                        "config": {
+                            "default": ""
+                        },
+                        "label": {
+                            "en": "Custom Config Share Code",
+                            "fr": "Code de partage de configuration"
+                        },
+                        "description": {
+                            "en": "Optional alphanumeric code that applies a shared set of custom game settings (resources, difficulty, world generation); leave empty for default rules.",
+                            "fr": "Code alphanumérique optionnel qui applique un ensemble partagé de paramètres de jeu personnalisés (ressources, difficulté, génération du monde) ; laissez vide pour les règles par défaut."
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -14,6 +14,15 @@ const studlyName = pluginName
 
 export default defineConfig({
     plugins: [react()],
+    // Bundled CommonJS deps (e.g. zustand's `use-sync-external-store` shim)
+    // switch on `process.env.NODE_ENV` at runtime. Vite does NOT shim `process`
+    // for an IIFE library build, so the reference survives into bundle.js and
+    // throws `ReferenceError: process is not defined` in the browser before the
+    // plugin can register itself ("Plugin … is not loaded"). Statically replace
+    // it at build time so the prod branch is taken and `process` never appears.
+    define: {
+        'process.env.NODE_ENV': JSON.stringify('production'),
+    },
     build: {
         lib: {
             entry: `plugins/${pluginName}/frontend/index.tsx`,

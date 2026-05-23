@@ -1,0 +1,898 @@
+{
+    "$schema": "https://peregrine.dev/schemas/easy-config-template/v1.json",
+    "id": "hytale",
+    "version": "1.0.0",
+    "name": {
+        "en": "Hytale",
+        "fr": "Hytale"
+    },
+    "description": {
+        "en": "Server rules & settings for Hytale (Early Access) — global server identity, player limits, view distance, networking, plus per-world generation, PvP, NPC spawning, persistence and visual time-of-day settings, with clear bilingual labels.",
+        "fr": "Règles et paramètres serveur pour Hytale (accès anticipé) — identité globale du serveur, limites de joueurs, distance d'affichage, réseau, ainsi que la génération par monde, le JcJ, l'apparition des PNJ, la persistance et les réglages visuels du cycle jour/nuit, avec des libellés bilingues clairs."
+    },
+    "author": "Peregrine",
+    "target_eggs": [
+        17
+    ],
+    "columns": 2,
+    "boost": {
+        "enabled": false,
+        "parameter_blacklist": []
+    },
+    "files": [
+        {
+            "id": "server-config",
+            "path": "config.json",
+            "format": "json",
+            "label": {
+                "en": "Server settings",
+                "fr": "Paramètres du serveur"
+            },
+            "parameters": {
+                "ServerName": {
+                    "display_type": "text",
+                    "config": {
+                        "default": "Hytale Server"
+                    },
+                    "label": {
+                        "en": "Server Name",
+                        "fr": "Nom du serveur"
+                    },
+                    "description": {
+                        "en": "Public name of the server as it appears to players in the server list; purely descriptive with no technical impact.",
+                        "fr": "Nom public du serveur tel qu'il apparaît aux joueurs dans la liste des serveurs ; purement descriptif et sans impact technique."
+                    }
+                },
+                "MOTD": {
+                    "display_type": "text",
+                    "config": {
+                        "default": ""
+                    },
+                    "label": {
+                        "en": "Message of the Day (MOTD)",
+                        "fr": "Message du jour (MOTD)"
+                    },
+                    "description": {
+                        "en": "Optional welcome message shown to players when they connect; leave empty to display no message.",
+                        "fr": "Message de bienvenue optionnel affiché aux joueurs lors de leur connexion ; laissez vide pour n'afficher aucun message."
+                    }
+                },
+                "Password": {
+                    "display_type": "text",
+                    "config": {
+                        "default": ""
+                    },
+                    "label": {
+                        "en": "Server Password",
+                        "fr": "Mot de passe du serveur"
+                    },
+                    "description": {
+                        "en": "Password players must enter to join the server; leave empty for a public server that anyone can join.",
+                        "fr": "Mot de passe que les joueurs doivent saisir pour rejoindre le serveur ; laissez vide pour un serveur public accessible à tous."
+                    }
+                },
+                "MaxPlayers": {
+                    "display_type": "number",
+                    "config": {
+                        "default": "100",
+                        "min": 1,
+                        "max": 1000
+                    },
+                    "label": {
+                        "en": "Max Players",
+                        "fr": "Joueurs maximum"
+                    },
+                    "description": {
+                        "en": "Maximum number of players that can be connected at the same time; keep it in line with the CPU and RAM available to the server.",
+                        "fr": "Nombre maximum de joueurs pouvant être connectés simultanément ; gardez-le cohérent avec le processeur et la mémoire vive disponibles pour le serveur."
+                    }
+                },
+                "MaxViewRadius": {
+                    "display_type": "slider",
+                    "config": {
+                        "min": 2,
+                        "max": 32,
+                        "step": 1,
+                        "default": "12"
+                    },
+                    "label": {
+                        "en": "Max View Radius (chunks)",
+                        "fr": "Rayon d'affichage maximum (chunks)"
+                    },
+                    "description": {
+                        "en": "Server-side view distance in chunks. Higher values increase load on world generation and synchronisation; around 12 chunks is recommended for performance.",
+                        "fr": "Distance d'affichage côté serveur en chunks. Des valeurs plus élevées augmentent la charge de génération du monde et de synchronisation ; environ 12 chunks sont recommandés pour les performances."
+                    }
+                },
+                "LocalCompressionEnabled": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "false",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Enable Local Compression",
+                        "fr": "Activer la compression locale"
+                    },
+                    "description": {
+                        "en": "When enabled, network data is compressed to save bandwidth at the cost of a little extra CPU usage; useful for bandwidth-limited hosts.",
+                        "fr": "Lorsqu'activé, les données réseau sont compressées pour économiser la bande passante au prix d'un léger surcoût processeur ; utile pour les hébergements à bande passante limitée."
+                    }
+                },
+                "DisplayTmpTagsInStrings": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "false",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Show Translation Tags (debug)",
+                        "fr": "Afficher les balises de traduction (débogage)"
+                    },
+                    "description": {
+                        "en": "Debug option that displays raw translation tags instead of localized text; leave disabled in normal operation.",
+                        "fr": "Option de débogage qui affiche les balises de traduction brutes au lieu du texte localisé ; à laisser désactivée en fonctionnement normal."
+                    }
+                },
+                "Defaults.World": {
+                    "display_type": "text",
+                    "config": {
+                        "default": "default"
+                    },
+                    "label": {
+                        "en": "Default World",
+                        "fr": "Monde par défaut"
+                    },
+                    "description": {
+                        "en": "Name of the world loaded first when the server starts; must match a folder under universe/worlds.",
+                        "fr": "Nom du monde chargé en premier au démarrage du serveur ; doit correspondre à un dossier sous universe/worlds."
+                    }
+                },
+                "Defaults.GameMode": {
+                    "display_type": "select",
+                    "config": {
+                        "default": "Adventure",
+                        "options": [
+                            {
+                                "value": "Adventure",
+                                "label": {
+                                    "en": "Adventure",
+                                    "fr": "Aventure"
+                                }
+                            },
+                            {
+                                "value": "Creative",
+                                "label": {
+                                    "en": "Creative",
+                                    "fr": "Créatif"
+                                }
+                            }
+                        ]
+                    },
+                    "label": {
+                        "en": "Default Game Mode",
+                        "fr": "Mode de jeu par défaut"
+                    },
+                    "description": {
+                        "en": "Game mode players start in when they first join: Adventure for normal survival-style play, Creative for unrestricted building.",
+                        "fr": "Mode de jeu dans lequel démarrent les joueurs lors de leur première connexion : Aventure pour un jeu de type survie classique, Créatif pour une construction sans restriction."
+                    }
+                },
+                "PlayerStorage.Type": {
+                    "display_type": "text",
+                    "config": {
+                        "default": "Hytale"
+                    },
+                    "label": {
+                        "en": "Player Storage Type",
+                        "fr": "Type de stockage des joueurs"
+                    },
+                    "description": {
+                        "en": "Backend used to persist player data; leave on the native \"Hytale\" value unless a plugin documents an alternative.",
+                        "fr": "Backend utilisé pour conserver les données des joueurs ; laissez la valeur native « Hytale » sauf si un plugin documente une alternative."
+                    }
+                },
+                "ConnectionTimeouts.InitialTimeout": {
+                    "display_type": "text",
+                    "config": {
+                        "default": "PT10S"
+                    },
+                    "label": {
+                        "en": "Initial Connection Timeout",
+                        "fr": "Délai de connexion initial"
+                    },
+                    "description": {
+                        "en": "Maximum time, as an ISO-8601 duration (e.g. PT10S = 10 seconds), to wait for a client to establish its initial connection before dropping it.",
+                        "fr": "Durée maximale, au format ISO-8601 (par ex. PT10S = 10 secondes), accordée à un client pour établir sa connexion initiale avant déconnexion."
+                    }
+                },
+                "ConnectionTimeouts.AuthTimeout": {
+                    "display_type": "text",
+                    "config": {
+                        "default": "PT30S"
+                    },
+                    "label": {
+                        "en": "Authentication Timeout",
+                        "fr": "Délai d'authentification"
+                    },
+                    "description": {
+                        "en": "Maximum time, as an ISO-8601 duration (e.g. PT30S = 30 seconds), allowed for a client to complete authentication before being disconnected.",
+                        "fr": "Durée maximale, au format ISO-8601 (par ex. PT30S = 30 secondes), accordée à un client pour terminer son authentification avant déconnexion."
+                    }
+                },
+                "ConnectionTimeouts.PlayTimeout": {
+                    "display_type": "text",
+                    "config": {
+                        "default": "PT1M"
+                    },
+                    "label": {
+                        "en": "Play Inactivity Timeout",
+                        "fr": "Délai d'inactivité en jeu"
+                    },
+                    "description": {
+                        "en": "Maximum idle time, as an ISO-8601 duration (e.g. PT1M = 1 minute), before an unresponsive in-game client is disconnected.",
+                        "fr": "Durée d'inactivité maximale, au format ISO-8601 (par ex. PT1M = 1 minute), avant qu'un client en jeu ne répondant plus ne soit déconnecté."
+                    }
+                },
+                "RateLimit.Enabled": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Enable Packet Rate Limiting",
+                        "fr": "Activer la limitation du débit de paquets"
+                    },
+                    "description": {
+                        "en": "When enabled, the server limits how many network packets a client may send to protect against packet spam and abuse.",
+                        "fr": "Lorsqu'activé, le serveur limite le nombre de paquets réseau qu'un client peut envoyer afin de se protéger contre le spam de paquets et les abus."
+                    }
+                },
+                "RateLimit.PacketsPerSecond": {
+                    "display_type": "number",
+                    "config": {
+                        "default": "2000",
+                        "min": 1,
+                        "max": 100000
+                    },
+                    "label": {
+                        "en": "Packets per Second",
+                        "fr": "Paquets par seconde"
+                    },
+                    "description": {
+                        "en": "Sustained number of network packets a single client is allowed to send each second when rate limiting is enabled.",
+                        "fr": "Nombre soutenu de paquets réseau qu'un seul client est autorisé à envoyer chaque seconde lorsque la limitation du débit est activée."
+                    }
+                },
+                "RateLimit.BurstCapacity": {
+                    "display_type": "number",
+                    "config": {
+                        "default": "500",
+                        "min": 1,
+                        "max": 100000
+                    },
+                    "label": {
+                        "en": "Burst Capacity",
+                        "fr": "Capacité de rafale"
+                    },
+                    "description": {
+                        "en": "Number of extra packets a client may send in a short burst above the per-second rate before being throttled.",
+                        "fr": "Nombre de paquets supplémentaires qu'un client peut envoyer en une courte rafale au-delà du débit par seconde avant d'être limité."
+                    }
+                },
+                "Version": {
+                    "display_type": "number",
+                    "config": {
+                        "default": "3",
+                        "min": 1,
+                        "max": 99
+                    },
+                    "label": {
+                        "en": "Config Version",
+                        "fr": "Version de la configuration"
+                    },
+                    "description": {
+                        "en": "Internal version number of the config file format. The server maintains this automatically — do not change it by hand.",
+                        "fr": "Numéro de version interne du format du fichier de configuration. Le serveur le maintient automatiquement — ne le modifiez pas à la main."
+                    }
+                }
+            }
+        },
+        {
+            "id": "world-config",
+            "path": "universe/worlds/world/config.json",
+            "format": "json",
+            "label": {
+                "en": "World settings",
+                "fr": "Paramètres du monde"
+            },
+            "parameters": {
+                "Seed": {
+                    "display_type": "text",
+                    "config": {
+                        "default": ""
+                    },
+                    "label": {
+                        "en": "World Seed",
+                        "fr": "Graine du monde"
+                    },
+                    "description": {
+                        "en": "Numeric seed that determines world generation. Leave empty to let the server pick a random seed on first generation; the same seed reproduces the same terrain.",
+                        "fr": "Graine numérique qui détermine la génération du monde. Laissez vide pour que le serveur choisisse une graine aléatoire à la première génération ; une même graine reproduit le même terrain."
+                    }
+                },
+                "WorldGen.Type": {
+                    "display_type": "select",
+                    "config": {
+                        "default": "Hytale",
+                        "options": [
+                            {
+                                "value": "Hytale",
+                                "label": {
+                                    "en": "Hytale (full generation)",
+                                    "fr": "Hytale (génération complète)"
+                                }
+                            },
+                            {
+                                "value": "Flat",
+                                "label": {
+                                    "en": "Flat",
+                                    "fr": "Plat"
+                                }
+                            },
+                            {
+                                "value": "Void",
+                                "label": {
+                                    "en": "Void (empty)",
+                                    "fr": "Vide"
+                                }
+                            },
+                            {
+                                "value": "Dummy",
+                                "label": {
+                                    "en": "Dummy (test)",
+                                    "fr": "Factice (test)"
+                                }
+                            }
+                        ]
+                    },
+                    "label": {
+                        "en": "World Generator Type",
+                        "fr": "Type de générateur de monde"
+                    },
+                    "description": {
+                        "en": "Which generation engine builds the world: Hytale for the standard biome-rich terrain, Flat for a flat world, Void for an empty world, Dummy for testing.",
+                        "fr": "Moteur de génération qui construit le monde : Hytale pour le terrain standard riche en biomes, Plat pour un monde plat, Vide pour un monde vide, Factice pour les tests."
+                    }
+                },
+                "WorldGen.Name": {
+                    "display_type": "text",
+                    "config": {
+                        "default": "Default"
+                    },
+                    "label": {
+                        "en": "Generator Configuration",
+                        "fr": "Configuration du générateur"
+                    },
+                    "description": {
+                        "en": "Name of the generator preset to use (only applies to the Hytale generator type); \"Default\" uses the stock terrain configuration.",
+                        "fr": "Nom du préréglage de générateur à utiliser (s'applique uniquement au type de générateur Hytale) ; « Default » utilise la configuration de terrain d'origine."
+                    }
+                },
+                "WorldGen.Path": {
+                    "display_type": "text",
+                    "config": {
+                        "default": ""
+                    },
+                    "label": {
+                        "en": "Generator Config Path",
+                        "fr": "Chemin de configuration du générateur"
+                    },
+                    "description": {
+                        "en": "Optional path to a custom world-generation configuration (Hytale generator type only). Leave empty to use the server default.",
+                        "fr": "Chemin optionnel vers une configuration de génération de monde personnalisée (type de générateur Hytale uniquement). Laissez vide pour utiliser la valeur par défaut du serveur."
+                    }
+                },
+                "ChunkStorage.Type": {
+                    "display_type": "text",
+                    "config": {
+                        "default": "Hytale"
+                    },
+                    "label": {
+                        "en": "Chunk Storage Type",
+                        "fr": "Type de stockage des chunks"
+                    },
+                    "description": {
+                        "en": "Backend used to store the world's chunk (block) data; leave on the native \"Hytale\" value unless a plugin documents an alternative.",
+                        "fr": "Backend utilisé pour stocker les données de chunks (blocs) du monde ; laissez la valeur native « Hytale » sauf si un plugin documente une alternative."
+                    }
+                },
+                "GameMode": {
+                    "display_type": "select",
+                    "config": {
+                        "default": "Adventure",
+                        "options": [
+                            {
+                                "value": "Adventure",
+                                "label": {
+                                    "en": "Adventure",
+                                    "fr": "Aventure"
+                                }
+                            },
+                            {
+                                "value": "Creative",
+                                "label": {
+                                    "en": "Creative",
+                                    "fr": "Créatif"
+                                }
+                            }
+                        ]
+                    },
+                    "label": {
+                        "en": "World Game Mode",
+                        "fr": "Mode de jeu du monde"
+                    },
+                    "description": {
+                        "en": "Default game mode applied to players in this specific world; overrides the server-wide default for this world only.",
+                        "fr": "Mode de jeu par défaut appliqué aux joueurs dans ce monde précis ; remplace le réglage par défaut du serveur pour ce monde uniquement."
+                    }
+                },
+                "GameplayConfig": {
+                    "display_type": "text",
+                    "config": {
+                        "default": "Default"
+                    },
+                    "label": {
+                        "en": "Gameplay Configuration",
+                        "fr": "Configuration de gameplay"
+                    },
+                    "description": {
+                        "en": "Name of the gameplay ruleset preset applied to this world; \"Default\" uses the stock gameplay rules.",
+                        "fr": "Nom du préréglage de règles de jeu appliqué à ce monde ; « Default » utilise les règles de jeu d'origine."
+                    }
+                },
+                "IsPvpEnabled": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "false",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Enable PvP",
+                        "fr": "Activer le JcJ"
+                    },
+                    "description": {
+                        "en": "When enabled, players can damage each other in this world; disable for a purely cooperative or peaceful world.",
+                        "fr": "Lorsqu'activé, les joueurs peuvent se blesser mutuellement dans ce monde ; désactivez-le pour un monde purement coopératif ou pacifique."
+                    }
+                },
+                "IsFallDamageEnabled": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Enable Fall Damage",
+                        "fr": "Activer les dégâts de chute"
+                    },
+                    "description": {
+                        "en": "When enabled, players take damage from falling; disable for building-focused or relaxed worlds.",
+                        "fr": "Lorsqu'activé, les joueurs subissent des dégâts en tombant ; désactivez-le pour les mondes axés sur la construction ou détendus."
+                    }
+                },
+                "IsTicking": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Tick World (chunks)",
+                        "fr": "Faire tourner le monde (chunks)"
+                    },
+                    "description": {
+                        "en": "When enabled, loaded chunks continue to update (entities move, time passes) even with no players nearby; disabling freezes the world to save CPU.",
+                        "fr": "Lorsqu'activé, les chunks chargés continuent de se mettre à jour (les entités bougent, le temps s'écoule) même sans joueur à proximité ; le désactiver fige le monde pour économiser le processeur."
+                    }
+                },
+                "IsBlockTicking": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Tick Blocks",
+                        "fr": "Faire tourner les blocs"
+                    },
+                    "description": {
+                        "en": "When enabled, blocks in this world receive random ticks (such as crop growth and fluid flow); disabling stops block-based processes.",
+                        "fr": "Lorsqu'activé, les blocs de ce monde reçoivent des ticks aléatoires (comme la croissance des cultures et l'écoulement des fluides) ; le désactiver arrête les processus liés aux blocs."
+                    }
+                },
+                "IsGameTimePaused": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "false",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Pause Day/Night Cycle",
+                        "fr": "Mettre en pause le cycle jour/nuit"
+                    },
+                    "description": {
+                        "en": "When enabled, the in-game clock stops so the time of day no longer advances; useful for locking a world to permanent day or night.",
+                        "fr": "Lorsqu'activé, l'horloge du jeu s'arrête de sorte que l'heure n'avance plus ; utile pour bloquer un monde sur un jour ou une nuit permanente."
+                    }
+                },
+                "GameTime": {
+                    "display_type": "text",
+                    "config": {
+                        "default": "1970-01-01T05:30:00Z"
+                    },
+                    "label": {
+                        "en": "Game Time of Day",
+                        "fr": "Heure du jour en jeu"
+                    },
+                    "description": {
+                        "en": "Current in-game time of day as an ISO-8601 timestamp (the date part is ignored); for example 05:30 represents early morning.",
+                        "fr": "Heure actuelle du jour en jeu sous forme d'horodatage ISO-8601 (la partie date est ignorée) ; par exemple 05:30 représente le petit matin."
+                    }
+                },
+                "DaytimeDurationSeconds": {
+                    "display_type": "number",
+                    "config": {
+                        "default": "0",
+                        "min": 0,
+                        "max": 86400
+                    },
+                    "label": {
+                        "en": "Daytime Duration (seconds)",
+                        "fr": "Durée du jour (secondes)"
+                    },
+                    "description": {
+                        "en": "Length of the daytime portion of the cycle in real seconds; set to 0 to use the world's default day length.",
+                        "fr": "Durée de la phase de jour du cycle en secondes réelles ; réglez sur 0 pour utiliser la durée du jour par défaut du monde."
+                    }
+                },
+                "NighttimeDurationSeconds": {
+                    "display_type": "number",
+                    "config": {
+                        "default": "0",
+                        "min": 0,
+                        "max": 86400
+                    },
+                    "label": {
+                        "en": "Nighttime Duration (seconds)",
+                        "fr": "Durée de la nuit (secondes)"
+                    },
+                    "description": {
+                        "en": "Length of the nighttime portion of the cycle in real seconds; set to 0 to use the world's default night length.",
+                        "fr": "Durée de la phase de nuit du cycle en secondes réelles ; réglez sur 0 pour utiliser la durée de la nuit par défaut du monde."
+                    }
+                },
+                "IsSpawningNPC": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Spawn NPCs",
+                        "fr": "Faire apparaître les PNJ"
+                    },
+                    "description": {
+                        "en": "When enabled, creatures and NPCs spawn naturally throughout the world; disable for an empty world with no wildlife or monsters.",
+                        "fr": "Lorsqu'activé, les créatures et PNJ apparaissent naturellement dans tout le monde ; désactivez-le pour un monde vide sans faune ni monstres."
+                    }
+                },
+                "IsSpawnMarkersEnabled": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Enable Spawn Markers",
+                        "fr": "Activer les marqueurs d'apparition"
+                    },
+                    "description": {
+                        "en": "When enabled, designer-placed spawn markers in the world are active and can spawn their associated NPCs or objects.",
+                        "fr": "Lorsqu'activé, les marqueurs d'apparition placés par les concepteurs dans le monde sont actifs et peuvent faire apparaître leurs PNJ ou objets associés."
+                    }
+                },
+                "IsAllNPCFrozen": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "false",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Freeze All NPCs",
+                        "fr": "Figer tous les PNJ"
+                    },
+                    "description": {
+                        "en": "When enabled, every NPC's AI is frozen so creatures stop moving and acting; useful for screenshots, building or debugging.",
+                        "fr": "Lorsqu'activé, l'IA de chaque PNJ est figée afin que les créatures cessent de bouger et d'agir ; utile pour les captures d'écran, la construction ou le débogage."
+                    }
+                },
+                "IsObjectiveMarkersEnabled": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Enable Objective Markers",
+                        "fr": "Activer les marqueurs d'objectif"
+                    },
+                    "description": {
+                        "en": "When enabled, objective and quest markers are shown to players in this world; disable to hide guidance markers.",
+                        "fr": "Lorsqu'activé, les marqueurs d'objectif et de quête sont affichés aux joueurs dans ce monde ; désactivez-le pour masquer les marqueurs d'orientation."
+                    }
+                },
+                "IsCompassUpdating": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Update Compass",
+                        "fr": "Mettre à jour la boussole"
+                    },
+                    "description": {
+                        "en": "When enabled, the player compass tracks targets and updates in this world; disable to keep the compass static.",
+                        "fr": "Lorsqu'activé, la boussole du joueur suit les cibles et se met à jour dans ce monde ; désactivez-le pour garder la boussole statique."
+                    }
+                },
+                "IsSavingPlayers": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Save Player Data",
+                        "fr": "Sauvegarder les données des joueurs"
+                    },
+                    "description": {
+                        "en": "When enabled, player inventory and position are persisted for this world; disable for temporary or event worlds where progress should not be kept.",
+                        "fr": "Lorsqu'activé, l'inventaire et la position des joueurs sont conservés pour ce monde ; désactivez-le pour les mondes temporaires ou événementiels où la progression ne doit pas être gardée."
+                    }
+                },
+                "IsSavingChunks": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Save Chunks to Disk",
+                        "fr": "Sauvegarder les chunks sur le disque"
+                    },
+                    "description": {
+                        "en": "When enabled, changes to the world's chunks are written to disk so the world persists across restarts; disable for read-only or disposable worlds.",
+                        "fr": "Lorsqu'activé, les modifications des chunks du monde sont écrites sur le disque afin que le monde persiste entre les redémarrages ; désactivez-le pour les mondes en lecture seule ou jetables."
+                    }
+                },
+                "SaveNewChunks": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Save Newly Generated Chunks",
+                        "fr": "Sauvegarder les chunks nouvellement générés"
+                    },
+                    "description": {
+                        "en": "When enabled, freshly generated chunks are marked to be saved; disable to keep only chunks that players have actively modified.",
+                        "fr": "Lorsqu'activé, les chunks nouvellement générés sont marqués pour être sauvegardés ; désactivez-le pour ne conserver que les chunks que les joueurs ont activement modifiés."
+                    }
+                },
+                "IsUnloadingChunks": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "true",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Unload Unused Chunks",
+                        "fr": "Décharger les chunks inutilisés"
+                    },
+                    "description": {
+                        "en": "When enabled, chunks with no players nearby are unloaded from memory to reduce RAM use; disabling keeps the whole loaded area resident.",
+                        "fr": "Lorsqu'activé, les chunks sans joueur à proximité sont déchargés de la mémoire pour réduire l'utilisation de la RAM ; le désactiver maintient toute la zone chargée en mémoire."
+                    }
+                },
+                "DeleteOnUniverseStart": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "false",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Delete World on Startup",
+                        "fr": "Supprimer le monde au démarrage"
+                    },
+                    "description": {
+                        "en": "When enabled, this world is wiped and regenerated every time the server starts; use only for rotating or temporary worlds.",
+                        "fr": "Lorsqu'activé, ce monde est effacé et régénéré à chaque démarrage du serveur ; à utiliser uniquement pour les mondes rotatifs ou temporaires."
+                    }
+                },
+                "DeleteOnRemove": {
+                    "display_type": "boolean",
+                    "config": {
+                        "default": "false",
+                        "true_value": "true",
+                        "false_value": "false"
+                    },
+                    "label": {
+                        "en": "Delete World Files on Removal",
+                        "fr": "Supprimer les fichiers du monde au retrait"
+                    },
+                    "description": {
+                        "en": "When enabled, the world's files are permanently deleted from disk when the world is removed from the universe; leave disabled to keep a backup on disk.",
+                        "fr": "Lorsqu'activé, les fichiers du monde sont définitivement supprimés du disque lorsque le monde est retiré de l'univers ; laissez désactivé pour conserver une sauvegarde sur le disque."
+                    }
+                },
+                "ClientEffects.SunIntensity": {
+                    "display_type": "slider",
+                    "config": {
+                        "min": 0,
+                        "max": 1,
+                        "step": 0.01,
+                        "default": "0.25"
+                    },
+                    "label": {
+                        "en": "Sun Intensity",
+                        "fr": "Intensité du soleil"
+                    },
+                    "description": {
+                        "en": "Brightness of direct sunlight in the world, from 0 (dark) to 1 (very bright); controls how strongly the sun lights the scene.",
+                        "fr": "Luminosité de la lumière directe du soleil dans le monde, de 0 (sombre) à 1 (très lumineux) ; contrôle l'intensité avec laquelle le soleil éclaire la scène."
+                    }
+                },
+                "ClientEffects.SunHeightPercent": {
+                    "display_type": "slider",
+                    "config": {
+                        "min": 0,
+                        "max": 100,
+                        "step": 1,
+                        "default": "100"
+                    },
+                    "label": {
+                        "en": "Sun Height (%)",
+                        "fr": "Hauteur du soleil (%)"
+                    },
+                    "description": {
+                        "en": "Height of the sun in the sky as a percentage, affecting how high the sun sits and the length of shadows.",
+                        "fr": "Hauteur du soleil dans le ciel en pourcentage, influençant la position du soleil et la longueur des ombres."
+                    }
+                },
+                "ClientEffects.SunAngleDegrees": {
+                    "display_type": "slider",
+                    "config": {
+                        "min": 0,
+                        "max": 360,
+                        "step": 1,
+                        "default": "0"
+                    },
+                    "label": {
+                        "en": "Sun Angle (degrees)",
+                        "fr": "Angle du soleil (degrés)"
+                    },
+                    "description": {
+                        "en": "Direction of the sun around the sky in degrees, which sets the direction shadows are cast.",
+                        "fr": "Direction du soleil autour du ciel en degrés, qui définit la direction dans laquelle les ombres sont projetées."
+                    }
+                },
+                "ClientEffects.SunshaftIntensity": {
+                    "display_type": "slider",
+                    "config": {
+                        "min": 0,
+                        "max": 1,
+                        "step": 0.01,
+                        "default": "0.3"
+                    },
+                    "label": {
+                        "en": "Sunshaft Intensity",
+                        "fr": "Intensité des rayons solaires"
+                    },
+                    "description": {
+                        "en": "Strength of the visible god-ray sunshafts that stream from the sun, from 0 (off) to 1 (strong).",
+                        "fr": "Intensité des rayons solaires visibles (« god rays ») émanant du soleil, de 0 (désactivés) à 1 (intenses)."
+                    }
+                },
+                "ClientEffects.SunshaftScaleFactor": {
+                    "display_type": "slider",
+                    "config": {
+                        "min": 0,
+                        "max": 16,
+                        "step": 0.1,
+                        "default": "4.0"
+                    },
+                    "label": {
+                        "en": "Sunshaft Scale",
+                        "fr": "Échelle des rayons solaires"
+                    },
+                    "description": {
+                        "en": "Scale factor applied to the sunshaft effect, controlling how far the god-ray streaks spread from the sun.",
+                        "fr": "Facteur d'échelle appliqué à l'effet de rayons solaires, contrôlant jusqu'où les traînées de lumière s'étendent depuis le soleil."
+                    }
+                },
+                "ClientEffects.BloomIntensity": {
+                    "display_type": "slider",
+                    "config": {
+                        "min": 0,
+                        "max": 1,
+                        "step": 0.01,
+                        "default": "0.3"
+                    },
+                    "label": {
+                        "en": "Bloom Intensity",
+                        "fr": "Intensité du bloom"
+                    },
+                    "description": {
+                        "en": "Strength of the bloom glow around bright areas, from 0 (off) to 1 (strong halo); a post-processing visual effect.",
+                        "fr": "Intensité de la lueur de bloom autour des zones lumineuses, de 0 (désactivée) à 1 (halo intense) ; un effet visuel de post-traitement."
+                    }
+                },
+                "ClientEffects.BloomPower": {
+                    "display_type": "slider",
+                    "config": {
+                        "min": 0,
+                        "max": 32,
+                        "step": 0.1,
+                        "default": "8.0"
+                    },
+                    "label": {
+                        "en": "Bloom Power",
+                        "fr": "Puissance du bloom"
+                    },
+                    "description": {
+                        "en": "Falloff curve of the bloom effect; higher values concentrate the glow tightly around the brightest pixels.",
+                        "fr": "Courbe d'atténuation de l'effet de bloom ; des valeurs plus élevées concentrent la lueur étroitement autour des pixels les plus lumineux."
+                    }
+                },
+                "Version": {
+                    "display_type": "number",
+                    "config": {
+                        "default": "4",
+                        "min": 1,
+                        "max": 99
+                    },
+                    "label": {
+                        "en": "World Config Version",
+                        "fr": "Version de la configuration du monde"
+                    },
+                    "description": {
+                        "en": "Internal version number of the world config file format. The server maintains this automatically — do not change it by hand.",
+                        "fr": "Numéro de version interne du format du fichier de configuration du monde. Le serveur le maintient automatiquement — ne le modifiez pas à la main."
+                    }
+                }
+            }
+        }
+    ]
+}

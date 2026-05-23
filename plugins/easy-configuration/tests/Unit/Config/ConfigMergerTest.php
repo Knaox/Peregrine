@@ -62,6 +62,31 @@ final class ConfigMergerTest extends TestCase
         self::assertSame('normal', $result['parameters'][0]['value']);
     }
 
+    public function test_it_emits_env_var_when_declared_and_null_otherwise(): void
+    {
+        $fileDef = [
+            'format' => 'properties',
+            'parameters' => [
+                'max-players' => ['display_type' => 'slider', 'env_var' => 'MAX_PLAYERS'],
+                'pvp' => ['display_type' => 'boolean'],
+            ],
+        ];
+        $parsed = new ParsedConfig([
+            new ConfigParameter('max-players', '50'),
+            new ConfigParameter('pvp', 'true'),
+            new ConfigParameter('motd', 'hi'),
+        ]);
+
+        $byKey = [];
+        foreach ($this->merger()->merge($fileDef, $parsed)['parameters'] as $param) {
+            $byKey[$param['key']] = $param;
+        }
+
+        self::assertSame('MAX_PLAYERS', $byKey['max-players']['env_var']);
+        self::assertNull($byKey['pvp']['env_var']);
+        self::assertNull($byKey['motd']['env_var']);
+    }
+
     public function test_it_filters_sections_outside_the_whitelist(): void
     {
         $fileDef = [
@@ -87,5 +112,36 @@ final class ConfigMergerTest extends TestCase
         $keys = array_column($result['parameters'], 'key');
         self::assertContains('MaxPlayers', $keys);
         self::assertContains('Extra', $keys);
+    }
+
+    public function test_it_surfaces_every_occurrence_of_a_repeated_templated_key(): void
+    {
+        // ARK Game.ini repeats e.g. ConfigOverrideItemMaxQuantity once per item.
+        $fileDef = [
+            'format' => 'ini',
+            'parameters' => [
+                'GameMode' => [
+                    'ConfigOverrideItemMaxQuantity' => ['display_type' => 'text', 'label' => ['en' => 'Item max quantity']],
+                ],
+            ],
+        ];
+        $parsed = new ParsedConfig([
+            new ConfigParameter('ConfigOverrideItemMaxQuantity', 'A', 'GameMode', 0),
+            new ConfigParameter('ConfigOverrideItemMaxQuantity', 'B', 'GameMode', 1),
+            new ConfigParameter('ConfigOverrideItemMaxQuantity', 'C', 'GameMode', 2),
+        ]);
+
+        $rows = array_values(array_filter(
+            $this->merger()->merge($fileDef, $parsed)['parameters'],
+            static fn (array $p): bool => $p['key'] === 'ConfigOverrideItemMaxQuantity',
+        ));
+
+        self::assertCount(3, $rows);
+        self::assertSame([0, 1, 2], array_map(static fn (array $p): int => $p['occurrence'], $rows));
+        self::assertSame(['A', 'B', 'C'], array_map(static fn (array $p): string => $p['value'], $rows));
+        // Every occurrence reuses the template's display type (not raw-inferred).
+        foreach ($rows as $p) {
+            self::assertSame('text', $p['display_type']);
+        }
     }
 }

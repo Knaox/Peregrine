@@ -12,5 +12,11 @@ export const adminCss = `
 .ec-error-list { margin: 0; padding-left: 1.1rem; color: var(--color-danger); font-size: 0.78rem; display: flex; flex-direction: column; gap: 0.2rem; }
 .ec-template-card { display: flex; flex-direction: column; gap: 0.6rem; }
 .ec-template-card-foot { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
-@media (max-width: 640px) { .ec-cols-2 { grid-template-columns: 1fr; } }
+.ec-pathbar { flex-wrap: wrap; gap: 0.2rem; padding: 0.1rem 0; }
+.ec-crumb { background: none; border: none; color: var(--color-text-secondary); cursor: pointer; font-size: 0.8rem; padding: 0.1rem 0.3rem; border-radius: var(--radius); max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ec-crumb:hover { color: var(--color-text); background: var(--color-surface-elevated); }
+.ec-link-group { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.4rem 0 0.5rem 0.75rem; border-left: 2px solid var(--color-border); }
+.ec-link-key { font-size: 0.78rem; font-weight: 500; color: var(--color-text-secondary); word-break: break-word; }
+.ec-section-row { display: grid; grid-template-columns: minmax(7rem, 1fr) 1fr 1fr; gap: 0.5rem; align-items: center; }
+@media (max-width: 640px) { .ec-cols-2 { grid-template-columns: 1fr; } .ec-section-row { grid-template-columns: 1fr; } }
 `;

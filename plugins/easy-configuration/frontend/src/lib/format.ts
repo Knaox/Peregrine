@@ -14,3 +14,38 @@ export function toLocalInput(date: Date): string {
 
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
+
+/** Config parser format from a file name's extension. Mirrors the backend's
+ * ConfigImportScaffolder::EXTENSION_FORMATS. Returns undefined when unknown so
+ * the import endpoint stays the single source of truth (it rejects with 422). */
+const EXTENSION_FORMATS: Record<string, string> = {
+    properties: 'properties',
+    ini: 'ini',
+    cfg: 'ini',
+    conf: 'ini',
+    toml: 'toml',
+    yml: 'yaml',
+    yaml: 'yaml',
+    json: 'json',
+};
+
+export function extensionToFormat(name: string): string | undefined {
+    const dot = name.lastIndexOf('.');
+    if (dot < 0) {
+        return undefined;
+    }
+
+    return EXTENSION_FORMATS[name.slice(dot + 1).toLowerCase()];
+}
+
+/** Short human file size, e.g. 1536 → "1.5 KB". Directories pass size 0 → "". */
+export function formatBytes(bytes: number): string {
+    if (!bytes || bytes <= 0) {
+        return '';
+    }
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    const value = bytes / 1024 ** exponent;
+
+    return `${value % 1 === 0 ? value : value.toFixed(1)} ${units[exponent]}`;
+}

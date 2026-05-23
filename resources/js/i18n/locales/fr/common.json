@@ -42,9 +42,12 @@
     "accept": {
         "title": "Invitation serveur",
         "invited_to": "{{inviter}} vous a invité à rejoindre {{server}}.",
+        "invited_to_multi": "{{inviter}} vous a invité sur {{n}} serveurs.",
+        "servers_label": "Serveurs que vous rejoindrez :",
         "permissions": "Permissions que vous recevrez :",
         "expires": "Cette invitation expire le {{date}}.",
         "button": "Accepter l'invitation",
+        "accepting": "Acceptation de votre invitation…",
         "wrong_email": "Vous êtes connecté en tant que {{current}}, mais cette invitation est pour {{expected}}.",
         "logout": "Se déconnecter",
         "create_account": "Créer un compte",

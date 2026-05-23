@@ -28,6 +28,19 @@ Route::middleware('auth')->group(function () {
             ->orderByDesc('created_at')
             ->get();
 
+        // Attach how many servers each batch spans so the UI can badge a
+        // multi-server invite. Single invites (batch_id null) stay null.
+        $batchIds = $invitations->pluck('batch_id')->filter()->unique()->values();
+        $sizes = $batchIds->isEmpty()
+            ? collect()
+            : Invitation::whereIn('batch_id', $batchIds->all())
+                ->selectRaw('batch_id, COUNT(*) as aggregate')
+                ->groupBy('batch_id')
+                ->pluck('aggregate', 'batch_id');
+        $invitations->each(function (Invitation $inv) use ($sizes): void {
+            $inv->batch_size = $inv->batch_id ? (int) ($sizes[$inv->batch_id] ?? 1) : null;
+        });
+
         return response()->json(['data' => $invitations]);
     });
 
@@ -42,6 +55,10 @@ Route::middleware('auth')->group(function () {
             'email' => ['required', 'email', 'max:255'],
             'permissions' => ['required', 'array', 'min:1'],
             'permissions.*' => ['string'],
+            // Optional extra servers — invite the same user to several servers
+            // in ONE email whose accept link authorizes them all at once.
+            'server_ids' => ['sometimes', 'array'],
+            'server_ids.*' => ['integer', 'distinct', 'exists:servers,id'],
         ]);
 
         // Self-invitation blocked.
@@ -51,9 +68,38 @@ Route::middleware('auth')->group(function () {
 
         try {
             $service = app(InvitationService::class);
-            $invitation = $service->create($server, $request->user(), $validated['email'], $validated['permissions']);
 
-            return response()->json(['message' => __('invitations::messages.success.invitation_sent'), 'id' => $invitation->id], 201);
+            // No extra servers → classic single-server invite (unchanged contract).
+            if (empty($validated['server_ids'])) {
+                $invitation = $service->create($server, $request->user(), $validated['email'], $validated['permissions']);
+
+                return response()->json(['message' => __('invitations::messages.success.invitation_sent'), 'id' => $invitation->id], 201);
+            }
+
+            // Targets are exactly the servers the client selected and the
+            // inviter may create users on (unauthorized ones dropped). The
+            // current server is included by the client only when it should be
+            // (a fresh invite — never a copy-access). Restricted to the SAME
+            // egg as the current server: permissions are egg-specific, so a
+            // different egg would receive an invalid permission set.
+            $targetIds = Server::whereIn('id', collect($validated['server_ids'])->unique()->values()->all())
+                ->get()
+                ->filter(fn (Server $s): bool => $request->user()->hasServerPermission($s, 'user.create')
+                    && $s->egg_id === $server->egg_id)
+                ->pluck('id')
+                ->all();
+
+            if (empty($targetIds)) {
+                abort(403);
+            }
+
+            $result = $service->createBatch($targetIds, $request->user(), $validated['email'], $validated['permissions']);
+
+            return response()->json([
+                'message' => __('invitations::messages.success.invitation_sent'),
+                'ids' => collect($result['invitations'])->pluck('id')->all(),
+                'skipped' => $result['skipped'],
+            ], 201);
         } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
@@ -324,9 +370,13 @@ Route::middleware('auth')->group(function () {
     Route::post('invite/{token}/accept', function (string $token, Request $request): JsonResponse {
         try {
             $service = app(InvitationService::class);
-            $invitation = $service->accept($token, $request->user());
+            $result = $service->accept($token, $request->user());
 
-            return response()->json(['message' => 'Invitation accepted.', 'server_id' => $invitation->server_id]);
+            return response()->json([
+                'message' => 'Invitation accepted.',
+                'server_id' => $result['first_server_id'],
+                'server_ids' => $result['accepted'],
+            ]);
         } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         } catch (Throwable $e) {

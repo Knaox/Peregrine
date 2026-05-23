@@ -77,6 +77,58 @@ final class TemplateRegistry
         return array_values(array_map('intval', array_keys($ids)));
     }
 
+    /**
+     * Env var names linked by any parameter of every valid template targeting
+     * this egg — used by the core to hide them from its startup-variables page.
+     *
+     * @return list<string>
+     */
+    public function linkedEnvVars(int $eggId): array
+    {
+        $vars = [];
+        foreach ($this->forEgg($eggId) as $row) {
+            $definition = $this->definition($row->template_id);
+            if ($definition === null) {
+                continue;
+            }
+            foreach ($definition->files() as $file) {
+                foreach ($this->envVarsInParameters(is_array($file['parameters'] ?? null) ? $file['parameters'] : []) as $name) {
+                    $vars[$name] = true;
+                }
+            }
+        }
+
+        return array_keys($vars);
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return list<string>
+     */
+    private function envVarsInParameters(array $params): array
+    {
+        $out = [];
+        foreach ($params as $value) {
+            if (! is_array($value)) {
+                continue;
+            }
+            if (isset($value['display_type'])) {
+                if (! empty($value['env_var'])) {
+                    $out[] = (string) $value['env_var'];
+                }
+
+                continue;
+            }
+            foreach ($value as $childDef) {
+                if (is_array($childDef) && ! empty($childDef['env_var'])) {
+                    $out[] = (string) $childDef['env_var'];
+                }
+            }
+        }
+
+        return $out;
+    }
+
     /** @return array<string, mixed> */
     private function attributes(LoadedTemplate $loaded): array
     {

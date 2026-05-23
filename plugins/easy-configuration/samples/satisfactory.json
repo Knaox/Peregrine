@@ -1,0 +1,339 @@
+{
+    "$schema": "https://peregrine.dev/schemas/easy-config-template/v1.json",
+    "id": "satisfactory",
+    "version": "1.0.0",
+    "name": {
+        "en": "Satisfactory",
+        "fr": "Satisfactory"
+    },
+    "description": {
+        "en": "File-editable settings for a Satisfactory dedicated server — network tick rate, connection timeouts, port range, autosave rotation and seasonal events. Headline gameplay options (server name, passwords, autosave count) live in the binary save and are managed in-game, not here.",
+        "fr": "Paramètres modifiables par fichier pour un serveur dédié Satisfactory — fréquence réseau, délais de connexion, plage de ports, rotation des sauvegardes automatiques et événements saisonniers. Les options de jeu principales (nom du serveur, mots de passe, nombre de sauvegardes) sont stockées dans la sauvegarde binaire et se gèrent en jeu, pas ici."
+    },
+    "author": "Peregrine",
+    "target_eggs": [],
+    "columns": 2,
+    "boost": {
+        "enabled": false,
+        "parameter_blacklist": []
+    },
+    "files": [
+        {
+            "id": "engine-ini",
+            "path": "/FactoryGame/Saved/Config/LinuxServer/Engine.ini",
+            "format": "ini",
+            "enabled": true,
+            "label": {
+                "en": "Engine & network",
+                "fr": "Moteur et réseau"
+            },
+            "parameters": {
+                "/Script/OnlineSubsystemUtils.IpNetDriver": {
+                    "NetServerMaxTickRate": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "30",
+                            "min": 10,
+                            "max": 120
+                        },
+                        "label": {
+                            "en": "Server Tick Rate",
+                            "fr": "Fréquence d'actualisation serveur"
+                        },
+                        "description": {
+                            "en": "Upper limit, in updates per second, at which the server simulates and replicates the world to players. Higher values feel smoother but cost more CPU and bandwidth.",
+                            "fr": "Limite supérieure, en mises à jour par seconde, à laquelle le serveur simule et réplique le monde aux joueurs. Des valeurs plus élevées sont plus fluides mais coûtent plus de CPU et de bande passante."
+                        }
+                    },
+                    "LanServerMaxTickRate": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "30",
+                            "min": 10,
+                            "max": 120
+                        },
+                        "label": {
+                            "en": "LAN Server Tick Rate",
+                            "fr": "Fréquence d'actualisation serveur LAN"
+                        },
+                        "description": {
+                            "en": "Same as the server tick rate but applied when the server is reached over a local network connection.",
+                            "fr": "Identique à la fréquence d'actualisation serveur mais appliquée lorsque le serveur est joint via une connexion réseau locale."
+                        }
+                    },
+                    "InitialConnectTimeout": {
+                        "display_type": "slider",
+                        "config": {
+                            "min": 5,
+                            "max": 300,
+                            "step": 1,
+                            "default": "30.0"
+                        },
+                        "label": {
+                            "en": "Initial Connection Timeout (s)",
+                            "fr": "Délai de connexion initiale (s)"
+                        },
+                        "description": {
+                            "en": "How long, in seconds, the server waits for a brand-new client to finish establishing its connection before giving up. Raise it for players on slow links who time out while joining.",
+                            "fr": "Durée, en secondes, pendant laquelle le serveur attend qu'un nouveau client termine l'établissement de sa connexion avant d'abandonner. Augmentez-la pour les joueurs sur connexion lente qui expirent en rejoignant."
+                        }
+                    },
+                    "ConnectionTimeout": {
+                        "display_type": "slider",
+                        "config": {
+                            "min": 5,
+                            "max": 300,
+                            "step": 1,
+                            "default": "30.0"
+                        },
+                        "label": {
+                            "en": "Active Connection Timeout (s)",
+                            "fr": "Délai de connexion active (s)"
+                        },
+                        "description": {
+                            "en": "How long, in seconds, an already-connected client can stop responding before the server drops it. Higher values tolerate brief network hiccups without disconnecting players.",
+                            "fr": "Durée, en secondes, pendant laquelle un client déjà connecté peut cesser de répondre avant que le serveur ne le déconnecte. Des valeurs plus élevées tolèrent de brèves coupures réseau sans déconnecter les joueurs."
+                        }
+                    }
+                },
+                "/Script/SocketSubsystemEpic.EpicNetDriver": {
+                    "NetServerMaxTickRate": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "30",
+                            "min": 10,
+                            "max": 120
+                        },
+                        "label": {
+                            "en": "Server Tick Rate (Epic)",
+                            "fr": "Fréquence d'actualisation serveur (Epic)"
+                        },
+                        "description": {
+                            "en": "Server tick rate used by the Epic Online Services net driver. Keep it in sync with the standard server tick rate so both connection paths behave the same.",
+                            "fr": "Fréquence d'actualisation serveur utilisée par le pilote réseau Epic Online Services. Gardez-la alignée sur la fréquence serveur standard pour que les deux voies de connexion se comportent identiquement."
+                        }
+                    },
+                    "LanServerMaxTickRate": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "30",
+                            "min": 10,
+                            "max": 120
+                        },
+                        "label": {
+                            "en": "LAN Server Tick Rate (Epic)",
+                            "fr": "Fréquence d'actualisation serveur LAN (Epic)"
+                        },
+                        "description": {
+                            "en": "LAN tick rate used by the Epic Online Services net driver, applied to local-network connections through that subsystem.",
+                            "fr": "Fréquence d'actualisation LAN utilisée par le pilote réseau Epic Online Services, appliquée aux connexions réseau locales via ce sous-système."
+                        }
+                    }
+                },
+                "/Script/Engine.Engine": {
+                    "NetClientTicksPerSecond": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "30",
+                            "min": 10,
+                            "max": 120
+                        },
+                        "label": {
+                            "en": "Client Update Rate",
+                            "fr": "Fréquence de mise à jour client"
+                        },
+                        "description": {
+                            "en": "How many times per second the server sends state updates to each client. Should generally match the server tick rate to avoid wasted or stuttering updates.",
+                            "fr": "Nombre de fois par seconde où le serveur envoie des mises à jour d'état à chaque client. Doit en général correspondre à la fréquence serveur pour éviter des mises à jour gaspillées ou saccadées."
+                        }
+                    }
+                },
+                "/Script/ReliableMessaging.ReliableMessagingTCPFactory": {
+                    "PortRangeBegin": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "8888",
+                            "min": 1,
+                            "max": 65535
+                        },
+                        "label": {
+                            "en": "Message Port Range Start",
+                            "fr": "Début de la plage de ports de messagerie"
+                        },
+                        "description": {
+                            "en": "First port the server tries when binding its internal reliable-messaging channel. Change it only if this port range conflicts with another service on the host.",
+                            "fr": "Premier port que le serveur tente lors de la liaison de son canal de messagerie fiable interne. Ne le modifiez que si cette plage de ports entre en conflit avec un autre service de l'hôte."
+                        }
+                    },
+                    "PortRangeLength": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "512",
+                            "min": 1,
+                            "max": 4096
+                        },
+                        "label": {
+                            "en": "Message Port Range Length",
+                            "fr": "Longueur de la plage de ports de messagerie"
+                        },
+                        "description": {
+                            "en": "How many consecutive ports, starting from the range start, the server may try before failing to bind. Leave at the default unless instructed otherwise.",
+                            "fr": "Nombre de ports consécutifs, à partir du début de la plage, que le serveur peut essayer avant d'échouer la liaison. Laissez la valeur par défaut sauf indication contraire."
+                        }
+                    },
+                    "ExternalPortRangeBegin": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "-1",
+                            "min": -1,
+                            "max": 65535
+                        },
+                        "label": {
+                            "en": "External Port Range Start",
+                            "fr": "Début de la plage de ports externes"
+                        },
+                        "description": {
+                            "en": "Externally visible starting port advertised to clients when the server sits behind NAT or port mapping. Leave at -1 to reuse the internal port range.",
+                            "fr": "Port de départ visible de l'extérieur annoncé aux clients lorsque le serveur est derrière du NAT ou une redirection de ports. Laissez -1 pour réutiliser la plage de ports interne."
+                        }
+                    }
+                },
+                "/Script/FactoryGame.FGSaveSession": {
+                    "mNumRotatingAutosaves": {
+                        "display_type": "number",
+                        "config": {
+                            "default": "3",
+                            "min": 1,
+                            "max": 20
+                        },
+                        "label": {
+                            "en": "Rotating Autosave Slots",
+                            "fr": "Emplacements de sauvegarde automatique en rotation"
+                        },
+                        "description": {
+                            "en": "How many autosave files are kept in rotation before the oldest is overwritten. More slots give deeper rollback history at the cost of disk space.",
+                            "fr": "Nombre de fichiers de sauvegarde automatique conservés en rotation avant que le plus ancien ne soit écrasé. Davantage d'emplacements offrent un historique de restauration plus profond au prix d'espace disque."
+                        }
+                    }
+                },
+                "CrashReportClient": {
+                    "bImplicitSend": {
+                        "display_type": "boolean",
+                        "config": {
+                            "default": "True",
+                            "true_value": "True",
+                            "false_value": "False"
+                        },
+                        "label": {
+                            "en": "Auto-Send Crash Reports",
+                            "fr": "Envoyer automatiquement les rapports de plantage"
+                        },
+                        "description": {
+                            "en": "When enabled, the dedicated server automatically uploads crash reports to the developer on Linux without prompting. Disable it to keep crash data local.",
+                            "fr": "Lorsqu'activé, le serveur dédié envoie automatiquement les rapports de plantage au développeur sous Linux sans demander confirmation. Désactivez-le pour garder les données de plantage en local."
+                        }
+                    }
+                }
+            },
+            "section_labels": {
+                "/Script/OnlineSubsystemUtils.IpNetDriver": {
+                    "en": "Network driver (IP)",
+                    "fr": "Pilote réseau (IP)"
+                },
+                "/Script/SocketSubsystemEpic.EpicNetDriver": {
+                    "en": "Network driver (Epic)",
+                    "fr": "Pilote réseau (Epic)"
+                },
+                "/Script/Engine.Engine": {
+                    "en": "Engine",
+                    "fr": "Moteur"
+                },
+                "/Script/ReliableMessaging.ReliableMessagingTCPFactory": {
+                    "en": "Ports",
+                    "fr": "Ports"
+                },
+                "/Script/FactoryGame.FGSaveSession": {
+                    "en": "Autosaves",
+                    "fr": "Sauvegardes automatiques"
+                },
+                "CrashReportClient": {
+                    "en": "Crash reporting",
+                    "fr": "Rapports de plantage"
+                }
+            }
+        },
+        {
+            "id": "game-ini",
+            "path": "/FactoryGame/Saved/Config/LinuxServer/Game.ini",
+            "format": "ini",
+            "enabled": true,
+            "label": {
+                "en": "Game session",
+                "fr": "Session de jeu"
+            },
+            "parameters": {
+                "/Script/Engine.GameSession": {
+                    "MaxPlayers": {
+                        "display_type": "slider",
+                        "config": {
+                            "min": 1,
+                            "max": 127,
+                            "step": 1,
+                            "default": "4"
+                        },
+                        "label": {
+                            "en": "Max Players",
+                            "fr": "Joueurs maximum"
+                        },
+                        "description": {
+                            "en": "Maximum number of players allowed to be connected to the session at the same time. The engine supports up to 127, but high values demand significant CPU and bandwidth.",
+                            "fr": "Nombre maximum de joueurs autorisés à être connectés à la session en même temps. Le moteur en gère jusqu'à 127, mais des valeurs élevées exigent beaucoup de CPU et de bande passante."
+                        }
+                    }
+                }
+            },
+            "section_labels": {
+                "/Script/Engine.GameSession": {
+                    "en": "Slots",
+                    "fr": "Slots / Joueurs"
+                }
+            }
+        },
+        {
+            "id": "gameusersettings-ini",
+            "path": "/FactoryGame/Saved/Config/LinuxServer/GameUserSettings.ini",
+            "format": "ini",
+            "enabled": true,
+            "label": {
+                "en": "User settings",
+                "fr": "Paramètres utilisateur"
+            },
+            "parameters": {
+                "/Script/FactoryGame.FGGameUserSettings": {
+                    "FG.DisableSeasonalEvents": {
+                        "display_type": "boolean",
+                        "config": {
+                            "default": "0",
+                            "true_value": "1",
+                            "false_value": "0"
+                        },
+                        "label": {
+                            "en": "Disable Seasonal Events",
+                            "fr": "Désactiver les événements saisonniers"
+                        },
+                        "description": {
+                            "en": "When enabled, limited-time seasonal events such as FICSMAS are turned off so their decorations and items do not appear on the server.",
+                            "fr": "Lorsqu'activé, les événements saisonniers à durée limitée comme FICSMAS sont désactivés afin que leurs décorations et objets n'apparaissent pas sur le serveur."
+                        }
+                    }
+                }
+            },
+            "section_labels": {
+                "/Script/FactoryGame.FGGameUserSettings": {
+                    "en": "Game user settings",
+                    "fr": "Paramètres utilisateur du jeu"
+                }
+            }
+        }
+    ]
+}

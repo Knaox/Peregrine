@@ -3,9 +3,11 @@
 namespace App\Services\Plugin;
 
 use App\Models\Plugin;
+use Filament\Panel;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -57,7 +59,7 @@ class PluginBootstrap
             }
 
             $studlyId = Str::studly($plugin->plugin_id);
-            $srcPath = $pluginPath . '/src/';
+            $srcPath = $pluginPath.'/src/';
 
             if ($this->files->isDirectory($srcPath)) {
                 $loader->addPsr4("Plugins\\{$studlyId}\\", $srcPath);
@@ -104,7 +106,7 @@ class PluginBootstrap
             try {
                 $this->app->register($fqcn);
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning(
+                Log::warning(
                     "PluginBootstrap: plugin '{$plugin->plugin_id}' failed to register and was skipped",
                     [
                         'plugin_id' => $plugin->plugin_id,
@@ -154,18 +156,28 @@ class PluginBootstrap
                 continue;
             }
 
+            $pluginPath = $this->discovery->getPluginPath($plugin->plugin_id);
+
             $bundleUrl = null;
             $frontendBundle = $manifest['frontend']['bundle'] ?? null;
 
             if ($frontendBundle) {
+                // Cache-bust on the bundle's CONTENT (mtime + size), not the
+                // plugin `version`: a dev rebuild lands immediately without
+                // churning the version, and a formal release whose bundle is
+                // unchanged keeps a stable URL. Falls back to the version when
+                // the compiled file is missing.
                 $version = $manifest['version'] ?? '0';
-                $bundleUrl = "/plugins/{$plugin->plugin_id}/bundle.js?v={$version}";
+                $bundleFile = $pluginPath !== null ? $pluginPath.'/frontend/dist/bundle.js' : null;
+                $assetTag = $bundleFile !== null && is_file($bundleFile)
+                    ? substr(sha1($version.':'.filemtime($bundleFile).':'.filesize($bundleFile)), 0, 10)
+                    : $version;
+                $bundleUrl = "/plugins/{$plugin->plugin_id}/bundle.js?v={$assetTag}";
             }
 
             // Optional plugin icon — auto-discovered from plugins/{id}/icon.svg.
             // Lets every plugin ship its own logo without manifest changes.
             $iconUrl = null;
-            $pluginPath = $this->discovery->getPluginPath($plugin->plugin_id);
             if ($pluginPath !== null && is_file($pluginPath.'/icon.svg')) {
                 $iconUrl = "/plugins/{$plugin->plugin_id}/icon.svg";
             }
@@ -239,7 +251,7 @@ class PluginBootstrap
      * the `register()` phase, BEFORE `bootPlugins()` would normally fire.
      * Registration is idempotent — safe to call from both.
      */
-    public function contributeToFilamentPanel(\Filament\Panel $panel): \Filament\Panel
+    public function contributeToFilamentPanel(Panel $panel): Panel
     {
         if (! config('panel.installed')) {
             return $panel;
@@ -269,9 +281,9 @@ class PluginBootstrap
                     continue;
                 }
 
-                $studlyId = \Illuminate\Support\Str::studly($plugin->plugin_id);
+                $studlyId = Str::studly($plugin->plugin_id);
                 $baseNs = "Plugins\\{$studlyId}";
-                $srcPath = $pluginPath . '/src/';
+                $srcPath = $pluginPath.'/src/';
 
                 if (! $this->files->isDirectory($srcPath)) {
                     continue;
@@ -280,7 +292,7 @@ class PluginBootstrap
                 // Idempotent PSR-4 registration — same call as bootPlugins().
                 $loader->addPsr4("{$baseNs}\\", $srcPath);
 
-                $resourcesDir = $srcPath . 'Filament/Resources';
+                $resourcesDir = $srcPath.'Filament/Resources';
                 if ($this->files->isDirectory($resourcesDir)) {
                     $panel->discoverResources(
                         in: $resourcesDir,
@@ -288,7 +300,7 @@ class PluginBootstrap
                     );
                 }
 
-                $pagesDir = $srcPath . 'Filament/Pages';
+                $pagesDir = $srcPath.'Filament/Pages';
                 if ($this->files->isDirectory($pagesDir)) {
                     $panel->discoverPages(
                         in: $pagesDir,
@@ -296,7 +308,7 @@ class PluginBootstrap
                     );
                 }
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning(
+                Log::warning(
                     "PluginBootstrap: plugin '{$plugin->plugin_id}' failed Filament contribution and was skipped",
                     [
                         'plugin_id' => $plugin->plugin_id,

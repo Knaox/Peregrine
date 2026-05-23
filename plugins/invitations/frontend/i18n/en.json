@@ -5,14 +5,31 @@
         "email": "Email address",
         "email_placeholder": "user@example.com",
         "permissions": "Permissions",
+        "advanced_permissions": "Advanced permissions",
         "no_permissions": "Please select at least one permission.",
         "send": "Send invitation",
         "active_invitations": "Active invitations",
         "expires": "Expires",
-        "revoke": "Revoke"
+        "revoke": "Revoke",
+        "subtitle": "Send an email invitation to give someone access.",
+        "select_all": "Select all permissions",
+        "loading_permissions": "Loading permissions…",
+        "servers": "Servers",
+        "servers_more": "Also invite to other servers",
+        "servers_hint": "Pick the servers to invite this user to — the same permissions apply to each, in a single email.",
+        "servers_hint_invite": "This server is always included — pick any additional servers. The same permissions apply to each.",
+        "select_all_servers": "All servers",
+        "no_other_servers": "No other servers with the same egg available.",
+        "no_servers": "Select at least one server."
     },
     "actions": {
         "resend": "Resend"
+    },
+    "copy": {
+        "button": "Copy access",
+        "title": "Copy access to other servers",
+        "subtitle": "Invite this user to other servers with the same permissions. They receive a single email.",
+        "send": "Send invitations"
     },
     "page": {
         "title": "Users & Invitations",
@@ -27,7 +44,8 @@
         "status_active": "Active",
         "remove": "Remove",
         "confirm_remove": "Remove this user from the server?",
-        "you": "You"
+        "you": "You",
+        "multi_server": "Multi-server"
     },
     "edit": {
         "button": "Edit",

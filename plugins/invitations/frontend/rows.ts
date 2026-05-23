@@ -7,20 +7,23 @@ interface SubuserRowArgs {
     sub: Sub;
     onEdit: (sub: Sub) => void;
     onRemove: (uuid: string) => void;
+    onCopy: (sub: Sub) => void;
     removeDisabled: boolean;
     canEdit: boolean;
     canRemove: boolean;
+    canCopy: boolean;
     labels: {
         active: string;
         remove: string;
         edit: string;
+        copy: string;
         confirmRemove: string;
         you: string;
     };
 }
 
 export function renderSubuserRow(args: SubuserRowArgs): ReturnType<typeof h> {
-    const { sub, onEdit, onRemove, removeDisabled, canEdit, canRemove, labels } = args;
+    const { sub, onEdit, onRemove, onCopy, removeDisabled, canEdit, canRemove, canCopy, labels } = args;
     const isSelf = sub.is_current_user === true;
 
     return h('div', { key: sub.uuid, style: { ...C.card, ...C.userRow } as React.CSSProperties }, [
@@ -55,6 +58,12 @@ export function renderSubuserRow(args: SubuserRowArgs): ReturnType<typeof h> {
         ]),
         h('div', { key: 'ac', style: C.actions }, [
             h('span', { key: 'pc', style: C.permBadge }, `${sub.permissions.length} perms`),
+            !isSelf && canCopy
+                ? h('button', {
+                    key: 'cp', type: 'button', onClick: () => onCopy(sub),
+                    style: C.btnSecondary,
+                }, labels.copy)
+                : null,
             !isSelf && canEdit
                 ? h('button', {
                     key: 'ed', type: 'button', onClick: () => onEdit(sub),
@@ -89,6 +98,7 @@ interface InvitationRowArgs {
         revoke: string;
         edit: string;
         resend: string;
+        multiServer: string;
     };
 }
 
@@ -108,6 +118,12 @@ export function renderInvitationRow(args: InvitationRowArgs): ReturnType<typeof 
                         key: 'st',
                         style: C.badge('rgba(var(--color-warning-rgb),0.1)', 'var(--color-warning)'),
                     }, labels.pending),
+                    inv.batch_id
+                        ? h('span', {
+                            key: 'ms',
+                            style: C.badge('rgba(var(--color-primary-rgb),0.12)', 'var(--color-primary)'),
+                        }, inv.batch_size && inv.batch_size > 1 ? `${labels.multiServer} · ${inv.batch_size}` : labels.multiServer)
+                        : null,
                     h('span', {
                         key: 'ex', style: { fontSize: '0.6875rem', color: 'var(--color-text-muted)' },
                     }, `${labels.expires}: ${new Date(inv.expires_at).toLocaleDateString()}`),

@@ -21,9 +21,22 @@ final class ConfigValueValidatorTest extends TestCase
         $def = ['display_type' => 'number', 'config' => ['min' => 1, 'max' => 100]];
 
         self::assertNull($this->validator->validate($def, '50'));
-        self::assertNotNull($this->validator->validate($def, '200'));
-        self::assertNotNull($this->validator->validate($def, '0'));
+        // Soft min/max: a non-linked number may be typed below its min OR above
+        // its max (manual override). Only the type check stays hard.
+        self::assertNull($this->validator->validate($def, '200'));
+        self::assertNull($this->validator->validate($def, '0'));
         self::assertNotNull($this->validator->validate(['display_type' => 'number'], 'abc'));
+    }
+
+    public function test_env_linked_number_is_hard_capped_at_min_and_max(): void
+    {
+        // An env-linked param bounds the synced Pelican variable, so BOTH `min`
+        // and `max` stay hard — manual override below min or above max is rejected.
+        $linked = ['display_type' => 'number', 'env_var' => 'MAX_PLAYERS', 'config' => ['min' => 1, 'max' => 100]];
+
+        self::assertNull($this->validator->validate($linked, '100'));
+        self::assertNotNull($this->validator->validate($linked, '200'));
+        self::assertNotNull($this->validator->validate($linked, '0'));
     }
 
     public function test_whole_number_unless_float_is_allowed(): void

@@ -45,6 +45,20 @@ export interface Inv {
     permissions: string[];
     expires_at: string;
     inviter: { name: string } | null;
+    /** Set when this invitation is part of a multi-server batch (one email, many servers). */
+    batch_id?: string | null;
+    /** How many servers the batch spans (null for a single-server invite). */
+    batch_size?: number | null;
+}
+
+/** A server the current user can access, as returned by the host `GET /api/servers`. */
+export interface HostServer {
+    id: number;
+    identifier: string;
+    name: string;
+    role?: 'owner' | 'subuser' | null;
+    permissions?: string[] | null;
+    egg?: { id?: number; name?: string } | null;
 }
 
 export interface Sub {
@@ -62,6 +76,8 @@ export interface PG {
     group: string;
     label: string;
     permissions: { key: string; label: string }[];
+    /** Permission keys surfaced under an "Advanced permissions" subsection. */
+    advanced?: string[];
 }
 
 export const C = {
@@ -88,4 +104,15 @@ export const C = {
     sectionLabel: { fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--color-text-muted)', margin: 0 },
     emptyBox: { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '1rem', padding: '4rem 1rem', textAlign: 'center' as const },
     emptyIcon: { width: 56, height: 56, borderRadius: 'var(--radius-lg)', background: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    // --- Overlay modal (scrim + centered panel) ---
+    overlay: { position: 'fixed' as const, inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '4vh 1rem', overflowY: 'auto' as const, background: 'var(--modal-scrim, rgba(0,0,0,0.6))', backdropFilter: 'blur(4px)' },
+    modalPanel: { borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', padding: '1.25rem', width: '100%', maxWidth: 'min(30rem, 96vw)', display: 'flex', flexDirection: 'column' as const, gap: '1rem', boxShadow: '0 24px 60px rgba(0,0,0,0.45)' },
+    modalTitle: { fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-primary)', margin: 0, lineHeight: 1.3 },
+    modalSubtitle: { fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0 },
+    hint: { fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 },
+    // --- Pickers (global select-all + server options) ---
+    pickerGlobalRow: { display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.625rem 1rem', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-hover)', cursor: 'pointer' },
+    serverList: { display: 'flex', flexDirection: 'column' as const, gap: '0.375rem', maxHeight: '30vh', overflowY: 'auto' as const },
+    serverOpt: { display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius)', border: '1px solid var(--color-border)', cursor: 'pointer', transition: 'background 150ms, border-color 150ms' },
+    checkbox: { width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--color-primary)', flexShrink: 0 },
 };

@@ -27,7 +27,20 @@ final class ServerConfigController
         $model = $this->resolveServer($server, $request);
         $this->authorizeServer($request, $model, 'easyconfig.read', 'file.read');
 
-        return response()->json(['data' => $reader->read($model)]);
+        $data = $reader->read($model);
+        // Surface the caller's capabilities so the editor can render read-only
+        // and hide copy/boost when the subuser lacks the matching permission.
+        $data['permissions'] = [
+            'write' => $this->canServer($request, $model, 'easyconfig.write', 'file.update'),
+            'copy' => $this->canServer($request, $model, 'easyconfig.copy', 'file.update'),
+            'boost' => $this->canServer($request, $model, 'easyconfig.boost', 'file.update'),
+            // Admin-only: gates the inline "annotate a discovered parameter into
+            // the template" action. The real barrier is EnsureAdmin on the
+            // /admin/templates routes; this just hides the affordance otherwise.
+            'manage_templates' => $request->user()?->is_admin === true,
+        ];
+
+        return response()->json(['data' => $data]);
     }
 
     public function update(SaveConfigRequest $request, string $server, ConfigWriterService $writer): JsonResponse
@@ -45,7 +58,11 @@ final class ServerConfigController
             ], 422);
         }
 
-        return response()->json(['data' => ['written' => $result['written']]]);
+        return response()->json(['data' => [
+            'written' => $result['written'],
+            'env_synced' => $result['env_synced'] ?? 0,
+            'env_errors' => $result['env_errors'] ?? [],
+        ]]);
     }
 
     public function status(Request $request, string $server, PelicanClientService $client): JsonResponse

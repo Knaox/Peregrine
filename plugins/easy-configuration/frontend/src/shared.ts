@@ -64,13 +64,21 @@ export async function api<T>(url: string, options: RequestInit = {}): Promise<T>
     });
 
     if (!response.ok) {
-        const body: unknown = await response.json().catch(() => ({}));
-        const error = (body as { error?: { code?: string; message?: string; messages?: string[]; fields?: ApiError['fields'] } }).error;
+        const body = (await response.json().catch(() => ({}))) as {
+            error?: { code?: string; message?: string; messages?: string[]; fields?: ApiError['fields'] };
+            message?: string;
+            errors?: Record<string, string[]>;
+        };
+        const error = body.error;
+        // Fall back to Laravel's validation shape ({ message, errors }) so a
+        // FormRequest rejection (e.g. SaveTemplateRequest) surfaces its real
+        // field messages instead of a generic error.
+        const laravelMessages = body.errors ? Object.values(body.errors).flat() : undefined;
         throw {
             status: response.status,
             code: error?.code,
-            message: error?.message,
-            messages: error?.messages,
+            message: error?.message ?? body.message,
+            messages: error?.messages ?? laravelMessages,
             fields: error?.fields,
         } satisfies ApiError;
     }

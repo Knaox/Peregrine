@@ -59,11 +59,17 @@ class PermissionRegistry
      *                                            return true to surface this group for the given server, false to hide it.
      *                                            Omit (or pass null) for an always-visible group.
      */
+    /**
+     * @param  array<string, array<string, string>>  $permissions
+     * @param  list<string>  $advanced  Permission keys to surface under an
+     *                                  "Advanced permissions" subsection in the picker.
+     */
     public function registerGroup(
         string $groupKey,
         array $groupLabel,
         array $permissions,
         ?Closure $availableForServer = null,
+        array $advanced = [],
     ): void {
         if (isset($this->groups[$groupKey])) {
             // Merge permissions into existing group ; the filter passed
@@ -73,6 +79,9 @@ class PermissionRegistry
                 $this->groups[$groupKey]['permissions'],
                 $permissions,
             );
+            $this->groups[$groupKey]['advanced'] = array_values(array_unique(
+                array_merge($this->groups[$groupKey]['advanced'] ?? [], $advanced),
+            ));
 
             return;
         }
@@ -81,6 +90,7 @@ class PermissionRegistry
             'label' => $groupLabel,
             'permissions' => $permissions,
             'filter' => $availableForServer,
+            'advanced' => array_values($advanced),
         ];
     }
 
@@ -184,6 +194,7 @@ class PermissionRegistry
                 'group' => $key,
                 'label' => $group['label'][$locale] ?? $group['label']['en'] ?? $key,
                 'permissions' => $permissions,
+                'advanced' => array_values($group['advanced'] ?? []),
             ];
         }
 

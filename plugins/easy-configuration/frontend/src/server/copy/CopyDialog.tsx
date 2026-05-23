@@ -38,6 +38,25 @@ export function CopyDialog({ open, onClose, serverId, templates }: { open: boole
     const [batchId, setBatchId] = useState<string | null>(null);
     const [expected, setExpected] = useState(0);
     const [copyBoosts, setCopyBoosts] = useState(false);
+    const [copyEnvVars, setCopyEnvVars] = useState(false);
+    const [envVarsSel, setEnvVarsSel] = useState<Set<string>>(new Set());
+
+    // Env vars linked by template params — offered as an opt-in copy alongside
+    // the config files (the value is read live from the source on copy).
+    const linkedEnvVars = useMemo(() => {
+        const set = new Set<string>();
+        for (const template of templates) {
+            for (const file of template.files) {
+                for (const param of file.parameters) {
+                    if (param.env_var) {
+                        set.add(param.env_var);
+                    }
+                }
+            }
+        }
+
+        return [...set].sort();
+    }, [templates]);
 
     const targetsQuery = useCopyTargets(serverId, open);
     const sourceBoosts = useBoosts(serverId);
@@ -72,6 +91,8 @@ export function CopyDialog({ open, onClose, serverId, templates }: { open: boole
         setBatchId(null);
         setExpected(0);
         setCopyBoosts(false);
+        setCopyEnvVars(false);
+        setEnvVarsSel(new Set());
     };
 
     const handleClose = (): void => {
@@ -92,9 +113,28 @@ export function CopyDialog({ open, onClose, serverId, templates }: { open: boole
         });
     };
 
+    const toggleEnvVar = (name: string): void => {
+        setEnvVarsSel((current) => {
+            const next = new Set(current);
+            if (next.has(name)) {
+                next.delete(name);
+            } else {
+                next.add(name);
+            }
+
+            return next;
+        });
+    };
+
     const confirm = (): void => {
         start.mutate(
-            { targets: [...targetsSel], files, copy_boosts: copyBoosts },
+            {
+                targets: [...targetsSel],
+                files,
+                copy_boosts: copyBoosts,
+                copy_env_vars: copyEnvVars,
+                env_vars: copyEnvVars ? [...envVarsSel] : [],
+            },
             {
                 onSuccess: (data) => {
                     setBatchId(data.batch_id);
@@ -146,6 +186,24 @@ export function CopyDialog({ open, onClose, serverId, templates }: { open: boole
                                 <Toggle checked={copyBoosts} onChange={setCopyBoosts} label={t('copy.copy_boosts')} />
                                 <span className="ec-field-desc">{t('copy.copy_boosts')}</span>
                             </label>
+                        )}
+                        {batchId === null && linkedEnvVars.length > 0 && (
+                            <div className="ec-stack">
+                                <label className="ec-row" style={{ cursor: 'pointer' }}>
+                                    <Toggle checked={copyEnvVars} onChange={setCopyEnvVars} label={t('copy.copy_env_vars')} />
+                                    <span className="ec-field-desc">{t('copy.copy_env_vars')}</span>
+                                </label>
+                                {copyEnvVars && (
+                                    <div className="ec-row" style={{ flexWrap: 'wrap', gap: '0.4rem 1rem' }}>
+                                        {linkedEnvVars.map((name) => (
+                                            <label key={name} className="ec-row" style={{ gap: '0.35rem', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={envVarsSel.has(name)} onChange={() => toggleEnvVar(name)} />
+                                                <span className="ec-truncate">{name}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         )}
                         <CopyReview targetNames={targetNames} paramCount={paramCount} started={batchId !== null} rows={rows} expected={expected} done={done} />
                     </div>

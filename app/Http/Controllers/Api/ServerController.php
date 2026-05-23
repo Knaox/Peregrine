@@ -10,6 +10,7 @@ use App\Http\Resources\ServerResource;
 use App\Models\Server;
 use App\Services\Pelican\PelicanClientService;
 use App\Services\Pelican\PelicanNetworkService;
+use App\Services\Plugin\StartupVariableClaimRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -150,6 +151,22 @@ class ServerController extends Controller
     {
         $this->authorize('readStartup', $server);
         $variables = $this->clientService->getStartupVariables($server->identifier);
+
+        // Flag variables a plugin has "claimed" via StartupVariableClaimRegistry
+        // so the UI can badge them as linked. They are shown here — the core
+        // startup page is the single place to edit them — and the claiming plugin
+        // hides them from its own editor. Core stays plugin-agnostic.
+        $claimed = StartupVariableClaimRegistry::getInstance()->claimedFor($server);
+        if ($claimed !== []) {
+            $variables = array_map(
+                static function (array $variable) use ($claimed): array {
+                    $variable['claimed'] = in_array($variable['env_variable'] ?? '', $claimed, true);
+
+                    return $variable;
+                },
+                $variables,
+            );
+        }
 
         return response()->json(['data' => $variables]);
     }

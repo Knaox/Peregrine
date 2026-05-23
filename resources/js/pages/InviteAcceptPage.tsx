@@ -14,7 +14,7 @@ export function InviteAcceptPage() {
     const { t } = useTranslation();
     const { token } = useParams<{ token: string }>();
     const navigate = useNavigate();
-    const { user, isAuthenticated, logout } = useAuthStore();
+    const { user, isAuthenticated, logout, loadUser, isLoading: authLoading } = useAuthStore();
     const branding = useBranding();
 
     const { data: invitation, isLoading, isError } = useInvitationPublic(token ?? '');
@@ -32,6 +32,12 @@ export function InviteAcceptPage() {
     // this they'd have to click "Accept" again after logging in — the friction
     // the bug report hit. Fires once (ref guard); the accept endpoint is
     // idempotent so a StrictMode double-invoke in dev is harmless.
+    // /invite/:token is a PUBLIC route, so the auth store is never hydrated by
+    // ProtectedRoute here. Hydrate the session on mount so an already-logged-in
+    // invitee is recognised and auto-accepts — instead of being shown the login
+    // screen and pushed through a needless re-login.
+    useEffect(() => { void loadUser(); }, [loadUser]);
+
     const autoAcceptedRef = useRef(false);
     useEffect(() => {
         if (!isAuthenticated || !invitation?.is_active || !token) return;
@@ -45,12 +51,16 @@ export function InviteAcceptPage() {
     }, [isAuthenticated, invitation, user, token, acceptMutation, navigate, t]);
 
     if (!token) return <ErrorState message={t('accept.invalid')} branding={branding} />;
-    if (isLoading) return <LoadingState branding={branding} />;
+    if (isLoading || authLoading) return <LoadingState branding={branding} />;
     if (isError || !invitation) return <ErrorState message={t('accept.expired')} branding={branding} />;
     if (!invitation.is_active) return <ErrorState message={invitation.is_accepted ? t('accept.already_accepted') : t('accept.expired')} branding={branding} />;
 
     const emailMatch = isAuthenticated && user?.email?.toLowerCase() === invitation.email.toLowerCase();
     const emailMismatch = isAuthenticated && !emailMatch;
+
+    // A multi-server invite (batch) lists every server the single link grants.
+    const servers = invitation.servers ?? (invitation.server_name ? [invitation.server_name] : []);
+    const isMultiServer = servers.length > 1;
 
     const handleAccept = () => {
         setError('');
@@ -97,8 +107,24 @@ export function InviteAcceptPage() {
 
                     <h1 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">{t('accept.title')}</h1>
                     <p className="text-sm text-[var(--color-text-secondary)] mb-5">
-                        {t('accept.invited_to', { server: invitation.server_name, inviter: invitation.inviter_name })}
+                        {isMultiServer
+                            ? t('accept.invited_to_multi', { n: servers.length, inviter: invitation.inviter_name })
+                            : t('accept.invited_to', { server: invitation.server_name, inviter: invitation.inviter_name })}
                     </p>
+
+                    {isMultiServer && (
+                        <div className="mb-5 rounded-[var(--radius)] p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">{t('accept.servers_label')}</p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {servers.map((s, i) => (
+                                    <span key={`${s}-${i}`} className="rounded-[var(--radius-sm)] px-2 py-0.5 text-[11px] font-medium"
+                                        style={{ background: 'rgba(var(--color-primary-rgb), 0.1)', color: 'var(--color-primary)' }}>
+                                        {s}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Permissions */}
                     {invitation.permissions.length > 0 && (
@@ -127,11 +153,21 @@ export function InviteAcceptPage() {
                         </div>
                     )}
 
-                    {/* Case 1: Authenticated + email match → accept button */}
+                    {/* Case 1: Authenticated + matching email → auto-accept (handled
+                        by the effect above), so there's no manual second step. Show
+                        an "accepting" spinner; fall back to a retry button only if
+                        the auto-accept errored. */}
                     {emailMatch && (
-                        <Button variant="primary" isLoading={acceptMutation.isPending} onClick={handleAccept} className="w-full">
-                            {t('accept.button')}
-                        </Button>
+                        error ? (
+                            <Button variant="primary" isLoading={acceptMutation.isPending} onClick={handleAccept} className="w-full">
+                                {t('accept.button')}
+                            </Button>
+                        ) : (
+                            <div className="flex items-center justify-center gap-2.5 py-2 text-sm text-[var(--color-text-secondary)]">
+                                <Spinner size="sm" />
+                                <span>{t('accept.accepting')}</span>
+                            </div>
+                        )
                     )}
 
                     {/* Case 2: Authenticated + wrong email */}

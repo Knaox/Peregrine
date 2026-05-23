@@ -39,6 +39,8 @@ export interface ParamBoost {
     id: number;
     status: 'pending' | 'active';
     multiplier: number;
+    /** When true the parameter is divided by the multiplier (deboost) instead of multiplied. */
+    invert?: boolean;
     effective_value: string;
     start_at: string;
     end_at: string;
@@ -53,6 +55,10 @@ export interface ConfigParam {
     description: LocaleLabel | null;
     value: string;
     inferred: boolean;
+    /** 0-based occurrence index for a key that repeats in the file (e.g. ARK ConfigOverride* lines). */
+    occurrence?: number;
+    /** When set, the parameter is linked to this Pelican env variable. */
+    env_var?: string | null;
     boost?: ParamBoost | null;
 }
 
@@ -63,6 +69,8 @@ export interface ConfigFile {
     format: string;
     exists: boolean;
     sectioned: boolean;
+    /** Friendly FR/EN names per native section (ini/toml), keyed by raw name. */
+    section_labels?: Record<string, LocaleLabel> | null;
     parameters: ConfigParam[];
 }
 
@@ -72,11 +80,24 @@ export interface ConfigTemplate {
     description: LocaleLabel;
     boost_enabled: boolean;
     boost_blacklist: string[];
+    /** Player editor layout: 1 (default), 2 or 3 columns. */
+    columns?: number;
     files: ConfigFile[];
+}
+
+/** Caller capabilities surfaced by the backend so the editor can gate the UI. */
+export interface ConfigPermissions {
+    write: boolean;
+    copy: boolean;
+    boost: boolean;
+    /** Admin-only: may annotate a discovered parameter into the template. */
+    manage_templates?: boolean;
 }
 
 export interface ConfigPayload {
     templates: ConfigTemplate[];
+    /** Absent for older backends → treated as full access (owner/admin). */
+    permissions?: ConfigPermissions;
 }
 
 /** Server power state as reported by Pelican. */
@@ -102,4 +123,24 @@ export interface EggOption {
     id: number;
     name: string;
     banner_image: string | null;
+}
+
+/** A server in the "import a config file" picker. */
+export interface ServerOption {
+    id: number;
+    name: string;
+    egg_id: number | null;
+    egg_name: string | null;
+}
+
+/** One entry in a server directory listing (file browser). */
+export interface ServerFileEntry {
+    name: string;
+    mode: string;
+    size: number;
+    is_file: boolean;
+    is_symlink: boolean;
+    is_directory: boolean;
+    modified_at: number | string;
+    mimetype?: string;
 }

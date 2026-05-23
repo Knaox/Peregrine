@@ -191,6 +191,7 @@ Route::middleware('auth')->group(function () {
     Route::post('servers/{server}/schedules', [ServerScheduleController::class, 'store']);
     Route::post('servers/{server}/schedules/{schedule}', [ServerScheduleController::class, 'update']);
     Route::post('servers/{server}/schedules/{schedule}/execute', [ServerScheduleController::class, 'execute']);
+    Route::post('servers/{server}/schedules/{schedule}/copy', [ServerScheduleController::class, 'copy']);
     Route::delete('servers/{server}/schedules/{schedule}', [ServerScheduleController::class, 'destroy']);
     Route::post('servers/{server}/schedules/{schedule}/tasks', [ServerScheduleController::class, 'storeTask']);
     Route::post('servers/{server}/schedules/{schedule}/tasks/{task}', [ServerScheduleController::class, 'updateTask']);

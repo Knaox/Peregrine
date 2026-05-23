@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Pelican\CopyScheduleAction;
 use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Server\CopyScheduleRequest;
 use App\Http\Requests\Server\CreateScheduleRequest;
 use App\Http\Requests\Server\CreateTaskRequest;
 use App\Http\Requests\Server\UpdateScheduleRequest;
 use App\Models\Server;
 use App\Services\Pelican\PelicanScheduleService;
+use App\Services\Pelican\ScheduleNormalizer;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
@@ -26,27 +29,7 @@ class ServerScheduleController extends Controller
         $data = Cache::remember("server_schedules:{$server->identifier}", 300, function () use ($server): array {
             $schedules = $this->scheduleService->listSchedules($server->identifier);
 
-            return array_map(function (array $schedule): array {
-                $attrs = $schedule['attributes'] ?? $schedule;
-                // Flatten cron object into top-level fields
-                if (isset($attrs['cron'])) {
-                    $attrs['minute'] = $attrs['cron']['minute'] ?? '*';
-                    $attrs['hour'] = $attrs['cron']['hour'] ?? '*';
-                    $attrs['day_of_month'] = $attrs['cron']['day_of_month'] ?? '*';
-                    $attrs['month'] = $attrs['cron']['month'] ?? '*';
-                    $attrs['day_of_week'] = $attrs['cron']['day_of_week'] ?? '*';
-                    unset($attrs['cron']);
-                }
-                // Flatten tasks from relationships
-                $rawTasks = $attrs['relationships']['tasks']['data'] ?? [];
-                $attrs['tasks'] = array_map(
-                    fn (array $task) => $task['attributes'] ?? $task,
-                    $rawTasks,
-                );
-                unset($attrs['relationships']);
-
-                return $attrs;
-            }, $schedules);
+            return array_map(ScheduleNormalizer::normalize(...), $schedules);
         });
 
         return response()->json(['data' => $data]);
@@ -111,6 +94,39 @@ class ServerScheduleController extends Controller
         $this->audit($server, 'server.schedule.delete', ['schedule_id' => $schedule]);
 
         return response()->json(['message' => 'success']);
+    }
+
+    public function copy(CopyScheduleRequest $request, Server $server, int $schedule, CopyScheduleAction $action): JsonResponse
+    {
+        $user = $request->user();
+
+        // Resolve targets, drop the source server, and keep only the ones the
+        // user may actually create schedules on. The result list reflects the
+        // outcome of each target independently.
+        $targets = Server::query()
+            ->whereIn('id', $request->validated()['target_server_ids'])
+            ->whereNotNull('identifier')
+            ->where('id', '!=', $server->id)
+            ->get()
+            ->filter(fn (Server $target): bool => $user->can('createSchedule', $target))
+            ->values();
+
+        if ($targets->isEmpty()) {
+            return response()->json(['data' => []]);
+        }
+
+        $results = $action->execute($server, $schedule, $targets->all());
+
+        foreach ($results as $result) {
+            if ($result['success']) {
+                $this->audit($server, 'server.schedule.copy', [
+                    'schedule_id' => $schedule,
+                    'target_server_id' => $result['server_id'],
+                ]);
+            }
+        }
+
+        return response()->json(['data' => $results]);
     }
 
     public function storeTask(CreateTaskRequest $request, Server $server, int $schedule): JsonResponse
