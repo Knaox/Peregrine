@@ -32,11 +32,14 @@ class ServerBackupController extends Controller
 
             // Adaptive TTL: while a backup is still running (no completed_at)
             // cache only briefly so the polling UI flips it to "done" within
-            // seconds; otherwise cache longer since the list won't change until
-            // the next create/delete. Short TTL stays under Pelican's per-server
-            // throttle (~4 req/min).
+            // seconds. Otherwise keep a short idle TTL too: backups created
+            // OUTSIDE the panel (a scheduled backup task, or one made directly
+            // on Pelican) never hit our store/destroy cache busting, so a long
+            // TTL would hide them for minutes. 30s lets the page's idle poll
+            // surface them quickly while staying well under Pelican's per-server
+            // throttle (~2 req/min from this endpoint).
             $hasInProgress = collect($data)->contains(fn (array $b): bool => empty($b['completed_at']));
-            Cache::put($key, $data, $hasInProgress ? 15 : 120);
+            Cache::put($key, $data, $hasInProgress ? 15 : 30);
         }
 
         return response()->json(['data' => $data]);

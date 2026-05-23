@@ -8,17 +8,24 @@ export function useBackups(serverId: number) {
     const list = useQuery({
         queryKey,
         queryFn: () => fetchBackups(serverId),
-        staleTime: 120_000,
+        // Short stale time so coming back to the tab / page refetches: a backup
+        // can be created outside the panel (scheduled task, or directly on
+        // Pelican) while the user is away, and we want it to show on return.
+        staleTime: 15_000,
         enabled: serverId > 0,
+        refetchOnWindowFocus: true,
         // Pelican/Wings creates backups asynchronously: a fresh backup lands
         // with `completed_at = null` and is filled in seconds later. There's no
-        // inbound webhook syncing that, so poll every 5s while ANY backup is
-        // still in progress, then stop — flips the "Creating…" badge to done
-        // without a manual refresh.
+        // inbound webhook syncing that, so poll fast (5s) while ANY backup is
+        // still in progress to flip the "Creating…" badge to done. When idle,
+        // keep a slow 30s poll while the page is open so a backup created by a
+        // schedule appears on its own — paused automatically when the tab is in
+        // the background. Aligned with the 30s server-side cache TTL and stays
+        // within Pelican's per-server throttle.
         refetchInterval: (query) => {
             const backups = query.state.data;
             const hasInProgress = Array.isArray(backups) && backups.some((b) => !b.completed_at);
-            return hasInProgress ? 5_000 : false;
+            return hasInProgress ? 5_000 : 30_000;
         },
     });
 
