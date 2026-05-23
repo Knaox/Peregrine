@@ -8,6 +8,44 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.11] — 2026-05-23
+
+### Added
+
+- **Schedules are now editable, not just deletable.** Each task in a schedule can be edited in place (action, payload, timing) instead of being removed and re-created, and an existing schedule's own settings (cron expression, name, active state) can be changed after creation. A preset task added to a new schedule shows up immediately without a manual page refresh. Backed by a new `UpdateScheduleRequest` gated on the `schedule.update` permission, so a user who can edit but not create schedules no longer hits a 403.
+- **Per-server feature limits surfaced in the panel.** The server resource exposes each server's real `feature_limits` (backups / databases / allocations), and the Backups, Databases and Network pages now show the live quota and remaining headroom ("3 / 5 used"), with the create action disabled and a clear message when the limit is reached.
+- **Richer file-manager feedback.** Uploads show a live percentage and survive cross-navigation (the directory is now URL-backed, so refreshing or sharing a link lands in the right folder), and long-running compress / decompress / pull operations display an indeterminate activity bar instead of looking frozen. The bulk-selection bar offers **Extract** when a single archive is selected.
+- **Post-login redirect for invitation links.** Login and the 2FA challenge now honour a `?redirect=` target, so an invitation URL (`/login?redirect=/invite/{token}`) returns the invitee to the invite page after authenticating — where it now **auto-accepts** when the signed-in email matches — instead of dropping them on the dashboard. A new `safeRedirectPath` guard rejects open-redirect tricks (protocol-relative, backslash, absolute URLs) and falls back to the default landing route.
+
+### Changed
+
+- **Startup variables regrouped in the permission picker.** Startup/environment variables now sit under the Overview group, renamed **"Server Configuration"**, for a clearer permission layout.
+
+### Fixed
+
+- **`feature_limits` are read from Pelican, not the catalog config.** The panel now reflects the server's actual limits as Pelican enforces them, rather than the (possibly stale) values from the catalog `ServerConfiguration`.
+- **Backups in progress are tracked correctly.** The backup list polls while a backup is still running and uses a short cache TTL during that window, so a freshly completed backup appears without a stale-cache delay.
+- **Archive operations target the right path.** Compress now forwards the correct archive root to Pelican, fixing archives created at the wrong location.
+- **Schedules: no more React #310 crash.** Stopped calling `useNamespace()` inside `actionIcon` (a conditional hook call), which could crash the schedules UI.
+- **Plugin i18n loads at runtime.** Components re-render when a plugin's translation namespace is registered at runtime, so plugin strings no longer flash their raw keys on first paint.
+
+### Security
+
+- **Server sidebar entries are gated by `required_permission`.** A plugin's sidebar tab is only shown to users who hold the declared permission, and the Invitations read endpoints now enforce `user.read` — a subuser without it can no longer list invitations or subusers.
+
+### Plugins
+
+- **Server Invitations → 1.3.3.** Hardening of the accept / removal flows:
+  - **Accept no longer gets stuck "pending".** The Pelican calls (account link + subuser provisioning) now run *outside* the DB transaction, and the local pivot + `accepted_at` are committed atomically only after they succeed — a late Pelican failure can no longer roll back local state while Pelican keeps the change. A new idempotent `syncSubuser` creates the subuser or updates an existing one (re-invite / leftover grant) instead of 422-ing on the duplicate.
+  - **Removing a subuser truly revokes Peregrine access.** The local `server_user` pivot and any lingering invitation are dropped on removal — previously a removed user kept every permission through the pivot ("revoked but still in"). The target email is resolved before deletion on a best-effort basis (a throttled Pelican list never aborts the removal).
+  - **Case-insensitive email matching throughout.** The host does not normalise emails (OAuth / shop accounts keep their original casing), so exact matches silently missed mixed-case accounts — granted permissions appeared not to apply, existing users were pushed into the register flow, and removals left the pivot intact. All lookups now match on `LOWER(email)`.
+  - **Clean errors instead of 500s.** Pelican client calls throw `RequestException` (not `RuntimeException`); accept and register now catch `Throwable`, report it, and return a friendly retry message (`accept_failed`) so a transient Pelican hiccup no longer 500s and strands the invite.
+  - **Already-registered invitees are sent to login**, and the accept-invite page is fully translated under the correct i18n namespace (strings served from the core common namespace).
+
+### In progress
+
+- **Easy Configuration plugin** — a new player-facing server-configuration editor (Nitrado-inspired UX, admin template management, copy-config-to-other-servers, scheduling) is under active development. It is **not** shipped in this release and is intentionally excluded from the marketplace bundle until it is complete.
+
 ## [1.0.0-alpha.10] — 2026-05-21
 
 ### Added

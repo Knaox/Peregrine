@@ -4,54 +4,153 @@
         {
             "id": "invitations",
             "name": "Server Invitations",
-            "version": "1.3.2",
-            "description": "Invite users to your servers by email with granular Pelican permissions. Edit permissions of active subusers and pending invitations. Ships with Peregrine by default. Admin-aware — panel admins can manage invitations / subusers on any server. Other plugins can register their own permission groups via the shared PermissionRegistry singleton with an optional `availableForServer` filter so they can hide their group on servers where it doesn't apply. Includes : (1) Resend button on pending invitations — token rotates on each resend so older mails are invalidated, throttled at 5 / min / user ; (2) plugin-permission persistence fix — modifications including plugin perms (modpack.*, arkmods.*, …) correctly land in the local pivot even when Pelican rejects unknown prefixes ; (3) full plugin-namespaced i18n (frontend strings + backend `__('invitations::messages.*')` + new `lang/{en,fr}/messages.php` files) — no more leaks into the Peregrine core bundle ; (4) `auto_activate_on_setup` manifest flag so the setup wizard activates the plugin without the core hard-coding any plugin id ; (5) v1.3.2 — invitation emails now resolve the brand name from SettingsService (canonical `app_name` set in /admin/settings) instead of the APP_NAME env var, fixing the literal \"LARAVEL\" header on Docker installs whose .env was never resynchronised after the wizard.",
+            "version": "1.3.3",
+            "description": "Invite users to your servers by email with granular Pelican permissions. Edit permissions of active subusers and pending invitations. Ships with Peregrine by default. Admin-aware — panel admins can manage invitations / subusers on any server. Other plugins can register their own permission groups via the shared PermissionRegistry singleton with an optional `availableForServer` filter so they can hide their group on servers where it doesn't apply. Includes : (1) Resend button on pending invitations — token rotates on each resend so older mails are invalidated, throttled at 5 / min / user ; (2) plugin-permission persistence fix — modifications including plugin perms (modpack.*, arkmods.*, …) correctly land in the local pivot even when Pelican rejects unknown prefixes ; (3) full plugin-namespaced i18n (frontend strings + backend `__('invitations::messages.*')` + new `lang/{en,fr}/messages.php` files) — no more leaks into the Peregrine core bundle ; (4) `auto_activate_on_setup` manifest flag so the setup wizard activates the plugin without the core hard-coding any plugin id ; (5) v1.3.2 — invitation emails now resolve the brand name from SettingsService (canonical `app_name` set in /admin/settings) instead of the APP_NAME env var, fixing the literal \"LARAVEL\" header on Docker installs whose .env was never resynchronised after the wizard ; (6) v1.3.3 — accept / removal hardening : Pelican calls run outside the DB transaction with an idempotent `syncSubuser` so an accept never gets stuck \"pending\", removing a subuser truly drops local pivot access (no more \"revoked but still in\"), all email lookups are case-insensitive (`LOWER(email)`) to match the host's un-normalised OAuth / shop accounts, and accept / register catch `Throwable` to surface a clean retry instead of a 500.",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.4",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.6/invitations-1.3.2.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.11/invitations-1.3.3.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/invitations",
-            "tags": ["users", "permissions", "collaboration", "default"]
+            "tags": [
+                "users",
+                "permissions",
+                "collaboration",
+                "default"
+            ]
         },
         {
             "id": "minecraft-modpack-installer",
             "name": "Minecraft: Modpack - Installer",
-            "version": "1.0.2",
-            "description": "Install, update and remove Minecraft modpacks on a server in a few clicks. Aggregates Modrinth, CurseForge, ATLauncher, Feed The Beast, Technic and VoidsWrath. Auto-detects the required Java version after install and switches the server runtime accordingly. Single-step uninstall, search caching (1 h default, configurable), eligibility filter (admin picks allowed eggs), Filament admin at /admin/modpack-configs. Marketplace install requires Peregrine 1.0.0-alpha.4+. The Invitations integration (subuser permission gating) is fully OPTIONAL : works standalone for owners and admins ; subuser permission management activates dynamically when the Invitations plugin is installed AND active. Hardened against API drift (reflection probe + top-level catch) so a host with an outdated Invitations can never crash the modpack boot.",
+            "version": "1.1.0",
+            "description": "Install, update and remove Minecraft modpacks on a server in a few clicks. Aggregates Modrinth, CurseForge, ATLauncher, Feed The Beast, Technic and VoidsWrath. Auto-detects the required Java version after install and switches the server runtime accordingly. v1.1.0 : production-ready Forge 1.17+ / NeoForge install path (no more symlinks on /mnt/server, fmlloader / bootstraplauncher probing, universal egg startup), server-compat badge + filter in the install modal (Modrinth / CurseForge / FTB / VoidsWrath populate the new is_server_compatible field), kill-before-install/uninstall, egg-template-first startup restoration (fixes a class of bugs where a per-server debug `startup_command` survived install). Marketplace install requires Peregrine 1.0.0-alpha.8+ for the loader-fallback wiring (the plugin tolerates older cores but the banner falls back to the legacy fingerprint-only path).",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
-            "min_peregrine_version": "1.0.0-alpha.4",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.4/minecraft-modpack-installer-1.0.2.zip",
+            "min_peregrine_version": "1.0.0-alpha.8",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.8/minecraft-modpack-installer-1.1.0.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/minecraft-modpack-installer",
-            "tags": ["minecraft", "modpacks", "modrinth", "curseforge", "ftb", "default"]
+            "tags": [
+                "minecraft",
+                "modpacks",
+                "modrinth",
+                "curseforge",
+                "ftb",
+                "default"
+            ]
         },
         {
             "id": "ark-mods-installer",
             "name": "ARK:SE Mods Installer",
-            "version": "1.0.3",
-            "description": "Browse, install and uninstall Steam Workshop mods for ARK: Survival Evolved (appid 346110) directly from the server panel. Two-tab UI (Marketplace + Installed) with search, tag chips, sort, optimistic install/uninstall, bulk actions and a 5-layer cache (Redis SWR + cron warm + HTTP + single-flight lock) so Steam is rarely hit. Adds and removes mod IDs in a configurable Pelican egg variable (default MOD_ID, format `id1,id2,id3` — comma without space, matches the official ARK:SE egg parser). Admin picks allowed eggs, target variable, page route, page label, mods/page (25 or 50), Steam Web API key. Variable must be flagged user_editable on the Pelican egg. Optional Invitations integration : when the Invitations plugin is installed AND active, three subuser permissions (arkmods.read / install / uninstall) appear in its picker, filtered to ARK:SE-eligible servers only. Standalone for owners and admins ; backward-compat with the legacy `startup.update` Pelican grant. v1.0.3 fixes a French label encoding bug (\\xC3\\xA9 escapes shipped literally instead of UTF-8 accents).",
+            "version": "1.0.4",
+            "description": "Browse, install and uninstall Steam Workshop mods for ARK: Survival Evolved (appid 346110) directly from the server panel. Two-tab UI (Marketplace + Installed) with search, tag chips, sort, optimistic install/uninstall, bulk actions and a 5-layer cache (Redis SWR + cron warm + HTTP + single-flight lock) so Steam is rarely hit. Adds and removes mod IDs in a configurable Pelican egg variable (default MOD_ID, format `id1,id2,id3` — comma without space, matches the official ARK:SE egg parser). Admin picks allowed eggs, target variable, page route, page label, mods/page (25 or 50), Steam Web API key. Variable must be flagged user_editable on the Pelican egg. Optional Invitations integration : when the Invitations plugin is installed AND active, three subuser permissions (arkmods.read / install / uninstall) appear in its picker, filtered to ARK:SE-eligible servers only. Standalone for owners and admins ; backward-compat with the legacy `startup.update` Pelican grant. v1.0.3 fixes a French label encoding bug (\\xC3\\xA9 escapes shipped literally instead of UTF-8 accents). v1.0.4 : safe-save pattern for the Steam Web API key — the admin form now blanks the masked password field on fill and treats blank input on save as \"keep existing\", so re-saving the page with a browser whose password manager clears the masked input no longer wipes the stored key (mirrors the modpack-installer pattern).",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.4",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.4/ark-mods-installer-1.0.3.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.8/ark-mods-installer-1.0.4.zip",
             "homepage": "https://github.com/Knaox/Peregrine",
-            "tags": ["ark", "mods", "steam", "workshop", "configuration"]
+            "tags": [
+                "ark",
+                "mods",
+                "steam",
+                "workshop",
+                "configuration"
+            ]
         },
         {
             "id": "ark-asa-mods-installer",
             "name": "ARK:ASA Mods Installer",
-            "version": "1.0.2",
-            "description": "Browse, install and uninstall CurseForge mods for ARK: Survival Ascended (gameId 83374) directly from the server panel. Two-tab UI (Marketplace + Installed) with search, dynamic category chips (pulled from CurseForge), 5-axis sort (Popularity / Top downloads / Recently updated / Most recent / Featured), optimistic install/uninstall, bulk actions and a 5-layer cache (Redis SWR + cron warm + HTTP + single-flight lock) so CurseForge is rarely hit. Adds and removes mod IDs in a configurable Pelican egg variable (default MOD_IDS, comma without spaces — matches the official ARK:ASA Pelican egg). Admin picks allowed eggs, target variable, format (comma / comma-space), page route, page label, mods/page (25 or 50), CurseForge API key. Variable must be flagged user_editable on the Pelican egg. CurseForge API key is free at https://console.curseforge.com/ — approval typically takes 24-48 h. Optional Invitations integration : when Invitations is installed AND active, three subuser permissions (arkasamods.read / install / uninstall) appear in its picker, filtered to ARK:ASA-eligible servers only. Standalone for owners and admins ; backward-compat with the legacy `startup.update` Pelican grant. v1.0.2 fixes a French label encoding bug (\\xC3\\xA9 escapes shipped literally instead of UTF-8 accents).",
+            "version": "1.0.3",
+            "description": "Browse, install and uninstall CurseForge mods for ARK: Survival Ascended (gameId 83374) directly from the server panel. Two-tab UI (Marketplace + Installed) with search, dynamic category chips (pulled from CurseForge), 5-axis sort (Popularity / Top downloads / Recently updated / Most recent / Featured), optimistic install/uninstall, bulk actions and a 5-layer cache (Redis SWR + cron warm + HTTP + single-flight lock) so CurseForge is rarely hit. Adds and removes mod IDs in a configurable Pelican egg variable (default MOD_IDS, comma without spaces — matches the official ARK:ASA Pelican egg). Admin picks allowed eggs, target variable, format (comma / comma-space), page route, page label, mods/page (25 or 50), CurseForge API key. Variable must be flagged user_editable on the Pelican egg. CurseForge API key is free at https://console.curseforge.com/ — approval typically takes 24-48 h. Optional Invitations integration : when Invitations is installed AND active, three subuser permissions (arkasamods.read / install / uninstall) appear in its picker, filtered to ARK:ASA-eligible servers only. Standalone for owners and admins ; backward-compat with the legacy `startup.update` Pelican grant. v1.0.2 fixes a French label encoding bug (\\xC3\\xA9 escapes shipped literally instead of UTF-8 accents). v1.0.3 : safe-save pattern for the CurseForge API key — the admin form now blanks the masked password field on fill and treats blank input on save as \"keep existing\", so re-saving the page with a browser whose password manager clears the masked input no longer wipes the stored key (mirrors the modpack-installer pattern).",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.4",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.4/ark-asa-mods-installer-1.0.2.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.8/ark-asa-mods-installer-1.0.3.zip",
             "homepage": "https://github.com/Knaox/Peregrine",
-            "tags": ["ark-asa", "mods", "curseforge", "configuration"]
+            "tags": [
+                "ark-asa",
+                "mods",
+                "curseforge",
+                "configuration"
+            ]
+        },
+        {
+            "id": "version-changer",
+            "name": "Minecraft: Version - Changer",
+            "version": "1.1.1",
+            "description": "Change a Minecraft server's software (Vanilla, Paper, Spigot, Purpur, Forge, NeoForge, Fabric, Quilt, proxies, …) and version in one click, sourced from the public MCJars catalog. The server's egg is never changed — only the JAR is swapped. v1.1.0 : the install now runs synchronously inside the controller (`dispatchSync()`) — the response carries the final status / status_message instead of a log_id to poll, so the UI lands on the success / failure screen without a polling loop. v1.1.1 : the sidebar tab now correctly respects the admin egg whitelist (the manifest enricher was reading the pre-flatten `frontend.server_sidebar_entries` key after `PluginBootstrap::getActiveManifests()` had already hoisted entries to top-level `server_sidebar_entries`, so `requires_egg_ids` stayed at the empty plugin.json default and the tab surfaced on every server regardless of the admin config).",
+            "author": "Peregrine Team",
+            "official": true,
+            "license": "MIT",
+            "min_peregrine_version": "1.0.0",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.8/version-changer-1.1.1.zip",
+            "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/version-changer",
+            "tags": [
+                "minecraft",
+                "versions",
+                "mcjars",
+                "default"
+            ]
+        },
+        {
+            "id": "minecraft-mods-installer",
+            "name": "Minecraft: Mods - Installer",
+            "version": "1.1.1",
+            "description": "Browse, install and remove Minecraft mods (Forge, NeoForge, Fabric, Quilt) directly from the player panel. CurseForge-backed catalog with per-egg gating and a singleton admin config. v1.1.0 : the loader banner now uses the new core `App\\Services\\Loader\\FallbackLoaderResolver` (filesystem probe → modpack-install row → egg name) when the MCJars fingerprint can't run, so it appears for every detectable server — hidden only when no source has a confident answer (no more leftover \"unknown server runtime\" placeholder). v1.1.1 : safe-save pattern for the CurseForge API key — the admin form now blanks the masked password field on fill and treats blank input on save as \"keep existing\", so re-saving the page with a browser whose password manager clears the masked input no longer wipes the stored key (mirrors the modpack-installer pattern).",
+            "author": "Peregrine Team",
+            "official": true,
+            "license": "MIT",
+            "min_peregrine_version": "1.0.0-alpha.8",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.8/minecraft-mods-installer-1.1.1.zip",
+            "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/minecraft-mods-installer",
+            "tags": [
+                "minecraft",
+                "mods",
+                "forge",
+                "fabric",
+                "curseforge",
+                "default"
+            ]
+        },
+        {
+            "id": "minecraft-plugins-installer",
+            "name": "Minecraft: Plugins - Installer",
+            "version": "1.1.1",
+            "description": "Browse, install and remove Bukkit-style Minecraft plugins (Paper, Spigot, Purpur, Folia, …) directly from the player panel. CurseForge-backed catalog with per-egg gating and a singleton admin config. v1.1.0 : loader banner now uses the new core `App\\Services\\Loader\\FallbackLoaderResolver` (filesystem probe → modpack-install row → egg name) when the MCJars fingerprint can't run ; CurseForge `listCategories` no longer ships `__PHP_Incomplete_Class` errors after a cache deserialise miss. v1.1.1 : safe-save pattern for the CurseForge API key — the admin form now blanks the masked password field on fill and treats blank input on save as \"keep existing\", so re-saving the page with a browser whose password manager clears the masked input no longer wipes the stored key (mirrors the modpack-installer pattern).",
+            "author": "Peregrine Team",
+            "official": true,
+            "license": "MIT",
+            "min_peregrine_version": "1.0.0-alpha.8",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.8/minecraft-plugins-installer-1.1.1.zip",
+            "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/minecraft-plugins-installer",
+            "tags": [
+                "minecraft",
+                "plugins",
+                "bukkit",
+                "paper",
+                "curseforge",
+                "default"
+            ]
+        },
+        {
+            "id": "hytale-mods-installer",
+            "name": "Hytale: Mods - Installer",
+            "version": "1.0.1",
+            "description": "Browse, install and remove Hytale mods directly from the player panel. CurseForge-backed catalog with per-egg gating and a singleton admin config. v1.0.1 : safe-save pattern for the CurseForge API key — the admin form now blanks the masked password field on fill and treats blank input on save as \"keep existing\", so re-saving the page with a browser whose password manager clears the masked input no longer wipes the stored key (mirrors the modpack-installer pattern).",
+            "author": "Peregrine Team",
+            "official": true,
+            "license": "MIT",
+            "min_peregrine_version": "1.0.0",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.8/hytale-mods-installer-1.0.1.zip",
+            "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/hytale-mods-installer",
+            "tags": [
+                "hytale",
+                "mods",
+                "curseforge",
+                "default"
+            ]
         }
     ]
 }
