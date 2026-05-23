@@ -6,6 +6,7 @@ use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Server\CreateScheduleRequest;
 use App\Http\Requests\Server\CreateTaskRequest;
+use App\Http\Requests\Server\UpdateScheduleRequest;
 use App\Models\Server;
 use App\Services\Pelican\PelicanScheduleService;
 use Illuminate\Http\Client\RequestException;
@@ -71,10 +72,8 @@ class ServerScheduleController extends Controller
         return response()->json(['data' => $data], 201);
     }
 
-    public function update(CreateScheduleRequest $request, Server $server, int $schedule): JsonResponse
+    public function update(UpdateScheduleRequest $request, Server $server, int $schedule): JsonResponse
     {
-        $this->authorize('updateSchedule', $server);
-
         $result = $this->scheduleService->updateSchedule(
             $server->identifier,
             $schedule,
