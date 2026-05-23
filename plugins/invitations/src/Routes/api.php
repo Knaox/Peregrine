@@ -148,7 +148,12 @@ Route::middleware('auth')->group(function () {
             )));
             $localByEmail = [];
             if (! empty($emails)) {
-                $users = User::whereIn('email', $emails)->get(['id', 'email']);
+                // Case-insensitive match: the host does NOT normalise emails
+                // (OAuth/shop accounts keep their original casing), so an exact
+                // whereIn('email', …) silently misses them and the local pivot
+                // permissions never get merged in — the granted permissions look
+                // like they "didn't apply". $emails is already lowercased.
+                $users = User::whereIn(DB::raw('LOWER(email)'), $emails)->get(['id', 'email']);
                 $pivots = DB::table('server_user')
                     ->whereIn('user_id', $users->pluck('id'))
                     ->where('server_id', $server->id)
@@ -212,9 +217,11 @@ Route::middleware('auth')->group(function () {
         try {
             app(PelicanSubuserService::class)->updateSubuser($serverIdentifier, $subuserUuid, $validated['permissions']);
 
-            // Sync local pivot
+            // Sync local pivot. Case-insensitive match — the host does not
+            // normalise emails, so where('email', …) misses mixed-case accounts
+            // and the new permissions would never reach the pivot.
             if ($target && ! empty($target['email'])) {
-                $localUser = User::where('email', $target['email'])->first();
+                $localUser = User::whereRaw('LOWER(email) = ?', [strtolower(trim((string) $target['email']))])->first();
                 if ($localUser) {
                     DB::table('server_user')
                         ->where('user_id', $localUser->id)
@@ -240,13 +247,20 @@ Route::middleware('auth')->group(function () {
             abort(403);
         }
 
-        $subusers = app(PelicanSubuserService::class)->listSubusers($serverIdentifier);
+        // Resolve the target's email from Pelican BEFORE deletion so we can
+        // clean up local access. Best-effort: a throttled / failing list must
+        // NOT abort the removal — the local revocation below is the part that
+        // actually strips access in Peregrine.
         $targetEmail = null;
-        foreach ($subusers as $sub) {
-            if (($sub['uuid'] ?? '') === $subuserUuid) {
-                $targetEmail = isset($sub['email']) ? strtolower((string) $sub['email']) : null;
-                break;
+        try {
+            foreach (app(PelicanSubuserService::class)->listSubusers($serverIdentifier) as $sub) {
+                if (($sub['uuid'] ?? '') === $subuserUuid) {
+                    $targetEmail = isset($sub['email']) ? strtolower(trim((string) $sub['email'])) : null;
+                    break;
+                }
             }
+        } catch (Throwable $e) {
+            report($e);
         }
 
         // A subuser cannot remove themselves.
@@ -261,10 +275,18 @@ Route::middleware('auth')->group(function () {
         }
 
         // Revoke Peregrine-side access too: drop the pivot and close any
-        // lingering invitation so the user truly loses access and can be
-        // cleanly re-invited later.
+        // lingering invitation so the user truly loses access and can be cleanly
+        // re-invited later. Without this the user keeps every permission via the
+        // server_user pivot (ServerPolicy / permissionsForUser read it) — i.e.
+        // "revoked but still in".
+        //
+        // Match case-insensitively: the host does NOT normalise emails
+        // (OAuth/shop accounts keep their original casing), so an exact
+        // where('email', …) silently misses them and the pivot survives — which
+        // is exactly how a removed user kept their access. Mirrors the
+        // LOWER(email) lookups the host uses in SocialAuthService.
         if ($targetEmail !== null) {
-            $localUser = User::where('email', $targetEmail)->first();
+            $localUser = User::whereRaw('LOWER(email) = ?', [$targetEmail])->first();
             if ($localUser) {
                 DB::table('server_user')
                     ->where('user_id', $localUser->id)
@@ -272,7 +294,7 @@ Route::middleware('auth')->group(function () {
                     ->delete();
             }
             Invitation::where('server_id', $server->id)
-                ->where('email', $targetEmail)
+                ->whereRaw('LOWER(email) = ?', [$targetEmail])
                 ->whereNull('revoked_at')
                 ->update(['revoked_at' => now()]);
         }
@@ -307,6 +329,13 @@ Route::middleware('auth')->group(function () {
             return response()->json(['message' => 'Invitation accepted.', 'server_id' => $invitation->server_id]);
         } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
+        } catch (Throwable $e) {
+            // Pelican client calls throw RequestException (not RuntimeException);
+            // without this catch the accept 500s and the invite stays "pending".
+            // Report for diagnosis, surface a clean error so the user can retry.
+            report($e);
+
+            return response()->json(['error' => __('invitations::messages.errors.accept_failed')], 422);
         }
     });
 });

@@ -3,6 +3,8 @@
 namespace Plugins\Invitations\Services;
 
 use App\Services\Pelican\Concerns\MakesClientRequests;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Log;
 
 class PelicanSubuserService
 {
@@ -48,7 +50,7 @@ class PelicanSubuserService
      * accept on its client-API user endpoints. Returns a re-indexed
      * array (no holes).
      *
-     * @param array<int, string> $permissions
+     * @param  array<int, string>  $permissions
      * @return array<int, string>
      */
     public static function filterPelicanNative(array $permissions): array
@@ -89,7 +91,7 @@ class PelicanSubuserService
     /**
      * Create a subuser on Pelican for a server.
      *
-     * @param array<int, string> $permissions
+     * @param  array<int, string>  $permissions
      * @return array<string, mixed>
      */
     public function createSubuser(
@@ -114,7 +116,7 @@ class PelicanSubuserService
     /**
      * Update a subuser's permissions.
      *
-     * @param array<int, string> $permissions
+     * @param  array<int, string>  $permissions
      * @return array<string, mixed>
      */
     public function updateSubuser(
@@ -143,5 +145,96 @@ class PelicanSubuserService
         $this->request()
             ->delete("/api/client/servers/{$serverIdentifier}/users/{$subuserUuid}")
             ->throw();
+    }
+
+    /**
+     * Idempotently make sure `$email` is a subuser of the server with exactly
+     * `$permissions`. Creates the subuser, or — if Pelican reports the email is
+     * already a subuser (re-invitation, or a leftover from a previous grant) —
+     * updates their permissions instead.
+     *
+     * Why this matters: the previous flow listed-then-create/updated, and a
+     * blind create on a duplicate 422'd. Since the caller wrapped this in a DB
+     * transaction, that exception rolled back `accepted_at` + the local pivot —
+     * the invite got stuck "pending" with stale permissions. Here we try create
+     * first (one call for the common first-invite case, throttle-friendly) and
+     * fall back to an update on the duplicate error, so an accept never gets
+     * stuck. A genuine error (bad permissions, Pelican down) still propagates so
+     * the caller can surface it and NOT mark the invite accepted.
+     *
+     * @param  array<int, string>  $permissions
+     */
+    public function syncSubuser(string $serverIdentifier, string $email, array $permissions): void
+    {
+        try {
+            $this->createSubuser($serverIdentifier, $email, $permissions);
+
+            return;
+        } catch (RequestException $e) {
+            // Anything other than "already a subuser" is a real failure.
+            if (! $this->isAlreadyAssignedError($e)) {
+                throw $e;
+            }
+        }
+
+        // Already a subuser → resolve their uuid and update the permissions.
+        $uuid = $this->findSubuserUuidByEmail($serverIdentifier, $email);
+        if ($uuid !== null) {
+            $this->updateSubuser($serverIdentifier, $uuid, $permissions);
+
+            return;
+        }
+
+        // Pelican says the email is already a subuser but we could not match it
+        // back (the list response omitted the email, pagination, or a race).
+        // The subuser already exists on Pelican, so we deliberately do NOT throw
+        // — the local grant must still land. Permissions on the Pelican side may
+        // be momentarily stale; logged for visibility.
+        Log::warning('invitations: email already a subuser on Pelican but could not be matched for update', [
+            'server' => $serverIdentifier,
+            'email' => $email,
+        ]);
+    }
+
+    /**
+     * Find a subuser's uuid by email (case-insensitive). Returns null when the
+     * server has no matching subuser, or when the list response carries no email
+     * to match against.
+     */
+    public function findSubuserUuidByEmail(string $serverIdentifier, string $email): ?string
+    {
+        $needle = strtolower(trim($email));
+
+        foreach ($this->listSubusers($serverIdentifier) as $sub) {
+            $subEmail = isset($sub['email']) ? strtolower(trim((string) $sub['email'])) : null;
+            if ($subEmail !== null && $subEmail === $needle && ! empty($sub['uuid'])) {
+                return (string) $sub['uuid'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether a Pelican client-API error means "this email is already a subuser
+     * of the server" — the only failure we recover from in syncSubuser. Pelican
+     * surfaces it as a 400/422 whose body mentions "already" / "exists".
+     */
+    private function isAlreadyAssignedError(RequestException $e): bool
+    {
+        $response = $e->response;
+        if ($response === null) {
+            return false;
+        }
+
+        if (! in_array($response->status(), [400, 422], true)) {
+            return false;
+        }
+
+        $body = strtolower((string) $response->body());
+
+        return str_contains($body, 'already')
+            || str_contains($body, 'exists')
+            || str_contains($body, 'duplicate');
     }
 }

@@ -22,6 +22,7 @@ return [
         'invalid_token' => 'Invitation introuvable.',
         'self_modify' => 'Vous ne pouvez pas modifier vos propres permissions.',
         'self_remove' => 'Vous ne pouvez pas vous retirer vous-même.',
+        'accept_failed' => "Impossible d'accepter l'invitation pour le moment. Veuillez réessayer dans un instant.",
     ],
     'success' => [
         'invitation_sent' => 'Invitation envoyée.',

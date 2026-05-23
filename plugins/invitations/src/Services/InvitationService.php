@@ -77,7 +77,16 @@ class InvitationService
     }
 
     /**
-     * Accept an invitation: verify token, create Pelican user if needed, create subuser.
+     * Accept an invitation: verify token, link a Pelican account if needed,
+     * provision the subuser, then grant local access — in that order.
+     *
+     * Ordering is deliberate. Pelican is an external system and is NOT part of
+     * the DB transaction: if we wrapped the HTTP calls in the transaction and a
+     * late step failed, Pelican would keep the change while the local grant +
+     * `accepted_at` rolled back — the invite would be stuck "pending" with no
+     * permissions (the exact bug reported). So we do the external work first
+     * (it throws on a hard failure and we never touch local state), then commit
+     * the local pivot + acceptance atomically.
      */
     public function accept(string $plainToken, User $user): Invitation
     {
@@ -92,33 +101,32 @@ class InvitationService
             throw new \RuntimeException(__('invitations::messages.errors.email_mismatch'));
         }
 
-        return DB::transaction(function () use ($invitation, $user) {
-            // Step 1: Ensure user has a Pelican account. Synchronous on
-            // purpose — Step 2 (subuser creation) needs `pelican_user_id`
-            // immediately. The action handles existing-Pelican-user lookup,
-            // username collisions, and parallel-call locking.
-            app(EnsurePelicanAccountAction::class)->execute($user, 'invitation');
+        $invitation->loadMissing('server');
+        $server = $invitation->server;
 
-            // Step 2: Create the subuser on Pelican — or UPDATE it if the user
-            // is already a subuser of this server (re-invitation, or a leftover
-            // from a previous grant). Calling createSubuser blindly would 422 on
-            // the duplicate and roll back the whole accept, leaving the
-            // invitation stuck "pending" with stale permissions.
-            $invitation->loadMissing('server');
-            $serverIdentifier = $invitation->server->identifier;
-            $permissions = $invitation->permissions ?? [];
+        if (! $server || ! $server->identifier) {
+            // Server was deleted, or never got a Pelican identifier — nothing to
+            // grant access to. Surface as "not found" rather than a 500.
+            throw new \RuntimeException(__('invitations::messages.errors.invitation_not_found'));
+        }
 
-            $existing = collect($this->subuserService->listSubusers($serverIdentifier))
-                ->first(fn (array $s): bool => isset($s['email'])
-                    && strtolower((string) $s['email']) === strtolower($user->email));
+        $permissions = $invitation->permissions ?? [];
 
-            if (is_array($existing) && ! empty($existing['uuid'])) {
-                $this->subuserService->updateSubuser($serverIdentifier, (string) $existing['uuid'], $permissions);
-            } else {
-                $this->subuserService->createSubuser($serverIdentifier, $user->email, $permissions);
-            }
+        // --- External side effects, OUTSIDE the DB transaction ---------------
 
-            // Step 3: Create access record in Peregrine DB (pivot table)
+        // 1. Make sure the user is linked to a Pelican account. Idempotent; the
+        //    action handles existing-user lookup, username collisions, locking.
+        app(EnsurePelicanAccountAction::class)->execute($user, 'invitation');
+
+        // 2. Ensure the Pelican subuser exists with the right permissions —
+        //    create, or update if they are already a subuser. Tolerates the
+        //    "already a subuser" conflict so a re-invite never gets stuck.
+        $this->subuserService->syncSubuser($server->identifier, $user->email, $permissions);
+
+        // --- Local state, committed atomically -------------------------------
+        DB::transaction(function () use ($invitation, $user, $permissions): void {
+            // Grant access in Peregrine's pivot — this, not Pelican, is what the
+            // host's ServerPolicy / permissionsForUser read for access checks.
             DB::table('server_user')->updateOrInsert(
                 ['user_id' => $user->id, 'server_id' => $invitation->server_id],
                 [
@@ -129,16 +137,15 @@ class InvitationService
                 ],
             );
 
-            // Step 4: Mark invitation as accepted
             $invitation->update([
                 'accepted_at' => now(),
                 'accepted_by_user_id' => $user->id,
             ]);
-
-            event(new InvitationAccepted($invitation, $user));
-
-            return $invitation;
         });
+
+        event(new InvitationAccepted($invitation, $user));
+
+        return $invitation;
     }
 
     /**

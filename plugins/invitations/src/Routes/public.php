@@ -55,7 +55,11 @@ Route::middleware('throttle:30,1')->group(function () {
             'is_revoked' => $invitation->revoked_at !== null,
             // Lets the accept page skip the register form and send a known
             // account straight to login instead of failing on submit (422).
-            'user_exists' => User::where('email', $invitation->email)->exists(),
+            // Case-insensitive: the host does NOT normalise emails (OAuth/shop
+            // accounts keep their original casing), so an exact match would miss
+            // an existing mixed-case account and wrongly push the invitee — who
+            // already has an account — into the register flow.
+            'user_exists' => User::whereRaw('LOWER(email) = ?', [strtolower(trim((string) $invitation->email))])->exists(),
         ]);
     });
 
@@ -77,7 +81,9 @@ Route::middleware('throttle:30,1')->group(function () {
             return response()->json(['error' => __('invitations::messages.errors.email_mismatch'), 'error_code' => 'email_mismatch'], 422);
         }
 
-        if (User::where('email', $validated['email'])->exists()) {
+        // Case-insensitive existence guard — emails aren't normalised host-side,
+        // so an exact match could let a duplicate (mixed-case) account through.
+        if (User::whereRaw('LOWER(email) = ?', [strtolower(trim($validated['email']))])->exists()) {
             return response()->json(['error' => __('invitations::messages.errors.account_exists'), 'error_code' => 'account_exists'], 422);
         }
 
@@ -94,6 +100,13 @@ Route::middleware('throttle:30,1')->group(function () {
             return response()->json(['message' => __('invitations::messages.success.account_created_and_accepted')], 201);
         } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
+        } catch (Throwable $e) {
+            // Pelican client calls throw RequestException, not RuntimeException.
+            // The account was created; surface a clean error so the user can log
+            // in and accept again rather than getting an opaque 500.
+            report($e);
+
+            return response()->json(['error' => __('invitations::messages.errors.accept_failed')], 422);
         }
     });
 });

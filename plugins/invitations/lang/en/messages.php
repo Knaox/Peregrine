@@ -22,6 +22,7 @@ return [
         'invalid_token' => 'Invitation not found.',
         'self_modify' => 'You cannot modify your own permissions.',
         'self_remove' => 'You cannot remove yourself.',
+        'accept_failed' => 'Could not accept the invitation right now. Please try again in a moment.',
     ],
     'success' => [
         'invitation_sent' => 'Invitation sent.',
