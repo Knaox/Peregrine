@@ -8,6 +8,12 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.11b] — 2026-05-23
+
+### Fixed
+
+- **Scheduled backups now appear on their own.** A backup created outside the panel — a scheduled backup task, or one made directly on Pelican — bypasses the cache busting that the panel's own create/delete actions trigger, so it used to stay hidden behind the backups-list cache for up to ~2 minutes (and would never show without a manual refresh while sitting on the page). The server-side idle cache TTL drops from 120s to 30s, and the backups page now refetches on window focus and polls on a slow 30s idle cadence (paused while the tab is backgrounded), so a scheduled backup surfaces within ~30s — still well within Pelican's per-server throttle (~2 req/min from this endpoint).
+
 ## [1.0.0-alpha.11] — 2026-05-23
 
 ### Added
