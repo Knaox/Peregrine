@@ -42,13 +42,13 @@
         {
             "id": "ark-mods-installer",
             "name": "ARK:SE Mods Installer",
-            "version": "1.0.4",
+            "version": "1.0.5",
             "description": "Browse, install and uninstall Steam Workshop mods for ARK: Survival Evolved (appid 346110) directly from the server panel. Two-tab UI (Marketplace + Installed) with search, tag chips, sort, optimistic install/uninstall, bulk actions and a 5-layer cache (Redis SWR + cron warm + HTTP + single-flight lock) so Steam is rarely hit. Adds and removes mod IDs in a configurable Pelican egg variable (default MOD_ID, format `id1,id2,id3` — comma without space, matches the official ARK:SE egg parser). Admin picks allowed eggs, target variable, page route, page label, mods/page (25 or 50), Steam Web API key. Variable must be flagged user_editable on the Pelican egg. Optional Invitations integration : when the Invitations plugin is installed AND active, three subuser permissions (arkmods.read / install / uninstall) appear in its picker, filtered to ARK:SE-eligible servers only. Standalone for owners and admins ; backward-compat with the legacy `startup.update` Pelican grant. v1.0.3 fixes a French label encoding bug (\\xC3\\xA9 escapes shipped literally instead of UTF-8 accents). v1.0.4 : safe-save pattern for the Steam Web API key — the admin form now blanks the masked password field on fill and treats blank input on save as \"keep existing\", so re-saving the page with a browser whose password manager clears the masked input no longer wipes the stored key (mirrors the modpack-installer pattern).",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.4",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.8/ark-mods-installer-1.0.4.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.11/ark-mods-installer-1.0.5.zip",
             "homepage": "https://github.com/Knaox/Peregrine",
             "tags": [
                 "ark",
@@ -61,13 +61,13 @@
         {
             "id": "ark-asa-mods-installer",
             "name": "ARK:ASA Mods Installer",
-            "version": "1.0.3",
+            "version": "1.0.4",
             "description": "Browse, install and uninstall CurseForge mods for ARK: Survival Ascended (gameId 83374) directly from the server panel. Two-tab UI (Marketplace + Installed) with search, dynamic category chips (pulled from CurseForge), 5-axis sort (Popularity / Top downloads / Recently updated / Most recent / Featured), optimistic install/uninstall, bulk actions and a 5-layer cache (Redis SWR + cron warm + HTTP + single-flight lock) so CurseForge is rarely hit. Adds and removes mod IDs in a configurable Pelican egg variable (default MOD_IDS, comma without spaces — matches the official ARK:ASA Pelican egg). Admin picks allowed eggs, target variable, format (comma / comma-space), page route, page label, mods/page (25 or 50), CurseForge API key. Variable must be flagged user_editable on the Pelican egg. CurseForge API key is free at https://console.curseforge.com/ — approval typically takes 24-48 h. Optional Invitations integration : when Invitations is installed AND active, three subuser permissions (arkasamods.read / install / uninstall) appear in its picker, filtered to ARK:ASA-eligible servers only. Standalone for owners and admins ; backward-compat with the legacy `startup.update` Pelican grant. v1.0.2 fixes a French label encoding bug (\\xC3\\xA9 escapes shipped literally instead of UTF-8 accents). v1.0.3 : safe-save pattern for the CurseForge API key — the admin form now blanks the masked password field on fill and treats blank input on save as \"keep existing\", so re-saving the page with a browser whose password manager clears the masked input no longer wipes the stored key (mirrors the modpack-installer pattern).",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.4",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.8/ark-asa-mods-installer-1.0.3.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.11/ark-asa-mods-installer-1.0.4.zip",
             "homepage": "https://github.com/Knaox/Peregrine",
             "tags": [
                 "ark-asa",
