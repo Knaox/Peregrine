@@ -8,6 +8,7 @@ import { ApiError } from '@/services/api';
 import { twoFactorChallenge } from '@/services/authApi';
 import { TwoFactorChallengeForm } from '@/components/auth/TwoFactorChallengeForm';
 import { useNamespace } from '@/i18n/useNamespace';
+import { safeRedirectPath } from '@/utils/redirect';
 
 /**
  * 2FA challenge page — reached after either a password login (authStore holds
@@ -29,6 +30,13 @@ export function TwoFactorChallengePage() {
         [searchParams, pendingChallengeId],
     );
 
+    // A `?redirect=` carried over from the login form (e.g. an invitation link)
+    // takes precedence over the default landing route once 2FA succeeds.
+    const paramRedirect = useMemo(
+        () => safeRedirectPath(searchParams.get('redirect')),
+        [searchParams],
+    );
+
     useEffect(() => {
         if (challengeId === null) {
             navigate('/login', { replace: true });
@@ -47,11 +55,11 @@ export function TwoFactorChallengePage() {
             // picked up by every hook on the next mount.
             if (pendingChallengeId === null) {
                 await twoFactorChallenge(challengeId, code);
-                window.location.href = '/dashboard';
+                window.location.href = paramRedirect ?? '/dashboard';
                 return;
             }
             const redirectTo = await submitChallenge(code);
-            navigate(redirectTo, { replace: true });
+            navigate(paramRedirect ?? redirectTo, { replace: true });
         } catch (err) {
             if (err instanceof ApiError) {
                 if (err.status === 410) {

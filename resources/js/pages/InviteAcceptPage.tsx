@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
@@ -26,6 +26,23 @@ export function InviteAcceptPage() {
     const [password, setPassword] = useState('');
     const [passwordConfirm, setPasswordConfirm] = useState('');
     const [error, setError] = useState('');
+
+    // Auto-accept once the invitee returns authenticated with the matching
+    // email (e.g. after the /login?redirect=/invite/{token} round-trip). Without
+    // this they'd have to click "Accept" again after logging in — the friction
+    // the bug report hit. Fires once (ref guard); the accept endpoint is
+    // idempotent so a StrictMode double-invoke in dev is harmless.
+    const autoAcceptedRef = useRef(false);
+    useEffect(() => {
+        if (!isAuthenticated || !invitation?.is_active || !token) return;
+        if (user?.email?.toLowerCase() !== invitation.email.toLowerCase()) return;
+        if (autoAcceptedRef.current) return;
+        autoAcceptedRef.current = true;
+        acceptMutation.mutate(token, {
+            onSuccess: (res) => navigate(`/servers/${res.server_id}`),
+            onError: (err) => setError((err as { data?: { error?: string } }).data?.error ?? t('common:error')),
+        });
+    }, [isAuthenticated, invitation, user, token, acceptMutation, navigate, t]);
 
     if (!token) return <ErrorState message={t('accept.invalid')} branding={branding} />;
     if (isLoading) return <LoadingState branding={branding} />;

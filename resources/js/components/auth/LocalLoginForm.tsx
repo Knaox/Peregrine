@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, m } from 'motion/react';
 import clsx from 'clsx';
 import { useAuthStore } from '@/stores/authStore';
 import { ApiError } from '@/services/api';
 import { AuthField } from '@/components/auth/AuthField';
+import { safeRedirectPath } from '@/utils/redirect';
 
 interface LocalLoginFormProps {
     /** Render the "or" divider above the form (when OAuth buttons precede it). */
@@ -21,6 +22,7 @@ interface LocalLoginFormProps {
 export function LocalLoginForm({ showDivider }: LocalLoginFormProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { login } = useAuthStore();
 
     const [email, setEmail] = useState('');
@@ -35,12 +37,17 @@ export function LocalLoginForm({ showDivider }: LocalLoginFormProps) {
         setError('');
         setIsSubmitting(true);
         try {
+            // Honour `?redirect=` so an invitation link
+            // (/login?redirect=/invite/{token}) returns the user to the invite
+            // page to accept, instead of always dropping them on the dashboard.
+            const redirectTo = safeRedirectPath(searchParams.get('redirect'));
             const result = await login(email, password, remember);
             if (result.requires2fa === true) {
-                navigate('/2fa/challenge');
+                // Carry the target through the 2FA challenge so it survives.
+                navigate(redirectTo ? `/2fa/challenge?redirect=${encodeURIComponent(redirectTo)}` : '/2fa/challenge');
                 return;
             }
-            navigate('/dashboard');
+            navigate(redirectTo ?? '/dashboard');
         } catch (err) {
             setError(err instanceof ApiError ? t('auth-login:error') : t('common:error'));
         } finally {
