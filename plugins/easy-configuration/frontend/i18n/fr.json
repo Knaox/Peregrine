@@ -224,6 +224,8 @@
             "links_env_var": "Variable d'environnement liée (par paramètre)",
             "links_env_server": "Charger les noms de variables depuis un serveur",
             "links_env_server_ph": "Choisir un serveur (optionnel, pour l'autocomplétion)",
+            "links_env_egg": "Charger les noms de variables depuis un egg",
+            "links_env_egg_ph": "Choisir un egg (optionnel, pour l'autocomplétion)",
             "links_param": "nom de la variable d'env",
             "links_section_en": "Nom de section (EN)",
             "links_section_fr": "Nom de section (FR)"

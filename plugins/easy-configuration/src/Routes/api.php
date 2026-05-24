@@ -53,6 +53,7 @@ Route::middleware(['auth', 'throttle:240,1'])->group(function (): void {
         Route::delete('templates/{id}', [TemplateController::class, 'destroy']);
         Route::get('templates/{id}/export', [TemplateController::class, 'export']);
         Route::get('eggs', [EggCatalogController::class, 'index']);
+        Route::get('eggs/{egg}/env-vars', [EggCatalogController::class, 'envVars']);
 
         // Import a real config file from a server to scaffold a template block.
         Route::get('servers', [ServerCatalogController::class, 'index']);

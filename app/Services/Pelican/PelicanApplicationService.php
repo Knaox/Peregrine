@@ -44,7 +44,7 @@ class PelicanApplicationService
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      *
      * @throws RequestException
      */
@@ -219,5 +219,15 @@ class PelicanApplicationService
     public function getEggVariableDefaults(int $eggId): array
     {
         return $this->infra->getEggVariableDefaults($eggId);
+    }
+
+    /**
+     * @return list<array{env_variable: string, name: string, default: string}>
+     *
+     * @throws RequestException
+     */
+    public function getEggVariables(int $eggId): array
+    {
+        return $this->infra->getEggVariables($eggId);
     }
 }

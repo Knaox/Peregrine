@@ -279,4 +279,38 @@ class PelicanInfrastructureClient
 
         return $defaults;
     }
+
+    /**
+     * Fetch an egg's variable definitions for UI autocomplete (the template
+     * editor's "link a parameter to an env var"). Unlike getEggVariableDefaults,
+     * this returns a list carrying each variable's friendly name beside its key.
+     *
+     * @return list<array{env_variable: string, name: string, default: string}>
+     *
+     * @throws RequestException
+     */
+    public function getEggVariables(int $eggId): array
+    {
+        $response = $this->http->request()
+            ->get("/api/application/eggs/{$eggId}", ['include' => 'variables'])
+            ->throw();
+
+        $variables = data_get($response->json(), 'attributes.relationships.variables.data', []);
+        $out = [];
+
+        foreach ($variables as $entry) {
+            $attrs = $entry['attributes'] ?? [];
+            $key = $attrs['env_variable'] ?? null;
+            if ($key === null || $key === '') {
+                continue;
+            }
+            $out[] = [
+                'env_variable' => (string) $key,
+                'name' => (string) ($attrs['name'] ?? $key),
+                'default' => (string) ($attrs['default_value'] ?? ''),
+            ];
+        }
+
+        return $out;
+    }
 }

@@ -224,6 +224,8 @@
             "links_env_var": "Linked environment variable (per parameter)",
             "links_env_server": "Load variable names from a server",
             "links_env_server_ph": "Select a server (optional, for autocomplete)",
+            "links_env_egg": "Load variable names from an egg",
+            "links_env_egg_ph": "Select an egg (optional, for autocomplete)",
             "links_param": "env variable name",
             "links_section_en": "Section name (EN)",
             "links_section_fr": "Section name (FR)"
