@@ -4,6 +4,13 @@
  * Tokens only.
  */
 export const fieldsCss = `
+/* File-level collapse toggle: the file title doubles as the open/close control. */
+.ec-file-head { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0; background: transparent;
+    border: none; cursor: pointer; font-family: inherit; color: var(--color-text-primary); text-align: left; }
+.ec-file-head:hover .ec-title { color: var(--color-accent); }
+.ec-file-head:disabled { cursor: default; }
+.ec-file-head:disabled:hover .ec-title { color: var(--color-text-primary); }
+
 .ec-section-group { border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; background: var(--color-surface); }
 .ec-section-head { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.75rem 1rem;
     background: transparent; border: none; cursor: pointer; font-family: inherit; color: var(--color-text-primary);
