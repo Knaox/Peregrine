@@ -1,6 +1,8 @@
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useT } from '../../../lib/i18n';
-import type { Json } from '../../../lib/templateFiles';
+import { appendBlankFile, type Json } from '../../../lib/templateFiles';
+import { Button } from '../../../ui/Button';
 import { Select } from '../../../ui/inputs';
 import { useEggCatalog } from '../../hooks/useTemplates';
 import { useEggEnvVars } from '../../hooks/useEggEnvVars';
@@ -34,13 +36,12 @@ export function VisualEditorPanel({ filesJson, lang, onChange }: { filesJson: st
     if (files === null) {
         return <span className="ec-field-desc ec-muted">{t('admin.editor.links_fix_json')}</span>;
     }
-    if (files.length === 0) {
-        return <div className="ec-empty">{t('admin.visual.empty')}</div>;
-    }
 
     const replaceFile = (index: number, next: Json): void => {
         onChange(JSON.stringify(files.map((file, i) => (i === index ? next : file)), null, 2));
     };
+    // Append-only: spreads the existing files so no defined file/parameter is lost.
+    const addFile = (): void => onChange(JSON.stringify(appendBlankFile(files), null, 2));
 
     return (
         <div className="ec-stack">
@@ -64,15 +65,25 @@ export function VisualEditorPanel({ filesJson, lang, onChange }: { filesJson: st
                 ))}
             </datalist>
 
-            {files.map((file, index) => (
-                <VisualFileEditor
-                    key={`${String(file.id ?? '')}-${index}`}
-                    file={file}
-                    datalistId={DATALIST_ID}
-                    lang={lang}
-                    onChange={(next) => replaceFile(index, next)}
-                />
-            ))}
+            {files.length === 0 ? (
+                <div className="ec-empty">{t('admin.visual.empty')}</div>
+            ) : (
+                files.map((file, index) => (
+                    <VisualFileEditor
+                        key={`${String(file.id ?? '')}-${index}`}
+                        file={file}
+                        datalistId={DATALIST_ID}
+                        lang={lang}
+                        onChange={(next) => replaceFile(index, next)}
+                    />
+                ))
+            )}
+
+            <div>
+                <Button variant="ghost" size="sm" onClick={addFile}>
+                    <Plus size={14} /> {t('admin.visual.add_file')}
+                </Button>
+            </div>
         </div>
     );
 }

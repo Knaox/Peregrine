@@ -233,6 +233,10 @@
         "visual": {
             "intro": "Edit each parameter visually — label, display type, options, default — without touching the JSON. Changes sync with the JSON tab.",
             "empty": "Add at least one file (Edit tab) to use the visual editor.",
+            "add_file": "Add a file",
+            "file_id": "File id",
+            "file_path": "File path",
+            "expanded_by_default": "Expanded by default",
             "preview": "Live preview",
             "label_en": "Label (EN)",
             "label_fr": "Label (FR)",

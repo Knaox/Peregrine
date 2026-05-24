@@ -233,6 +233,10 @@
         "visual": {
             "intro": "Modifiez chaque paramètre visuellement — label, type d'affichage, options, valeur par défaut — sans toucher au JSON. Les changements se synchronisent avec l'onglet JSON.",
             "empty": "Ajoutez au moins un fichier (onglet Édition) pour utiliser l'éditeur visuel.",
+            "add_file": "Ajouter un fichier",
+            "file_id": "Identifiant du fichier",
+            "file_path": "Chemin du fichier",
+            "expanded_by_default": "Déplié par défaut",
             "preview": "Aperçu en direct",
             "label_en": "Libellé (EN)",
             "label_fr": "Libellé (FR)",
