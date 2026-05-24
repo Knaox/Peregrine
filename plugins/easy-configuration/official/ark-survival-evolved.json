@@ -926,7 +926,8 @@
           "en": "Game mode",
           "fr": "Mode de jeu"
         }
-      }
+      },
+      "expanded_by_default": true
     },
     {
       "id": "gameusersettings-ini",
@@ -3073,7 +3074,8 @@
           "en": "Slots",
           "fr": "Slots / Joueurs"
         }
-      }
+      },
+      "expanded_by_default": true
     }
   ]
 }
