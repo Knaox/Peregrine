@@ -6,6 +6,7 @@ namespace Plugins\EasyConfiguration\Services\Config;
 
 use App\Models\Server;
 use App\Services\Pelican\PelicanFileService;
+use Illuminate\Http\Client\RequestException;
 use Plugins\EasyConfiguration\Services\Boost\BoostCalculator;
 use Plugins\EasyConfiguration\Services\Boost\BoostLookup;
 use Plugins\EasyConfiguration\Services\Parsing\ParserRegistry;
@@ -80,11 +81,22 @@ final class ConfigReaderService
         $fileId = (string) ($fileDef['id'] ?? $path);
 
         $exists = true;
+        $readError = false;
         try {
             $raw = $this->files->getFileContent($server->identifier, $path);
-        } catch (Throwable) {
+        } catch (RequestException $e) {
+            // A definitive 404 means the file simply isn't there yet (hidden in
+            // the UI). Any other HTTP error is a read failure, not an absence.
             $raw = '';
-            $exists = false;
+            if ($e->response->status() === 404) {
+                $exists = false;
+            } else {
+                $readError = true;
+            }
+        } catch (Throwable) {
+            // Connection refused / timeout / Wings unreachable: not "absent".
+            $raw = '';
+            $readError = true;
         }
 
         $parsed = $this->parsers->has($format)
@@ -100,6 +112,7 @@ final class ConfigReaderService
             'path' => $path,
             'format' => $format,
             'exists' => $exists,
+            'read_error' => $readError,
             'sectioned' => $merged['sectioned'],
             'section_labels' => is_array($fileDef['section_labels'] ?? null) ? $fileDef['section_labels'] : null,
             'expanded_by_default' => (bool) ($fileDef['expanded_by_default'] ?? false),

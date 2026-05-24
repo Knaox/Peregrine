@@ -24,14 +24,16 @@ interface SelectProps {
     className?: string;
     disabled?: boolean;
     invalid?: boolean;
+    ariaLabel?: string;
 }
 
-export function Select({ value, onChange, children, className, disabled, invalid }: SelectProps) {
+export function Select({ value, onChange, children, className, disabled, invalid, ariaLabel }: SelectProps) {
     return (
         <select
             className={clsx('ec-select', invalid && 'ec-input-invalid', className)}
             value={value}
             disabled={disabled}
+            aria-label={ariaLabel}
             onChange={(event) => onChange(event.target.value)}
         >
             {children}

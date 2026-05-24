@@ -13,6 +13,8 @@ interface FieldRowProps {
     value: string;
     onChange: (value: string) => void;
     disabled?: boolean;
+    /** Server running: control stays interactive (to show the lock message) but the reset shortcut is hidden. */
+    locked?: boolean;
     dirty?: boolean;
     saved?: boolean;
     invalid?: boolean;
@@ -42,6 +44,7 @@ export function FieldRow({
     value,
     onChange,
     disabled,
+    locked,
     dirty,
     saved,
     invalid,
@@ -65,6 +68,7 @@ export function FieldRow({
         onReset !== undefined &&
         defaultValue !== undefined &&
         !disabled &&
+        !locked &&
         value !== String(defaultValue);
 
     return (
@@ -108,7 +112,7 @@ export function FieldRow({
                     />
                 )}
                 {boost}
-                <FieldControl param={param} value={value} onChange={onChange} disabled={disabled} invalid={invalid} />
+                <FieldControl param={param} value={value} onChange={onChange} disabled={disabled} invalid={invalid} ariaLabel={label} />
                 {saved && (
                     <span className="ec-field-saved" aria-hidden>
                         <Check size={15} />

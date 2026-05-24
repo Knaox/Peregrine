@@ -36,6 +36,13 @@ export const overlayCss = `
 .ec-overlay-card { display: flex; flex-direction: column; align-items: center; gap: 0.85rem; max-width: 22rem; }
 .ec-relative { position: relative; }
 
+/* Read-only notice shown above the editor while the server runs (non-blocking). */
+.ec-banner { display: flex; align-items: center; gap: 0.85rem; padding: 0.85rem 1rem; border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border); background: var(--color-surface); }
+.ec-banner-icon { color: var(--color-warning); display: inline-flex; flex-shrink: 0; }
+.ec-banner-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.ec-banner-title { font-weight: 600; }
+
 .ec-toast-host { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 80; display: flex; flex-direction: column; gap: 0.5rem; max-width: 22rem; }
 .ec-toast { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.7rem 0.85rem; border-radius: var(--radius);
     border: 1px solid var(--color-border); background: var(--color-glass); backdrop-filter: var(--glass-blur);

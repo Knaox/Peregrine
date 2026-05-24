@@ -6,9 +6,8 @@ import { useCollapsed } from './useCollapsed';
 /**
  * Collapsible section block. The initial state comes from the template
  * (`expandedByDefault`, base collapsed); the player's manual toggle is persisted
- * in localStorage per (server, file, section). `forceCollapsed` (server running)
- * overrides the UI to closed and locks the toggle without touching localStorage,
- * so the player's own layout is restored once the server is offline again.
+ * in localStorage per (server, file, section). The layout is the same whether
+ * the server runs or not — running only makes the editor read-only.
  */
 /** Body class for the chosen column layout (1 = list, 2/3 = responsive grid). */
 export function sectionBodyClass(columns?: number): string {
@@ -20,7 +19,6 @@ export function SectionGroup({
     storageKey,
     count,
     children,
-    forceCollapsed = false,
     expandedByDefault = false,
     columns,
 }: {
@@ -28,15 +26,14 @@ export function SectionGroup({
     storageKey: string;
     count?: number;
     children: ReactNode;
-    forceCollapsed?: boolean;
     expandedByDefault?: boolean;
     columns?: number;
 }) {
-    const { isOpen, toggle } = useCollapsed(storageKey, expandedByDefault, forceCollapsed);
+    const { isOpen, toggle } = useCollapsed(storageKey, expandedByDefault);
 
     return (
         <div className={clsx('ec-section-group', !isOpen && 'ec-section-collapsed')}>
-            <button type="button" className="ec-section-head" onClick={toggle} aria-expanded={isOpen} disabled={forceCollapsed}>
+            <button type="button" className="ec-section-head" onClick={toggle} aria-expanded={isOpen}>
                 <span className="ec-section-chevron">
                     <ChevronDown size={16} />
                 </span>

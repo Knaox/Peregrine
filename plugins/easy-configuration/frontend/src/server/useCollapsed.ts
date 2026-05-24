@@ -5,16 +5,11 @@ import { useState } from 'react';
  *
  * Base default is COLLAPSED; the template may seed a unit open via
  * `defaultExpanded`. The player's manual toggle is persisted in localStorage per
- * `storageKey` and wins over the template default. While the server is running,
- * `forceCollapsed` overrides the UI to closed and locks the toggle WITHOUT
- * touching localStorage — so the player's own layout is restored unchanged once
- * the server is offline again. This rule is identical for every template.
+ * `storageKey` and wins over the template default. The layout is identical
+ * whether the server is running or offline — running only makes the editor
+ * read-only, it never changes what is expanded.
  */
-export function useCollapsed(
-    storageKey: string,
-    defaultExpanded: boolean,
-    forceCollapsed: boolean,
-): { isOpen: boolean; toggle: () => void; locked: boolean } {
+export function useCollapsed(storageKey: string, defaultExpanded: boolean): { isOpen: boolean; toggle: () => void } {
     const [open, setOpen] = useState<boolean>(() => {
         try {
             const stored = localStorage.getItem(storageKey);
@@ -31,12 +26,7 @@ export function useCollapsed(
         return defaultExpanded;
     });
 
-    const isOpen = forceCollapsed ? false : open;
-
     const toggle = (): void => {
-        if (forceCollapsed) {
-            return;
-        }
         setOpen((current) => {
             const next = !current;
             try {
@@ -49,5 +39,5 @@ export function useCollapsed(
         });
     };
 
-    return { isOpen, toggle, locked: forceCollapsed };
+    return { isOpen: open, toggle };
 }

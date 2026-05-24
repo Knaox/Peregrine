@@ -20,7 +20,8 @@
         "general": "General",
         "read_only": "Read-only",
         "no_results": "No setting matches your search.",
-        "no_files_yet": "No configuration file is present yet. They appear once the server has been started at least once."
+        "no_files_yet": "No configuration file is present yet. They appear once the server has been started at least once.",
+        "unreachable": "The game server configuration can't be reached right now. Please wait a moment, or contact the administrator if it persists."
     },
     "save": {
         "save": "Save",
@@ -30,9 +31,10 @@
         "fix_invalid": "Fix the highlighted values before saving."
     },
     "overlay": {
-        "running_title": "Stop the server to edit",
-        "running_desc": "The server must be offline before its configuration can be changed safely.",
-        "stop_button": "Stop the server"
+        "running_title": "Read-only while the server is running",
+        "running_desc": "You can browse the configuration, but the server must be turned off before any value can be changed safely.",
+        "stop_button": "Stop the server",
+        "edit_blocked": "The server must be turned off before you can change a value."
     },
     "file": {
         "missing": "No configuration file found at {{path}}.",
@@ -181,6 +183,7 @@
             "tab_edit": "Edit",
             "tab_visual": "Visual editing",
             "tab_preview": "Preview",
+            "tab_prompt": "AI Prompt",
             "open_visual": "Visual editing",
             "columns": "Layout (columns)",
             "columns_1": "1 column",
@@ -230,6 +233,27 @@
             "links_param": "env variable name",
             "links_section_en": "Section name (EN)",
             "links_section_fr": "Section name (FR)"
+        },
+        "prompt": {
+            "intro": "Build a ready-to-use prompt from a real server's config: pick the options, import the files, then paste the prompt into any AI. It returns a finished template JSON you load back here to review.",
+            "files_title": "Configuration files",
+            "params_count": "params",
+            "sections_title": "Sections to include",
+            "no_files": "Import config files from a server to include their parameters in the prompt.",
+            "links_title": "Environment variable links",
+            "source_egg": "Egg for variable autocomplete",
+            "source_egg_ph": "Use the first target egg",
+            "add_link": "Add a link",
+            "envvar_ph": "Env variable name",
+            "generate": "Generate the prompt",
+            "copy": "Copy the prompt",
+            "copied": "Prompt copied to the clipboard.",
+            "copy_failed": "Couldn't copy — select the text manually.",
+            "paste_label": "Paste the AI's JSON here",
+            "paste_ph": "{ \"id\": \"...\", \"files\": [ ... ] }",
+            "load": "Load into the editor",
+            "loaded": "Template loaded — review it, then save.",
+            "load_invalid": "That isn't a valid template JSON (an object with a \"files\" array is required)."
         },
         "visual": {
             "intro": "Edit each parameter visually — label, display type, options, default — without touching the JSON. Changes sync with the JSON tab.",

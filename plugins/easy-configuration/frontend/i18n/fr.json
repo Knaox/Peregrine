@@ -20,7 +20,8 @@
         "general": "Général",
         "read_only": "Lecture seule",
         "no_results": "Aucun paramètre ne correspond à votre recherche.",
-        "no_files_yet": "Aucun fichier de configuration n'est encore présent. Ils apparaissent une fois le serveur démarré au moins une fois."
+        "no_files_yet": "Aucun fichier de configuration n'est encore présent. Ils apparaissent une fois le serveur démarré au moins une fois.",
+        "unreachable": "La configuration du serveur de jeu n'est pas joignable pour le moment. Veuillez patienter, ou contacter l'administrateur si cela persiste."
     },
     "save": {
         "save": "Enregistrer",
@@ -30,9 +31,10 @@
         "fix_invalid": "Corrigez les valeurs en surbrillance avant d'enregistrer."
     },
     "overlay": {
-        "running_title": "Arrêtez le serveur pour modifier",
-        "running_desc": "Le serveur doit être hors ligne avant de pouvoir modifier sa configuration en toute sécurité.",
-        "stop_button": "Arrêter le serveur"
+        "running_title": "Lecture seule pendant que le serveur tourne",
+        "running_desc": "Vous pouvez consulter la configuration, mais le serveur doit être éteint avant de pouvoir modifier une valeur en toute sécurité.",
+        "stop_button": "Arrêter le serveur",
+        "edit_blocked": "Le serveur doit être éteint avant de pouvoir modifier une valeur."
     },
     "file": {
         "missing": "Aucun fichier de configuration trouvé pour {{path}}.",
@@ -181,6 +183,7 @@
             "tab_edit": "Édition",
             "tab_visual": "Édition visuelle",
             "tab_preview": "Aperçu",
+            "tab_prompt": "Prompt IA",
             "open_visual": "Édition visuelle",
             "columns": "Disposition (colonnes)",
             "columns_1": "1 colonne",
@@ -230,6 +233,27 @@
             "links_param": "nom de la variable d'env",
             "links_section_en": "Nom de section (EN)",
             "links_section_fr": "Nom de section (FR)"
+        },
+        "prompt": {
+            "intro": "Construisez un prompt prêt à l'emploi à partir de la config d'un vrai serveur : choisissez les options, importez les fichiers, puis collez le prompt dans n'importe quelle IA. Elle renvoie un template JSON terminé que vous rechargez ici pour le relire.",
+            "files_title": "Fichiers de configuration",
+            "params_count": "params",
+            "sections_title": "Sections à inclure",
+            "no_files": "Importez des fichiers de config depuis un serveur pour inclure leurs paramètres dans le prompt.",
+            "links_title": "Liaisons de variables d'environnement",
+            "source_egg": "Egg pour l'autocomplétion des variables",
+            "source_egg_ph": "Utiliser le premier egg cible",
+            "add_link": "Ajouter une liaison",
+            "envvar_ph": "Nom de la variable d'env",
+            "generate": "Générer le prompt",
+            "copy": "Copier le prompt",
+            "copied": "Prompt copié dans le presse-papiers.",
+            "copy_failed": "Copie impossible — sélectionnez le texte manuellement.",
+            "paste_label": "Collez ici le JSON renvoyé par l'IA",
+            "paste_ph": "{ \"id\": \"...\", \"files\": [ ... ] }",
+            "load": "Charger dans l'éditeur",
+            "loaded": "Template chargé — relisez-le, puis enregistrez.",
+            "load_invalid": "Ce n'est pas un template JSON valide (un objet avec un tableau « files » est requis)."
         },
         "visual": {
             "intro": "Modifiez chaque paramètre visuellement — label, type d'affichage, options, valeur par défaut — sans toucher au JSON. Les changements se synchronisent avec l'onglet JSON.",

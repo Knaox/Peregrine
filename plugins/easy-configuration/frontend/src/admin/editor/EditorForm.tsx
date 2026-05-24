@@ -8,25 +8,12 @@ import { Input, Select, Textarea, Toggle } from '../../ui/inputs';
 import { Card, Tabs } from '../../ui/surfaces';
 import { useToast } from '../../ui/Toast';
 import { useEggCatalog, useSaveTemplate } from '../hooks/useTemplates';
+import { draftFrom, type Draft } from './draft';
 import { EggSelector } from './EggSelector';
 import { ImportFromServerDialog } from './ImportFromServerDialog';
+import { PromptGeneratorPanel } from './PromptGeneratorPanel';
 import { TemplatePreview } from './TemplatePreview';
 import { VisualEditorPanel } from './visual/VisualEditorPanel';
-
-export interface Draft {
-    id: string;
-    version: string;
-    nameEn: string;
-    nameFr: string;
-    descEn: string;
-    descFr: string;
-    author: string;
-    targetEggs: number[];
-    boostEnabled: boolean;
-    blacklist: string;
-    columns: number;
-    filesJson: string;
-}
 
 function label(en: string, fr: string): Record<string, string> {
     const out: Record<string, string> = {};
@@ -56,11 +43,20 @@ export function EditorForm({ initial, isNew }: { initial: Draft; isNew: boolean 
     const save = useSaveTemplate();
 
     const [draft, setDraft] = useState<Draft>(initial);
-    const [tab, setTab] = useState<'edit' | 'visual' | 'preview'>('edit');
+    const [tab, setTab] = useState<'edit' | 'visual' | 'preview' | 'prompt'>('edit');
     const [errors, setErrors] = useState<string[]>([]);
     const [importOpen, setImportOpen] = useState(false);
 
     const patch = (partial: Partial<Draft>): void => setDraft((current) => ({ ...current, ...partial }));
+
+    // Load the JSON an AI returned (from the prompt tab) into the editor for
+    // review. Keep the existing id when editing; take the AI's id for a new one.
+    const onLoadTemplate = (template: Record<string, unknown>): void => {
+        const loadedId = isNew && typeof template.id === 'string' ? template.id : draft.id;
+        setDraft(draftFrom(loadedId, template));
+        setTab('visual');
+        toast.success(t('admin.prompt.loaded'));
+    };
 
     // Append a scaffolded file (imported from a server) to the files array.
     // MUST read the latest state inside the functional updater: a batch import
@@ -143,10 +139,11 @@ export function EditorForm({ initial, isNew }: { initial: Draft; isNew: boolean 
 
             <Tabs
                 active={tab}
-                onChange={(id) => setTab(id as 'edit' | 'visual' | 'preview')}
+                onChange={(id) => setTab(id as 'edit' | 'visual' | 'preview' | 'prompt')}
                 tabs={[
                     { id: 'edit', label: t('admin.editor.tab_edit') },
                     { id: 'visual', label: t('admin.editor.tab_visual') },
+                    { id: 'prompt', label: t('admin.editor.tab_prompt') },
                     { id: 'preview', label: t('admin.editor.tab_preview') },
                 ]}
             />
@@ -237,6 +234,8 @@ export function EditorForm({ initial, isNew }: { initial: Draft; isNew: boolean 
                 </div>
             ) : tab === 'visual' ? (
                 <VisualEditorPanel filesJson={draft.filesJson} lang={lang} onChange={(filesJson) => patch({ filesJson })} />
+            ) : tab === 'prompt' ? (
+                <PromptGeneratorPanel draft={draft} patch={patch} eggs={eggs.data ?? []} onOpenImport={() => setImportOpen(true)} onLoadTemplate={onLoadTemplate} />
             ) : (
                 <TemplatePreview files={safeParse(draft.filesJson)} />
             )}

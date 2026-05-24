@@ -17,7 +17,7 @@ import { CopyDialog } from './copy/CopyDialog';
 import { FileCard } from './FileCard';
 import { FloatingSaveBar } from './FloatingSaveBar';
 import { useSaveConfig, type SaveFilePayload } from './hooks/useServerConfig';
-import { RunningOverlay } from './RunningOverlay';
+import { RunningBanner } from './RunningBanner';
 
 /**
  * Add keys present in `source` but missing from `target`, preserving every
@@ -39,7 +39,7 @@ function mergeMissing(target: Record<string, string>, source: Record<string, str
 export function ConfigEditor({
     serverId,
     templates,
-    disabled,
+    running,
     permissions,
     state,
     stopping,
@@ -47,8 +47,9 @@ export function ConfigEditor({
 }: {
     serverId: number;
     templates: ConfigTemplate[];
-    /** Server is running → the config area is collapsed + overlaid (edit offline only). */
-    disabled: boolean;
+    /** Server is running → the editor is read-only (a banner explains it); the
+     *  layout is unchanged, edits are intercepted with a "stop the server" message. */
+    running: boolean;
     permissions?: ConfigPermissions;
     state: ServerState;
     stopping: boolean;
@@ -63,9 +64,11 @@ export function ConfigEditor({
     const canWrite = permissions?.write ?? true;
     const canCopy = permissions?.copy ?? true;
     const canBoost = permissions?.boost ?? true;
-    // Controls are frozen when the server is running (overlay) or the caller only
-    // has read access. The overlay + section collapse track running only.
-    const readOnly = disabled || !canWrite;
+    // Two read-only reasons, handled differently: no write permission HARD-disables
+    // the controls; a running server LOCKS them (still interactive so a tap explains
+    // "stop the server first"). Editing is only possible with write AND offline.
+    const hardDisabled = ! canWrite;
+    const canEdit = canWrite && ! running;
 
     const { initial, index } = useMemo(() => {
         const initialValues: Record<string, string> = {};
@@ -122,6 +125,16 @@ export function ConfigEditor({
 
     const onChange = useCallback(
         (fieldKey: string, param: ConfigParam, value: string) => {
+            if (hardDisabled) {
+                return;
+            }
+            // Running server: keep the control interactive but explain why the edit
+            // didn't take, instead of silently disabling everything.
+            if (running) {
+                toast.warning(t('overlay.edit_blocked'));
+
+                return;
+            }
             setJustSaved(false);
             setValues((current) => ({ ...current, [fieldKey]: value }));
             const reason = validateValue(param, value);
@@ -130,7 +143,7 @@ export function ConfigEditor({
                 toast.warning(t('validation.invalid_value', { param: pickLabel(param.label, lang, param.key), type: t(`validation.type.${reason}`) }));
             }
         },
-        [toast, t, lang],
+        [toast, t, lang, hardDisabled, running],
     );
 
     const onReset = useCallback(
@@ -143,7 +156,7 @@ export function ConfigEditor({
     );
 
     const doSave = useCallback(() => {
-        if (!isDirty || readOnly || save.isPending) {
+        if (!isDirty || !canEdit || save.isPending) {
             return;
         }
         if (hasInvalid) {
@@ -189,7 +202,7 @@ export function ConfigEditor({
                 toast.error(t('save.error'));
             },
         });
-    }, [isDirty, readOnly, hasInvalid, dirtyKeys, index, values, save, toast, t]);
+    }, [isDirty, canEdit, hasInvalid, dirtyKeys, index, values, save, toast, t]);
 
     useEffect(() => {
         const onKey = (event: KeyboardEvent): void => {
@@ -208,7 +221,8 @@ export function ConfigEditor({
         isDirty: (key) => values[key] !== original[key],
         isSaved: (key) => savedKeys.has(key),
         isInvalid: (key) => invalid[key] ?? false,
-        disabled: readOnly,
+        disabled: hardDisabled,
+        locked: running,
         search,
         onChange,
         onReset,
@@ -229,6 +243,10 @@ export function ConfigEditor({
             .filter((file) => file.exists !== false)
             .map((file) => ({ key: `${template.id}:${file.id}`, file, columns: template.columns, templateId: template.id })),
     );
+
+    // A read failure (Wings unreachable / timeout) is distinct from a genuinely
+    // absent file: don't hide the config, tell the player it can't be reached.
+    const unreachable = templates.some((template) => template.files.some((file) => file.read_error === true));
 
     return (
         <div className="ec-stack">
@@ -268,30 +286,37 @@ export function ConfigEditor({
                 />
             )}
 
-            {/* Config area: locked (collapsed + overlay) while the server runs. */}
-            <div className="ec-relative">
-                <div className="ec-stack">
-                    <div className="ec-search">
-                        <span className="ec-search-icon">
-                            <Search size={14} />
-                        </span>
-                        <Input value={search} placeholder={t('section.search')} onChange={(event) => setSearch(event.target.value)} />
-                    </div>
+            {/* Running server: read-only banner (layout unchanged, edits blocked with a message). */}
+            {running && <RunningBanner state={state} stopping={stopping} onStop={onStop} />}
 
-                    {fileCards.length === 0 ? (
-                        <Card>
-                            <EmptyState>{t('section.no_files_yet')}</EmptyState>
-                        </Card>
-                    ) : (
-                        fileCards.map(({ key, file, columns, templateId }) => (
-                            <FileCard key={key} file={file} controller={controller} serverId={serverId} templateId={templateId} forceCollapsed={disabled} columns={columns} />
-                        ))
-                    )}
-                </div>
-                {disabled && <RunningOverlay state={state} stopping={stopping} onStop={onStop} />}
+            <div className="ec-stack">
+                {unreachable ? (
+                    <Card>
+                        <EmptyState>{t('section.unreachable')}</EmptyState>
+                    </Card>
+                ) : (
+                    <>
+                        <div className="ec-search">
+                            <span className="ec-search-icon">
+                                <Search size={14} />
+                            </span>
+                            <Input value={search} placeholder={t('section.search')} onChange={(event) => setSearch(event.target.value)} />
+                        </div>
+
+                        {fileCards.length === 0 ? (
+                            <Card>
+                                <EmptyState>{t('section.no_files_yet')}</EmptyState>
+                            </Card>
+                        ) : (
+                            fileCards.map(({ key, file, columns, templateId }) => (
+                                <FileCard key={key} file={file} controller={controller} serverId={serverId} templateId={templateId} columns={columns} />
+                            ))
+                        )}
+                    </>
+                )}
             </div>
 
-            {(isDirty || justSaved) && !readOnly && <FloatingSaveBar saving={save.isPending} saved={justSaved} onSave={doSave} />}
+            {(isDirty || justSaved) && canEdit && <FloatingSaveBar saving={save.isPending} saved={justSaved} onSave={doSave} />}
 
             <CopyDialog open={copyOpen} onClose={() => setCopyOpen(false)} serverId={serverId} templates={templates} />
         </div>
