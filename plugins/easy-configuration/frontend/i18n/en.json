@@ -238,6 +238,7 @@
             "intro": "Build a ready-to-use prompt from a real server's config: pick the options, import the files, then paste the prompt into any AI. It returns a finished template JSON you load back here to review.",
             "files_title": "Configuration files",
             "params_count": "params",
+            "sections_title": "Sections to include",
             "no_files": "Import config files from a server to include their parameters in the prompt.",
             "links_title": "Environment variable links",
             "source_egg": "Egg for variable autocomplete",

@@ -238,6 +238,7 @@
             "intro": "Construisez un prompt prêt à l'emploi à partir de la config d'un vrai serveur : choisissez les options, importez les fichiers, puis collez le prompt dans n'importe quelle IA. Elle renvoie un template JSON terminé que vous rechargez ici pour le relire.",
             "files_title": "Fichiers de configuration",
             "params_count": "params",
+            "sections_title": "Sections à inclure",
             "no_files": "Importez des fichiers de config depuis un serveur pour inclure leurs paramètres dans le prompt.",
             "links_title": "Liaisons de variables d'environnement",
             "source_egg": "Egg pour l'autocomplétion des variables",

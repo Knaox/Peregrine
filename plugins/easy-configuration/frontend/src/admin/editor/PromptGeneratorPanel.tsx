@@ -12,6 +12,7 @@ import { buildPrompt, fileParamsForPrompt, promptFilesFrom, type PromptEnvLink }
 import type { Draft } from './draft';
 import { EggSelector } from './EggSelector';
 import { EnvLinkList, type ParamOption } from './EnvLinkList';
+import { SectionWhitelist } from './SectionWhitelist';
 
 const DATALIST_ID = 'ec-prompt-envvars';
 const SEP = String.fromCharCode(0x1f);
@@ -69,9 +70,10 @@ export function PromptGeneratorPanel({ draft, patch, eggs, onOpenImport, onLoadT
         return <span className="ec-field-desc ec-muted">{t('admin.editor.invalid_files_json')}</span>;
     }
 
-    const toggleExpanded = (index: number, on: boolean): void => {
-        patch({ filesJson: JSON.stringify(files.map((file, i) => (i === index ? setExpandedByDefault(file, on) : file)), null, 2) });
+    const replaceFile = (index: number, next: Json): void => {
+        patch({ filesJson: JSON.stringify(files.map((file, i) => (i === index ? next : file)), null, 2) });
     };
+    const toggleExpanded = (index: number, on: boolean): void => replaceFile(index, setExpandedByDefault(files[index], on));
 
     const onGenerate = (): void => {
         setPrompt(buildPrompt({
@@ -156,14 +158,17 @@ export function PromptGeneratorPanel({ draft, patch, eggs, onOpenImport, onLoadT
                         <EmptyState>{t('admin.prompt.no_files')}</EmptyState>
                     ) : (
                         files.map((file, index) => (
-                            <div key={`${String(file.id ?? '')}-${index}`} className="ec-between">
-                                <span className="ec-field-desc ec-truncate">
-                                    {String(file.path ?? file.id ?? '')} · {fileParamsForPrompt(file).length} {t('admin.prompt.params_count')}
-                                </span>
-                                <label className="ec-row" style={{ cursor: 'pointer', gap: '0.5rem' }}>
-                                    <span className="ec-field-desc ec-secondary">{t('admin.visual.expanded_by_default')}</span>
-                                    <Toggle checked={file.expanded_by_default === true} onChange={(on) => toggleExpanded(index, on)} label={t('admin.visual.expanded_by_default')} />
-                                </label>
+                            <div key={`${String(file.id ?? '')}-${index}`} className="ec-stack">
+                                <div className="ec-between">
+                                    <span className="ec-field-desc ec-truncate">
+                                        {String(file.path ?? file.id ?? '')} · {fileParamsForPrompt(file).length} {t('admin.prompt.params_count')}
+                                    </span>
+                                    <label className="ec-row" style={{ cursor: 'pointer', gap: '0.5rem' }}>
+                                        <span className="ec-field-desc ec-secondary">{t('admin.visual.expanded_by_default')}</span>
+                                        <Toggle checked={file.expanded_by_default === true} onChange={(on) => toggleExpanded(index, on)} label={t('admin.visual.expanded_by_default')} />
+                                    </label>
+                                </div>
+                                <SectionWhitelist file={file} onChange={(next) => replaceFile(index, next)} />
                             </div>
                         ))
                     )}

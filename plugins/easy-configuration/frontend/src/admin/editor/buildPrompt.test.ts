@@ -81,3 +81,43 @@ describe('buildPrompt', () => {
         expect(prompt).toContain('param "max-players" → env_var "MAX_PLAYERS"');
     });
 });
+
+describe('section whitelist', () => {
+    const whitelisted: Json = {
+        id: 'gus',
+        path: 'GameUserSettings.ini',
+        format: 'ini',
+        section_whitelist: ['ServerSettings'],
+        parameters: {
+            ServerSettings: { XP: { display_type: 'slider', config: { default: '3' } } },
+            SessionSettings: { SessionName: { display_type: 'text', config: { default: 'srv' } } },
+        },
+    };
+
+    it('drops params of non-whitelisted sections', () => {
+        expect(fileParamsForPrompt(whitelisted)).toEqual([{ section: 'ServerSettings', key: 'XP', value: '3', type: 'slider' }]);
+    });
+
+    it('carries the whitelist into the file model and the prompt', () => {
+        const [file] = promptFilesFrom([whitelisted]);
+        expect(file.sectionWhitelist).toEqual(['ServerSettings']);
+
+        const prompt = buildPrompt({
+            id: 't',
+            nameEn: 'T',
+            nameFr: 'T',
+            descEn: '',
+            descFr: '',
+            author: '',
+            targetEggs: [],
+            columns: 1,
+            boostEnabled: false,
+            blacklist: [],
+            files: [file],
+            envLinks: [],
+        });
+        expect(prompt).toContain('section_whitelist: ["ServerSettings"]');
+        expect(prompt).toContain('XP = 3 (slider)');
+        expect(prompt).not.toContain('SessionName');
+    });
+});

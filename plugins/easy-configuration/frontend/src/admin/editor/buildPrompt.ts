@@ -14,6 +14,8 @@ export interface PromptFile {
     path: string;
     format: string;
     expandedByDefault: boolean;
+    /** Whitelisted native sections (ini/toml). Empty = every section. */
+    sectionWhitelist: string[];
     params: PromptParam[];
 }
 
@@ -44,10 +46,21 @@ function isParamDef(value: unknown): value is Json {
     return typeof value === 'object' && value !== null && 'display_type' in (value as Json);
 }
 
-/** Read every parameter (key, current value, detected type) out of a scaffolded file block. */
+/** Whitelisted sections of a file block (empty = every section is kept). */
+export function sectionWhitelistOf(file: Json): string[] {
+    return Array.isArray(file.section_whitelist) ? (file.section_whitelist as unknown[]).map(String) : [];
+}
+
+/**
+ * Read every parameter (key, current value, detected type) out of a scaffolded
+ * file block, honouring `section_whitelist` — params of a non-whitelisted
+ * native section are dropped so the prompt only covers what the player will see.
+ */
 export function fileParamsForPrompt(file: Json): PromptParam[] {
     const rows: PromptParam[] = [];
     const params = (file.parameters ?? {}) as Json;
+    const whitelist = sectionWhitelistOf(file);
+    const allows = (section: string): boolean => whitelist.length === 0 || whitelist.includes(section);
 
     const push = (section: string | null, key: string, def: Json): void => {
         const config = (def.config ?? {}) as Json;
@@ -57,7 +70,7 @@ export function fileParamsForPrompt(file: Json): PromptParam[] {
     for (const [key, value] of Object.entries(params)) {
         if (isParamDef(value)) {
             push(null, key, value);
-        } else if (typeof value === 'object' && value !== null) {
+        } else if (typeof value === 'object' && value !== null && allows(key)) {
             for (const [childKey, childDef] of Object.entries(value as Json)) {
                 if (isParamDef(childDef)) {
                     push(key, childKey, childDef as Json);
@@ -76,6 +89,7 @@ export function promptFilesFrom(files: Json[]): PromptFile[] {
         path: String(file.path ?? ''),
         format: String(file.format ?? 'properties'),
         expandedByDefault: file.expanded_by_default === true,
+        sectionWhitelist: sectionWhitelistOf(file),
         params: fileParamsForPrompt(file),
     }));
 }
@@ -116,9 +130,12 @@ function paramLine(p: PromptParam): string {
 
 function fileBlock(file: PromptFile): string {
     const header = `FILE "${file.id}" — path "${file.path}", format ${file.format}, expanded_by_default ${file.expandedByDefault}`;
+    const whitelist = file.sectionWhitelist.length > 0
+        ? `\nsection_whitelist: ${JSON.stringify(file.sectionWhitelist)} — set this on the file and produce ONLY these native sections, ignore every other section.`
+        : '';
     const params = file.params.length > 0 ? file.params.map(paramLine).join('\n') : '  (no parameters detected)';
 
-    return `${header}\nParameters (key = current value (detected type)):\n${params}`;
+    return `${header}${whitelist}\nParameters (key = current value (detected type)):\n${params}`;
 }
 
 function envLinkLine(link: PromptEnvLink): string {
