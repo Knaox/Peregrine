@@ -8,25 +8,11 @@ import { Input, Select, Textarea, Toggle } from '../../ui/inputs';
 import { Card, Tabs } from '../../ui/surfaces';
 import { useToast } from '../../ui/Toast';
 import { useEggCatalog, useSaveTemplate } from '../hooks/useTemplates';
+import { type Draft } from './draft';
 import { EggSelector } from './EggSelector';
 import { ImportFromServerDialog } from './ImportFromServerDialog';
 import { TemplatePreview } from './TemplatePreview';
 import { VisualEditorPanel } from './visual/VisualEditorPanel';
-
-export interface Draft {
-    id: string;
-    version: string;
-    nameEn: string;
-    nameFr: string;
-    descEn: string;
-    descFr: string;
-    author: string;
-    targetEggs: number[];
-    boostEnabled: boolean;
-    blacklist: string;
-    columns: number;
-    filesJson: string;
-}
 
 function label(en: string, fr: string): Record<string, string> {
     const out: Record<string, string> = {};
