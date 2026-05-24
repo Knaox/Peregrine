@@ -37,7 +37,7 @@ function ConfigSectionInner({ serverId }: { serverId: number }) {
             serverId={serverId}
             templates={config.data.templates}
             permissions={config.data.permissions}
-            disabled={running}
+            running={running}
             state={state}
             stopping={power.isPending}
             onStop={() => power.mutate('stop')}

@@ -30,9 +30,10 @@
         "fix_invalid": "Corrigez les valeurs en surbrillance avant d'enregistrer."
     },
     "overlay": {
-        "running_title": "Arrêtez le serveur pour modifier",
-        "running_desc": "Le serveur doit être hors ligne avant de pouvoir modifier sa configuration en toute sécurité.",
-        "stop_button": "Arrêter le serveur"
+        "running_title": "Lecture seule pendant que le serveur tourne",
+        "running_desc": "Vous pouvez consulter la configuration, mais le serveur doit être éteint avant de pouvoir modifier une valeur en toute sécurité.",
+        "stop_button": "Arrêter le serveur",
+        "edit_blocked": "Le serveur doit être éteint avant de pouvoir modifier une valeur."
     },
     "file": {
         "missing": "Aucun fichier de configuration trouvé pour {{path}}.",

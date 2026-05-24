@@ -6,7 +6,11 @@ export interface EditorController {
     isDirty: (fieldKey: string) => boolean;
     isSaved: (fieldKey: string) => boolean;
     isInvalid: (fieldKey: string) => boolean;
+    /** Hard read-only: caller lacks write permission — controls are disabled. */
     disabled: boolean;
+    /** Soft lock: server is running — controls stay interactive but edits are
+     *  intercepted with a "stop the server" message instead of applying. */
+    locked: boolean;
     search: string;
     onChange: (fieldKey: string, param: ConfigParam, value: string) => void;
     onReset: (fieldKey: string, param: ConfigParam) => void;

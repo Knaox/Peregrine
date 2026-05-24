@@ -38,15 +38,16 @@ function resolveSectionDefault(file: ConfigFile, section: string | null): boolea
     return true;
 }
 
-export function FileCard({ file, controller, serverId, templateId, forceCollapsed = false, columns }: { file: ConfigFile; controller: EditorController; serverId: number; templateId: string; forceCollapsed?: boolean; columns?: number }) {
+export function FileCard({ file, controller, serverId, templateId, columns }: { file: ConfigFile; controller: EditorController; serverId: number; templateId: string; columns?: number }) {
     const { t, lang } = useT();
     const title = pickLabel(file.label, lang, file.path);
     const [addOpen, setAddOpen] = useState(false);
     const [annotateParam, setAnnotateParam] = useState<ConfigParam | null>(null);
     const sections = [...new Set(file.parameters.map((p) => p.section).filter((s): s is string => s !== null))];
     // The whole file is one collapsible unit (click its title). Base = collapsed;
-    // the template flips it open via `expanded_by_default`; running forces closed.
-    const fileCollapse = useCollapsed(`ec:col:${serverId}:${file.id}:_file`, file.expanded_by_default ?? false, forceCollapsed);
+    // the template flips it open via `expanded_by_default`. The layout is the same
+    // running or offline — running only makes the editor read-only.
+    const fileCollapse = useCollapsed(`ec:col:${serverId}:${file.id}:_file`, file.expanded_by_default ?? false);
 
     const query = controller.search.trim().toLowerCase();
     const matches = (param: ConfigParam): boolean => {
@@ -79,6 +80,7 @@ export function FileCard({ file, controller, serverId, templateId, forceCollapse
                 saved={controller.isSaved(key)}
                 invalid={controller.isInvalid(key)}
                 disabled={controller.disabled}
+                locked={controller.locked}
                 onChange={(value) => controller.onChange(key, param, value)}
                 onReset={() => controller.onReset(key, param)}
                 boost={param.boost ? <BoostBadge boost={param.boost} /> : undefined}
@@ -104,7 +106,6 @@ export function FileCard({ file, controller, serverId, templateId, forceCollapse
                         className={clsx('ec-file-head', !fileCollapse.isOpen && 'ec-section-collapsed')}
                         onClick={fileCollapse.toggle}
                         aria-expanded={fileCollapse.isOpen}
-                        disabled={forceCollapsed}
                     >
                         <span className="ec-section-chevron">
                             <ChevronDown size={18} />
@@ -125,7 +126,6 @@ export function FileCard({ file, controller, serverId, templateId, forceCollapse
                                         title={section === null ? t('section.general') : pickLabel(file.section_labels?.[section], lang, section)}
                                         storageKey={`ec:col:${serverId}:${file.id}:${section ?? ''}`}
                                         count={params.length}
-                                        forceCollapsed={forceCollapsed}
                                         expandedByDefault={resolveSectionDefault(file, section)}
                                         columns={columns}
                                     >
@@ -138,7 +138,7 @@ export function FileCard({ file, controller, serverId, templateId, forceCollapse
                                 </div>
                             )}
 
-                            {!controller.disabled && (
+                            {!controller.disabled && !controller.locked && (
                                 <div>
                                     <Button variant="ghost" size="sm" onClick={() => setAddOpen(true)}>
                                         <Plus size={14} /> {t('add_param.button')}
