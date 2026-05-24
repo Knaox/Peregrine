@@ -19,7 +19,8 @@
         "search": "Search a setting...",
         "general": "General",
         "read_only": "Read-only",
-        "no_results": "No setting matches your search."
+        "no_results": "No setting matches your search.",
+        "no_files_yet": "No configuration file is present yet. They appear once the server has been started at least once."
     },
     "save": {
         "save": "Save",

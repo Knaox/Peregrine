@@ -7,6 +7,7 @@ import type { ApiError } from '../shared';
 import type { ConfigParam, ConfigPermissions, ConfigTemplate, ServerState } from '../types';
 import { Button } from '../ui/Button';
 import { Input, Toggle } from '../ui/inputs';
+import { Card, EmptyState } from '../ui/surfaces';
 import { useToast } from '../ui/Toast';
 import { BoostSection } from './boost/BoostSection';
 import { useBoosts } from './boost/useBoosts';
@@ -221,8 +222,12 @@ export function ConfigEditor({
         canManageTemplate: permissions?.manage_templates ?? false,
     };
 
+    // Files absent on the server aren't shown at all (a config file only exists
+    // once the server has generated it — typically after its first boot).
     const fileCards = templates.flatMap((template) =>
-        template.files.map((file) => ({ key: `${template.id}:${file.id}`, file, columns: template.columns, templateId: template.id })),
+        template.files
+            .filter((file) => file.exists !== false)
+            .map((file) => ({ key: `${template.id}:${file.id}`, file, columns: template.columns, templateId: template.id })),
     );
 
     return (
@@ -273,9 +278,15 @@ export function ConfigEditor({
                         <Input value={search} placeholder={t('section.search')} onChange={(event) => setSearch(event.target.value)} />
                     </div>
 
-                    {fileCards.map(({ key, file, columns, templateId }) => (
-                        <FileCard key={key} file={file} controller={controller} serverId={serverId} templateId={templateId} forceCollapsed={disabled} columns={columns} />
-                    ))}
+                    {fileCards.length === 0 ? (
+                        <Card>
+                            <EmptyState>{t('section.no_files_yet')}</EmptyState>
+                        </Card>
+                    ) : (
+                        fileCards.map(({ key, file, columns, templateId }) => (
+                            <FileCard key={key} file={file} controller={controller} serverId={serverId} templateId={templateId} forceCollapsed={disabled} columns={columns} />
+                        ))
+                    )}
                 </div>
                 {disabled && <RunningOverlay state={state} stopping={stopping} onStop={onStop} />}
             </div>

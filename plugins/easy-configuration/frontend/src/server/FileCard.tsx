@@ -6,7 +6,7 @@ import { fieldKeyOf } from '../lib/fieldKey';
 import { pickLabel, useT } from '../lib/i18n';
 import type { ConfigFile, ConfigParam } from '../types';
 import { Button } from '../ui/Button';
-import { Badge, Card, EmptyState } from '../ui/surfaces';
+import { Card, EmptyState } from '../ui/surfaces';
 import { AddParameterDialog } from './AddParameterDialog';
 import { AnnotateParameterDialog } from './AnnotateParameterDialog';
 import { BoostBadge } from './boost/BoostBadge';
@@ -96,17 +96,8 @@ export function FileCard({ file, controller, serverId, templateId, forceCollapse
 
     return (
         <div className="ec-stack">
-            {!file.exists ? (
-                <>
-                    <div className="ec-between">
-                        <h3 className="ec-title">{title}</h3>
-                        <Badge variant="warning">{t('file.missing_badge')}</Badge>
-                    </div>
-                    <Card>
-                        <EmptyState>{t('file.missing', { path: file.path })}</EmptyState>
-                    </Card>
-                </>
-            ) : (
+            {/* Files absent on the server are filtered out by ConfigEditor; render nothing if one slips through. */}
+            {!file.exists ? null : (
                 <>
                     <button
                         type="button"
