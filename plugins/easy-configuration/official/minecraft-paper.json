@@ -1,0 +1,2407 @@
+{
+  "id": "minecraft-paper",
+  "version": "1.0.0",
+  "name": {
+    "en": "Minecraft (Paper)",
+    "fr": "Minecraft (Paper)"
+  },
+  "description": {
+    "en": "Exhaustive bilingual configuration for a Minecraft Paper server — every standard server.properties key plus the most-tuned Paper global and per-world performance settings, with clear labels and descriptions.",
+    "fr": "Configuration bilingue exhaustive pour un serveur Minecraft Paper — toutes les clés standard de server.properties ainsi que les réglages de performance Paper globaux et par monde les plus ajustés, avec des libellés et descriptions clairs."
+  },
+  "author": "Peregrine",
+  "target_eggs": [],
+  "columns": 2,
+  "boost": {
+    "enabled": false,
+    "parameter_blacklist": []
+  },
+  "files": [
+    {
+      "id": "server-properties",
+      "path": "server.properties",
+      "format": "properties",
+      "enabled": true,
+      "label": {
+        "en": "Server properties",
+        "fr": "Propriétés du serveur"
+      },
+      "parameters": {
+        "gamemode": {
+          "display_type": "select",
+          "config": {
+            "default": "survival",
+            "options": [
+              {
+                "value": "survival",
+                "label": {
+                  "en": "Survival",
+                  "fr": "Survie"
+                }
+              },
+              {
+                "value": "creative",
+                "label": {
+                  "en": "Creative",
+                  "fr": "Créatif"
+                }
+              },
+              {
+                "value": "adventure",
+                "label": {
+                  "en": "Adventure",
+                  "fr": "Aventure"
+                }
+              },
+              {
+                "value": "spectator",
+                "label": {
+                  "en": "Spectator",
+                  "fr": "Spectateur"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Default game mode",
+            "fr": "Mode de jeu par défaut"
+          },
+          "description": {
+            "en": "The game mode new players start in: Survival, Creative, Adventure or Spectator.",
+            "fr": "Le mode de jeu dans lequel les nouveaux joueurs commencent : Survie, Créatif, Aventure ou Spectateur."
+          }
+        },
+        "force-gamemode": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Force game mode",
+            "fr": "Forcer le mode de jeu"
+          },
+          "description": {
+            "en": "When enabled, players are forced back to the default game mode every time they join instead of keeping their last one.",
+            "fr": "Lorsqu'activé, les joueurs sont ramenés au mode de jeu par défaut à chaque connexion au lieu de conserver le leur."
+          }
+        },
+        "difficulty": {
+          "display_type": "select",
+          "config": {
+            "default": "easy",
+            "options": [
+              {
+                "value": "peaceful",
+                "label": {
+                  "en": "Peaceful",
+                  "fr": "Paisible"
+                }
+              },
+              {
+                "value": "easy",
+                "label": {
+                  "en": "Easy",
+                  "fr": "Facile"
+                }
+              },
+              {
+                "value": "normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normal"
+                }
+              },
+              {
+                "value": "hard",
+                "label": {
+                  "en": "Hard",
+                  "fr": "Difficile"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Difficulty",
+            "fr": "Difficulté"
+          },
+          "description": {
+            "en": "Sets the world difficulty, which controls hostile mob behaviour, hunger damage and other survival hazards.",
+            "fr": "Définit la difficulté du monde, qui contrôle le comportement des monstres hostiles, les dégâts de faim et autres dangers de survie."
+          }
+        },
+        "hardcore": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Hardcore mode",
+            "fr": "Mode hardcore"
+          },
+          "description": {
+            "en": "When enabled, difficulty is locked to Hard and players are banned (set to spectator) permanently on death.",
+            "fr": "Lorsqu'activé, la difficulté est verrouillée sur Difficile et les joueurs sont bannis (passés en spectateur) définitivement à leur mort."
+          }
+        },
+        "pvp": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "PvP enabled",
+            "fr": "PvP activé"
+          },
+          "description": {
+            "en": "When enabled, players can deal direct combat damage to one another.",
+            "fr": "Lorsqu'activé, les joueurs peuvent s'infliger des dégâts de combat directs."
+          }
+        },
+        "max-players": {
+          "display_type": "slider",
+          "config": {
+            "min": 1,
+            "max": 200,
+            "step": 1,
+            "default": "20"
+          },
+          "label": {
+            "en": "Max players",
+            "fr": "Joueurs maximum"
+          },
+          "description": {
+            "en": "Maximum number of players that can be connected to the server at the same time.",
+            "fr": "Nombre maximum de joueurs pouvant être connectés au serveur en même temps."
+          }
+        },
+        "online-mode": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Online mode",
+            "fr": "Mode en ligne"
+          },
+          "description": {
+            "en": "When enabled, the server verifies each player against Mojang's authentication servers. Disable only behind a proxy.",
+            "fr": "Lorsqu'activé, le serveur vérifie chaque joueur auprès des serveurs d'authentification de Mojang. À désactiver uniquement derrière un proxy."
+          }
+        },
+        "white-list": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Whitelist enabled",
+            "fr": "Liste blanche activée"
+          },
+          "description": {
+            "en": "When enabled, only players added to the whitelist are allowed to join the server.",
+            "fr": "Lorsqu'activé, seuls les joueurs ajoutés à la liste blanche sont autorisés à rejoindre le serveur."
+          }
+        },
+        "enforce-whitelist": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Enforce whitelist",
+            "fr": "Appliquer la liste blanche"
+          },
+          "description": {
+            "en": "When enabled, players already online who are not on the whitelist are kicked the moment the whitelist is reloaded.",
+            "fr": "Lorsqu'activé, les joueurs déjà connectés qui ne figurent pas sur la liste blanche sont expulsés dès que celle-ci est rechargée."
+          }
+        },
+        "enforce-secure-profile": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Enforce secure profile",
+            "fr": "Exiger un profil sécurisé"
+          },
+          "description": {
+            "en": "When enabled, players without a Mojang-signed chat profile cannot join, ensuring messages can be cryptographically verified.",
+            "fr": "Lorsqu'activé, les joueurs sans profil de chat signé par Mojang ne peuvent pas se connecter, garantissant que les messages peuvent être vérifiés cryptographiquement."
+          }
+        },
+        "motd": {
+          "display_type": "textarea",
+          "config": {
+            "max_length": 256,
+            "default": "A Minecraft Server"
+          },
+          "label": {
+            "en": "Message of the day",
+            "fr": "Message du jour"
+          },
+          "description": {
+            "en": "The description shown beneath the server name in the multiplayer server list.",
+            "fr": "La description affichée sous le nom du serveur dans la liste des serveurs multijoueur."
+          }
+        },
+        "level-name": {
+          "display_type": "text",
+          "config": {
+            "max_length": 64,
+            "default": "world"
+          },
+          "label": {
+            "en": "World folder name",
+            "fr": "Nom du dossier du monde"
+          },
+          "description": {
+            "en": "Name of the folder that stores the world save; changing it switches to (or creates) a different world.",
+            "fr": "Nom du dossier qui stocke la sauvegarde du monde ; le changer bascule vers (ou crée) un autre monde."
+          }
+        },
+        "level-seed": {
+          "display_type": "text",
+          "config": {
+            "max_length": 128,
+            "default": null
+          },
+          "label": {
+            "en": "World seed",
+            "fr": "Graine du monde"
+          },
+          "description": {
+            "en": "Seed used to generate the world. Leave empty for a random seed; only affects newly generated worlds.",
+            "fr": "Graine utilisée pour générer le monde. Laissez vide pour une graine aléatoire ; n'affecte que les mondes nouvellement générés."
+          }
+        },
+        "level-type": {
+          "display_type": "select",
+          "config": {
+            "default": "minecraft\\:normal",
+            "options": [
+              {
+                "value": "minecraft\\:normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normal"
+                }
+              },
+              {
+                "value": "minecraft\\:flat",
+                "label": {
+                  "en": "Superflat",
+                  "fr": "Superplat"
+                }
+              },
+              {
+                "value": "minecraft\\:large_biomes",
+                "label": {
+                  "en": "Large biomes",
+                  "fr": "Grands biomes"
+                }
+              },
+              {
+                "value": "minecraft\\:amplified",
+                "label": {
+                  "en": "Amplified",
+                  "fr": "Amplifié"
+                }
+              },
+              {
+                "value": "minecraft\\:single_biome_surface",
+                "label": {
+                  "en": "Single biome",
+                  "fr": "Biome unique"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "World type",
+            "fr": "Type de monde"
+          },
+          "description": {
+            "en": "Terrain generation preset for new worlds: Normal, Superflat, Large biomes, Amplified or Single biome.",
+            "fr": "Préréglage de génération du terrain pour les nouveaux mondes : Normal, Superplat, Grands biomes, Amplifié ou Biome unique."
+          }
+        },
+        "generator-settings": {
+          "display_type": "textarea",
+          "config": {
+            "max_length": 1024,
+            "default": "{}"
+          },
+          "label": {
+            "en": "Generator settings (JSON)",
+            "fr": "Paramètres du générateur (JSON)"
+          },
+          "description": {
+            "en": "Advanced JSON used to customize world generation, most commonly the layer stack of a superflat world.",
+            "fr": "JSON avancé servant à personnaliser la génération du monde, le plus souvent la pile de couches d'un monde superplat."
+          }
+        },
+        "generate-structures": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Generate structures",
+            "fr": "Générer les structures"
+          },
+          "description": {
+            "en": "When enabled, the world generates structures such as villages, temples and strongholds.",
+            "fr": "Lorsqu'activé, le monde génère des structures comme les villages, les temples et les forteresses."
+          }
+        },
+        "max-world-size": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 29999984,
+            "default": "29999984"
+          },
+          "label": {
+            "en": "Max world size (blocks)",
+            "fr": "Taille max du monde (blocs)"
+          },
+          "description": {
+            "en": "Radius in blocks of the playable world border around spawn; smaller values keep the world more compact.",
+            "fr": "Rayon en blocs de la bordure du monde jouable autour du spawn ; des valeurs plus petites gardent le monde plus compact."
+          }
+        },
+        "spawn-protection": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 256,
+            "default": "16"
+          },
+          "label": {
+            "en": "Spawn protection radius",
+            "fr": "Rayon de protection du spawn"
+          },
+          "description": {
+            "en": "Radius in blocks around spawn where non-operator players cannot build or break blocks; 0 disables protection.",
+            "fr": "Rayon en blocs autour du spawn où les joueurs non-opérateurs ne peuvent ni construire ni casser de blocs ; 0 désactive la protection."
+          }
+        },
+        "view-distance": {
+          "display_type": "slider",
+          "config": {
+            "min": 2,
+            "max": 32,
+            "step": 1,
+            "default": "10"
+          },
+          "label": {
+            "en": "View distance (chunks)",
+            "fr": "Distance de vue (chunks)"
+          },
+          "description": {
+            "en": "Radius of chunks the server sends to each player; lower values reduce bandwidth and CPU load.",
+            "fr": "Rayon de chunks que le serveur envoie à chaque joueur ; des valeurs plus basses réduisent la bande passante et la charge CPU."
+          }
+        },
+        "simulation-distance": {
+          "display_type": "slider",
+          "config": {
+            "min": 2,
+            "max": 32,
+            "step": 1,
+            "default": "10"
+          },
+          "label": {
+            "en": "Simulation distance (chunks)",
+            "fr": "Distance de simulation (chunks)"
+          },
+          "description": {
+            "en": "Radius of chunks around each player where entities, redstone and ticking blocks are actively simulated.",
+            "fr": "Rayon de chunks autour de chaque joueur où les entités, la redstone et les blocs animés sont activement simulés."
+          }
+        },
+        "allow-nether": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Allow Nether",
+            "fr": "Autoriser le Nether"
+          },
+          "description": {
+            "en": "When enabled, players can travel to the Nether dimension through portals.",
+            "fr": "Lorsqu'activé, les joueurs peuvent voyager dans la dimension du Nether via les portails."
+          }
+        },
+        "allow-flight": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Allow flight",
+            "fr": "Autoriser le vol"
+          },
+          "description": {
+            "en": "When enabled, survival players using flight mods or items are not kicked; leave off unless you trust your players.",
+            "fr": "Lorsqu'activé, les joueurs en survie utilisant des mods ou objets de vol ne sont pas expulsés ; laissez désactivé sauf si vous faites confiance à vos joueurs."
+          }
+        },
+        "spawn-monsters": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Spawn monsters",
+            "fr": "Apparition des monstres"
+          },
+          "description": {
+            "en": "When enabled, hostile monsters can spawn naturally in the world.",
+            "fr": "Lorsqu'activé, les monstres hostiles peuvent apparaître naturellement dans le monde."
+          }
+        },
+        "spawn-animals": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Spawn animals",
+            "fr": "Apparition des animaux"
+          },
+          "description": {
+            "en": "When enabled, passive animals such as cows, pigs and sheep can spawn naturally.",
+            "fr": "Lorsqu'activé, les animaux passifs comme les vaches, cochons et moutons peuvent apparaître naturellement."
+          }
+        },
+        "spawn-npcs": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Spawn villagers",
+            "fr": "Apparition des villageois"
+          },
+          "description": {
+            "en": "When enabled, villagers (NPCs) can spawn and be generated in villages.",
+            "fr": "Lorsqu'activé, les villageois (PNJ) peuvent apparaître et être générés dans les villages."
+          }
+        },
+        "allow-end": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Allow the End",
+            "fr": "Autoriser l'End"
+          },
+          "description": {
+            "en": "When enabled, players can travel to the End dimension and fight the Ender Dragon.",
+            "fr": "Lorsqu'activé, les joueurs peuvent voyager dans la dimension de l'End et affronter le dragon de l'Ender."
+          }
+        },
+        "enable-command-block": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Enable command blocks",
+            "fr": "Activer les blocs de commande"
+          },
+          "description": {
+            "en": "When enabled, command blocks can be placed and will execute their commands.",
+            "fr": "Lorsqu'activé, les blocs de commande peuvent être placés et exécuteront leurs commandes."
+          }
+        },
+        "player-idle-timeout": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 1440,
+            "default": "0"
+          },
+          "label": {
+            "en": "Idle timeout (minutes)",
+            "fr": "Délai d'inactivité (minutes)"
+          },
+          "description": {
+            "en": "Minutes a player may stay idle before being kicked; 0 disables the idle kick entirely.",
+            "fr": "Nombre de minutes qu'un joueur peut rester inactif avant d'être expulsé ; 0 désactive complètement l'expulsion pour inactivité."
+          }
+        },
+        "max-tick-time": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 600000,
+            "default": "60000"
+          },
+          "label": {
+            "en": "Max tick time (ms)",
+            "fr": "Temps de tick max (ms)"
+          },
+          "description": {
+            "en": "Maximum milliseconds a single tick may take before the watchdog considers the server crashed; -1 disables the watchdog.",
+            "fr": "Durée maximale en millisecondes qu'un seul tick peut prendre avant que le chien de garde ne considère le serveur planté ; -1 désactive le chien de garde."
+          }
+        },
+        "function-permission-level": {
+          "display_type": "select",
+          "config": {
+            "default": "2",
+            "options": [
+              {
+                "value": "1",
+                "label": {
+                  "en": "Level 1",
+                  "fr": "Niveau 1"
+                }
+              },
+              {
+                "value": "2",
+                "label": {
+                  "en": "Level 2",
+                  "fr": "Niveau 2"
+                }
+              },
+              {
+                "value": "3",
+                "label": {
+                  "en": "Level 3",
+                  "fr": "Niveau 3"
+                }
+              },
+              {
+                "value": "4",
+                "label": {
+                  "en": "Level 4",
+                  "fr": "Niveau 4"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Function permission level",
+            "fr": "Niveau d'autorisation des fonctions"
+          },
+          "description": {
+            "en": "Operator permission level (1-4) granted to commands run from datapack functions.",
+            "fr": "Niveau d'autorisation d'opérateur (1-4) accordé aux commandes exécutées depuis les fonctions de datapack."
+          }
+        },
+        "op-permission-level": {
+          "display_type": "select",
+          "config": {
+            "default": "4",
+            "options": [
+              {
+                "value": "1",
+                "label": {
+                  "en": "Level 1",
+                  "fr": "Niveau 1"
+                }
+              },
+              {
+                "value": "2",
+                "label": {
+                  "en": "Level 2",
+                  "fr": "Niveau 2"
+                }
+              },
+              {
+                "value": "3",
+                "label": {
+                  "en": "Level 3",
+                  "fr": "Niveau 3"
+                }
+              },
+              {
+                "value": "4",
+                "label": {
+                  "en": "Level 4",
+                  "fr": "Niveau 4"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Operator permission level",
+            "fr": "Niveau d'autorisation des opérateurs"
+          },
+          "description": {
+            "en": "Default permission level (1-4) granted to players who are made server operators.",
+            "fr": "Niveau d'autorisation par défaut (1-4) accordé aux joueurs promus opérateurs du serveur."
+          }
+        },
+        "server-ip": {
+          "display_type": "text",
+          "config": {
+            "max_length": 64,
+            "default": null
+          },
+          "label": {
+            "en": "Server IP",
+            "fr": "IP du serveur"
+          },
+          "description": {
+            "en": "Specific IP address the server binds to; leave empty to listen on all available interfaces.",
+            "fr": "Adresse IP spécifique sur laquelle le serveur s'attache ; laissez vide pour écouter sur toutes les interfaces disponibles."
+          }
+        },
+        "server-port": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 65535,
+            "default": "25565"
+          },
+          "label": {
+            "en": "Server port",
+            "fr": "Port du serveur"
+          },
+          "description": {
+            "en": "TCP port the server listens on for incoming player connections.",
+            "fr": "Port TCP sur lequel le serveur écoute les connexions entrantes des joueurs."
+          }
+        },
+        "network-compression-threshold": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 65535,
+            "default": "256"
+          },
+          "label": {
+            "en": "Network compression threshold",
+            "fr": "Seuil de compression réseau"
+          },
+          "description": {
+            "en": "Packets larger than this many bytes are compressed; -1 disables compression, 0 compresses everything.",
+            "fr": "Les paquets dépassant ce nombre d'octets sont compressés ; -1 désactive la compression, 0 compresse tout."
+          }
+        },
+        "rate-limit": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 10000,
+            "default": "0"
+          },
+          "label": {
+            "en": "Packet rate limit",
+            "fr": "Limite de débit de paquets"
+          },
+          "description": {
+            "en": "Maximum packets a player may send per tick before being kicked; 0 disables this limit.",
+            "fr": "Nombre maximum de paquets qu'un joueur peut envoyer par tick avant d'être expulsé ; 0 désactive cette limite."
+          }
+        },
+        "prevent-proxy-connections": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Prevent proxy connections",
+            "fr": "Bloquer les connexions par proxy"
+          },
+          "description": {
+            "en": "When enabled, the server blocks players whose connection appears to come through a VPN or proxy.",
+            "fr": "Lorsqu'activé, le serveur bloque les joueurs dont la connexion semble passer par un VPN ou un proxy."
+          }
+        },
+        "enable-status": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Enable status (server list ping)",
+            "fr": "Activer le statut (ping de la liste)"
+          },
+          "description": {
+            "en": "When enabled, the server responds to server-list pings so it shows player count and MOTD; disabling hides it.",
+            "fr": "Lorsqu'activé, le serveur répond aux pings de la liste des serveurs et affiche donc le nombre de joueurs et le MOTD ; le désactiver le masque."
+          }
+        },
+        "hide-online-players": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Hide online players",
+            "fr": "Masquer les joueurs connectés"
+          },
+          "description": {
+            "en": "When enabled, the player sample shown in the server-list ping is hidden for privacy.",
+            "fr": "Lorsqu'activé, l'échantillon de joueurs affiché dans le ping de la liste des serveurs est masqué pour préserver la confidentialité."
+          }
+        },
+        "enable-query": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Enable GameSpy query",
+            "fr": "Activer la requête GameSpy"
+          },
+          "description": {
+            "en": "When enabled, the legacy GameSpy4 query protocol exposes server stats over UDP for monitoring tools.",
+            "fr": "Lorsqu'activé, l'ancien protocole de requête GameSpy4 expose les statistiques du serveur en UDP pour les outils de supervision."
+          }
+        },
+        "query.port": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 65535,
+            "default": "25565"
+          },
+          "label": {
+            "en": "Query port",
+            "fr": "Port de requête"
+          },
+          "description": {
+            "en": "UDP port the GameSpy query listener binds to when query is enabled.",
+            "fr": "Port UDP sur lequel l'écouteur de requête GameSpy s'attache lorsque la requête est activée."
+          }
+        },
+        "enable-rcon": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Enable RCON",
+            "fr": "Activer RCON"
+          },
+          "description": {
+            "en": "When enabled, the remote console (RCON) lets administrators run commands over the network.",
+            "fr": "Lorsqu'activé, la console distante (RCON) permet aux administrateurs d'exécuter des commandes via le réseau."
+          }
+        },
+        "rcon.port": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 65535,
+            "default": "25575"
+          },
+          "label": {
+            "en": "RCON port",
+            "fr": "Port RCON"
+          },
+          "description": {
+            "en": "TCP port the RCON listener binds to when RCON is enabled.",
+            "fr": "Port TCP sur lequel l'écouteur RCON s'attache lorsque RCON est activé."
+          }
+        },
+        "rcon.password": {
+          "display_type": "text",
+          "config": {
+            "max_length": 128,
+            "default": null
+          },
+          "label": {
+            "en": "RCON password",
+            "fr": "Mot de passe RCON"
+          },
+          "description": {
+            "en": "Password required to authenticate RCON connections; should be long and secret.",
+            "fr": "Mot de passe requis pour authentifier les connexions RCON ; il doit être long et secret."
+          }
+        },
+        "broadcast-rcon-to-ops": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Broadcast RCON to ops",
+            "fr": "Diffuser RCON aux opérateurs"
+          },
+          "description": {
+            "en": "When enabled, the output of commands run via RCON is also shown to online operators.",
+            "fr": "Lorsqu'activé, la sortie des commandes exécutées via RCON est également affichée aux opérateurs connectés."
+          }
+        },
+        "broadcast-console-to-ops": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Broadcast console to ops",
+            "fr": "Diffuser la console aux opérateurs"
+          },
+          "description": {
+            "en": "When enabled, commands executed from the server console are broadcast to online operators.",
+            "fr": "Lorsqu'activé, les commandes exécutées depuis la console du serveur sont diffusées aux opérateurs connectés."
+          }
+        },
+        "use-native-transport": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Use native transport",
+            "fr": "Utiliser le transport natif"
+          },
+          "description": {
+            "en": "When enabled on Linux, the server uses optimized native packet sending and receiving (epoll).",
+            "fr": "Lorsqu'activé sous Linux, le serveur utilise l'envoi et la réception de paquets natifs optimisés (epoll)."
+          }
+        },
+        "sync-chunk-writes": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Synchronous chunk writes",
+            "fr": "Écriture synchrone des chunks"
+          },
+          "description": {
+            "en": "When enabled, chunks are written to disk synchronously, which is safer but can stall the main thread; disabling can improve performance.",
+            "fr": "Lorsqu'activé, les chunks sont écrits sur le disque de façon synchrone, ce qui est plus sûr mais peut bloquer le thread principal ; le désactiver peut améliorer les performances."
+          }
+        },
+        "entity-broadcast-range-percentage": {
+          "display_type": "slider",
+          "config": {
+            "min": 10,
+            "max": 1000,
+            "step": 10,
+            "default": "100"
+          },
+          "label": {
+            "en": "Entity broadcast range (%)",
+            "fr": "Portée de diffusion des entités (%)"
+          },
+          "description": {
+            "en": "Percentage of the default range at which entities are sent to players; lower values reduce network load.",
+            "fr": "Pourcentage de la portée par défaut à laquelle les entités sont envoyées aux joueurs ; des valeurs plus basses réduisent la charge réseau."
+          }
+        },
+        "max-chained-neighbor-updates": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 10000000,
+            "default": "1000000"
+          },
+          "label": {
+            "en": "Max chained neighbor updates",
+            "fr": "Mises à jour de voisinage en chaîne max"
+          },
+          "description": {
+            "en": "Limits how many consecutive neighbor block updates are processed, mitigating certain redstone-based lag machines; -1 removes the limit.",
+            "fr": "Limite le nombre de mises à jour de blocs voisins consécutives traitées, atténuant certaines machines à lag basées sur la redstone ; -1 supprime la limite."
+          }
+        },
+        "rate-limit-packets": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Resource pack required",
+            "fr": "Pack de ressources obligatoire"
+          },
+          "description": {
+            "en": "When enabled, players must accept the server resource pack or they are disconnected.",
+            "fr": "Lorsqu'activé, les joueurs doivent accepter le pack de ressources du serveur sous peine d'être déconnectés."
+          }
+        },
+        "require-resource-pack": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Require resource pack",
+            "fr": "Exiger le pack de ressources"
+          },
+          "description": {
+            "en": "When enabled, players who decline the configured server resource pack are kicked from the server.",
+            "fr": "Lorsqu'activé, les joueurs qui refusent le pack de ressources configuré sont expulsés du serveur."
+          }
+        },
+        "resource-pack": {
+          "display_type": "text",
+          "config": {
+            "max_length": 512,
+            "default": null
+          },
+          "label": {
+            "en": "Resource pack URL",
+            "fr": "URL du pack de ressources"
+          },
+          "description": {
+            "en": "Direct download URL of the resource pack offered to players when they join.",
+            "fr": "URL de téléchargement direct du pack de ressources proposé aux joueurs à leur connexion."
+          }
+        },
+        "resource-pack-prompt": {
+          "display_type": "textarea",
+          "config": {
+            "max_length": 256,
+            "default": null
+          },
+          "label": {
+            "en": "Resource pack prompt",
+            "fr": "Message du pack de ressources"
+          },
+          "description": {
+            "en": "Custom message shown in the prompt that asks players to accept the server resource pack.",
+            "fr": "Message personnalisé affiché dans l'invite demandant aux joueurs d'accepter le pack de ressources du serveur."
+          }
+        },
+        "resource-pack-sha1": {
+          "display_type": "text",
+          "config": {
+            "max_length": 64,
+            "default": null
+          },
+          "label": {
+            "en": "Resource pack SHA-1",
+            "fr": "SHA-1 du pack de ressources"
+          },
+          "description": {
+            "en": "Optional SHA-1 hash of the resource pack so clients can cache and verify the download.",
+            "fr": "Hachage SHA-1 facultatif du pack de ressources permettant aux clients de mettre en cache et de vérifier le téléchargement."
+          }
+        },
+        "allow-restricted-permissions": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Initial enabled packs",
+            "fr": "Packs activés au démarrage"
+          },
+          "description": {
+            "en": "Placeholder kept for legacy compatibility; controls whether restricted permission features are exposed.",
+            "fr": "Réservé pour la compatibilité avec d'anciennes versions ; contrôle l'exposition des fonctionnalités d'autorisations restreintes."
+          }
+        },
+        "use-display-name": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Log IP addresses",
+            "fr": "Journaliser les adresses IP"
+          },
+          "description": {
+            "en": "When enabled, player IP addresses are written to the server log on connection.",
+            "fr": "Lorsqu'activé, les adresses IP des joueurs sont inscrites dans le journal du serveur lors de la connexion."
+          }
+        },
+        "log-ips": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Log player IPs",
+            "fr": "Journaliser les IP des joueurs"
+          },
+          "description": {
+            "en": "When enabled, the server records each connecting player's IP address in the console and log files.",
+            "fr": "Lorsqu'activé, le serveur enregistre l'adresse IP de chaque joueur se connectant dans la console et les fichiers journaux."
+          }
+        },
+        "pause-when-empty-seconds": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 86400,
+            "default": "60"
+          },
+          "label": {
+            "en": "Pause when empty (seconds)",
+            "fr": "Pause si vide (secondes)"
+          },
+          "description": {
+            "en": "Seconds with no players online before the server pauses ticking to save CPU; -1 disables pausing.",
+            "fr": "Secondes sans joueur connecté avant que le serveur ne mette le tick en pause pour économiser le CPU ; -1 désactive la mise en pause."
+          }
+        },
+        "text-filtering-config": {
+          "display_type": "text",
+          "config": {
+            "max_length": 256,
+            "default": null
+          },
+          "label": {
+            "en": "Text filtering config",
+            "fr": "Configuration du filtrage de texte"
+          },
+          "description": {
+            "en": "Path or endpoint for an external chat text-filtering service; leave empty to disable server-side filtering.",
+            "fr": "Chemin ou point d'accès d'un service externe de filtrage de texte du chat ; laissez vide pour désactiver le filtrage côté serveur."
+          }
+        },
+        "initial-disabled-packs": {
+          "display_type": "text",
+          "config": {
+            "max_length": 256,
+            "default": null
+          },
+          "label": {
+            "en": "Initial disabled datapacks",
+            "fr": "Datapacks désactivés au démarrage"
+          },
+          "description": {
+            "en": "Comma-separated list of datapacks that should start disabled when the world first loads.",
+            "fr": "Liste séparée par des virgules des datapacks qui doivent démarrer désactivés au premier chargement du monde."
+          }
+        }
+      },
+      "expanded_by_default": true
+    },
+    {
+      "id": "paper-global-yml",
+      "path": "config/paper-global.yml",
+      "format": "yaml",
+      "enabled": true,
+      "label": {
+        "en": "Paper global config",
+        "fr": "Config globale Paper"
+      },
+      "parameters": {
+        "chunk-loading-advanced.auto-config-send-distance": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Auto-config chunk send distance",
+            "fr": "Distance d'envoi de chunks auto"
+          },
+          "description": {
+            "en": "When enabled, the server automatically lowers the chunk send distance to match each client's view distance, saving bandwidth.",
+            "fr": "Lorsqu'activé, le serveur abaisse automatiquement la distance d'envoi des chunks pour correspondre à la distance de vue de chaque client, économisant de la bande passante."
+          }
+        },
+        "chunk-loading-advanced.player-max-concurrent-chunk-generates": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 64,
+            "default": "0"
+          },
+          "label": {
+            "en": "Max concurrent chunk generates",
+            "fr": "Générations de chunks simultanées max"
+          },
+          "description": {
+            "en": "Maximum chunk generations a single player may have running at once; 0 lets the server decide, -1 is unlimited.",
+            "fr": "Nombre maximum de générations de chunks qu'un seul joueur peut avoir en cours simultanément ; 0 laisse le serveur décider, -1 est illimité."
+          }
+        },
+        "chunk-loading-advanced.player-max-concurrent-chunk-loads": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 64,
+            "default": "0"
+          },
+          "label": {
+            "en": "Max concurrent chunk loads",
+            "fr": "Chargements de chunks simultanés max"
+          },
+          "description": {
+            "en": "Maximum chunk loads a single player may have running at once; 0 lets the server decide, -1 is unlimited.",
+            "fr": "Nombre maximum de chargements de chunks qu'un seul joueur peut avoir en cours simultanément ; 0 laisse le serveur décider, -1 est illimité."
+          }
+        },
+        "chunk-loading-basic.player-max-chunk-load-rate": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 1000,
+            "default": "100"
+          },
+          "label": {
+            "en": "Max chunk load rate",
+            "fr": "Taux de chargement de chunks max"
+          },
+          "description": {
+            "en": "Maximum chunks per second a single player may load; -1 disables the limit.",
+            "fr": "Nombre maximum de chunks par seconde qu'un seul joueur peut charger ; -1 désactive la limite."
+          }
+        },
+        "chunk-loading-basic.player-max-chunk-send-rate": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 1000,
+            "default": "75"
+          },
+          "label": {
+            "en": "Max chunk send rate",
+            "fr": "Taux d'envoi de chunks max"
+          },
+          "description": {
+            "en": "Maximum chunks per second the server sends to a single player; -1 disables the limit.",
+            "fr": "Nombre maximum de chunks par seconde que le serveur envoie à un seul joueur ; -1 désactive la limite."
+          }
+        },
+        "proxies.velocity.enabled": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Velocity modern forwarding",
+            "fr": "Transfert moderne Velocity"
+          },
+          "description": {
+            "en": "When enabled, the server accepts Velocity Modern Forwarding so a Velocity proxy can pass player data securely.",
+            "fr": "Lorsqu'activé, le serveur accepte le transfert moderne de Velocity afin qu'un proxy Velocity puisse transmettre les données des joueurs en toute sécurité."
+          }
+        },
+        "proxies.velocity.online-mode": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Velocity online mode",
+            "fr": "Mode en ligne Velocity"
+          },
+          "description": {
+            "en": "When enabled, UUIDs and skins are handled according to the Velocity proxy's own online-mode setting.",
+            "fr": "Lorsqu'activé, les UUID et les skins sont gérés selon le paramètre de mode en ligne propre au proxy Velocity."
+          }
+        },
+        "proxies.velocity.secret": {
+          "display_type": "text",
+          "config": {
+            "max_length": 128,
+            "default": null
+          },
+          "label": {
+            "en": "Velocity forwarding secret",
+            "fr": "Secret de transfert Velocity"
+          },
+          "description": {
+            "en": "Shared secret that must match the Velocity proxy's forwarding.secret file for modern forwarding to work.",
+            "fr": "Secret partagé qui doit correspondre au fichier forwarding.secret du proxy Velocity pour que le transfert moderne fonctionne."
+          }
+        },
+        "proxies.bungee-cord.online-mode": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "BungeeCord online mode",
+            "fr": "Mode en ligne BungeeCord"
+          },
+          "description": {
+            "en": "When enabled, UUIDs and skins are handled according to the BungeeCord proxy's own online-mode setting.",
+            "fr": "Lorsqu'activé, les UUID et les skins sont gérés selon le paramètre de mode en ligne propre au proxy BungeeCord."
+          }
+        },
+        "misc.region-file-cache-size": {
+          "display_type": "number",
+          "config": {
+            "min": 4,
+            "max": 2048,
+            "default": "256"
+          },
+          "label": {
+            "en": "Region file cache size",
+            "fr": "Taille du cache des fichiers de région"
+          },
+          "description": {
+            "en": "Maximum number of region files kept open in the cache; higher values use more file handles and memory.",
+            "fr": "Nombre maximum de fichiers de région maintenus ouverts dans le cache ; des valeurs plus élevées consomment davantage de descripteurs de fichiers et de mémoire."
+          }
+        },
+        "misc.max-joins-per-tick": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 100,
+            "default": "5"
+          },
+          "label": {
+            "en": "Max joins per tick",
+            "fr": "Connexions max par tick"
+          },
+          "description": {
+            "en": "Maximum number of players allowed to finish joining the server in a single tick, smoothing login spikes.",
+            "fr": "Nombre maximum de joueurs autorisés à terminer leur connexion au serveur en un seul tick, lissant les pics de connexion."
+          }
+        },
+        "misc.compression-level": {
+          "display_type": "text",
+          "config": {
+            "max_length": 16,
+            "default": "default"
+          },
+          "label": {
+            "en": "Network compression level",
+            "fr": "Niveau de compression réseau"
+          },
+          "description": {
+            "en": "Zlib compression level for network packets; 'default' keeps the platform default, or set 0-9 to trade CPU for bandwidth.",
+            "fr": "Niveau de compression Zlib des paquets réseau ; « default » conserve la valeur par défaut de la plateforme, ou réglez 0-9 pour arbitrer entre CPU et bande passante."
+          }
+        },
+        "messages.no-permission": {
+          "display_type": "textarea",
+          "config": {
+            "max_length": 256,
+            "default": "<red>I'm sorry, but you do not have permission to perform this command. Please contact the server administrators if you believe that this is in error."
+          },
+          "label": {
+            "en": "No-permission message",
+            "fr": "Message d'absence de permission"
+          },
+          "description": {
+            "en": "Message shown to a player who runs a command they lack permission for; supports MiniMessage formatting.",
+            "fr": "Message affiché à un joueur qui exécute une commande pour laquelle il n'a pas la permission ; prend en charge le formatage MiniMessage."
+          }
+        },
+        "messages.kick.connection-throttle": {
+          "display_type": "textarea",
+          "config": {
+            "max_length": 256,
+            "default": "Connection throttled! Please wait before reconnecting."
+          },
+          "label": {
+            "en": "Kick: connection throttled",
+            "fr": "Expulsion : connexion limitée"
+          },
+          "description": {
+            "en": "Kick message shown when a player reconnects faster than the connection-throttle allows.",
+            "fr": "Message d'expulsion affiché lorsqu'un joueur se reconnecte plus vite que ne l'autorise la limitation de connexion."
+          }
+        },
+        "messages.kick.flying-player": {
+          "display_type": "textarea",
+          "config": {
+            "max_length": 256,
+            "default": "<lang:multiplayer.disconnect.flying>"
+          },
+          "label": {
+            "en": "Kick: flying player",
+            "fr": "Expulsion : joueur volant"
+          },
+          "description": {
+            "en": "Kick message shown when the anti-fly check flags a player for flying without permission.",
+            "fr": "Message d'expulsion affiché lorsque la vérification anti-vol signale un joueur volant sans autorisation."
+          }
+        },
+        "messages.kick.flying-vehicle": {
+          "display_type": "textarea",
+          "config": {
+            "max_length": 256,
+            "default": "<lang:multiplayer.disconnect.flying>"
+          },
+          "label": {
+            "en": "Kick: flying vehicle",
+            "fr": "Expulsion : véhicule volant"
+          },
+          "description": {
+            "en": "Kick message shown when the anti-fly check flags a vehicle (such as a boat or minecart) for flying.",
+            "fr": "Message d'expulsion affiché lorsque la vérification anti-vol signale un véhicule (comme un bateau ou un wagonnet) en train de voler."
+          }
+        },
+        "messages.use-display-name-in-quit-message": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Display name in quit message",
+            "fr": "Nom d'affichage dans le message de départ"
+          },
+          "description": {
+            "en": "When enabled, leave messages use a player's display name instead of their account name.",
+            "fr": "Lorsqu'activé, les messages de départ utilisent le nom d'affichage d'un joueur au lieu de son nom de compte."
+          }
+        },
+        "packet-limiter.all-packets.interval": {
+          "display_type": "slider",
+          "config": {
+            "min": 0.1,
+            "max": 60,
+            "step": 0.1,
+            "default": "7.0"
+          },
+          "label": {
+            "en": "Packet limiter interval (s)",
+            "fr": "Intervalle du limiteur de paquets (s)"
+          },
+          "description": {
+            "en": "Length in seconds of the sliding window used to count packets for the global packet rate limiter.",
+            "fr": "Durée en secondes de la fenêtre glissante utilisée pour compter les paquets du limiteur global de débit de paquets."
+          }
+        },
+        "packet-limiter.all-packets.max-packet-rate": {
+          "display_type": "slider",
+          "config": {
+            "min": 10,
+            "max": 5000,
+            "step": 10,
+            "default": "500.0"
+          },
+          "label": {
+            "en": "Max packet rate",
+            "fr": "Débit de paquets max"
+          },
+          "description": {
+            "en": "Maximum packets a player may send within one interval before the configured action (kick or drop) is taken.",
+            "fr": "Nombre maximum de paquets qu'un joueur peut envoyer durant un intervalle avant que l'action configurée (expulsion ou rejet) ne soit appliquée."
+          }
+        },
+        "packet-limiter.all-packets.action": {
+          "display_type": "select",
+          "config": {
+            "default": "KICK",
+            "options": [
+              {
+                "value": "KICK",
+                "label": {
+                  "en": "Kick player",
+                  "fr": "Expulser le joueur"
+                }
+              },
+              {
+                "value": "DROP",
+                "label": {
+                  "en": "Drop packets",
+                  "fr": "Rejeter les paquets"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Packet limiter action",
+            "fr": "Action du limiteur de paquets"
+          },
+          "description": {
+            "en": "What the server does when a player exceeds the packet rate limit: kick them or silently drop the extra packets.",
+            "fr": "Ce que fait le serveur lorsqu'un joueur dépasse la limite de débit de paquets : l'expulser ou rejeter silencieusement les paquets excédentaires."
+          }
+        },
+        "spam-limiter.tab-spam-increment": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 100,
+            "default": "1"
+          },
+          "label": {
+            "en": "Tab spam increment",
+            "fr": "Incrément de spam de tabulation"
+          },
+          "description": {
+            "en": "Amount the tab-spam counter rises each time a player presses Tab while typing in chat.",
+            "fr": "Valeur dont le compteur de spam de tabulation augmente chaque fois qu'un joueur appuie sur Tab en tapant dans le chat."
+          }
+        },
+        "spam-limiter.tab-spam-limit": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 10000,
+            "default": "500"
+          },
+          "label": {
+            "en": "Tab spam limit",
+            "fr": "Limite de spam de tabulation"
+          },
+          "description": {
+            "en": "Counter value at which a player is kicked for spamming the Tab key in chat.",
+            "fr": "Valeur du compteur à laquelle un joueur est expulsé pour avoir spammé la touche Tab dans le chat."
+          }
+        },
+        "spam-limiter.recipe-spam-increment": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 100,
+            "default": "1"
+          },
+          "label": {
+            "en": "Recipe spam increment",
+            "fr": "Incrément de spam de recettes"
+          },
+          "description": {
+            "en": "Amount the recipe-spam counter rises each time a player clicks a recipe in the recipe book.",
+            "fr": "Valeur dont le compteur de spam de recettes augmente chaque fois qu'un joueur clique sur une recette dans le livre de recettes."
+          }
+        },
+        "spam-limiter.recipe-spam-limit": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 10000,
+            "default": "20"
+          },
+          "label": {
+            "en": "Recipe spam limit",
+            "fr": "Limite de spam de recettes"
+          },
+          "description": {
+            "en": "Counter value at which a player is kicked for clicking recipes too quickly.",
+            "fr": "Valeur du compteur à laquelle un joueur est expulsé pour avoir cliqué sur les recettes trop rapidement."
+          }
+        },
+        "spam-limiter.incoming-packet-threshold": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 10000,
+            "default": "300"
+          },
+          "label": {
+            "en": "Incoming packet threshold",
+            "fr": "Seuil de paquets entrants"
+          },
+          "description": {
+            "en": "Number of incoming packets per player above which spam protection begins throttling them.",
+            "fr": "Nombre de paquets entrants par joueur au-delà duquel la protection anti-spam commence à les limiter."
+          }
+        },
+        "collisions.enable-player-collisions": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Enable player collisions",
+            "fr": "Activer les collisions entre joueurs"
+          },
+          "description": {
+            "en": "When enabled, players physically push against one another; disabling lets players pass through each other.",
+            "fr": "Lorsqu'activé, les joueurs se poussent physiquement les uns les autres ; le désactiver permet aux joueurs de se traverser."
+          }
+        },
+        "player-auto-save.max-per-tick": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 1000,
+            "default": "-1"
+          },
+          "label": {
+            "en": "Player auto-save per tick",
+            "fr": "Sauvegarde auto de joueurs par tick"
+          },
+          "description": {
+            "en": "Maximum number of player data files written per tick; -1 uses Paper's recommended adaptive value.",
+            "fr": "Nombre maximum de fichiers de données de joueur écrits par tick ; -1 utilise la valeur adaptative recommandée par Paper."
+          }
+        },
+        "player-auto-save.rate": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 72000,
+            "default": "-1"
+          },
+          "label": {
+            "en": "Player auto-save rate (ticks)",
+            "fr": "Fréquence de sauvegarde des joueurs (ticks)"
+          },
+          "description": {
+            "en": "How often, in ticks, player data is auto-saved; -1 falls back to the global auto-save interval.",
+            "fr": "Fréquence, en ticks, de la sauvegarde automatique des données des joueurs ; -1 retombe sur l'intervalle de sauvegarde global."
+          }
+        },
+        "watchdog.early-warning-every": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 60000,
+            "default": "5000"
+          },
+          "label": {
+            "en": "Watchdog warning interval (ms)",
+            "fr": "Intervalle d'alerte du chien de garde (ms)"
+          },
+          "description": {
+            "en": "Milliseconds between thread-dump warnings while the server's main thread appears hung.",
+            "fr": "Millisecondes entre les avertissements de vidage de threads pendant que le thread principal du serveur semble bloqué."
+          }
+        },
+        "watchdog.early-warning-delay": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 120000,
+            "default": "10000"
+          },
+          "label": {
+            "en": "Watchdog warning delay (ms)",
+            "fr": "Délai d'alerte du chien de garde (ms)"
+          },
+          "description": {
+            "en": "Milliseconds the main thread must be unresponsive before the first watchdog thread dump is printed.",
+            "fr": "Millisecondes pendant lesquelles le thread principal doit rester inactif avant l'affichage du premier vidage de threads du chien de garde."
+          }
+        },
+        "unsupported-settings.allow-permanent-block-break-exploits": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Allow block-break exploits",
+            "fr": "Autoriser les exploits de cassage de blocs"
+          },
+          "description": {
+            "en": "When enabled, certain vanilla exploits that break normally unbreakable blocks are left functional; leave off on survival servers.",
+            "fr": "Lorsqu'activé, certains exploits vanilla qui cassent des blocs normalement incassables restent fonctionnels ; laissez désactivé sur les serveurs de survie."
+          }
+        },
+        "unsupported-settings.allow-piston-duplication": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Allow piston duplication",
+            "fr": "Autoriser la duplication par piston"
+          },
+          "description": {
+            "en": "When enabled, piston-based TNT, carpet and rail duplication glitches are allowed to work.",
+            "fr": "Lorsqu'activé, les bugs de duplication de TNT, de tapis et de rails à base de pistons sont autorisés à fonctionner."
+          }
+        },
+        "commands.ride-command-allow-player-as-vehicle": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "/ride player as vehicle",
+            "fr": "/ride joueur comme véhicule"
+          },
+          "description": {
+            "en": "When enabled, the /ride command can mount one entity onto a player, allowing players to be ridden.",
+            "fr": "Lorsqu'activé, la commande /ride peut faire monter une entité sur un joueur, permettant ainsi de chevaucher des joueurs."
+          }
+        }
+      }
+    },
+    {
+      "id": "paper-world-defaults-yml",
+      "path": "config/paper-world-defaults.yml",
+      "format": "yaml",
+      "enabled": true,
+      "label": {
+        "en": "Paper world defaults",
+        "fr": "Valeurs par défaut des mondes Paper"
+      },
+      "parameters": {
+        "chunks.delay-chunk-unloads-by": {
+          "display_type": "text",
+          "config": {
+            "max_length": 16,
+            "default": "10s"
+          },
+          "label": {
+            "en": "Delay chunk unloads by",
+            "fr": "Délai de déchargement des chunks"
+          },
+          "description": {
+            "en": "How long a chunk lingers loaded after its last player leaves, written as a duration like 10s or 1m; higher values reduce reload churn.",
+            "fr": "Durée pendant laquelle un chunk reste chargé après le départ de son dernier joueur, écrite comme une durée telle que 10s ou 1m ; des valeurs plus élevées réduisent les rechargements répétés."
+          }
+        },
+        "chunks.max-auto-save-chunks-per-tick": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 256,
+            "default": "24"
+          },
+          "label": {
+            "en": "Max auto-save chunks per tick",
+            "fr": "Chunks sauvegardés auto par tick"
+          },
+          "description": {
+            "en": "Maximum number of chunks written to disk per tick during incremental auto-saving; lower values smooth save spikes.",
+            "fr": "Nombre maximum de chunks écrits sur le disque par tick lors de la sauvegarde automatique incrémentielle ; des valeurs plus basses lissent les pics de sauvegarde."
+          }
+        },
+        "chunks.prevent-moving-into-unloaded-chunks": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Prevent moving into unloaded chunks",
+            "fr": "Bloquer l'entrée dans les chunks non chargés"
+          },
+          "description": {
+            "en": "When enabled, players are stopped at the edge of unloaded chunks instead of falling through the world while they generate.",
+            "fr": "Lorsqu'activé, les joueurs sont arrêtés à la limite des chunks non chargés au lieu de tomber à travers le monde pendant leur génération."
+          }
+        },
+        "chunks.entity-per-chunk-save-limit.experience_orb": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 10000,
+            "default": "-1"
+          },
+          "label": {
+            "en": "XP orbs saved per chunk",
+            "fr": "Orbes d'XP sauvegardées par chunk"
+          },
+          "description": {
+            "en": "Maximum experience orbs saved per chunk; capping prevents orb pile-ups from bloating saves, -1 is unlimited.",
+            "fr": "Nombre maximum d'orbes d'expérience sauvegardées par chunk ; le plafonnement évite que les amas d'orbes ne gonflent les sauvegardes, -1 est illimité."
+          }
+        },
+        "collisions.max-entity-collisions": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 64,
+            "default": "8"
+          },
+          "label": {
+            "en": "Max entity collisions",
+            "fr": "Collisions d'entités max"
+          },
+          "description": {
+            "en": "Number of collisions an entity processes per tick before extra ones are ignored, limiting lag from densely packed mobs.",
+            "fr": "Nombre de collisions qu'une entité traite par tick avant que les suivantes ne soient ignorées, limitant le lag dû aux mobs entassés."
+          }
+        },
+        "collisions.only-players-collide": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Only players collide",
+            "fr": "Seuls les joueurs entrent en collision"
+          },
+          "description": {
+            "en": "When enabled, entity collisions are only calculated when a player is involved, greatly reducing mob-on-mob collision cost.",
+            "fr": "Lorsqu'activé, les collisions d'entités ne sont calculées que lorsqu'un joueur est impliqué, réduisant fortement le coût des collisions entre mobs."
+          }
+        },
+        "entities.spawning.per-player-mob-spawns": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Per-player mob spawns",
+            "fr": "Apparition de mobs par joueur"
+          },
+          "description": {
+            "en": "When enabled, the mob cap is applied per player rather than per chunk area, giving every player a fair share of mobs.",
+            "fr": "Lorsqu'activé, le plafond de mobs est appliqué par joueur plutôt que par zone de chunks, donnant à chaque joueur une part équitable de mobs."
+          }
+        },
+        "entities.spawning.spawn-limits.monster": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 200,
+            "default": "-1"
+          },
+          "label": {
+            "en": "Monster spawn limit",
+            "fr": "Limite d'apparition de monstres"
+          },
+          "description": {
+            "en": "Per-world cap on naturally spawning monsters; -1 inherits the value from bukkit.yml.",
+            "fr": "Plafond par monde des monstres apparaissant naturellement ; -1 hérite de la valeur de bukkit.yml."
+          }
+        },
+        "entities.spawning.spawn-limits.creature": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 200,
+            "default": "-1"
+          },
+          "label": {
+            "en": "Animal spawn limit",
+            "fr": "Limite d'apparition d'animaux"
+          },
+          "description": {
+            "en": "Per-world cap on naturally spawning passive creatures; -1 inherits the value from bukkit.yml.",
+            "fr": "Plafond par monde des créatures passives apparaissant naturellement ; -1 hérite de la valeur de bukkit.yml."
+          }
+        },
+        "entities.spawning.spawn-limits.water_creature": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 200,
+            "default": "-1"
+          },
+          "label": {
+            "en": "Water creature spawn limit",
+            "fr": "Limite d'apparition de créatures aquatiques"
+          },
+          "description": {
+            "en": "Per-world cap on naturally spawning water creatures such as squid; -1 inherits the value from bukkit.yml.",
+            "fr": "Plafond par monde des créatures aquatiques apparaissant naturellement comme les calmars ; -1 hérite de la valeur de bukkit.yml."
+          }
+        },
+        "entities.spawning.spawn-limits.ambient": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 200,
+            "default": "-1"
+          },
+          "label": {
+            "en": "Ambient spawn limit",
+            "fr": "Limite d'apparition d'ambiance"
+          },
+          "description": {
+            "en": "Per-world cap on naturally spawning ambient mobs such as bats; -1 inherits the value from bukkit.yml.",
+            "fr": "Plafond par monde des mobs d'ambiance apparaissant naturellement comme les chauves-souris ; -1 hérite de la valeur de bukkit.yml."
+          }
+        },
+        "entities.spawning.spawn-limits.axolotls": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 200,
+            "default": "-1"
+          },
+          "label": {
+            "en": "Axolotl spawn limit",
+            "fr": "Limite d'apparition d'axolotls"
+          },
+          "description": {
+            "en": "Per-world cap on naturally spawning axolotls; -1 inherits the value from bukkit.yml.",
+            "fr": "Plafond par monde des axolotls apparaissant naturellement ; -1 hérite de la valeur de bukkit.yml."
+          }
+        },
+        "entities.spawning.monster-spawn-max-light-level": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 15,
+            "default": "0"
+          },
+          "label": {
+            "en": "Monster spawn max light level",
+            "fr": "Niveau de lumière max d'apparition des monstres"
+          },
+          "description": {
+            "en": "Highest light level at which monsters may spawn; the modern default is 0, set to 7 or 15 to mimic older versions.",
+            "fr": "Niveau de lumière maximal auquel les monstres peuvent apparaître ; la valeur moderne par défaut est 0, réglez sur 7 ou 15 pour imiter les anciennes versions."
+          }
+        },
+        "entities.spawning.wandering-trader.spawn-chance-min": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 100,
+            "default": "25"
+          },
+          "label": {
+            "en": "Wandering trader min chance",
+            "fr": "Chance min du marchand ambulant"
+          },
+          "description": {
+            "en": "Minimum percentage chance that a wandering trader spawns during each spawn attempt.",
+            "fr": "Pourcentage minimum de chance qu'un marchand ambulant apparaisse à chaque tentative d'apparition."
+          }
+        },
+        "entities.spawning.wandering-trader.spawn-chance-max": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 100,
+            "default": "75"
+          },
+          "label": {
+            "en": "Wandering trader max chance",
+            "fr": "Chance max du marchand ambulant"
+          },
+          "description": {
+            "en": "Maximum percentage chance that a wandering trader spawns during each spawn attempt.",
+            "fr": "Pourcentage maximum de chance qu'un marchand ambulant apparaisse à chaque tentative d'apparition."
+          }
+        },
+        "entities.behavior.mobs-can-always-pick-up-loot.zombies": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Zombies always pick up loot",
+            "fr": "Les zombies ramassent toujours le butin"
+          },
+          "description": {
+            "en": "When enabled, zombies always pick up dropped items regardless of difficulty instead of by random chance.",
+            "fr": "Lorsqu'activé, les zombies ramassent toujours les objets au sol quelle que soit la difficulté, au lieu de le faire au hasard."
+          }
+        },
+        "entities.behavior.mobs-can-always-pick-up-loot.skeletons": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Skeletons always pick up loot",
+            "fr": "Les squelettes ramassent toujours le butin"
+          },
+          "description": {
+            "en": "When enabled, skeletons always pick up dropped items regardless of difficulty instead of by random chance.",
+            "fr": "Lorsqu'activé, les squelettes ramassent toujours les objets au sol quelle que soit la difficulté, au lieu de le faire au hasard."
+          }
+        },
+        "entities.behavior.disable-chest-cat-detection": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Disable chest cat detection",
+            "fr": "Désactiver la détection de chat sur coffre"
+          },
+          "description": {
+            "en": "When enabled, chests can be opened even when a cat is sitting on top, removing the vanilla blocking behaviour.",
+            "fr": "Lorsqu'activé, les coffres peuvent être ouverts même si un chat est assis dessus, supprimant le comportement de blocage vanilla."
+          }
+        },
+        "entities.behavior.baby-zombie-movement-modifier": {
+          "display_type": "slider",
+          "config": {
+            "min": 0,
+            "max": 2,
+            "step": 0.05,
+            "default": "0.5"
+          },
+          "label": {
+            "en": "Baby zombie speed modifier",
+            "fr": "Modificateur de vitesse des bébés zombies"
+          },
+          "description": {
+            "en": "Additional movement speed multiplier applied to baby zombies; 0.5 makes them roughly 50% faster than adults.",
+            "fr": "Multiplicateur de vitesse supplémentaire appliqué aux bébés zombies ; 0,5 les rend environ 50 % plus rapides que les adultes."
+          }
+        },
+        "entities.behavior.nerf-pigmen-from-nether-portals": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Nerf portal-spawned piglins",
+            "fr": "Affaiblir les piglins issus de portails"
+          },
+          "description": {
+            "en": "When enabled, zombified piglins spawned by nether portals have no AI, reducing lag from portal-based mob farms.",
+            "fr": "Lorsqu'activé, les piglins zombifiés générés par les portails du Nether n'ont pas d'IA, réduisant le lag des fermes à mobs basées sur les portails."
+          }
+        },
+        "entities.behavior.zombies-target-turtle-eggs": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Zombies target turtle eggs",
+            "fr": "Les zombies ciblent les œufs de tortue"
+          },
+          "description": {
+            "en": "When enabled, zombies actively path toward and trample turtle eggs; disabling this can improve performance.",
+            "fr": "Lorsqu'activé, les zombies se dirigent activement vers les œufs de tortue et les piétinent ; le désactiver peut améliorer les performances."
+          }
+        },
+        "hopper.cooldown-when-full": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Hopper cooldown when full",
+            "fr": "Temps de recharge des entonnoirs pleins"
+          },
+          "description": {
+            "en": "When enabled, a hopper feeding into a full container waits on cooldown instead of retrying every tick, saving CPU.",
+            "fr": "Lorsqu'activé, un entonnoir alimentant un conteneur plein attend un temps de recharge au lieu de réessayer à chaque tick, économisant du CPU."
+          }
+        },
+        "hopper.disable-move-event": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Disable hopper move event",
+            "fr": "Désactiver l'événement de transfert des entonnoirs"
+          },
+          "description": {
+            "en": "When enabled, the InventoryMoveItemEvent is skipped for hoppers, boosting performance but breaking plugins that rely on it.",
+            "fr": "Lorsqu'activé, l'événement InventoryMoveItemEvent est ignoré pour les entonnoirs, améliorant les performances mais cassant les plugins qui en dépendent."
+          }
+        },
+        "hopper.ignore-occluding-blocks": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Hoppers ignore occluding blocks",
+            "fr": "Les entonnoirs ignorent les blocs occultants"
+          },
+          "description": {
+            "en": "When enabled, hoppers skip checking containers hidden inside opaque blocks, slightly improving performance.",
+            "fr": "Lorsqu'activé, les entonnoirs ne vérifient pas les conteneurs cachés dans des blocs opaques, améliorant légèrement les performances."
+          }
+        },
+        "tick-rates.container-update": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 20,
+            "default": "1"
+          },
+          "label": {
+            "en": "Container update tick rate",
+            "fr": "Fréquence de mise à jour des conteneurs"
+          },
+          "description": {
+            "en": "How many ticks pass between open-container UI updates; higher values reduce the cost of many open inventories.",
+            "fr": "Nombre de ticks entre les mises à jour de l'interface des conteneurs ouverts ; des valeurs plus élevées réduisent le coût de nombreux inventaires ouverts."
+          }
+        },
+        "tick-rates.grass-spread": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 100,
+            "default": "1"
+          },
+          "label": {
+            "en": "Grass spread tick rate",
+            "fr": "Fréquence de propagation de l'herbe"
+          },
+          "description": {
+            "en": "How many ticks pass between grass and mycelium spread attempts; higher values slow spreading to save CPU.",
+            "fr": "Nombre de ticks entre les tentatives de propagation de l'herbe et du mycélium ; des valeurs plus élevées ralentissent la propagation pour économiser du CPU."
+          }
+        },
+        "tick-rates.mob-spawner": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 100,
+            "default": "1"
+          },
+          "label": {
+            "en": "Mob spawner tick rate",
+            "fr": "Fréquence des générateurs de monstres"
+          },
+          "description": {
+            "en": "How often monster spawner blocks recalculate spawning; -1 disables spawners entirely.",
+            "fr": "Fréquence à laquelle les blocs générateurs de monstres recalculent l'apparition ; -1 désactive entièrement les générateurs."
+          }
+        },
+        "tick-rates.dry-farmland": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 100,
+            "default": "1"
+          },
+          "label": {
+            "en": "Dry farmland tick rate",
+            "fr": "Fréquence de la terre labourée sèche"
+          },
+          "description": {
+            "en": "How often dry farmland is checked for hydration or trampling; -1 disables these checks.",
+            "fr": "Fréquence à laquelle la terre labourée sèche est vérifiée pour l'hydratation ou le piétinement ; -1 désactive ces vérifications."
+          }
+        },
+        "tick-rates.wet-farmland": {
+          "display_type": "number",
+          "config": {
+            "min": -1,
+            "max": 100,
+            "default": "1"
+          },
+          "label": {
+            "en": "Wet farmland tick rate",
+            "fr": "Fréquence de la terre labourée humide"
+          },
+          "description": {
+            "en": "How often wet farmland is checked for drying out; -1 disables these checks.",
+            "fr": "Fréquence à laquelle la terre labourée humide est vérifiée pour son assèchement ; -1 désactive ces vérifications."
+          }
+        },
+        "anticheat.anti-xray.enabled": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Enable Anti-Xray",
+            "fr": "Activer l'Anti-Xray"
+          },
+          "description": {
+            "en": "When enabled, the server obfuscates hidden ores so X-ray cheats cannot see them through stone; adds some CPU overhead.",
+            "fr": "Lorsqu'activé, le serveur masque les minerais cachés afin que les triches X-ray ne puissent pas les voir à travers la pierre ; ajoute une charge CPU."
+          }
+        },
+        "anticheat.anti-xray.engine-mode": {
+          "display_type": "select",
+          "config": {
+            "default": "1",
+            "options": [
+              {
+                "value": "1",
+                "label": {
+                  "en": "Mode 1 — hide ores",
+                  "fr": "Mode 1 — masquer les minerais"
+                }
+              },
+              {
+                "value": "2",
+                "label": {
+                  "en": "Mode 2 — fake ores",
+                  "fr": "Mode 2 — faux minerais"
+                }
+              },
+              {
+                "value": "3",
+                "label": {
+                  "en": "Mode 3 — layered",
+                  "fr": "Mode 3 — par couches"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Anti-Xray engine mode",
+            "fr": "Mode du moteur Anti-Xray"
+          },
+          "description": {
+            "en": "Obfuscation strategy: Mode 1 replaces hidden blocks with stone, Mode 2 scatters fake ores, Mode 3 obfuscates by layer.",
+            "fr": "Stratégie de masquage : le Mode 1 remplace les blocs cachés par de la pierre, le Mode 2 disperse de faux minerais, le Mode 3 masque par couche."
+          }
+        },
+        "anticheat.anti-xray.max-block-height": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 320,
+            "default": "64"
+          },
+          "label": {
+            "en": "Anti-Xray max block height",
+            "fr": "Hauteur de blocs max Anti-Xray"
+          },
+          "description": {
+            "en": "Highest Y level (in multiples of 16) up to which Anti-Xray obfuscation is applied; blocks above are left untouched.",
+            "fr": "Niveau Y maximal (par multiples de 16) jusqu'auquel le masquage Anti-Xray est appliqué ; les blocs au-dessus sont laissés intacts."
+          }
+        },
+        "anticheat.anti-xray.update-radius": {
+          "display_type": "number",
+          "config": {
+            "min": 0,
+            "max": 2,
+            "default": "2"
+          },
+          "label": {
+            "en": "Anti-Xray update radius",
+            "fr": "Rayon de mise à jour Anti-Xray"
+          },
+          "description": {
+            "en": "Radius of blocks re-sent to clients when a hidden block is revealed; 0-2, higher closes more visual gaps.",
+            "fr": "Rayon de blocs renvoyés aux clients lorsqu'un bloc caché est révélé ; 0-2, plus élevé comble davantage les artefacts visuels."
+          }
+        },
+        "anticheat.anti-xray.lava-obscures": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "false"
+          },
+          "label": {
+            "en": "Lava obscures ores",
+            "fr": "La lave masque les minerais"
+          },
+          "description": {
+            "en": "When enabled, blocks touching lava are also obfuscated by Anti-Xray, hiding ores exposed in lava lakes.",
+            "fr": "Lorsqu'activé, les blocs en contact avec la lave sont également masqués par l'Anti-Xray, cachant les minerais exposés dans les lacs de lave."
+          }
+        },
+        "misc.redstone-implementation": {
+          "display_type": "select",
+          "config": {
+            "default": "VANILLA",
+            "options": [
+              {
+                "value": "VANILLA",
+                "label": {
+                  "en": "Vanilla",
+                  "fr": "Vanilla"
+                }
+              },
+              {
+                "value": "EIGENCRAFT",
+                "label": {
+                  "en": "Eigencraft",
+                  "fr": "Eigencraft"
+                }
+              },
+              {
+                "value": "ALTERNATE_CURRENT",
+                "label": {
+                  "en": "Alternate Current",
+                  "fr": "Alternate Current"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Redstone implementation",
+            "fr": "Implémentation de la redstone"
+          },
+          "description": {
+            "en": "Redstone dust algorithm: Vanilla matches the base game, while Eigencraft and Alternate Current are faster, low-lag rewrites.",
+            "fr": "Algorithme de poussière de redstone : Vanilla correspond au jeu de base, tandis qu'Eigencraft et Alternate Current sont des réécritures plus rapides et moins gourmandes."
+          }
+        },
+        "fishing-time-range.minimum": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 2000,
+            "default": "100"
+          },
+          "label": {
+            "en": "Fishing time minimum (ticks)",
+            "fr": "Temps de pêche minimum (ticks)"
+          },
+          "description": {
+            "en": "Minimum number of ticks before a fishing bobber can catch something; lower values speed up fishing.",
+            "fr": "Nombre minimum de ticks avant qu'un bouchon de pêche puisse attraper quelque chose ; des valeurs plus basses accélèrent la pêche."
+          }
+        },
+        "fishing-time-range.maximum": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 5000,
+            "default": "600"
+          },
+          "label": {
+            "en": "Fishing time maximum (ticks)",
+            "fr": "Temps de pêche maximum (ticks)"
+          },
+          "description": {
+            "en": "Maximum number of ticks before a fishing bobber catches something; lower values speed up fishing.",
+            "fr": "Nombre maximum de ticks avant qu'un bouchon de pêche n'attrape quelque chose ; des valeurs plus basses accélèrent la pêche."
+          }
+        },
+        "max-growth-height.cactus": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 32,
+            "default": "3"
+          },
+          "label": {
+            "en": "Max cactus growth height",
+            "fr": "Hauteur de croissance max du cactus"
+          },
+          "description": {
+            "en": "Maximum number of blocks a cactus can grow naturally before it stops.",
+            "fr": "Nombre maximum de blocs qu'un cactus peut atteindre naturellement avant de s'arrêter."
+          }
+        },
+        "max-growth-height.reeds": {
+          "display_type": "number",
+          "config": {
+            "min": 1,
+            "max": 32,
+            "default": "3"
+          },
+          "label": {
+            "en": "Max sugar cane growth height",
+            "fr": "Hauteur de croissance max de la canne à sucre"
+          },
+          "description": {
+            "en": "Maximum number of blocks sugar cane can grow naturally before it stops.",
+            "fr": "Nombre maximum de blocs que la canne à sucre peut atteindre naturellement avant de s'arrêter."
+          }
+        },
+        "unsupported-settings.fix-invulnerable-end-crystal-exploit": {
+          "display_type": "boolean",
+          "config": {
+            "true_value": "true",
+            "false_value": "false",
+            "default": "true"
+          },
+          "label": {
+            "en": "Fix invulnerable end crystals",
+            "fr": "Corriger les cristaux de l'End invulnérables"
+          },
+          "description": {
+            "en": "When enabled, the server patches the exploit that lets players create invulnerable end crystals (MC-108513).",
+            "fr": "Lorsqu'activé, le serveur corrige l'exploit permettant de créer des cristaux de l'End invulnérables (MC-108513)."
+          }
+        }
+      }
+    },
+    {
+      "id": "eula",
+      "path": "eula.txt",
+      "format": "properties",
+      "enabled": true,
+      "expanded_by_default": true,
+      "label": {
+        "en": "EULA",
+        "fr": "CLUF"
+      },
+      "parameters": {
+        "eula": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Accept the Minecraft EULA",
+            "fr": "Accepter le CLUF de Minecraft"
+          },
+          "description": {
+            "en": "Set to true to accept the Minecraft End User License Agreement (https://aka.ms/MinecraftEULA). The server refuses to start while this is false.",
+            "fr": "Réglez sur vrai pour accepter le contrat de licence utilisateur final de Minecraft (https://aka.ms/MinecraftEULA). Le serveur refuse de démarrer tant que ceci est faux."
+          }
+        }
+      }
+    }
+  ]
+}

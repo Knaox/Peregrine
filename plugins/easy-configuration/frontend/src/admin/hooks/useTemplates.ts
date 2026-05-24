@@ -62,7 +62,13 @@ export function useSaveTemplate() {
             id !== null
                 ? api(`${BASE}/admin/templates/${id}`, { method: 'PUT', body: JSON.stringify({ template }) })
                 : api(`${BASE}/admin/templates`, { method: 'POST', body: JSON.stringify({ template }) }),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+        // Invalidate BOTH the list and every detail query: without the detail
+        // invalidation, reopening a just-saved template re-hydrates the form from
+        // the stale cached definition and a re-save clobbers the new edits.
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: LIST_KEY });
+            void queryClient.invalidateQueries({ queryKey: ['ec-admin-template'] });
+        },
     });
 }
 
@@ -90,6 +96,29 @@ export function useImportTemplate() {
     return useMutation({
         mutationFn: (content: string) => api(`${BASE}/admin/templates/import`, { method: 'POST', body: JSON.stringify({ content }) }),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+    });
+}
+
+/** Result of the official-catalog import: ids newly written vs. left untouched. */
+export interface OfficialImportResult {
+    imported: string[];
+    skipped: string[];
+}
+
+/**
+ * One-click import of the 9 bundled official templates. Egg-agnostic on import;
+ * existing templates of the same id are skipped, never overwritten.
+ */
+export function useImportOfficialTemplates() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: () =>
+            api<{ data: OfficialImportResult }>(`${BASE}/admin/templates/import-official`, { method: 'POST' }).then((response) => response.data),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: LIST_KEY });
+            void queryClient.invalidateQueries({ queryKey: ['ec-admin-template'] });
+        },
     });
 }
 

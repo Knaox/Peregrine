@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\EggCatalogController;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\ImportConfigController;
+use Plugins\EasyConfiguration\Http\Controllers\Admin\OfficialTemplateController;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\ServerCatalogController;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\ServerFileBrowserController;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\TemplateController;
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'throttle:240,1'])->group(function (): void {
         Route::get('templates', [TemplateController::class, 'index']);
         Route::post('templates', [TemplateController::class, 'store']);
         Route::post('templates/import', [TemplateController::class, 'import']);
+        Route::post('templates/import-official', [OfficialTemplateController::class, 'import']);
         // Static segment BEFORE {id} so it isn't captured as a template id.
         Route::get('templates/example', [TemplateController::class, 'example']);
         Route::get('templates/{id}', [TemplateController::class, 'show']);
@@ -51,6 +53,7 @@ Route::middleware(['auth', 'throttle:240,1'])->group(function (): void {
         Route::delete('templates/{id}', [TemplateController::class, 'destroy']);
         Route::get('templates/{id}/export', [TemplateController::class, 'export']);
         Route::get('eggs', [EggCatalogController::class, 'index']);
+        Route::get('eggs/{egg}/env-vars', [EggCatalogController::class, 'envVars']);
 
         // Import a real config file from a server to scaffold a template block.
         Route::get('servers', [ServerCatalogController::class, 'index']);

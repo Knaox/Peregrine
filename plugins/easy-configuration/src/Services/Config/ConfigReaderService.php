@@ -102,6 +102,8 @@ final class ConfigReaderService
             'exists' => $exists,
             'sectioned' => $merged['sectioned'],
             'section_labels' => is_array($fileDef['section_labels'] ?? null) ? $fileDef['section_labels'] : null,
+            'expanded_by_default' => (bool) ($fileDef['expanded_by_default'] ?? false),
+            'section_expanded' => is_array($fileDef['section_expanded'] ?? null) ? $fileDef['section_expanded'] : null,
             'parameters' => $parameters,
         ];
     }

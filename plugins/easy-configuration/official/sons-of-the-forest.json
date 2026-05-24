@@ -1,0 +1,1145 @@
+{
+  "id": "sons-of-the-forest",
+  "version": "1.0.0",
+  "name": {
+    "en": "Sons of the Forest",
+    "fr": "Sons of the Forest"
+  },
+  "description": {
+    "en": "Complete server configuration for Sons of the Forest — identity, ports, save behaviour, performance and the full Custom game-mode settings (enemies, environment, survival, construction and multiplayer), with clear bilingual labels.",
+    "fr": "Configuration serveur complète pour Sons of the Forest — identité, ports, sauvegarde, performances et l'ensemble des réglages du mode de jeu Personnalisé (ennemis, environnement, survie, construction et multijoueur), avec des libellés bilingues clairs."
+  },
+  "author": "Peregrine",
+  "target_eggs": [],
+  "columns": 2,
+  "boost": {
+    "enabled": false,
+    "parameter_blacklist": []
+  },
+  "files": [
+    {
+      "id": "dedicatedserver",
+      "path": "serverconfig/dedicatedserver.cfg",
+      "format": "json",
+      "label": {
+        "en": "Dedicated server configuration",
+        "fr": "Configuration du serveur dédié"
+      },
+      "parameters": {
+        "ServerName": {
+          "display_type": "text",
+          "config": {
+            "default": "Sons Of The Forest Server"
+          },
+          "label": {
+            "en": "Server name",
+            "fr": "Nom du serveur"
+          },
+          "description": {
+            "en": "The public name of the server as it appears in the in-game server browser.",
+            "fr": "Le nom public du serveur tel qu'il apparaît dans la liste des serveurs en jeu."
+          },
+          "env_var": "SRV_NAME"
+        },
+        "MaxPlayers": {
+          "display_type": "number",
+          "config": {
+            "default": "8",
+            "min": 1,
+            "max": 8,
+            "step": 1
+          },
+          "label": {
+            "en": "Max players",
+            "fr": "Joueurs maximum"
+          },
+          "description": {
+            "en": "Maximum number of players allowed to connect at the same time. Sons of the Forest enforces a hard cap of 8.",
+            "fr": "Nombre maximum de joueurs autorisés à se connecter en même temps. Sons of the Forest impose une limite stricte de 8."
+          },
+          "env_var": "MAX_PLAYERS"
+        },
+        "Password": {
+          "display_type": "text",
+          "config": {
+            "default": null
+          },
+          "label": {
+            "en": "Server password",
+            "fr": "Mot de passe du serveur"
+          },
+          "description": {
+            "en": "Password players must enter to join the server. Leave empty for a public server (up to 40 characters).",
+            "fr": "Mot de passe que les joueurs doivent saisir pour rejoindre le serveur. Laissez vide pour un serveur public (40 caractères maximum)."
+          },
+          "env_var": "SRV_PW"
+        },
+        "LanOnly": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "LAN only",
+            "fr": "Réseau local uniquement"
+          },
+          "description": {
+            "en": "When enabled, the server is only reachable from the local network and is not advertised to the internet.",
+            "fr": "Lorsqu'activé, le serveur n'est accessible que depuis le réseau local et n'est pas annoncé sur Internet."
+          }
+        },
+        "GameMode": {
+          "display_type": "select",
+          "config": {
+            "default": "Normal",
+            "options": [
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normal"
+                }
+              },
+              {
+                "value": "Hard",
+                "label": {
+                  "en": "Hard",
+                  "fr": "Difficile"
+                }
+              },
+              {
+                "value": "HardSurvival",
+                "label": {
+                  "en": "Hard survival",
+                  "fr": "Survie difficile"
+                }
+              },
+              {
+                "value": "Peaceful",
+                "label": {
+                  "en": "Peaceful",
+                  "fr": "Paisible"
+                }
+              },
+              {
+                "value": "Creative",
+                "label": {
+                  "en": "Creative",
+                  "fr": "Créatif"
+                }
+              },
+              {
+                "value": "Custom",
+                "label": {
+                  "en": "Custom",
+                  "fr": "Personnalisé"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Game mode",
+            "fr": "Mode de jeu"
+          },
+          "description": {
+            "en": "Overall difficulty preset. Choose Custom to unlock the detailed Custom game-mode settings below; the other presets ignore those values.",
+            "fr": "Préréglage de difficulté global. Choisissez Personnalisé pour débloquer les réglages détaillés du mode personnalisé ci-dessous ; les autres préréglages ignorent ces valeurs."
+          },
+          "env_var": "GAME_MODE"
+        },
+        "SaveSlot": {
+          "display_type": "number",
+          "config": {
+            "default": "1",
+            "min": 1,
+            "max": 100,
+            "step": 1
+          },
+          "label": {
+            "en": "Save slot",
+            "fr": "Emplacement de sauvegarde"
+          },
+          "description": {
+            "en": "Which save slot the world is stored in. Change it to keep several independent worlds on the same server.",
+            "fr": "Emplacement dans lequel le monde est sauvegardé. Modifiez-le pour conserver plusieurs mondes indépendants sur le même serveur."
+          }
+        },
+        "SaveMode": {
+          "display_type": "select",
+          "config": {
+            "default": "Continue",
+            "options": [
+              {
+                "value": "Continue",
+                "label": {
+                  "en": "Continue existing save",
+                  "fr": "Continuer la sauvegarde existante"
+                }
+              },
+              {
+                "value": "New",
+                "label": {
+                  "en": "Start a new save",
+                  "fr": "Démarrer une nouvelle sauvegarde"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Save mode",
+            "fr": "Mode de sauvegarde"
+          },
+          "description": {
+            "en": "Continue resumes the world stored in the chosen slot; New starts a fresh world (overwriting that slot when it next saves).",
+            "fr": "Continuer reprend le monde stocké dans l'emplacement choisi ; Nouveau démarre un monde vierge (écrasant cet emplacement lors de la prochaine sauvegarde)."
+          }
+        },
+        "SaveInterval": {
+          "display_type": "number",
+          "config": {
+            "default": "600",
+            "min": 0,
+            "max": 86400,
+            "step": 1
+          },
+          "label": {
+            "en": "Auto-save interval (seconds)",
+            "fr": "Intervalle de sauvegarde auto (secondes)"
+          },
+          "description": {
+            "en": "How often, in seconds, the server automatically writes the world to disk. Lower values save more often at a small performance cost.",
+            "fr": "Fréquence, en secondes, à laquelle le serveur écrit automatiquement le monde sur le disque. Des valeurs plus basses sauvegardent plus souvent au prix d'une légère baisse de performance."
+          }
+        },
+        "IdleDayCycleSpeed": {
+          "display_type": "slider",
+          "config": {
+            "default": "0.0",
+            "min": 0,
+            "max": 10,
+            "step": 0.1
+          },
+          "label": {
+            "en": "Idle day-cycle speed",
+            "fr": "Vitesse du cycle jour/nuit à vide"
+          },
+          "description": {
+            "en": "How fast the day/night cycle advances while no players are connected. Set to 0 to pause time on an empty server.",
+            "fr": "Vitesse à laquelle le cycle jour/nuit avance lorsqu'aucun joueur n'est connecté. Réglez sur 0 pour figer le temps sur un serveur vide."
+          }
+        },
+        "IdleTargetFramerate": {
+          "display_type": "number",
+          "config": {
+            "default": "5",
+            "min": 1,
+            "max": 120,
+            "step": 1
+          },
+          "label": {
+            "en": "Idle target framerate",
+            "fr": "Images par seconde cibles à vide"
+          },
+          "description": {
+            "en": "Simulation framerate the server targets while empty. A low value reduces CPU usage when no one is playing.",
+            "fr": "Fréquence d'images visée par le serveur lorsqu'il est vide. Une valeur basse réduit l'utilisation du processeur quand personne ne joue."
+          }
+        },
+        "ActiveTargetFramerate": {
+          "display_type": "number",
+          "config": {
+            "default": "60",
+            "min": 10,
+            "max": 240,
+            "step": 1
+          },
+          "label": {
+            "en": "Active target framerate",
+            "fr": "Images par seconde cibles en activité"
+          },
+          "description": {
+            "en": "Simulation framerate the server targets while players are connected. Higher values smooth out gameplay but use more CPU (minimum 10).",
+            "fr": "Fréquence d'images visée par le serveur lorsque des joueurs sont connectés. Des valeurs plus élevées fluidifient le jeu mais consomment plus de processeur (minimum 10)."
+          }
+        },
+        "LogFilesEnabled": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Enable log files",
+            "fr": "Activer les fichiers journaux"
+          },
+          "description": {
+            "en": "When enabled, the server writes log files to disk, which is useful for diagnosing crashes and errors.",
+            "fr": "Lorsqu'activé, le serveur écrit des fichiers journaux sur le disque, ce qui est utile pour diagnostiquer les plantages et les erreurs."
+          }
+        },
+        "TimestampLogFilenames": {
+          "display_type": "boolean",
+          "config": {
+            "default": "true",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Timestamp log file names",
+            "fr": "Horodater les noms de fichiers journaux"
+          },
+          "description": {
+            "en": "When enabled, each new log file is named with the date and time so old logs are kept separately instead of being overwritten.",
+            "fr": "Lorsqu'activé, chaque nouveau fichier journal est nommé avec la date et l'heure afin que les anciens journaux soient conservés séparément au lieu d'être écrasés."
+          }
+        },
+        "TimestampLogEntries": {
+          "display_type": "boolean",
+          "config": {
+            "default": "true",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Timestamp log entries",
+            "fr": "Horodater les entrées de journal"
+          },
+          "description": {
+            "en": "When enabled, every line written to the logs is prefixed with the date and time it was recorded.",
+            "fr": "Lorsqu'activé, chaque ligne écrite dans les journaux est précédée de la date et de l'heure à laquelle elle a été enregistrée."
+          }
+        },
+        "SkipNetworkAccessibilityTest": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Skip network accessibility test",
+            "fr": "Ignorer le test d'accessibilité réseau"
+          },
+          "description": {
+            "en": "When enabled, the server skips the start-up check that verifies its ports are reachable from the internet. Useful behind some firewalls or NAT setups.",
+            "fr": "Lorsqu'activé, le serveur ignore la vérification au démarrage qui contrôle l'accessibilité de ses ports depuis Internet. Utile derrière certains pare-feu ou configurations NAT."
+          }
+        },
+        "IpAddress": {
+          "display_type": "text",
+          "config": {
+            "default": "0.0.0.0"
+          },
+          "label": {
+            "en": "Bind IP address",
+            "fr": "Adresse IP d'écoute"
+          },
+          "description": {
+            "en": "Local network interface the server binds to. Leave as 0.0.0.0 to listen on all interfaces unless your host requires a specific address.",
+            "fr": "Interface réseau locale sur laquelle le serveur écoute. Laissez 0.0.0.0 pour écouter sur toutes les interfaces, sauf si votre hébergeur exige une adresse précise."
+          }
+        },
+        "GamePort": {
+          "display_type": "number",
+          "config": {
+            "default": "8766",
+            "min": 1,
+            "max": 65535,
+            "step": 1
+          },
+          "label": {
+            "en": "Game port (UDP)",
+            "fr": "Port de jeu (UDP)"
+          },
+          "description": {
+            "en": "UDP port used for the main game traffic. Must be open on your firewall and not collide with the query or blob-sync ports.",
+            "fr": "Port UDP utilisé pour le trafic de jeu principal. Il doit être ouvert sur votre pare-feu et ne pas entrer en conflit avec les ports de requête ou de synchronisation."
+          }
+        },
+        "QueryPort": {
+          "display_type": "number",
+          "config": {
+            "default": "27016",
+            "min": 1,
+            "max": 65535,
+            "step": 1
+          },
+          "label": {
+            "en": "Query port (UDP)",
+            "fr": "Port de requête (UDP)"
+          },
+          "description": {
+            "en": "UDP port used by the server browser to query status and player count. Must be open and distinct from the other ports.",
+            "fr": "Port UDP utilisé par la liste des serveurs pour interroger l'état et le nombre de joueurs. Il doit être ouvert et distinct des autres ports."
+          }
+        },
+        "BlobSyncPort": {
+          "display_type": "number",
+          "config": {
+            "default": "9700",
+            "min": 1,
+            "max": 65535,
+            "step": 1
+          },
+          "label": {
+            "en": "Blob-sync port (UDP)",
+            "fr": "Port de synchronisation (UDP)"
+          },
+          "description": {
+            "en": "UDP port used to synchronise save-game data (blobs) with connecting clients. Must be open and distinct from the other ports.",
+            "fr": "Port UDP utilisé pour synchroniser les données de sauvegarde (blobs) avec les clients qui se connectent. Il doit être ouvert et distinct des autres ports."
+          }
+        },
+        "GameSettings.Gameplay.TreeRegrowth": {
+          "display_type": "boolean",
+          "config": {
+            "default": "true",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Tree regrowth",
+            "fr": "Repousse des arbres"
+          },
+          "description": {
+            "en": "When enabled, chopped-down trees gradually grow back over time so the forest replenishes itself.",
+            "fr": "Lorsqu'activé, les arbres abattus repoussent progressivement avec le temps afin que la forêt se régénère d'elle-même."
+          }
+        },
+        "GameSettings.Structure.Damage": {
+          "display_type": "boolean",
+          "config": {
+            "default": "true",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Structure damage",
+            "fr": "Dégâts aux structures"
+          },
+          "description": {
+            "en": "When enabled, player-built structures can take damage from enemies and the environment; disable it to make bases indestructible.",
+            "fr": "Lorsqu'activé, les structures construites par les joueurs peuvent subir des dégâts des ennemis et de l'environnement ; désactivez-le pour rendre les bases indestructibles."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Vail.EnemySpawn": {
+          "display_type": "boolean",
+          "config": {
+            "default": "true",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Enemy spawning",
+            "fr": "Apparition des ennemis"
+          },
+          "description": {
+            "en": "Custom mode only. When enabled, cannibals and mutants spawn on the island; disable it for a combat-free experience.",
+            "fr": "Mode personnalisé uniquement. Lorsqu'activé, les cannibales et les mutants apparaissent sur l'île ; désactivez-le pour une expérience sans combat."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Vail.EnemyHealth": {
+          "display_type": "select",
+          "config": {
+            "default": "Normal",
+            "options": [
+              {
+                "value": "Low",
+                "label": {
+                  "en": "Low",
+                  "fr": "Faible"
+                }
+              },
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normale"
+                }
+              },
+              {
+                "value": "High",
+                "label": {
+                  "en": "High",
+                  "fr": "Élevée"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Enemy health",
+            "fr": "Santé des ennemis"
+          },
+          "description": {
+            "en": "Custom mode only. Sets how much health enemies have; higher values make them tougher to kill.",
+            "fr": "Mode personnalisé uniquement. Définit la quantité de points de vie des ennemis ; des valeurs plus élevées les rendent plus difficiles à tuer."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Vail.EnemyDamage": {
+          "display_type": "select",
+          "config": {
+            "default": "Normal",
+            "options": [
+              {
+                "value": "Low",
+                "label": {
+                  "en": "Low",
+                  "fr": "Faibles"
+                }
+              },
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normaux"
+                }
+              },
+              {
+                "value": "High",
+                "label": {
+                  "en": "High",
+                  "fr": "Élevés"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Enemy damage",
+            "fr": "Dégâts des ennemis"
+          },
+          "description": {
+            "en": "Custom mode only. Sets how much damage enemies deal to players in combat.",
+            "fr": "Mode personnalisé uniquement. Définit la quantité de dégâts que les ennemis infligent aux joueurs en combat."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Vail.EnemyArmour": {
+          "display_type": "select",
+          "config": {
+            "default": "Normal",
+            "options": [
+              {
+                "value": "Low",
+                "label": {
+                  "en": "Low",
+                  "fr": "Faible"
+                }
+              },
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normale"
+                }
+              },
+              {
+                "value": "High",
+                "label": {
+                  "en": "High",
+                  "fr": "Élevée"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Enemy armour",
+            "fr": "Armure des ennemis"
+          },
+          "description": {
+            "en": "Custom mode only. Sets how much damage enemies absorb before being hurt; higher values mean tougher, more armoured foes.",
+            "fr": "Mode personnalisé uniquement. Définit la quantité de dégâts que les ennemis absorbent avant d'être blessés ; des valeurs plus élevées signifient des adversaires plus résistants et mieux blindés."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Vail.EnemyAggression": {
+          "display_type": "select",
+          "config": {
+            "default": "Normal",
+            "options": [
+              {
+                "value": "Low",
+                "label": {
+                  "en": "Low",
+                  "fr": "Faible"
+                }
+              },
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normale"
+                }
+              },
+              {
+                "value": "High",
+                "label": {
+                  "en": "High",
+                  "fr": "Élevée"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Enemy aggression",
+            "fr": "Agressivité des ennemis"
+          },
+          "description": {
+            "en": "Custom mode only. Controls how readily enemies seek out and attack players; higher values make them hunt more aggressively.",
+            "fr": "Mode personnalisé uniquement. Contrôle la propension des ennemis à traquer et attaquer les joueurs ; des valeurs plus élevées les rendent plus agressifs à la chasse."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Vail.EnemySearchParties": {
+          "display_type": "select",
+          "config": {
+            "default": "Normal",
+            "options": [
+              {
+                "value": "Low",
+                "label": {
+                  "en": "Low",
+                  "fr": "Faible"
+                }
+              },
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normale"
+                }
+              },
+              {
+                "value": "High",
+                "label": {
+                  "en": "High",
+                  "fr": "Élevée"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Enemy search parties",
+            "fr": "Patrouilles de recherche ennemies"
+          },
+          "description": {
+            "en": "Custom mode only. Controls how often groups of enemies actively patrol and search for the player's base.",
+            "fr": "Mode personnalisé uniquement. Contrôle la fréquence à laquelle des groupes d'ennemis patrouillent activement et recherchent la base du joueur."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Vail.AnimalSpawnRate": {
+          "display_type": "select",
+          "config": {
+            "default": "Normal",
+            "options": [
+              {
+                "value": "Low",
+                "label": {
+                  "en": "Low",
+                  "fr": "Faible"
+                }
+              },
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normal"
+                }
+              },
+              {
+                "value": "High",
+                "label": {
+                  "en": "High",
+                  "fr": "Élevé"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Animal spawn rate",
+            "fr": "Taux d'apparition des animaux"
+          },
+          "description": {
+            "en": "Custom mode only. Controls how frequently wildlife such as deer, rabbits and fish spawn around the island.",
+            "fr": "Mode personnalisé uniquement. Contrôle la fréquence d'apparition de la faune comme les cerfs, lapins et poissons autour de l'île."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Environment.StartingSeason": {
+          "display_type": "select",
+          "config": {
+            "default": "Summer",
+            "options": [
+              {
+                "value": "Spring",
+                "label": {
+                  "en": "Spring",
+                  "fr": "Printemps"
+                }
+              },
+              {
+                "value": "Summer",
+                "label": {
+                  "en": "Summer",
+                  "fr": "Été"
+                }
+              },
+              {
+                "value": "Autumn",
+                "label": {
+                  "en": "Autumn",
+                  "fr": "Automne"
+                }
+              },
+              {
+                "value": "Winter",
+                "label": {
+                  "en": "Winter",
+                  "fr": "Hiver"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Starting season",
+            "fr": "Saison de départ"
+          },
+          "description": {
+            "en": "Custom mode only. Sets which season the world begins in, affecting temperature, foliage and food availability.",
+            "fr": "Mode personnalisé uniquement. Définit la saison dans laquelle le monde commence, ce qui influe sur la température, la végétation et la disponibilité de la nourriture."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Environment.SeasonLength": {
+          "display_type": "select",
+          "config": {
+            "default": "Default",
+            "options": [
+              {
+                "value": "Short",
+                "label": {
+                  "en": "Short",
+                  "fr": "Courte"
+                }
+              },
+              {
+                "value": "Default",
+                "label": {
+                  "en": "Default",
+                  "fr": "Par défaut"
+                }
+              },
+              {
+                "value": "Long",
+                "label": {
+                  "en": "Long",
+                  "fr": "Longue"
+                }
+              },
+              {
+                "value": "Realistic",
+                "label": {
+                  "en": "Realistic",
+                  "fr": "Réaliste"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Season length",
+            "fr": "Durée des saisons"
+          },
+          "description": {
+            "en": "Custom mode only. Sets how many in-game days each season lasts; Realistic stretches them to roughly real-world proportions.",
+            "fr": "Mode personnalisé uniquement. Définit le nombre de jours en jeu que dure chaque saison ; Réaliste les allonge à des proportions proches du monde réel."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Environment.DayLength": {
+          "display_type": "select",
+          "config": {
+            "default": "Default",
+            "options": [
+              {
+                "value": "Short",
+                "label": {
+                  "en": "Short",
+                  "fr": "Courte"
+                }
+              },
+              {
+                "value": "Default",
+                "label": {
+                  "en": "Default",
+                  "fr": "Par défaut"
+                }
+              },
+              {
+                "value": "Long",
+                "label": {
+                  "en": "Long",
+                  "fr": "Longue"
+                }
+              },
+              {
+                "value": "Realistic",
+                "label": {
+                  "en": "Realistic",
+                  "fr": "Réaliste"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Day length",
+            "fr": "Durée du jour"
+          },
+          "description": {
+            "en": "Custom mode only. Sets how long a full day/night cycle lasts; Realistic makes days and nights close to real-world length.",
+            "fr": "Mode personnalisé uniquement. Définit la durée d'un cycle jour/nuit complet ; Réaliste rapproche la durée des jours et des nuits de celle du monde réel."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Environment.PrecipitationFrequency": {
+          "display_type": "select",
+          "config": {
+            "default": "Default",
+            "options": [
+              {
+                "value": "Low",
+                "label": {
+                  "en": "Low",
+                  "fr": "Faible"
+                }
+              },
+              {
+                "value": "Default",
+                "label": {
+                  "en": "Default",
+                  "fr": "Par défaut"
+                }
+              },
+              {
+                "value": "High",
+                "label": {
+                  "en": "High",
+                  "fr": "Élevée"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Precipitation frequency",
+            "fr": "Fréquence des précipitations"
+          },
+          "description": {
+            "en": "Custom mode only. Controls how often rain and snow occur on the island.",
+            "fr": "Mode personnalisé uniquement. Contrôle la fréquence des pluies et des chutes de neige sur l'île."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Survival.ConsumableEffects": {
+          "display_type": "select",
+          "config": {
+            "default": "Normal",
+            "options": [
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normaux"
+                }
+              },
+              {
+                "value": "Hard",
+                "label": {
+                  "en": "Hard",
+                  "fr": "Difficiles"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Consumable effects",
+            "fr": "Effets des consommables"
+          },
+          "description": {
+            "en": "Custom mode only. Sets how strongly food and drink restore hunger, thirst and energy; Hard makes consumables less effective.",
+            "fr": "Mode personnalisé uniquement. Définit l'efficacité de la nourriture et des boissons pour restaurer la faim, la soif et l'énergie ; Difficiles rend les consommables moins efficaces."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Survival.PlayerStatsDamage": {
+          "display_type": "select",
+          "config": {
+            "default": "Off",
+            "options": [
+              {
+                "value": "Off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Désactivé"
+                }
+              },
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normaux"
+                }
+              },
+              {
+                "value": "Hard",
+                "label": {
+                  "en": "Hard",
+                  "fr": "Difficiles"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Player stats damage",
+            "fr": "Dégâts liés aux statistiques du joueur"
+          },
+          "description": {
+            "en": "Custom mode only. Controls whether neglected needs such as hunger and thirst start damaging the player's health, and how harshly.",
+            "fr": "Mode personnalisé uniquement. Détermine si des besoins négligés comme la faim et la soif commencent à entamer la santé du joueur, et avec quelle sévérité."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Survival.ColdPenalties": {
+          "display_type": "select",
+          "config": {
+            "default": "Off",
+            "options": [
+              {
+                "value": "Off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Désactivées"
+                }
+              },
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normales"
+                }
+              },
+              {
+                "value": "Hard",
+                "label": {
+                  "en": "Hard",
+                  "fr": "Difficiles"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Cold penalties",
+            "fr": "Pénalités de froid"
+          },
+          "description": {
+            "en": "Custom mode only. Controls whether cold weather harms the player when poorly dressed or sheltered, and how severe the penalty is.",
+            "fr": "Mode personnalisé uniquement. Détermine si le froid nuit au joueur mal vêtu ou mal abrité, et la sévérité de la pénalité."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Survival.BuildingResistance": {
+          "display_type": "select",
+          "config": {
+            "default": "Normal",
+            "options": [
+              {
+                "value": "Low",
+                "label": {
+                  "en": "Low",
+                  "fr": "Faible"
+                }
+              },
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normale"
+                }
+              },
+              {
+                "value": "High",
+                "label": {
+                  "en": "High",
+                  "fr": "Élevée"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Building resistance",
+            "fr": "Résistance des constructions"
+          },
+          "description": {
+            "en": "Custom mode only. Sets how much punishment player-built structures can withstand before breaking; higher values make bases more durable.",
+            "fr": "Mode personnalisé uniquement. Définit la résistance des structures construites par les joueurs avant qu'elles ne cèdent ; des valeurs plus élevées rendent les bases plus durables."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Survival.ReducedFoodInContainers": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Reduced food in containers",
+            "fr": "Nourriture réduite dans les conteneurs"
+          },
+          "description": {
+            "en": "Custom mode only. When enabled, lootable containers across the island hold less food, making scavenging harder.",
+            "fr": "Mode personnalisé uniquement. Lorsqu'activé, les conteneurs pillables de l'île contiennent moins de nourriture, rendant la fouille plus difficile."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Survival.SingleUseContainers": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Single-use containers",
+            "fr": "Conteneurs à usage unique"
+          },
+          "description": {
+            "en": "Custom mode only. When enabled, lootable containers can only be searched once and never refill with new loot.",
+            "fr": "Mode personnalisé uniquement. Lorsqu'activé, les conteneurs pillables ne peuvent être fouillés qu'une seule fois et ne se remplissent jamais de nouveau butin."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Survival.CreativeMode": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Creative mode",
+            "fr": "Mode créatif"
+          },
+          "description": {
+            "en": "Custom mode only. When enabled, players build freely with unlimited resources and no survival pressure.",
+            "fr": "Mode personnalisé uniquement. Lorsqu'activé, les joueurs construisent librement avec des ressources illimitées et sans contrainte de survie."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Survival.PlayersImmortalMode": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Immortal players",
+            "fr": "Joueurs immortels"
+          },
+          "description": {
+            "en": "Custom mode only. When enabled, players cannot die, ignoring damage, hunger, thirst and environmental hazards.",
+            "fr": "Mode personnalisé uniquement. Lorsqu'activé, les joueurs ne peuvent pas mourir, ignorant les dégâts, la faim, la soif et les dangers de l'environnement."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Survival.OneHitToCutTrees": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "One hit to cut trees",
+            "fr": "Abattre les arbres en un coup"
+          },
+          "description": {
+            "en": "Custom mode only. When enabled, any tree is felled in a single hit, dramatically speeding up gathering wood.",
+            "fr": "Mode personnalisé uniquement. Lorsqu'activé, tout arbre est abattu d'un seul coup, accélérant considérablement la récolte de bois."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Construction.NoCuttingsSpawn": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "No structure-cutting spawn limits",
+            "fr": "Pas de limite d'apparition pour les coupes de structures"
+          },
+          "description": {
+            "en": "Custom mode only. When enabled, the limit on how many cut/placed building pieces can exist at once is lifted, allowing larger builds.",
+            "fr": "Mode personnalisé uniquement. Lorsqu'activé, la limite du nombre de pièces de construction découpées ou placées pouvant exister simultanément est levée, autorisant des constructions plus vastes."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.FreeForm.ForcePlaceFullLoad": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Force-place full load",
+            "fr": "Forcer le placement à pleine charge"
+          },
+          "description": {
+            "en": "Custom mode only. When enabled, free-form building pieces can be placed even when fully loaded with other pieces, easing complex constructions.",
+            "fr": "Mode personnalisé uniquement. Lorsqu'activé, les pièces de construction libre peuvent être posées même lorsqu'elles sont entièrement chargées d'autres pièces, facilitant les constructions complexes."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Multiplayer.Cheats": {
+          "display_type": "boolean",
+          "config": {
+            "default": "false",
+            "true_value": "true",
+            "false_value": "false"
+          },
+          "label": {
+            "en": "Allow cheats",
+            "fr": "Autoriser les triches"
+          },
+          "description": {
+            "en": "Custom mode only. When enabled, debug and cheat commands can be used on the multiplayer server.",
+            "fr": "Mode personnalisé uniquement. Lorsqu'activé, les commandes de débogage et de triche peuvent être utilisées sur le serveur multijoueur."
+          }
+        },
+        "CustomGameModeSettings.GameSetting.Multiplayer.PvpDamage": {
+          "display_type": "select",
+          "config": {
+            "default": "Normal",
+            "options": [
+              {
+                "value": "Off",
+                "label": {
+                  "en": "Off",
+                  "fr": "Désactivés"
+                }
+              },
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normaux"
+                }
+              },
+              {
+                "value": "High",
+                "label": {
+                  "en": "High",
+                  "fr": "Élevés"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "PvP damage",
+            "fr": "Dégâts JcJ"
+          },
+          "description": {
+            "en": "Custom mode only. Controls whether players can hurt each other and how much damage they deal; Off disables player-versus-player damage.",
+            "fr": "Mode personnalisé uniquement. Détermine si les joueurs peuvent se blesser mutuellement et la quantité de dégâts infligés ; Désactivés supprime les dégâts entre joueurs."
+          }
+        }
+      },
+      "section_labels": []
+    }
+  ]
+}

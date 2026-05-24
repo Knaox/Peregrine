@@ -79,4 +79,33 @@ final class TemplateSchemaValidatorTest extends TestCase
 
         self::assertContains('target_eggs: every entry must be an integer egg id', $errors);
     }
+
+    public function test_expanded_by_default_and_section_expanded_flags_are_accepted(): void
+    {
+        $template = $this->validTemplate();
+        $template['files'][0]['expanded_by_default'] = true;
+        $template['files'][0]['section_expanded'] = ['ServerSettings' => false];
+
+        self::assertSame([], (new TemplateSchemaValidator)->validate($template));
+    }
+
+    public function test_it_reports_a_non_boolean_expanded_by_default(): void
+    {
+        $template = $this->validTemplate();
+        $template['files'][0]['expanded_by_default'] = 'yes';
+
+        $errors = (new TemplateSchemaValidator)->validate($template);
+
+        self::assertContains('files[0].expanded_by_default: must be a boolean', $errors);
+    }
+
+    public function test_it_reports_a_non_boolean_section_expanded_entry(): void
+    {
+        $template = $this->validTemplate();
+        $template['files'][0]['section_expanded'] = ['ServerSettings' => 'open'];
+
+        $errors = (new TemplateSchemaValidator)->validate($template);
+
+        self::assertContains('files[0].section_expanded.ServerSettings: must be a boolean', $errors);
+    }
 }

@@ -46,6 +46,8 @@
                 "path": { "type": "string" },
                 "format": { "enum": ["properties", "ini", "yaml", "json", "toml", "palworld", "theforest"] },
                 "enabled": { "type": "boolean", "default": true },
+                "expanded_by_default": { "type": "boolean", "default": false, "description": "Player editor: start this file expanded. Base default is collapsed." },
+                "section_expanded": { "type": "object", "description": "Player editor: per-section expanded override, keyed by raw section name.", "additionalProperties": { "type": "boolean" } },
                 "section_whitelist": { "type": "array", "items": { "type": "string" } },
                 "section_labels": { "type": "object", "description": "Friendly FR/EN names per native section, keyed by raw section name.", "additionalProperties": { "$ref": "#/$defs/localeLabel" } },
                 "label": { "$ref": "#/$defs/localeLabel" },

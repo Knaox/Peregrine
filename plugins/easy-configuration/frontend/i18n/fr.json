@@ -19,7 +19,8 @@
         "search": "Rechercher un paramètre...",
         "general": "Général",
         "read_only": "Lecture seule",
-        "no_results": "Aucun paramètre ne correspond à votre recherche."
+        "no_results": "Aucun paramètre ne correspond à votre recherche.",
+        "no_files_yet": "Aucun fichier de configuration n'est encore présent. Ils apparaissent une fois le serveur démarré au moins une fois."
     },
     "save": {
         "save": "Enregistrer",
@@ -170,7 +171,10 @@
             "confirm_delete": "Supprimer le template « {{id}} » ? Le fichier JSON sera effacé.",
             "deleted": "Template supprimé.",
             "imported": "Template importé.",
-            "import_failed": "Échec de l'import. Vérifiez que le JSON est valide."
+            "import_failed": "Échec de l'import. Vérifiez que le JSON est valide.",
+            "import_official": "Importer les officiels",
+            "official_imported": "{{ok}} templates officiels importés, {{skipped}} déjà présents.",
+            "official_failed": "Échec de l'import des templates officiels."
         },
         "editor": {
             "title_new": "Nouveau template",
@@ -221,6 +225,8 @@
             "links_env_var": "Variable d'environnement liée (par paramètre)",
             "links_env_server": "Charger les noms de variables depuis un serveur",
             "links_env_server_ph": "Choisir un serveur (optionnel, pour l'autocomplétion)",
+            "links_env_egg": "Charger les noms de variables depuis un egg",
+            "links_env_egg_ph": "Choisir un egg (optionnel, pour l'autocomplétion)",
             "links_param": "nom de la variable d'env",
             "links_section_en": "Nom de section (EN)",
             "links_section_fr": "Nom de section (FR)"
@@ -228,6 +234,10 @@
         "visual": {
             "intro": "Modifiez chaque paramètre visuellement — label, type d'affichage, options, valeur par défaut — sans toucher au JSON. Les changements se synchronisent avec l'onglet JSON.",
             "empty": "Ajoutez au moins un fichier (onglet Édition) pour utiliser l'éditeur visuel.",
+            "add_file": "Ajouter un fichier",
+            "file_id": "Identifiant du fichier",
+            "file_path": "Chemin du fichier",
+            "expanded_by_default": "Déplié par défaut",
             "preview": "Aperçu en direct",
             "label_en": "Libellé (EN)",
             "label_fr": "Libellé (FR)",

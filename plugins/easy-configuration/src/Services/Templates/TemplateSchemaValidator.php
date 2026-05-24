@@ -78,6 +78,22 @@ final class TemplateSchemaValidator
             $errors[] = "{$path}.section_whitelist: must be an array of section names";
         }
 
+        if (isset($file['expanded_by_default']) && ! is_bool($file['expanded_by_default'])) {
+            $errors[] = "{$path}.expanded_by_default: must be a boolean";
+        }
+
+        if (isset($file['section_expanded'])) {
+            if (! is_array($file['section_expanded'])) {
+                $errors[] = "{$path}.section_expanded: must be an object of section => boolean";
+            } else {
+                foreach ($file['section_expanded'] as $sectionKey => $expanded) {
+                    if (! is_bool($expanded)) {
+                        $errors[] = "{$path}.section_expanded.{$sectionKey}: must be a boolean";
+                    }
+                }
+            }
+        }
+
         if (! isset($file['parameters']) || ! is_array($file['parameters'])) {
             $errors[] = "{$path}.parameters: must be an object";
 

@@ -1,0 +1,521 @@
+{
+  "$schema": "https://peregrine.dev/schemas/easy-config-template/v1.json",
+  "id": "the-forest",
+  "version": "1.0.0",
+  "name": {
+    "en": "The Forest",
+    "fr": "The Forest"
+  },
+  "description": {
+    "en": "Dedicated server settings for The Forest — network ports, slots, difficulty, save behaviour, VAC, and survival gameplay toggles, all edited from Server.cfg with clear bilingual labels.",
+    "fr": "Paramètres du serveur dédié pour The Forest — ports réseau, slots, difficulté, sauvegarde, VAC et options de gameplay de survie, le tout modifiable depuis Server.cfg avec des libellés bilingues clairs."
+  },
+  "author": "Peregrine",
+  "target_eggs": [],
+  "columns": 2,
+  "boost": {
+    "enabled": false,
+    "parameter_blacklist": []
+  },
+  "files": [
+    {
+      "id": "servercfg",
+      "path": "config/config.cfg",
+      "format": "theforest",
+      "label": {
+        "en": "Server configuration",
+        "fr": "Configuration du serveur"
+      },
+      "parameters": {
+        "serverIP": {
+          "display_type": "text",
+          "config": {
+            "default": "0.0.0.0"
+          },
+          "label": {
+            "en": "Server IP",
+            "fr": "IP du serveur"
+          },
+          "description": {
+            "en": "The local IP address the server binds to. Leave it as 0.0.0.0 to listen on every network interface unless your host requires a specific address.",
+            "fr": "L'adresse IP locale sur laquelle le serveur s'attache. Laissez 0.0.0.0 pour écouter sur toutes les interfaces réseau, sauf si votre hébergeur impose une adresse précise."
+          }
+        },
+        "serverSteamPort": {
+          "display_type": "number",
+          "config": {
+            "default": "8766",
+            "min": 1,
+            "max": 65535
+          },
+          "label": {
+            "en": "Steam Port",
+            "fr": "Port Steam"
+          },
+          "description": {
+            "en": "UDP port used for Steam communication between the server and Valve's network. Must be open on your firewall and not collide with the game or query ports.",
+            "fr": "Port UDP utilisé pour la communication Steam entre le serveur et le réseau de Valve. Il doit être ouvert sur votre pare-feu et ne pas entrer en conflit avec les ports de jeu ou de requête."
+          }
+        },
+        "serverGamePort": {
+          "display_type": "number",
+          "config": {
+            "default": "27015",
+            "min": 1,
+            "max": 65535
+          },
+          "label": {
+            "en": "Game Port",
+            "fr": "Port de jeu"
+          },
+          "description": {
+            "en": "UDP port that carries the actual gameplay traffic between the server and connected players.",
+            "fr": "Port UDP qui transporte le trafic de jeu réel entre le serveur et les joueurs connectés."
+          }
+        },
+        "serverQueryPort": {
+          "display_type": "number",
+          "config": {
+            "default": "27016",
+            "min": 1,
+            "max": 65535
+          },
+          "label": {
+            "en": "Query Port",
+            "fr": "Port de requête"
+          },
+          "description": {
+            "en": "UDP port used by the Steam server browser to query the server's name, player count and status.",
+            "fr": "Port UDP utilisé par la liste des serveurs Steam pour interroger le nom, le nombre de joueurs et l'état du serveur."
+          }
+        },
+        "serverName": {
+          "display_type": "text",
+          "config": {
+            "default": "The Forest Server"
+          },
+          "label": {
+            "en": "Server Name",
+            "fr": "Nom du serveur"
+          },
+          "description": {
+            "en": "The public name shown for your server in the in-game server browser.",
+            "fr": "Le nom public affiché pour votre serveur dans la liste des serveurs du jeu."
+          }
+        },
+        "serverPlayers": {
+          "display_type": "number",
+          "config": {
+            "default": "8",
+            "min": 1,
+            "max": 8
+          },
+          "label": {
+            "en": "Max Players",
+            "fr": "Joueurs maximum"
+          },
+          "description": {
+            "en": "Maximum number of players allowed on the server at once. The Forest supports up to 8 players in co-op.",
+            "fr": "Nombre maximum de joueurs autorisés simultanément sur le serveur. The Forest prend en charge jusqu'à 8 joueurs en coopération."
+          }
+        },
+        "enableVAC": {
+          "display_type": "boolean",
+          "config": {
+            "default": "off",
+            "true_value": "on",
+            "false_value": "off"
+          },
+          "label": {
+            "en": "Enable VAC",
+            "fr": "Activer VAC"
+          },
+          "description": {
+            "en": "Turns on Valve Anti-Cheat protection so flagged cheaters are automatically blocked from joining.",
+            "fr": "Active la protection Valve Anti-Cheat afin que les tricheurs signalés soient automatiquement empêchés de se connecter."
+          }
+        },
+        "serverPassword": {
+          "display_type": "text",
+          "config": {
+            "default": ""
+          },
+          "label": {
+            "en": "Server Password",
+            "fr": "Mot de passe du serveur"
+          },
+          "description": {
+            "en": "Password players must enter to join the server. Leave empty to keep the server public.",
+            "fr": "Mot de passe que les joueurs doivent saisir pour rejoindre le serveur. Laissez vide pour garder le serveur public."
+          }
+        },
+        "serverPasswordAdmin": {
+          "display_type": "text",
+          "config": {
+            "default": ""
+          },
+          "label": {
+            "en": "Admin Password",
+            "fr": "Mot de passe administrateur"
+          },
+          "description": {
+            "en": "Password that grants in-game administrator privileges. Keep it long and secret, and different from the join password.",
+            "fr": "Mot de passe qui accorde les privilèges d'administrateur en jeu. Gardez-le long et secret, et différent du mot de passe de connexion."
+          }
+        },
+        "serverSteamAccount": {
+          "display_type": "text",
+          "config": {
+            "default": ""
+          },
+          "label": {
+            "en": "Steam Game Server Token (GSLT)",
+            "fr": "Jeton de serveur de jeu Steam (GSLT)"
+          },
+          "description": {
+            "en": "Optional Steam Game Server Login Token used to register the server under your Steam account so it lists publicly. Leave empty to run anonymously.",
+            "fr": "Jeton de connexion de serveur de jeu Steam facultatif, utilisé pour enregistrer le serveur sous votre compte Steam afin qu'il apparaisse publiquement. Laissez vide pour fonctionner de façon anonyme."
+          }
+        },
+        "serverContact": {
+          "display_type": "text",
+          "config": {
+            "default": ""
+          },
+          "label": {
+            "en": "Contact Email",
+            "fr": "Adresse e-mail de contact"
+          },
+          "description": {
+            "en": "Optional administrator contact email associated with the server. Not shown publicly to players.",
+            "fr": "Adresse e-mail de contact de l'administrateur, facultative, associée au serveur. Elle n'est pas affichée publiquement aux joueurs."
+          }
+        },
+        "serverAutoSaveInterval": {
+          "display_type": "number",
+          "config": {
+            "default": "30",
+            "min": 15,
+            "max": 1440
+          },
+          "label": {
+            "en": "Auto-Save Interval (minutes)",
+            "fr": "Intervalle de sauvegarde auto (minutes)"
+          },
+          "description": {
+            "en": "How often, in minutes, the server automatically saves world progress to disk. The minimum supported value is 15 minutes.",
+            "fr": "Fréquence, en minutes, à laquelle le serveur sauvegarde automatiquement la progression du monde sur le disque. La valeur minimale prise en charge est de 15 minutes."
+          }
+        },
+        "difficulty": {
+          "display_type": "select",
+          "config": {
+            "default": "Normal",
+            "options": [
+              {
+                "value": "Peaceful",
+                "label": {
+                  "en": "Peaceful",
+                  "fr": "Paisible"
+                }
+              },
+              {
+                "value": "Normal",
+                "label": {
+                  "en": "Normal",
+                  "fr": "Normal"
+                }
+              },
+              {
+                "value": "Hard",
+                "label": {
+                  "en": "Hard",
+                  "fr": "Difficile"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Difficulty",
+            "fr": "Difficulté"
+          },
+          "description": {
+            "en": "Sets the world difficulty: Peaceful disables hostile mutants, Normal is the standard survival experience, and Hard makes enemies tougher and more aggressive.",
+            "fr": "Définit la difficulté du monde : Paisible désactive les mutants hostiles, Normal correspond à l'expérience de survie standard, et Difficile rend les ennemis plus résistants et plus agressifs."
+          }
+        },
+        "initType": {
+          "display_type": "select",
+          "config": {
+            "default": "Continue",
+            "options": [
+              {
+                "value": "Continue",
+                "label": {
+                  "en": "Continue",
+                  "fr": "Continuer"
+                }
+              },
+              {
+                "value": "New",
+                "label": {
+                  "en": "New",
+                  "fr": "Nouvelle partie"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "World Init Mode",
+            "fr": "Mode d'initialisation du monde"
+          },
+          "description": {
+            "en": "Controls how the server loads on startup: Continue resumes the saved game in the selected slot, while New starts a fresh world (overwriting that slot).",
+            "fr": "Contrôle le chargement du serveur au démarrage : Continuer reprend la partie sauvegardée dans le slot sélectionné, tandis que Nouvelle partie démarre un monde vierge (en écrasant ce slot)."
+          }
+        },
+        "slot": {
+          "display_type": "select",
+          "config": {
+            "default": "1",
+            "options": [
+              {
+                "value": "1",
+                "label": {
+                  "en": "Slot 1",
+                  "fr": "Slot 1"
+                }
+              },
+              {
+                "value": "2",
+                "label": {
+                  "en": "Slot 2",
+                  "fr": "Slot 2"
+                }
+              },
+              {
+                "value": "3",
+                "label": {
+                  "en": "Slot 3",
+                  "fr": "Slot 3"
+                }
+              },
+              {
+                "value": "4",
+                "label": {
+                  "en": "Slot 4",
+                  "fr": "Slot 4"
+                }
+              },
+              {
+                "value": "5",
+                "label": {
+                  "en": "Slot 5",
+                  "fr": "Slot 5"
+                }
+              }
+            ]
+          },
+          "label": {
+            "en": "Save Slot",
+            "fr": "Slot de sauvegarde"
+          },
+          "description": {
+            "en": "Which of the five save slots the server uses to store and load its world. Combine with the World Init Mode to continue or reset a specific slot.",
+            "fr": "Lequel des cinq slots de sauvegarde le serveur utilise pour stocker et charger son monde. À combiner avec le mode d'initialisation du monde pour continuer ou réinitialiser un slot précis."
+          }
+        },
+        "saveFolderPath": {
+          "display_type": "text",
+          "config": {
+            "default": ""
+          },
+          "label": {
+            "en": "Custom Save Folder",
+            "fr": "Dossier de sauvegarde personnalisé"
+          },
+          "description": {
+            "en": "Optional custom directory where the server stores its save slots. Leave empty to use the default save location.",
+            "fr": "Répertoire personnalisé facultatif où le serveur stocke ses slots de sauvegarde. Laissez vide pour utiliser l'emplacement de sauvegarde par défaut."
+          }
+        },
+        "showLogs": {
+          "display_type": "boolean",
+          "config": {
+            "default": "off",
+            "true_value": "on",
+            "false_value": "off"
+          },
+          "label": {
+            "en": "Show Logs",
+            "fr": "Afficher les journaux"
+          },
+          "description": {
+            "en": "When enabled, the server writes detailed activity logs to the console and log files, which is useful for debugging.",
+            "fr": "Lorsqu'activé, le serveur écrit des journaux d'activité détaillés dans la console et les fichiers journaux, ce qui est utile pour le débogage."
+          }
+        },
+        "veganMode": {
+          "display_type": "boolean",
+          "config": {
+            "default": "off",
+            "true_value": "on",
+            "false_value": "off"
+          },
+          "label": {
+            "en": "Vegan Mode",
+            "fr": "Mode végan"
+          },
+          "description": {
+            "en": "When enabled, enemy mutants never appear during the day, making the world far less hostile.",
+            "fr": "Lorsqu'activé, les mutants ennemis n'apparaissent jamais en journée, rendant le monde bien moins hostile."
+          }
+        },
+        "vegetarianMode": {
+          "display_type": "boolean",
+          "config": {
+            "default": "off",
+            "true_value": "on",
+            "false_value": "off"
+          },
+          "label": {
+            "en": "Vegetarian Mode",
+            "fr": "Mode végétarien"
+          },
+          "description": {
+            "en": "When enabled, enemy mutants only appear at night and stay away during daylight hours.",
+            "fr": "Lorsqu'activé, les mutants ennemis n'apparaissent que la nuit et restent à l'écart durant la journée."
+          }
+        },
+        "resetHolesMode": {
+          "display_type": "boolean",
+          "config": {
+            "default": "off",
+            "true_value": "on",
+            "false_value": "off"
+          },
+          "label": {
+            "en": "Reset Holes on Load",
+            "fr": "Réinitialiser les trous au chargement"
+          },
+          "description": {
+            "en": "When enabled, holes dug into the terrain are filled back in each time the world loads, repairing landscape damage.",
+            "fr": "Lorsqu'activé, les trous creusés dans le terrain sont rebouchés à chaque chargement du monde, réparant les dégâts du paysage."
+          }
+        },
+        "treeRegrowMode": {
+          "display_type": "boolean",
+          "config": {
+            "default": "on",
+            "true_value": "on",
+            "false_value": "off"
+          },
+          "label": {
+            "en": "Tree Regrowth on Load",
+            "fr": "Repousse des arbres au chargement"
+          },
+          "description": {
+            "en": "When enabled, a portion of chopped-down trees regrow each time the world is reloaded, replenishing wood over time.",
+            "fr": "Lorsqu'activé, une partie des arbres abattus repousse à chaque rechargement du monde, reconstituant le bois au fil du temps."
+          }
+        },
+        "allowBuildingDestruction": {
+          "display_type": "boolean",
+          "config": {
+            "default": "on",
+            "true_value": "on",
+            "false_value": "off"
+          },
+          "label": {
+            "en": "Allow Building Destruction",
+            "fr": "Autoriser la destruction des constructions"
+          },
+          "description": {
+            "en": "When enabled, enemies and the environment can damage and destroy player-built structures. Disable it to make bases indestructible.",
+            "fr": "Lorsqu'activé, les ennemis et l'environnement peuvent endommager et détruire les structures construites par les joueurs. Désactivez-le pour rendre les bases indestructibles."
+          }
+        },
+        "allowEnemiesCreativeMode": {
+          "display_type": "boolean",
+          "config": {
+            "default": "off",
+            "true_value": "on",
+            "false_value": "off"
+          },
+          "label": {
+            "en": "Enemies in Creative Mode",
+            "fr": "Ennemis en mode créatif"
+          },
+          "description": {
+            "en": "When enabled, hostile mutants still spawn even while the world is running in creative mode.",
+            "fr": "Lorsqu'activé, les mutants hostiles continuent d'apparaître même lorsque le monde tourne en mode créatif."
+          }
+        },
+        "allowCheats": {
+          "display_type": "boolean",
+          "config": {
+            "default": "off",
+            "true_value": "on",
+            "false_value": "off"
+          },
+          "label": {
+            "en": "Allow Cheats",
+            "fr": "Autoriser les triches"
+          },
+          "description": {
+            "en": "When enabled, players may use developer console cheat commands on the server. Leave off for fair survival play.",
+            "fr": "Lorsqu'activé, les joueurs peuvent utiliser les commandes de triche de la console développeur sur le serveur. Laissez désactivé pour une survie équitable."
+          }
+        },
+        "realisticPlayerDamage": {
+          "display_type": "boolean",
+          "config": {
+            "default": "off",
+            "true_value": "on",
+            "false_value": "off"
+          },
+          "label": {
+            "en": "Realistic Player Damage",
+            "fr": "Dégâts réalistes aux joueurs"
+          },
+          "description": {
+            "en": "When enabled, players take more punishing, lifelike damage from falls and attacks, raising the survival challenge.",
+            "fr": "Lorsqu'activé, les joueurs subissent des dégâts plus punitifs et réalistes lors des chutes et des attaques, augmentant le défi de survie."
+          }
+        },
+        "targetFpsIdle": {
+          "display_type": "number",
+          "config": {
+            "default": "5",
+            "min": 1,
+            "max": 120
+          },
+          "label": {
+            "en": "Target FPS (Idle)",
+            "fr": "FPS cible (au repos)"
+          },
+          "description": {
+            "en": "Frame rate the server simulates when no player is connected. A low value such as 5 saves CPU while the server is empty.",
+            "fr": "Fréquence d'images que le serveur simule lorsqu'aucun joueur n'est connecté. Une valeur basse comme 5 économise le processeur quand le serveur est vide."
+          }
+        },
+        "targetFpsActive": {
+          "display_type": "number",
+          "config": {
+            "default": "60",
+            "min": 1,
+            "max": 120
+          },
+          "label": {
+            "en": "Target FPS (Active)",
+            "fr": "FPS cible (actif)"
+          },
+          "description": {
+            "en": "Frame rate the server simulates while at least one player is connected. Higher values give smoother gameplay at the cost of CPU.",
+            "fr": "Fréquence d'images que le serveur simule lorsqu'au moins un joueur est connecté. Des valeurs plus élevées offrent un jeu plus fluide au prix de davantage de processeur."
+          }
+        }
+      }
+    }
+  ]
+}

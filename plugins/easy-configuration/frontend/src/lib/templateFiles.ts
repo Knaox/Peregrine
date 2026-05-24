@@ -16,6 +16,31 @@ function isParamDef(value: unknown): value is Json {
     return typeof value === 'object' && value !== null && 'display_type' in (value as Json);
 }
 
+/**
+ * Append a blank file block, preserving every existing file and its parameters
+ * (the spread guarantees the rest of the template is untouched).
+ */
+export function appendBlankFile(files: Json[]): Json[] {
+    return [...files, { id: 'new-file', path: '', format: 'properties', label: {}, parameters: {} }];
+}
+
+/** Immutably set a top-level string field (id/path/format) on a file. */
+export function setFileField(file: Json, field: 'id' | 'path' | 'format', value: string): Json {
+    return { ...file, [field]: value };
+}
+
+/** Immutably set/clear the `expanded_by_default` flag (cleared when false → clean JSON). */
+export function setExpandedByDefault(file: Json, on: boolean): Json {
+    const clone = { ...file };
+    if (on) {
+        clone.expanded_by_default = true;
+    } else {
+        delete clone.expanded_by_default;
+    }
+
+    return clone;
+}
+
 function params(file: Json): Json {
     return (file.parameters ?? {}) as Json;
 }

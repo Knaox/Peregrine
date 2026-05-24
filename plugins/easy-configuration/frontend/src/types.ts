@@ -71,6 +71,10 @@ export interface ConfigFile {
     sectioned: boolean;
     /** Friendly FR/EN names per native section (ini/toml), keyed by raw name. */
     section_labels?: Record<string, LocaleLabel> | null;
+    /** Admin-set: start this file expanded in the player editor (base = collapsed). */
+    expanded_by_default?: boolean;
+    /** Admin-set: per-section expanded override (key = raw section name). */
+    section_expanded?: Record<string, boolean> | null;
     parameters: ConfigParam[];
 }
 

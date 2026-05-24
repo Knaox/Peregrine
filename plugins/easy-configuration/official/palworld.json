@@ -1,0 +1,1659 @@
+{
+  "id": "palworld",
+  "version": "1.0.0",
+  "name": {
+    "en": "Palworld",
+    "fr": "Palworld"
+  },
+  "description": {
+    "en": "Complete server rules & settings for Palworld — rates, capture, breeding, base camps, guilds, PvP, crossplay, RCON/REST and more, with clear bilingual labels (PalWorldSettings.ini).",
+    "fr": "Règles et paramètres serveur complets pour Palworld — taux, capture, élevage, camps de base, guildes, JcJ, crossplay, RCON/REST et plus, avec des libellés bilingues clairs (PalWorldSettings.ini)."
+  },
+  "author": "Peregrine",
+  "target_eggs": [],
+  "columns": 3,
+  "boost": {
+    "enabled": true,
+    "parameter_blacklist": [
+      "Difficulty",
+      "RandomizerType",
+      "RandomizerSeed",
+      "bIsRandomizerPalLevelRandom",
+      "DeathPenalty",
+      "bEnablePlayerToPlayerDamage",
+      "bEnableFriendlyFire",
+      "bEnableInvaderEnemy",
+      "bActiveUNKO",
+      "bEnableAimAssistPad",
+      "bEnableAimAssistKeyboard",
+      "bAutoResetGuildNoOnlinePlayers",
+      "bIsMultiplay",
+      "bIsPvP",
+      "bHardcore",
+      "bPalLost",
+      "bCharacterRecreateInHardcore",
+      "bCanPickupOtherGuildDeathPenaltyDrop",
+      "bEnableNonLoginPenalty",
+      "bEnableFastTravel",
+      "bEnableFastTravelOnlyBaseCamp",
+      "bIsStartLocationSelectByMap",
+      "bExistPlayerAfterLogout",
+      "bEnableDefenseOtherGuildPlayer",
+      "bInvisibleOtherGuildBaseCampAreaFX",
+      "bBuildAreaLimit",
+      "ServerName",
+      "ServerDescription",
+      "AdminPassword",
+      "ServerPassword",
+      "PublicPort",
+      "PublicIP",
+      "RCONEnabled",
+      "RCONPort",
+      "Region",
+      "bUseAuth",
+      "BanListURL",
+      "RESTAPIEnabled",
+      "RESTAPIPort",
+      "bShowPlayerList",
+      "CrossplayPlatforms",
+      "bIsUseBackupSaveData",
+      "LogFormatType",
+      "bIsShowJoinLeftMessage",
+      "EnablePredatorBossPal"
+    ]
+  },
+  "files": [
+    {
+      "id": "palworldsettings",
+      "path": "Pal/Saved/Config/WindowsServer/PalWorldSettings.ini",
+      "format": "palworld",
+      "enabled": true,
+      "label": {
+        "en": "World settings",
+        "fr": "Réglages du monde"
+      },
+      "section_labels": {
+        "/Script/Pal.PalGameWorldSettings": {
+          "en": "Game options",
+          "fr": "Options de jeu"
+        }
+      },
+      "parameters": {
+        "/Script/Pal.PalGameWorldSettings": {
+          "Difficulty": {
+            "display_type": "select",
+            "config": {
+              "default": "None",
+              "options": [
+                {
+                  "value": "None",
+                  "label": {
+                    "en": "None (use rates below)",
+                    "fr": "Aucune (utiliser les taux ci-dessous)"
+                  }
+                },
+                {
+                  "value": "Easy",
+                  "label": {
+                    "en": "Easy",
+                    "fr": "Facile"
+                  }
+                },
+                {
+                  "value": "Normal",
+                  "label": {
+                    "en": "Normal",
+                    "fr": "Normal"
+                  }
+                },
+                {
+                  "value": "Hard",
+                  "label": {
+                    "en": "Hard",
+                    "fr": "Difficile"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Difficulty preset",
+              "fr": "Préréglage de difficulté"
+            },
+            "description": {
+              "en": "Overall difficulty preset. Leave on None to keep manual control through the individual rate sliders below; other presets apply Palworld's built-in balance.",
+              "fr": "Préréglage de difficulté global. Laissez sur Aucune pour garder le contrôle manuel via les curseurs de taux ci-dessous ; les autres préréglages appliquent l'équilibrage intégré de Palworld."
+            }
+          },
+          "RandomizerType": {
+            "display_type": "select",
+            "config": {
+              "default": "None",
+              "options": [
+                {
+                  "value": "None",
+                  "label": {
+                    "en": "None",
+                    "fr": "Aucun"
+                  }
+                },
+                {
+                  "value": "Region",
+                  "label": {
+                    "en": "Region",
+                    "fr": "Région"
+                  }
+                },
+                {
+                  "value": "All",
+                  "label": {
+                    "en": "All",
+                    "fr": "Tout"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Pal randomizer mode",
+              "fr": "Mode aléatoire des Pals"
+            },
+            "description": {
+              "en": "Controls how wild Pal spawns are shuffled: None disables it, Region reshuffles within each area, All fully randomizes spawns across the map.",
+              "fr": "Contrôle le brassage des apparitions de Pals sauvages : Aucun le désactive, Région rebrasse dans chaque zone, Tout rend totalement aléatoires les apparitions sur la carte."
+            }
+          },
+          "RandomizerSeed": {
+            "display_type": "text",
+            "config": {
+              "default": null,
+              "max_length": 64
+            },
+            "label": {
+              "en": "Randomizer seed",
+              "fr": "Graine de l'aléatoire"
+            },
+            "description": {
+              "en": "Seed used by the Pal randomizer; the same seed reproduces the same shuffle. Leave empty for a random seed.",
+              "fr": "Graine utilisée par l'aléatoire des Pals ; une même graine reproduit le même brassage. Laissez vide pour une graine aléatoire."
+            }
+          },
+          "bIsRandomizerPalLevelRandom": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Randomize Pal levels",
+              "fr": "Niveaux de Pals aléatoires"
+            },
+            "description": {
+              "en": "When enabled, wild Pal levels are fully random instead of being constrained to each area's intended level range.",
+              "fr": "Lorsqu'activé, les niveaux des Pals sauvages sont totalement aléatoires au lieu d'être limités à la plage de niveaux prévue pour chaque zone."
+            }
+          },
+          "DayTimeSpeedRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0.1,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Daytime speed",
+              "fr": "Vitesse du jour"
+            },
+            "description": {
+              "en": "Scales how fast in-game daytime passes; higher values make daytime shorter.",
+              "fr": "Ajuste la vitesse d'écoulement du jour en jeu ; des valeurs plus élevées raccourcissent la journée."
+            }
+          },
+          "NightTimeSpeedRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0.1,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Nighttime speed",
+              "fr": "Vitesse de la nuit"
+            },
+            "description": {
+              "en": "Scales how fast in-game nighttime passes; higher values make the night shorter.",
+              "fr": "Ajuste la vitesse d'écoulement de la nuit en jeu ; des valeurs plus élevées raccourcissent la nuit."
+            }
+          },
+          "ExpRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Experience rate",
+              "fr": "Taux d'expérience"
+            },
+            "description": {
+              "en": "Multiplies the experience players and Pals earn; higher values level them up faster.",
+              "fr": "Multiplie l'expérience gagnée par les joueurs et les Pals ; des valeurs plus élevées les font monter de niveau plus vite."
+            }
+          },
+          "PalCaptureRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Pal capture rate",
+              "fr": "Taux de capture des Pals"
+            },
+            "description": {
+              "en": "Multiplies the success rate of capturing wild Pals with Pal Spheres; higher values make captures easier.",
+              "fr": "Multiplie le taux de réussite de capture des Pals sauvages avec les Sphères ; des valeurs plus élevées facilitent les captures."
+            }
+          },
+          "PalSpawnNumRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Pal spawn rate",
+              "fr": "Taux d'apparition des Pals"
+            },
+            "description": {
+              "en": "Multiplies how many wild Pals spawn in the world; higher values make the map more densely populated.",
+              "fr": "Multiplie le nombre de Pals sauvages qui apparaissent dans le monde ; des valeurs plus élevées peuplent la carte plus densément."
+            }
+          },
+          "PalDamageRateAttack": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Pal damage dealt",
+              "fr": "Dégâts infligés par les Pals"
+            },
+            "description": {
+              "en": "Multiplies the damage Pals deal with their attacks.",
+              "fr": "Multiplie les dégâts infligés par les Pals avec leurs attaques."
+            }
+          },
+          "PalDamageRateDefense": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Pal damage taken",
+              "fr": "Dégâts subis par les Pals"
+            },
+            "description": {
+              "en": "Multiplies the damage Pals take; higher values make Pals more fragile.",
+              "fr": "Multiplie les dégâts subis par les Pals ; des valeurs plus élevées les rendent plus fragiles."
+            }
+          },
+          "PlayerDamageRateAttack": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player damage dealt",
+              "fr": "Dégâts infligés par les joueurs"
+            },
+            "description": {
+              "en": "Multiplies the damage players deal with their attacks.",
+              "fr": "Multiplie les dégâts infligés par les joueurs avec leurs attaques."
+            }
+          },
+          "PlayerDamageRateDefense": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player damage taken",
+              "fr": "Dégâts subis par les joueurs"
+            },
+            "description": {
+              "en": "Multiplies the damage players take; higher values make players more fragile.",
+              "fr": "Multiplie les dégâts subis par les joueurs ; des valeurs plus élevées les rendent plus fragiles."
+            }
+          },
+          "PlayerStomachDecreaceRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player hunger drain",
+              "fr": "Perte de satiété du joueur"
+            },
+            "description": {
+              "en": "Multiplies how quickly a player's hunger gauge decreases; lower values mean players need to eat less often.",
+              "fr": "Multiplie la vitesse à laquelle la jauge de faim d'un joueur diminue ; des valeurs plus basses obligent les joueurs à manger moins souvent."
+            }
+          },
+          "PlayerStaminaDecreaceRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player stamina drain",
+              "fr": "Perte d'endurance du joueur"
+            },
+            "description": {
+              "en": "Multiplies how quickly a player's stamina is consumed while sprinting, gliding or climbing.",
+              "fr": "Multiplie la vitesse de consommation de l'endurance d'un joueur en courant, planant ou grimpant."
+            }
+          },
+          "PlayerAutoHPRegeneRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player HP regen",
+              "fr": "Régénération PV du joueur"
+            },
+            "description": {
+              "en": "Multiplies how fast a player's health regenerates over time.",
+              "fr": "Multiplie la vitesse de régénération des points de vie d'un joueur au fil du temps."
+            }
+          },
+          "PlayerAutoHpRegeneRateInSleep": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player HP regen (sleeping)",
+              "fr": "Régénération PV du joueur (sommeil)"
+            },
+            "description": {
+              "en": "Multiplies how fast a player's health regenerates while sleeping in a bed.",
+              "fr": "Multiplie la vitesse de régénération des points de vie d'un joueur pendant qu'il dort dans un lit."
+            }
+          },
+          "PalStomachDecreaceRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Pal hunger drain",
+              "fr": "Perte de satiété des Pals"
+            },
+            "description": {
+              "en": "Multiplies how quickly a Pal's hunger gauge decreases; lower values mean Pals need feeding less often.",
+              "fr": "Multiplie la vitesse à laquelle la jauge de faim d'un Pal diminue ; des valeurs plus basses obligent à nourrir les Pals moins souvent."
+            }
+          },
+          "PalStaminaDecreaceRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Pal stamina drain",
+              "fr": "Perte d'endurance des Pals"
+            },
+            "description": {
+              "en": "Multiplies how quickly a Pal's stamina is consumed during activity.",
+              "fr": "Multiplie la vitesse de consommation de l'endurance d'un Pal pendant l'activité."
+            }
+          },
+          "PalAutoHPRegeneRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Pal HP regen",
+              "fr": "Régénération PV des Pals"
+            },
+            "description": {
+              "en": "Multiplies how fast a Pal's health regenerates over time.",
+              "fr": "Multiplie la vitesse de régénération des points de vie d'un Pal au fil du temps."
+            }
+          },
+          "PalAutoHpRegeneRateInSleep": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Pal HP regen (in box)",
+              "fr": "Régénération PV des Pals (en boîte)"
+            },
+            "description": {
+              "en": "Multiplies how fast a Pal's health regenerates while resting in the Palbox.",
+              "fr": "Multiplie la vitesse de régénération des points de vie d'un Pal pendant qu'il se repose dans la Palbox."
+            }
+          },
+          "BuildObjectHpRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Structure HP",
+              "fr": "PV des structures"
+            },
+            "description": {
+              "en": "Multiplies the maximum health of player-built structures; higher values make bases tougher.",
+              "fr": "Multiplie les points de vie maximum des structures construites par les joueurs ; des valeurs plus élevées rendent les bases plus résistantes."
+            }
+          },
+          "BuildObjectDamageRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Structure damage",
+              "fr": "Dégâts aux structures"
+            },
+            "description": {
+              "en": "Multiplies the damage dealt to player-built structures.",
+              "fr": "Multiplie les dégâts infligés aux structures construites par les joueurs."
+            }
+          },
+          "BuildObjectDeteriorationDamageRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Structure decay rate",
+              "fr": "Vitesse de détérioration des structures"
+            },
+            "description": {
+              "en": "Multiplies how fast structures deteriorate over time; set to 0 to disable decay entirely.",
+              "fr": "Multiplie la vitesse de détérioration des structures au fil du temps ; réglez sur 0 pour désactiver entièrement la dégradation."
+            }
+          },
+          "CollectionDropRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Gatherable drop amount",
+              "fr": "Quantité récoltée des gisements"
+            },
+            "description": {
+              "en": "Multiplies the quantity of items dropped when harvesting gatherable objects such as trees and ore.",
+              "fr": "Multiplie la quantité d'objets obtenus en récoltant des éléments comme les arbres et le minerai."
+            }
+          },
+          "CollectionObjectHpRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Gatherable HP",
+              "fr": "PV des gisements"
+            },
+            "description": {
+              "en": "Multiplies the health of gatherable objects; higher values take more hits to harvest.",
+              "fr": "Multiplie les points de vie des éléments récoltables ; des valeurs plus élevées demandent plus de coups pour récolter."
+            }
+          },
+          "CollectionObjectRespawnSpeedRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Gatherable respawn speed",
+              "fr": "Vitesse de réapparition des gisements"
+            },
+            "description": {
+              "en": "Multiplies how quickly harvested gatherable objects respawn in the world.",
+              "fr": "Multiplie la vitesse de réapparition des éléments récoltables dans le monde."
+            }
+          },
+          "EnemyDropItemRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Enemy drop amount",
+              "fr": "Quantité de butin des ennemis"
+            },
+            "description": {
+              "en": "Multiplies the quantity of items dropped by defeated enemies and Pals.",
+              "fr": "Multiplie la quantité d'objets lâchés par les ennemis et les Pals vaincus."
+            }
+          },
+          "DeathPenalty": {
+            "display_type": "select",
+            "config": {
+              "default": "All",
+              "options": [
+                {
+                  "value": "None",
+                  "label": {
+                    "en": "None (keep everything)",
+                    "fr": "Aucune (tout conserver)"
+                  }
+                },
+                {
+                  "value": "Item",
+                  "label": {
+                    "en": "Drop items only",
+                    "fr": "Perdre les objets seulement"
+                  }
+                },
+                {
+                  "value": "ItemAndEquipment",
+                  "label": {
+                    "en": "Drop items & equipment",
+                    "fr": "Perdre objets et équipement"
+                  }
+                },
+                {
+                  "value": "All",
+                  "label": {
+                    "en": "Drop everything (incl. Pals)",
+                    "fr": "Tout perdre (Pals inclus)"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Death penalty",
+              "fr": "Pénalité de mort"
+            },
+            "description": {
+              "en": "Determines what a player drops on death: nothing, only items, items and equipment, or everything including Pals on their belt.",
+              "fr": "Détermine ce qu'un joueur perd à sa mort : rien, seulement les objets, les objets et l'équipement, ou tout y compris les Pals à sa ceinture."
+            }
+          },
+          "bEnablePlayerToPlayerDamage": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Player-vs-player damage",
+              "fr": "Dégâts entre joueurs"
+            },
+            "description": {
+              "en": "When enabled, players can damage each other directly.",
+              "fr": "Lorsqu'activé, les joueurs peuvent se blesser directement entre eux."
+            }
+          },
+          "bEnableFriendlyFire": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Friendly fire",
+              "fr": "Tirs amis"
+            },
+            "description": {
+              "en": "When enabled, players can damage members of their own guild.",
+              "fr": "Lorsqu'activé, les joueurs peuvent blesser les membres de leur propre guilde."
+            }
+          },
+          "bEnableInvaderEnemy": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Enable raids",
+              "fr": "Activer les raids"
+            },
+            "description": {
+              "en": "When enabled, hostile factions and Pals periodically raid player base camps.",
+              "fr": "Lorsqu'activé, des factions et des Pals hostiles attaquent périodiquement les camps de base des joueurs."
+            }
+          },
+          "bActiveUNKO": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Enable UNKO content",
+              "fr": "Activer le contenu UNKO"
+            },
+            "description": {
+              "en": "Enables special UNKO (debug/easter-egg) content; normally left off for regular play.",
+              "fr": "Active le contenu spécial UNKO (débogage/clin d'œil) ; normalement laissé désactivé en jeu normal."
+            }
+          },
+          "bEnableAimAssistPad": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Aim assist (gamepad)",
+              "fr": "Aide à la visée (manette)"
+            },
+            "description": {
+              "en": "When enabled, controller players get aim assist when targeting enemies.",
+              "fr": "Lorsqu'activé, les joueurs à la manette bénéficient d'une aide à la visée pour cibler les ennemis."
+            }
+          },
+          "bEnableAimAssistKeyboard": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Aim assist (keyboard)",
+              "fr": "Aide à la visée (clavier)"
+            },
+            "description": {
+              "en": "When enabled, keyboard and mouse players also get aim assist when targeting enemies.",
+              "fr": "Lorsqu'activé, les joueurs au clavier et à la souris bénéficient également d'une aide à la visée pour cibler les ennemis."
+            }
+          },
+          "DropItemMaxNum": {
+            "display_type": "number",
+            "config": {
+              "min": 0,
+              "max": 10000,
+              "default": "3000"
+            },
+            "label": {
+              "en": "Max dropped items",
+              "fr": "Objets au sol maximum"
+            },
+            "description": {
+              "en": "Maximum number of dropped item stacks that can exist in the world at once before the oldest ones disappear.",
+              "fr": "Nombre maximum de piles d'objets au sol pouvant exister simultanément dans le monde avant que les plus anciennes ne disparaissent."
+            }
+          },
+          "DropItemMaxNum_UNKO": {
+            "display_type": "number",
+            "config": {
+              "min": 0,
+              "max": 10000,
+              "default": "100"
+            },
+            "label": {
+              "en": "Max dropped items (UNKO)",
+              "fr": "Objets au sol maximum (UNKO)"
+            },
+            "description": {
+              "en": "Maximum number of UNKO-type dropped items allowed in the world at once.",
+              "fr": "Nombre maximum d'objets au sol de type UNKO autorisés simultanément dans le monde."
+            }
+          },
+          "BaseCampMaxNum": {
+            "display_type": "number",
+            "config": {
+              "min": 1,
+              "max": 1000,
+              "default": "128"
+            },
+            "label": {
+              "en": "Max base camps",
+              "fr": "Camps de base maximum"
+            },
+            "description": {
+              "en": "Maximum total number of base camps that can exist on the map at once.",
+              "fr": "Nombre total maximum de camps de base pouvant exister simultanément sur la carte."
+            }
+          },
+          "BaseCampWorkerMaxNum": {
+            "display_type": "number",
+            "config": {
+              "min": 1,
+              "max": 50,
+              "default": "15"
+            },
+            "label": {
+              "en": "Max workers per base",
+              "fr": "Ouvriers maximum par base"
+            },
+            "description": {
+              "en": "Maximum number of Pals that can be assigned to work in a single base camp.",
+              "fr": "Nombre maximum de Pals pouvant être assignés au travail dans un même camp de base."
+            }
+          },
+          "DropItemAliveMaxHours": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 240,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Dropped item lifetime (hours)",
+              "fr": "Durée de vie des objets au sol (heures)"
+            },
+            "description": {
+              "en": "How long, in hours, dropped items remain in the world before despawning.",
+              "fr": "Durée, en heures, pendant laquelle les objets au sol restent dans le monde avant de disparaître."
+            }
+          },
+          "bAutoResetGuildNoOnlinePlayers": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Auto-reset inactive guilds",
+              "fr": "Réinitialiser les guildes inactives"
+            },
+            "description": {
+              "en": "When enabled, a guild is automatically disbanded after none of its members have logged in for the time set below.",
+              "fr": "Lorsqu'activé, une guilde est automatiquement dissoute si aucun de ses membres ne s'est connecté pendant la durée définie ci-dessous."
+            }
+          },
+          "AutoResetGuildTimeNoOnlinePlayers": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 720,
+              "step": 0.1,
+              "float": true,
+              "default": "72.0"
+            },
+            "label": {
+              "en": "Guild reset delay (hours)",
+              "fr": "Délai de réinitialisation de guilde (heures)"
+            },
+            "description": {
+              "en": "Number of hours of total guild inactivity before the guild is auto-reset, when that option is enabled.",
+              "fr": "Nombre d'heures d'inactivité totale d'une guilde avant sa réinitialisation automatique, lorsque cette option est activée."
+            }
+          },
+          "GuildPlayerMaxNum": {
+            "display_type": "number",
+            "config": {
+              "min": 1,
+              "max": 100,
+              "default": "20"
+            },
+            "label": {
+              "en": "Max players per guild",
+              "fr": "Joueurs maximum par guilde"
+            },
+            "description": {
+              "en": "Maximum number of players allowed to belong to a single guild.",
+              "fr": "Nombre maximum de joueurs autorisés à appartenir à une même guilde."
+            }
+          },
+          "BaseCampMaxNumInGuild": {
+            "display_type": "number",
+            "config": {
+              "min": 1,
+              "max": 50,
+              "default": "4"
+            },
+            "label": {
+              "en": "Max base camps per guild",
+              "fr": "Camps de base maximum par guilde"
+            },
+            "description": {
+              "en": "Maximum number of base camps a single guild is allowed to own at the same time.",
+              "fr": "Nombre maximum de camps de base qu'une même guilde peut posséder simultanément."
+            }
+          },
+          "PalEggDefaultHatchingTime": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 240,
+              "step": 0.1,
+              "float": true,
+              "default": "72.0"
+            },
+            "label": {
+              "en": "Egg hatching time (hours)",
+              "fr": "Temps d'éclosion des œufs (heures)"
+            },
+            "description": {
+              "en": "Base incubation time, in hours, for a Pal egg to hatch; lower values make breeding far faster.",
+              "fr": "Temps d'incubation de base, en heures, pour qu'un œuf de Pal éclose ; des valeurs plus basses accélèrent fortement l'élevage."
+            }
+          },
+          "WorkSpeedRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Work speed",
+              "fr": "Vitesse de travail"
+            },
+            "description": {
+              "en": "Multiplies how fast Pals perform tasks such as crafting, mining and farming at a base camp.",
+              "fr": "Multiplie la vitesse à laquelle les Pals accomplissent les tâches comme l'artisanat, le minage et l'agriculture dans un camp de base."
+            }
+          },
+          "AutoSaveSpan": {
+            "display_type": "slider",
+            "config": {
+              "min": 1,
+              "max": 240,
+              "step": 0.1,
+              "float": true,
+              "default": "30.0"
+            },
+            "label": {
+              "en": "Auto-save interval (minutes)",
+              "fr": "Intervalle de sauvegarde auto (minutes)"
+            },
+            "description": {
+              "en": "How often, in minutes, the server automatically saves world progress to disk.",
+              "fr": "Fréquence, en minutes, à laquelle le serveur sauvegarde automatiquement la progression du monde sur le disque."
+            }
+          },
+          "bIsMultiplay": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Local multiplayer",
+              "fr": "Multijoueur local"
+            },
+            "description": {
+              "en": "Enables local multiplayer (split host) mode; leave off for a normal dedicated server.",
+              "fr": "Active le mode multijoueur local (hôte partagé) ; laissez désactivé pour un serveur dédié normal."
+            }
+          },
+          "bIsPvP": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "PvP mode",
+              "fr": "Mode JcJ"
+            },
+            "description": {
+              "en": "Enables player-versus-player combat features on the server.",
+              "fr": "Active les fonctionnalités de combat joueur contre joueur sur le serveur."
+            }
+          },
+          "bHardcore": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Hardcore mode",
+              "fr": "Mode hardcore"
+            },
+            "description": {
+              "en": "When enabled, player death is permanent: the character is lost instead of respawning.",
+              "fr": "Lorsqu'activé, la mort du joueur est définitive : le personnage est perdu au lieu de réapparaître."
+            }
+          },
+          "bPalLost": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Lose Pals on death",
+              "fr": "Perdre les Pals à la mort"
+            },
+            "description": {
+              "en": "When enabled, Pals carried by a player are permanently lost when that player dies.",
+              "fr": "Lorsqu'activé, les Pals portés par un joueur sont définitivement perdus lorsque ce joueur meurt."
+            }
+          },
+          "bCharacterRecreateInHardcore": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Recreate character in hardcore",
+              "fr": "Recréer le personnage en hardcore"
+            },
+            "description": {
+              "en": "In hardcore mode, lets a player recreate their character after a permanent death instead of being locked out.",
+              "fr": "En mode hardcore, permet à un joueur de recréer son personnage après une mort définitive au lieu d'en être exclu."
+            }
+          },
+          "bCanPickupOtherGuildDeathPenaltyDrop": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Loot other guilds' death drops",
+              "fr": "Ramasser le butin de mort d'autres guildes"
+            },
+            "description": {
+              "en": "When enabled, players can pick up the items dropped on death by members of other guilds.",
+              "fr": "Lorsqu'activé, les joueurs peuvent ramasser les objets lâchés à la mort par les membres d'autres guildes."
+            }
+          },
+          "bEnableNonLoginPenalty": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Inactivity penalty",
+              "fr": "Pénalité d'inactivité"
+            },
+            "description": {
+              "en": "When enabled, players who do not log in for a long time receive an in-game penalty.",
+              "fr": "Lorsqu'activé, les joueurs qui ne se connectent pas pendant longtemps subissent une pénalité en jeu."
+            }
+          },
+          "bEnableFastTravel": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Enable fast travel",
+              "fr": "Activer le voyage rapide"
+            },
+            "description": {
+              "en": "When enabled, players can fast-travel between discovered statues and fast-travel points.",
+              "fr": "Lorsqu'activé, les joueurs peuvent voyager rapidement entre les statues et points de voyage rapide découverts."
+            }
+          },
+          "bEnableFastTravelOnlyBaseCamp": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Fast travel from base only",
+              "fr": "Voyage rapide depuis la base uniquement"
+            },
+            "description": {
+              "en": "When enabled, fast travel can only be initiated from a player's own base camp.",
+              "fr": "Lorsqu'activé, le voyage rapide ne peut être lancé que depuis le propre camp de base du joueur."
+            }
+          },
+          "bIsStartLocationSelectByMap": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Choose start on map",
+              "fr": "Choisir le départ sur la carte"
+            },
+            "description": {
+              "en": "When enabled, new players pick their starting location from the map instead of a fixed spawn point.",
+              "fr": "Lorsqu'activé, les nouveaux joueurs choisissent leur point de départ sur la carte au lieu d'un point d'apparition fixe."
+            }
+          },
+          "bExistPlayerAfterLogout": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Body stays after logout",
+              "fr": "Le corps reste après déconnexion"
+            },
+            "description": {
+              "en": "When enabled, a player's body remains in the world after they log out, leaving them vulnerable.",
+              "fr": "Lorsqu'activé, le corps d'un joueur reste dans le monde après sa déconnexion, le laissant vulnérable."
+            }
+          },
+          "bEnableDefenseOtherGuildPlayer": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Defend against other guilds",
+              "fr": "Défense contre les autres guildes"
+            },
+            "description": {
+              "en": "When enabled, base defenses will attack players from other guilds who enter the area.",
+              "fr": "Lorsqu'activé, les défenses de base attaquent les joueurs des autres guildes qui pénètrent dans la zone."
+            }
+          },
+          "bInvisibleOtherGuildBaseCampAreaFX": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Hide other bases' area FX",
+              "fr": "Masquer les effets de zone des autres bases"
+            },
+            "description": {
+              "en": "When enabled, the area boundary visual effect of other guilds' base camps is hidden.",
+              "fr": "Lorsqu'activé, l'effet visuel délimitant la zone des camps de base des autres guildes est masqué."
+            }
+          },
+          "bBuildAreaLimit": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Limit build area",
+              "fr": "Limiter la zone de construction"
+            },
+            "description": {
+              "en": "When enabled, restricts how far structures can be built around a base camp.",
+              "fr": "Lorsqu'activé, restreint la distance sur laquelle des structures peuvent être construites autour d'un camp de base."
+            }
+          },
+          "ItemWeightRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Item weight",
+              "fr": "Poids des objets"
+            },
+            "description": {
+              "en": "Multiplies the carry weight of items; lower values let players carry more before being encumbered.",
+              "fr": "Multiplie le poids de portage des objets ; des valeurs plus basses permettent de porter davantage avant d'être encombré."
+            }
+          },
+          "CoopPlayerMaxNum": {
+            "display_type": "number",
+            "config": {
+              "min": 1,
+              "max": 32,
+              "default": "4"
+            },
+            "label": {
+              "en": "Max co-op party size",
+              "fr": "Taille maximum du groupe coop"
+            },
+            "description": {
+              "en": "Maximum number of players that can team up in a single co-operative party.",
+              "fr": "Nombre maximum de joueurs pouvant former un même groupe coopératif."
+            }
+          },
+          "ServerPlayerMaxNum": {
+            "display_type": "number",
+            "config": {
+              "min": 1,
+              "max": 32,
+              "default": "32"
+            },
+            "label": {
+              "en": "Max players",
+              "fr": "Joueurs maximum"
+            },
+            "description": {
+              "en": "Maximum number of players that can be connected to the server at the same time.",
+              "fr": "Nombre maximum de joueurs pouvant être connectés au serveur en même temps."
+            }
+          },
+          "ServerName": {
+            "display_type": "text",
+            "config": {
+              "default": "Default Palworld Server",
+              "max_length": 64
+            },
+            "label": {
+              "en": "Server name",
+              "fr": "Nom du serveur"
+            },
+            "description": {
+              "en": "The public name of the server shown in the in-game community server browser.",
+              "fr": "Le nom public du serveur affiché dans la liste des serveurs communautaires du jeu."
+            }
+          },
+          "ServerDescription": {
+            "display_type": "textarea",
+            "config": {
+              "default": null,
+              "max_length": 256
+            },
+            "label": {
+              "en": "Server description",
+              "fr": "Description du serveur"
+            },
+            "description": {
+              "en": "A short description of the server shown alongside its name in the server browser.",
+              "fr": "Une courte description du serveur affichée à côté de son nom dans la liste des serveurs."
+            }
+          },
+          "AdminPassword": {
+            "display_type": "text",
+            "config": {
+              "default": null,
+              "max_length": 128
+            },
+            "label": {
+              "en": "Admin password",
+              "fr": "Mot de passe administrateur"
+            },
+            "description": {
+              "en": "Password granting in-game admin command access; should be long and secret.",
+              "fr": "Mot de passe donnant accès aux commandes administrateur en jeu ; il doit être long et secret."
+            }
+          },
+          "ServerPassword": {
+            "display_type": "text",
+            "config": {
+              "default": null,
+              "max_length": 128
+            },
+            "label": {
+              "en": "Server password",
+              "fr": "Mot de passe du serveur"
+            },
+            "description": {
+              "en": "Password players must enter to join the server; leave empty for a public server.",
+              "fr": "Mot de passe que les joueurs doivent saisir pour rejoindre le serveur ; laissez vide pour un serveur public."
+            }
+          },
+          "PublicPort": {
+            "display_type": "number",
+            "config": {
+              "min": 1,
+              "max": 65535,
+              "default": "8211"
+            },
+            "label": {
+              "en": "Public port",
+              "fr": "Port public"
+            },
+            "description": {
+              "en": "UDP game port advertised to players and used for incoming connections.",
+              "fr": "Port de jeu UDP annoncé aux joueurs et utilisé pour les connexions entrantes."
+            }
+          },
+          "PublicIP": {
+            "display_type": "text",
+            "config": {
+              "default": null,
+              "max_length": 64
+            },
+            "label": {
+              "en": "Public IP",
+              "fr": "IP publique"
+            },
+            "description": {
+              "en": "Public IP address advertised to players; leave empty to detect it automatically.",
+              "fr": "Adresse IP publique annoncée aux joueurs ; laissez vide pour la détecter automatiquement."
+            }
+          },
+          "RCONEnabled": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Enable RCON",
+              "fr": "Activer RCON"
+            },
+            "description": {
+              "en": "Enables the remote console (RCON) protocol for administering the server externally.",
+              "fr": "Active le protocole de console distante (RCON) pour administrer le serveur depuis l'extérieur."
+            }
+          },
+          "RCONPort": {
+            "display_type": "number",
+            "config": {
+              "min": 1,
+              "max": 65535,
+              "default": "25575"
+            },
+            "label": {
+              "en": "RCON port",
+              "fr": "Port RCON"
+            },
+            "description": {
+              "en": "Network port on which the server listens for RCON connections.",
+              "fr": "Port réseau sur lequel le serveur écoute les connexions RCON."
+            }
+          },
+          "Region": {
+            "display_type": "text",
+            "config": {
+              "default": null,
+              "max_length": 32
+            },
+            "label": {
+              "en": "Region",
+              "fr": "Région"
+            },
+            "description": {
+              "en": "Optional region code used by the community server listing; leave empty for default.",
+              "fr": "Code de région facultatif utilisé par la liste des serveurs communautaires ; laissez vide pour la valeur par défaut."
+            }
+          },
+          "bUseAuth": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Require authentication",
+              "fr": "Exiger l'authentification"
+            },
+            "description": {
+              "en": "When enabled, players must be authenticated through the platform to join; disabling is not recommended.",
+              "fr": "Lorsqu'activé, les joueurs doivent être authentifiés via la plateforme pour rejoindre ; la désactivation est déconseillée."
+            }
+          },
+          "BanListURL": {
+            "display_type": "text",
+            "config": {
+              "default": "https://b.palworldgame.com/api/banlist.txt",
+              "max_length": 256
+            },
+            "label": {
+              "en": "Ban list URL",
+              "fr": "URL de la liste de bannissement"
+            },
+            "description": {
+              "en": "URL of the shared ban list the server checks; defaults to the official Palworld ban list.",
+              "fr": "URL de la liste de bannissement partagée que le serveur consulte ; pointe par défaut vers la liste officielle de Palworld."
+            }
+          },
+          "RESTAPIEnabled": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Enable REST API",
+              "fr": "Activer l'API REST"
+            },
+            "description": {
+              "en": "Enables the built-in REST API for remote administration over HTTP.",
+              "fr": "Active l'API REST intégrée pour l'administration à distance via HTTP."
+            }
+          },
+          "RESTAPIPort": {
+            "display_type": "number",
+            "config": {
+              "min": 1,
+              "max": 65535,
+              "default": "8212"
+            },
+            "label": {
+              "en": "REST API port",
+              "fr": "Port de l'API REST"
+            },
+            "description": {
+              "en": "Network port on which the server exposes its REST API.",
+              "fr": "Port réseau sur lequel le serveur expose son API REST."
+            }
+          },
+          "bShowPlayerList": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Show player list",
+              "fr": "Afficher la liste des joueurs"
+            },
+            "description": {
+              "en": "When enabled, the server publishes its current player list to the community listing.",
+              "fr": "Lorsqu'activé, le serveur publie sa liste de joueurs actuelle dans la liste communautaire."
+            }
+          },
+          "ChatPostLimitPerMinute": {
+            "display_type": "number",
+            "config": {
+              "min": 1,
+              "max": 600,
+              "default": "30"
+            },
+            "label": {
+              "en": "Chat rate limit (per minute)",
+              "fr": "Limite de chat (par minute)"
+            },
+            "description": {
+              "en": "Maximum number of chat messages a player may send per minute, used to curb spam.",
+              "fr": "Nombre maximum de messages de chat qu'un joueur peut envoyer par minute, pour limiter le spam."
+            }
+          },
+          "CrossplayPlatforms": {
+            "display_type": "text",
+            "config": {
+              "default": "(Steam,Xbox,PS5,Mac)",
+              "max_length": 64
+            },
+            "label": {
+              "en": "Crossplay platforms",
+              "fr": "Plateformes crossplay"
+            },
+            "description": {
+              "en": "Tuple of platforms allowed to connect, e.g. (Steam,Xbox,PS5,Mac). Remove entries to restrict crossplay; keep the parentheses.",
+              "fr": "Liste des plateformes autorisées à se connecter, ex. (Steam,Xbox,PS5,Mac). Retirez des entrées pour restreindre le crossplay ; conservez les parenthèses."
+            }
+          },
+          "bIsUseBackupSaveData": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Keep save backups",
+              "fr": "Conserver les sauvegardes de secours"
+            },
+            "description": {
+              "en": "When enabled, the server keeps periodic backups of the save data for recovery.",
+              "fr": "Lorsqu'activé, le serveur conserve des sauvegardes périodiques des données pour pouvoir restaurer."
+            }
+          },
+          "LogFormatType": {
+            "display_type": "select",
+            "config": {
+              "default": "Text",
+              "options": [
+                {
+                  "value": "Text",
+                  "label": {
+                    "en": "Text (readable)",
+                    "fr": "Texte (lisible)"
+                  }
+                },
+                {
+                  "value": "Json",
+                  "label": {
+                    "en": "JSON (structured)",
+                    "fr": "JSON (structuré)"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Log format",
+              "fr": "Format des journaux"
+            },
+            "description": {
+              "en": "Format used for server log output: plain readable Text or structured JSON for tooling.",
+              "fr": "Format utilisé pour la sortie des journaux du serveur : texte lisible ou JSON structuré pour l'outillage."
+            }
+          },
+          "bIsShowJoinLeftMessage": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Show join/leave messages",
+              "fr": "Afficher les messages d'arrivée/départ"
+            },
+            "description": {
+              "en": "When enabled, a chat message is broadcast whenever a player joins or leaves the server.",
+              "fr": "Lorsqu'activé, un message de chat est diffusé chaque fois qu'un joueur rejoint ou quitte le serveur."
+            }
+          },
+          "SupplyDropSpan": {
+            "display_type": "number",
+            "config": {
+              "min": 0,
+              "max": 1440,
+              "default": "180"
+            },
+            "label": {
+              "en": "Supply drop interval (minutes)",
+              "fr": "Intervalle des largages (minutes)"
+            },
+            "description": {
+              "en": "How often, in minutes, meteorite supply drops appear on the map.",
+              "fr": "Fréquence, en minutes, à laquelle les largages de ravitaillement par météorite apparaissent sur la carte."
+            }
+          },
+          "EnablePredatorBossPal": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Enable Predator Pals",
+              "fr": "Activer les Pals prédateurs"
+            },
+            "description": {
+              "en": "When enabled, powerful Predator boss Pals can appear in the world as rare high-level encounters.",
+              "fr": "Lorsqu'activé, de puissants Pals boss prédateurs peuvent apparaître dans le monde comme rencontres rares de haut niveau."
+            }
+          },
+          "MaxBuildingLimitNum": {
+            "display_type": "number",
+            "config": {
+              "min": 0,
+              "max": 100000,
+              "default": "0"
+            },
+            "label": {
+              "en": "Max structures per base",
+              "fr": "Structures maximum par base"
+            },
+            "description": {
+              "en": "Maximum number of structures allowed per base camp; set to 0 for no limit.",
+              "fr": "Nombre maximum de structures autorisées par camp de base ; réglez sur 0 pour aucune limite."
+            }
+          },
+          "ServerReplicatePawnCullDistance": {
+            "display_type": "slider",
+            "config": {
+              "min": 1000,
+              "max": 30000,
+              "step": 100,
+              "float": true,
+              "default": "15000.0"
+            },
+            "label": {
+              "en": "Pawn replication distance",
+              "fr": "Distance de réplication des entités"
+            },
+            "description": {
+              "en": "Distance, in centimeters, beyond which the server stops replicating pawns to clients; lower values can reduce network load at the cost of visible range.",
+              "fr": "Distance, en centimètres, au-delà de laquelle le serveur cesse de répliquer les entités vers les clients ; des valeurs plus basses réduisent la charge réseau au prix de la portée visible."
+            }
+          },
+          "EquipmentDurabilityDamageRate": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Equipment durability loss",
+              "fr": "Usure de la durabilité de l'équipement"
+            },
+            "description": {
+              "en": "Multiplies how quickly equipment loses durability with use; set to 0 to disable durability loss.",
+              "fr": "Multiplie la vitesse à laquelle l'équipement perd sa durabilité à l'usage ; réglez sur 0 pour désactiver l'usure."
+            }
+          },
+          "ItemContainerForceMarkDirtyInterval": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 60,
+              "step": 0.1,
+              "float": true,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Container sync interval",
+              "fr": "Intervalle de synchro des conteneurs"
+            },
+            "description": {
+              "en": "How often, in seconds, item container contents are force-synced; an advanced performance tuning value best left at default.",
+              "fr": "Fréquence, en secondes, à laquelle le contenu des conteneurs d'objets est forcé à se synchroniser ; valeur d'optimisation avancée, à laisser par défaut."
+            }
+          }
+        }
+      }
+    }
+  ]
+}

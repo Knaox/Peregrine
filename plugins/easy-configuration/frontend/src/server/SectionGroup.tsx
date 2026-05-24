@@ -1,13 +1,14 @@
 import clsx from 'clsx';
 import { ChevronDown } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { useCollapsed } from './useCollapsed';
 
 /**
- * Collapsible section block. Open by default; the collapsed state is persisted
- * in localStorage per (server, file, section) so a player's layout sticks.
- * `forceCollapsed` (server running) overrides the UI to closed and locks the
- * toggle WITHOUT touching localStorage — so the player's own layout is restored
- * unchanged once the server is offline again.
+ * Collapsible section block. The initial state comes from the template
+ * (`expandedByDefault`, base collapsed); the player's manual toggle is persisted
+ * in localStorage per (server, file, section). `forceCollapsed` (server running)
+ * overrides the UI to closed and locks the toggle without touching localStorage,
+ * so the player's own layout is restored once the server is offline again.
  */
 /** Body class for the chosen column layout (1 = list, 2/3 = responsive grid). */
 export function sectionBodyClass(columns?: number): string {
@@ -20,6 +21,7 @@ export function SectionGroup({
     count,
     children,
     forceCollapsed = false,
+    expandedByDefault = false,
     columns,
 }: {
     title: ReactNode;
@@ -27,33 +29,10 @@ export function SectionGroup({
     count?: number;
     children: ReactNode;
     forceCollapsed?: boolean;
+    expandedByDefault?: boolean;
     columns?: number;
 }) {
-    const [open, setOpen] = useState<boolean>(() => {
-        try {
-            return localStorage.getItem(storageKey) !== '0';
-        } catch {
-            return true;
-        }
-    });
-
-    const isOpen = forceCollapsed ? false : open;
-
-    const toggle = (): void => {
-        if (forceCollapsed) {
-            return;
-        }
-        setOpen((current) => {
-            const next = !current;
-            try {
-                localStorage.setItem(storageKey, next ? '1' : '0');
-            } catch {
-                /* localStorage unavailable — keep in-memory only */
-            }
-
-            return next;
-        });
-    };
+    const { isOpen, toggle } = useCollapsed(storageKey, expandedByDefault, forceCollapsed);
 
     return (
         <div className={clsx('ec-section-group', !isOpen && 'ec-section-collapsed')}>
