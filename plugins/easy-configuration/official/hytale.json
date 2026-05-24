@@ -1,6 +1,6 @@
 {
   "id": "hytale",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": {
     "en": "Hytale",
     "fr": "Hytale"
@@ -301,7 +301,7 @@
     },
     {
       "id": "world-config",
-      "path": "universe/worlds/world/config.json",
+      "path": "universe/worlds/default/config.json",
       "format": "json",
       "label": {
         "en": "World settings",
@@ -380,18 +380,32 @@
             "fr": "Nom du préréglage de générateur à utiliser (s'applique uniquement au type de générateur Hytale) ; « Default » utilise la configuration de terrain d'origine."
           }
         },
-        "WorldGen.Path": {
+        "WorldGen.Version": {
           "display_type": "text",
           "config": {
-            "default": null
+            "default": "0.0.0"
           },
           "label": {
-            "en": "Generator Config Path",
-            "fr": "Chemin de configuration du générateur"
+            "en": "Generator Version",
+            "fr": "Version du générateur"
           },
           "description": {
-            "en": "Optional path to a custom world-generation configuration (Hytale generator type only). Leave empty to use the server default.",
-            "fr": "Chemin optionnel vers une configuration de génération de monde personnalisée (type de générateur Hytale uniquement). Laissez vide pour utiliser la valeur par défaut du serveur."
+            "en": "Internal version of the world generator used to build this world. Maintained automatically by the server — do not change it by hand.",
+            "fr": "Version interne du générateur de monde utilisé pour construire ce monde. Maintenue automatiquement par le serveur — ne la modifiez pas à la main."
+          }
+        },
+        "WorldMap.Type": {
+          "display_type": "text",
+          "config": {
+            "default": "WorldGen"
+          },
+          "label": {
+            "en": "World Map Type",
+            "fr": "Type de carte du monde"
+          },
+          "description": {
+            "en": "Backend that produces the world map; leave on the native \"WorldGen\" value unless a plugin documents an alternative.",
+            "fr": "Backend qui produit la carte du monde ; laissez la valeur native « WorldGen » sauf si un plugin documente une alternative."
           }
         },
         "ChunkStorage.Type": {
@@ -406,36 +420,6 @@
           "description": {
             "en": "Backend used to store the world's chunk (block) data; leave on the native \"Hytale\" value unless a plugin documents an alternative.",
             "fr": "Backend utilisé pour stocker les données de chunks (blocs) du monde ; laissez la valeur native « Hytale » sauf si un plugin documente une alternative."
-          }
-        },
-        "GameMode": {
-          "display_type": "select",
-          "config": {
-            "default": "Adventure",
-            "options": [
-              {
-                "value": "Adventure",
-                "label": {
-                  "en": "Adventure",
-                  "fr": "Aventure"
-                }
-              },
-              {
-                "value": "Creative",
-                "label": {
-                  "en": "Creative",
-                  "fr": "Créatif"
-                }
-              }
-            ]
-          },
-          "label": {
-            "en": "World Game Mode",
-            "fr": "Mode de jeu du monde"
-          },
-          "description": {
-            "en": "Default game mode applied to players in this specific world; overrides the server-wide default for this world only.",
-            "fr": "Mode de jeu par défaut appliqué aux joueurs dans ce monde précis ; remplace le réglage par défaut du serveur pour ce monde uniquement."
           }
         },
         "GameplayConfig": {
@@ -546,36 +530,128 @@
             "fr": "Heure actuelle du jour en jeu sous forme d'horodatage ISO-8601 (la partie date est ignorée) ; par exemple 05:30 représente le petit matin."
           }
         },
-        "DaytimeDurationSeconds": {
-          "display_type": "number",
+        "ClientEffects.SunIntensity": {
+          "display_type": "slider",
           "config": {
-            "default": "0",
             "min": 0,
-            "max": 86400
+            "max": 1,
+            "step": 0.01,
+            "default": "0.25",
+            "float": true
           },
           "label": {
-            "en": "Daytime Duration (seconds)",
-            "fr": "Durée du jour (secondes)"
+            "en": "Sun Intensity",
+            "fr": "Intensité du soleil"
           },
           "description": {
-            "en": "Length of the daytime portion of the cycle in real seconds; set to 0 to use the world's default day length.",
-            "fr": "Durée de la phase de jour du cycle en secondes réelles ; réglez sur 0 pour utiliser la durée du jour par défaut du monde."
+            "en": "Brightness of direct sunlight in the world, from 0 (dark) to 1 (very bright); controls how strongly the sun lights the scene.",
+            "fr": "Luminosité de la lumière directe du soleil dans le monde, de 0 (sombre) à 1 (très lumineux) ; contrôle l'intensité avec laquelle le soleil éclaire la scène."
           }
         },
-        "NighttimeDurationSeconds": {
-          "display_type": "number",
+        "ClientEffects.SunHeightPercent": {
+          "display_type": "slider",
           "config": {
-            "default": "0",
             "min": 0,
-            "max": 86400
+            "max": 100,
+            "step": 1,
+            "default": "100"
           },
           "label": {
-            "en": "Nighttime Duration (seconds)",
-            "fr": "Durée de la nuit (secondes)"
+            "en": "Sun Height (%)",
+            "fr": "Hauteur du soleil (%)"
           },
           "description": {
-            "en": "Length of the nighttime portion of the cycle in real seconds; set to 0 to use the world's default night length.",
-            "fr": "Durée de la phase de nuit du cycle en secondes réelles ; réglez sur 0 pour utiliser la durée de la nuit par défaut du monde."
+            "en": "Height of the sun in the sky as a percentage, affecting how high the sun sits and the length of shadows.",
+            "fr": "Hauteur du soleil dans le ciel en pourcentage, influençant la position du soleil et la longueur des ombres."
+          }
+        },
+        "ClientEffects.SunAngleDegrees": {
+          "display_type": "slider",
+          "config": {
+            "min": 0,
+            "max": 360,
+            "step": 1,
+            "default": "0"
+          },
+          "label": {
+            "en": "Sun Angle (degrees)",
+            "fr": "Angle du soleil (degrés)"
+          },
+          "description": {
+            "en": "Direction of the sun around the sky in degrees, which sets the direction shadows are cast.",
+            "fr": "Direction du soleil autour du ciel en degrés, qui définit la direction dans laquelle les ombres sont projetées."
+          }
+        },
+        "ClientEffects.SunshaftIntensity": {
+          "display_type": "slider",
+          "config": {
+            "min": 0,
+            "max": 1,
+            "step": 0.01,
+            "default": "0.3",
+            "float": true
+          },
+          "label": {
+            "en": "Sunshaft Intensity",
+            "fr": "Intensité des rayons solaires"
+          },
+          "description": {
+            "en": "Strength of the visible god-ray sunshafts that stream from the sun, from 0 (off) to 1 (strong).",
+            "fr": "Intensité des rayons solaires visibles (« god rays ») émanant du soleil, de 0 (désactivés) à 1 (intenses)."
+          }
+        },
+        "ClientEffects.SunshaftScaleFactor": {
+          "display_type": "slider",
+          "config": {
+            "min": 0,
+            "max": 16,
+            "step": 0.1,
+            "default": "4.0",
+            "float": true
+          },
+          "label": {
+            "en": "Sunshaft Scale",
+            "fr": "Échelle des rayons solaires"
+          },
+          "description": {
+            "en": "Scale factor applied to the sunshaft effect, controlling how far the god-ray streaks spread from the sun.",
+            "fr": "Facteur d'échelle appliqué à l'effet de rayons solaires, contrôlant jusqu'où les traînées de lumière s'étendent depuis le soleil."
+          }
+        },
+        "ClientEffects.BloomIntensity": {
+          "display_type": "slider",
+          "config": {
+            "min": 0,
+            "max": 1,
+            "step": 0.01,
+            "default": "0.3",
+            "float": true
+          },
+          "label": {
+            "en": "Bloom Intensity",
+            "fr": "Intensité du bloom"
+          },
+          "description": {
+            "en": "Strength of the bloom glow around bright areas, from 0 (off) to 1 (strong halo); a post-processing visual effect.",
+            "fr": "Intensité de la lueur de bloom autour des zones lumineuses, de 0 (désactivée) à 1 (halo intense) ; un effet visuel de post-traitement."
+          }
+        },
+        "ClientEffects.BloomPower": {
+          "display_type": "slider",
+          "config": {
+            "min": 0,
+            "max": 32,
+            "step": 0.1,
+            "default": "8.0",
+            "float": true
+          },
+          "label": {
+            "en": "Bloom Power",
+            "fr": "Puissance du bloom"
+          },
+          "description": {
+            "en": "Falloff curve of the bloom effect; higher values concentrate the glow tightly around the brightest pixels.",
+            "fr": "Courbe d'atténuation de l'effet de bloom ; des valeurs plus élevées concentrent la lueur étroitement autour des pixels les plus lumineux."
           }
         },
         "IsSpawningNPC": {
@@ -754,123 +830,102 @@
             "fr": "Lorsqu'activé, les fichiers du monde sont définitivement supprimés du disque lorsque le monde est retiré de l'univers ; laissez désactivé pour conserver une sauvegarde sur le disque."
           }
         },
-        "ClientEffects.SunIntensity": {
-          "display_type": "slider",
+        "DisabledFluidTickers": {
+          "display_type": "text",
           "config": {
-            "min": 0,
-            "max": 1,
-            "step": 0.01,
-            "default": "0.25"
+            "default": "[]"
           },
           "label": {
-            "en": "Sun Intensity",
-            "fr": "Intensité du soleil"
+            "en": "Disabled Fluid Tickers",
+            "fr": "Tickers de fluides désactivés"
           },
           "description": {
-            "en": "Brightness of direct sunlight in the world, from 0 (dark) to 1 (very bright); controls how strongly the sun lights the scene.",
-            "fr": "Luminosité de la lumière directe du soleil dans le monde, de 0 (sombre) à 1 (très lumineux) ; contrôle l'intensité avec laquelle le soleil éclaire la scène."
+            "en": "Advanced JSON list of fluid simulation tickers to disable in this world; leave as an empty list \"[]\" unless a plugin or guide tells you otherwise.",
+            "fr": "Liste JSON avancée des tickers de simulation de fluides à désactiver dans ce monde ; laissez une liste vide « [] » sauf indication contraire d'un plugin ou d'un guide."
           }
         },
-        "ClientEffects.SunHeightPercent": {
-          "display_type": "slider",
+        "ResourceStorage.Type": {
+          "display_type": "text",
           "config": {
-            "min": 0,
-            "max": 100,
-            "step": 1,
-            "default": "100"
+            "default": "Hytale"
           },
           "label": {
-            "en": "Sun Height (%)",
-            "fr": "Hauteur du soleil (%)"
+            "en": "Resource Storage Type",
+            "fr": "Type de stockage des ressources"
           },
           "description": {
-            "en": "Height of the sun in the sky as a percentage, affecting how high the sun sits and the length of shadows.",
-            "fr": "Hauteur du soleil dans le ciel en pourcentage, influençant la position du soleil et la longueur des ombres."
+            "en": "Backend used to store the world's resource data; leave on the native \"Hytale\" value unless a plugin documents an alternative.",
+            "fr": "Backend utilisé pour stocker les données de ressources du monde ; laissez la valeur native « Hytale » sauf si un plugin documente une alternative."
           }
         },
-        "ClientEffects.SunAngleDegrees": {
-          "display_type": "slider",
+        "RequiredPlugins": {
+          "display_type": "text",
           "config": {
-            "min": 0,
-            "max": 360,
-            "step": 1,
-            "default": "0"
+            "default": "[]"
           },
           "label": {
-            "en": "Sun Angle (degrees)",
-            "fr": "Angle du soleil (degrés)"
+            "en": "Required Plugins",
+            "fr": "Plugins requis"
           },
           "description": {
-            "en": "Direction of the sun around the sky in degrees, which sets the direction shadows are cast.",
-            "fr": "Direction du soleil autour du ciel en degrés, qui définit la direction dans laquelle les ombres sont projetées."
+            "en": "JSON list of plugins this world requires to load. Normally managed by the plugins themselves — leave as an empty list \"[]\" unless you know what you're adding.",
+            "fr": "Liste JSON des plugins que ce monde nécessite pour se charger. Normalement gérée par les plugins eux-mêmes — laissez une liste vide « [] » sauf si vous savez ce que vous ajoutez."
           }
         },
-        "ClientEffects.SunshaftIntensity": {
-          "display_type": "slider",
+        "ChunkConfig": {
+          "display_type": "text",
           "config": {
-            "min": 0,
-            "max": 1,
-            "step": 0.01,
-            "default": "0.3"
+            "default": "[]"
           },
           "label": {
-            "en": "Sunshaft Intensity",
-            "fr": "Intensité des rayons solaires"
+            "en": "Chunk Configuration (advanced)",
+            "fr": "Configuration des chunks (avancé)"
           },
           "description": {
-            "en": "Strength of the visible god-ray sunshafts that stream from the sun, from 0 (off) to 1 (strong).",
-            "fr": "Intensité des rayons solaires visibles (« god rays ») émanant du soleil, de 0 (désactivés) à 1 (intenses)."
+            "en": "Advanced raw JSON list of per-chunk overrides maintained by the engine; leave as an empty list \"[]\" unless a guide instructs otherwise.",
+            "fr": "Liste JSON brute avancée de surcharges par chunk maintenue par le moteur ; laissez une liste vide « [] » sauf indication contraire d'un guide."
           }
         },
-        "ClientEffects.SunshaftScaleFactor": {
-          "display_type": "slider",
+        "Plugin": {
+          "display_type": "text",
           "config": {
-            "min": 0,
-            "max": 16,
-            "step": 0.1,
-            "default": "4.0"
+            "default": "[]"
           },
           "label": {
-            "en": "Sunshaft Scale",
-            "fr": "Échelle des rayons solaires"
+            "en": "Plugin Data (advanced)",
+            "fr": "Données de plugin (avancé)"
           },
           "description": {
-            "en": "Scale factor applied to the sunshaft effect, controlling how far the god-ray streaks spread from the sun.",
-            "fr": "Facteur d'échelle appliqué à l'effet de rayons solaires, contrôlant jusqu'où les traînées de lumière s'étendent depuis le soleil."
+            "en": "Advanced raw JSON list holding per-world plugin data; written by plugins. Leave as an empty list \"[]\" unless a plugin documents a value.",
+            "fr": "Liste JSON brute avancée contenant les données de plugin propres au monde ; écrite par les plugins. Laissez une liste vide « [] » sauf si un plugin documente une valeur."
           }
         },
-        "ClientEffects.BloomIntensity": {
-          "display_type": "slider",
+        "UUID.$binary": {
+          "display_type": "text",
           "config": {
-            "min": 0,
-            "max": 1,
-            "step": 0.01,
-            "default": "0.3"
+            "default": null
           },
           "label": {
-            "en": "Bloom Intensity",
-            "fr": "Intensité du bloom"
+            "en": "World UUID (binary)",
+            "fr": "UUID du monde (binaire)"
           },
           "description": {
-            "en": "Strength of the bloom glow around bright areas, from 0 (off) to 1 (strong halo); a post-processing visual effect.",
-            "fr": "Intensité de la lueur de bloom autour des zones lumineuses, de 0 (désactivée) à 1 (halo intense) ; un effet visuel de post-traitement."
+            "en": "Internal unique identifier of this world (base64-encoded). Generated by the server — do not change it by hand or the world may be orphaned.",
+            "fr": "Identifiant unique interne de ce monde (encodé en base64). Généré par le serveur — ne le modifiez pas à la main, au risque d'orpheliner le monde."
           }
         },
-        "ClientEffects.BloomPower": {
-          "display_type": "slider",
+        "UUID.$type": {
+          "display_type": "text",
           "config": {
-            "min": 0,
-            "max": 32,
-            "step": 0.1,
-            "default": "8.0"
+            "default": "04"
           },
           "label": {
-            "en": "Bloom Power",
-            "fr": "Puissance du bloom"
+            "en": "World UUID (type)",
+            "fr": "UUID du monde (type)"
           },
           "description": {
-            "en": "Falloff curve of the bloom effect; higher values concentrate the glow tightly around the brightest pixels.",
-            "fr": "Courbe d'atténuation de l'effet de bloom ; des valeurs plus élevées concentrent la lueur étroitement autour des pixels les plus lumineux."
+            "en": "Internal BSON type tag for the world UUID; maintained automatically by the server — do not change it.",
+            "fr": "Indicateur de type BSON interne de l'UUID du monde ; maintenu automatiquement par le serveur — ne le modifiez pas."
           }
         },
         "Version": {

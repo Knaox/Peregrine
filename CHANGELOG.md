@@ -8,6 +8,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Fixed
+
+- **Easy Configuration → 1.2.3** (plugin-only release, not tied to a panel version). The game-config editor no longer blanks out entirely ("the game server configuration can't be reached") when a *single* config file fails to read: a file that is absent (404) or unreadable (Wings 5xx / timeout / a per-file throttle or bad path) is now skipped, and every config file that loaded is still shown; the full "unreachable" message appears only when *nothing at all* could be read. This bit multi-file templates (e.g. Hytale's server + world configs) where one file's path errored — and it was never a JSON-format problem (the parser tolerates malformed input by design). Also refreshes the bundled **official Hytale template** with a complete, fully bilingual (FR/EN) server + `default`-world schema.
+
 ## [1.0.0-alpha.13c] — 2026-05-24
 
 ### Fixed

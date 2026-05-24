@@ -237,16 +237,21 @@ export function ConfigEditor({
     };
 
     // Files absent on the server aren't shown at all (a config file only exists
-    // once the server has generated it — typically after its first boot).
+    // once the server has generated it — typically after its first boot). A file
+    // that FAILED to read (Wings 5xx / timeout / a throttle or bad path on that
+    // one file) is also skipped here so a single unreadable file no longer blanks
+    // the whole editor — every config that DID load (200) is still shown.
     const fileCards = templates.flatMap((template) =>
         template.files
-            .filter((file) => file.exists !== false)
+            .filter((file) => file.exists !== false && file.read_error !== true)
             .map((file) => ({ key: `${template.id}:${file.id}`, file, columns: template.columns, templateId: template.id })),
     );
 
-    // A read failure (Wings unreachable / timeout) is distinct from a genuinely
-    // absent file: don't hide the config, tell the player it can't be reached.
-    const unreachable = templates.some((template) => template.files.some((file) => file.read_error === true));
+    // Only declare the whole section unreachable when NOTHING could be read AND
+    // at least one file errored (a genuine Wings/connectivity problem). If some
+    // files loaded, we render those and silently drop the ones that errored.
+    const anyReadError = templates.some((template) => template.files.some((file) => file.read_error === true));
+    const unreachable = fileCards.length === 0 && anyReadError;
 
     return (
         <div className="ec-stack">
