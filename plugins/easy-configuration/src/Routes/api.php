@@ -45,13 +45,20 @@ Route::middleware(['auth', 'throttle:240,1'])->group(function (): void {
         Route::post('templates', [TemplateController::class, 'store']);
         Route::post('templates/import', [TemplateController::class, 'import']);
         Route::post('templates/import-official', [OfficialTemplateController::class, 'import']);
-        // Static segment BEFORE {id} so it isn't captured as a template id.
+        // `{id}` is constrained to digits so the static `import` / `import-official`
+        // / `example` segments can never be captured as a template id. Declaration
+        // order alone is enough at runtime (first-match wins) but NOT under
+        // `php artisan route:cache` (run in the prod Docker image): the compiled
+        // Symfony matcher lets the unconstrained `{id}` wildcard shadow the static
+        // POST routes, so `POST templates/import-official` 405'd in production with
+        // "Supported methods: GET, HEAD, PUT, DELETE". The whereNumber() guard makes
+        // the routing identical in dev and prod. (Template ids are `$table->id()`.)
         Route::get('templates/example', [TemplateController::class, 'example']);
-        Route::get('templates/{id}', [TemplateController::class, 'show']);
-        Route::put('templates/{id}', [TemplateController::class, 'update']);
-        Route::post('templates/{id}/parameters', [TemplateController::class, 'addParameter']);
-        Route::delete('templates/{id}', [TemplateController::class, 'destroy']);
-        Route::get('templates/{id}/export', [TemplateController::class, 'export']);
+        Route::get('templates/{id}', [TemplateController::class, 'show'])->whereNumber('id');
+        Route::put('templates/{id}', [TemplateController::class, 'update'])->whereNumber('id');
+        Route::post('templates/{id}/parameters', [TemplateController::class, 'addParameter'])->whereNumber('id');
+        Route::delete('templates/{id}', [TemplateController::class, 'destroy'])->whereNumber('id');
+        Route::get('templates/{id}/export', [TemplateController::class, 'export'])->whereNumber('id');
         Route::get('eggs', [EggCatalogController::class, 'index']);
         Route::get('eggs/{egg}/env-vars', [EggCatalogController::class, 'envVars']);
 

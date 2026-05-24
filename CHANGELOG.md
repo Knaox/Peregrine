@@ -8,6 +8,12 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.13b] — 2026-05-24
+
+### Fixed
+
+- **Easy Configuration → 1.2.1.** Importing the official template catalog failed in production — `POST …/admin/templates/import-official` returned `405 (Supported methods: GET, HEAD, PUT, DELETE)`. Under `php artisan route:cache` (run in the prod Docker image) the unconstrained `templates/{id}` wildcard shadowed the static `import-official` / `import` / `example` POST routes; declaration order alone only protects the un-cached dev matcher, which is why it worked locally but not in prod. The `{id}` routes are now constrained to digits (`whereNumber('id')`) so the static routes resolve identically in dev and prod. Note: imported templates were never at risk — they live in `storage/app/easy-config/templates` (outside the plugin directory), so they already persist across plugin updates.
+
 ## [1.0.0-alpha.13] — 2026-05-24
 
 ### Added
