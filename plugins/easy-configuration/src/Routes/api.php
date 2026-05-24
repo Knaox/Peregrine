@@ -45,20 +45,23 @@ Route::middleware(['auth', 'throttle:240,1'])->group(function (): void {
         Route::post('templates', [TemplateController::class, 'store']);
         Route::post('templates/import', [TemplateController::class, 'import']);
         Route::post('templates/import-official', [OfficialTemplateController::class, 'import']);
-        // `{id}` is constrained to digits so the static `import` / `import-official`
-        // / `example` segments can never be captured as a template id. Declaration
-        // order alone is enough at runtime (first-match wins) but NOT under
-        // `php artisan route:cache` (run in the prod Docker image): the compiled
-        // Symfony matcher lets the unconstrained `{id}` wildcard shadow the static
-        // POST routes, so `POST templates/import-official` 405'd in production with
-        // "Supported methods: GET, HEAD, PUT, DELETE". The whereNumber() guard makes
-        // the routing identical in dev and prod. (Template ids are `$table->id()`.)
+        // `{id}` accepts any template id — official templates use slug ids
+        // (e.g. `ark-survival-ascended`, stored as `<id>.json` by TemplateStorage),
+        // user templates may be numeric — EXCEPT the reserved static segments
+        // (`import` / `import-official` / `example`). Without this guard the
+        // unconstrained wildcard shadows those static routes once
+        // `php artisan route:cache` compiles them (prod Docker image): the
+        // compiled Symfony matcher doesn't honour declaration order the way the
+        // un-cached dev matcher does, so `POST templates/import-official` 405'd in
+        // production. The exclusion makes routing identical in dev and prod while
+        // still matching slug ids (a plain whereNumber() would 404 every slug id).
+        $templateId = '(?!import-official$|import$|example$)[^/]+';
         Route::get('templates/example', [TemplateController::class, 'example']);
-        Route::get('templates/{id}', [TemplateController::class, 'show'])->whereNumber('id');
-        Route::put('templates/{id}', [TemplateController::class, 'update'])->whereNumber('id');
-        Route::post('templates/{id}/parameters', [TemplateController::class, 'addParameter'])->whereNumber('id');
-        Route::delete('templates/{id}', [TemplateController::class, 'destroy'])->whereNumber('id');
-        Route::get('templates/{id}/export', [TemplateController::class, 'export'])->whereNumber('id');
+        Route::get('templates/{id}', [TemplateController::class, 'show'])->where('id', $templateId);
+        Route::put('templates/{id}', [TemplateController::class, 'update'])->where('id', $templateId);
+        Route::post('templates/{id}/parameters', [TemplateController::class, 'addParameter'])->where('id', $templateId);
+        Route::delete('templates/{id}', [TemplateController::class, 'destroy'])->where('id', $templateId);
+        Route::get('templates/{id}/export', [TemplateController::class, 'export'])->where('id', $templateId);
         Route::get('eggs', [EggCatalogController::class, 'index']);
         Route::get('eggs/{egg}/env-vars', [EggCatalogController::class, 'envVars']);
 

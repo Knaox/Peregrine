@@ -8,6 +8,12 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.13c] — 2026-05-24
+
+### Fixed
+
+- **Easy Configuration → 1.2.2.** Editing a template imported via "Import official" (slug ids such as `ark-survival-ascended`) returned `404` in production. The alpha.13b guard constrained `templates/{id}` to digits (`whereNumber`), which fixed the `import-official` 405 but wrongly rejected the **non-numeric slug ids** that official templates use (they're stored as `<id>.json`). The constraint now excludes only the reserved static segments (`import` / `import-official` / `example`) while accepting both slug and numeric ids — so the official import **and** template editing both work under cached routes. Verified under `php artisan route:cache` for `import-official` (POST), slug ids (GET/PUT/DELETE), `example`, and numeric ids.
+
 ## [1.0.0-alpha.13b] — 2026-05-24
 
 ### Fixed
