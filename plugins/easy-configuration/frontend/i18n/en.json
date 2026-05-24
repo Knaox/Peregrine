@@ -20,7 +20,8 @@
         "general": "General",
         "read_only": "Read-only",
         "no_results": "No setting matches your search.",
-        "no_files_yet": "No configuration file is present yet. They appear once the server has been started at least once."
+        "no_files_yet": "No configuration file is present yet. They appear once the server has been started at least once.",
+        "unreachable": "The game server configuration can't be reached right now. Please wait a moment, or contact the administrator if it persists."
     },
     "save": {
         "save": "Save",

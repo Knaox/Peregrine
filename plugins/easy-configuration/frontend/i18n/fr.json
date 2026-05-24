@@ -20,7 +20,8 @@
         "general": "Général",
         "read_only": "Lecture seule",
         "no_results": "Aucun paramètre ne correspond à votre recherche.",
-        "no_files_yet": "Aucun fichier de configuration n'est encore présent. Ils apparaissent une fois le serveur démarré au moins une fois."
+        "no_files_yet": "Aucun fichier de configuration n'est encore présent. Ils apparaissent une fois le serveur démarré au moins une fois.",
+        "unreachable": "La configuration du serveur de jeu n'est pas joignable pour le moment. Veuillez patienter, ou contacter l'administrateur si cela persiste."
     },
     "save": {
         "save": "Enregistrer",

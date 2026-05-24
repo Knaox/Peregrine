@@ -68,6 +68,8 @@ export interface ConfigFile {
     path: string;
     format: string;
     exists: boolean;
+    /** The file couldn't be read (Wings unreachable / read error) — distinct from genuinely absent. */
+    read_error?: boolean;
     sectioned: boolean;
     /** Friendly FR/EN names per native section (ini/toml), keyed by raw name. */
     section_labels?: Record<string, LocaleLabel> | null;

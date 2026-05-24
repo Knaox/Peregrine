@@ -244,6 +244,10 @@ export function ConfigEditor({
             .map((file) => ({ key: `${template.id}:${file.id}`, file, columns: template.columns, templateId: template.id })),
     );
 
+    // A read failure (Wings unreachable / timeout) is distinct from a genuinely
+    // absent file: don't hide the config, tell the player it can't be reached.
+    const unreachable = templates.some((template) => template.files.some((file) => file.read_error === true));
+
     return (
         <div className="ec-stack">
             <div className="ec-between">
@@ -286,21 +290,29 @@ export function ConfigEditor({
             {running && <RunningBanner state={state} stopping={stopping} onStop={onStop} />}
 
             <div className="ec-stack">
-                <div className="ec-search">
-                    <span className="ec-search-icon">
-                        <Search size={14} />
-                    </span>
-                    <Input value={search} placeholder={t('section.search')} onChange={(event) => setSearch(event.target.value)} />
-                </div>
-
-                {fileCards.length === 0 ? (
+                {unreachable ? (
                     <Card>
-                        <EmptyState>{t('section.no_files_yet')}</EmptyState>
+                        <EmptyState>{t('section.unreachable')}</EmptyState>
                     </Card>
                 ) : (
-                    fileCards.map(({ key, file, columns, templateId }) => (
-                        <FileCard key={key} file={file} controller={controller} serverId={serverId} templateId={templateId} columns={columns} />
-                    ))
+                    <>
+                        <div className="ec-search">
+                            <span className="ec-search-icon">
+                                <Search size={14} />
+                            </span>
+                            <Input value={search} placeholder={t('section.search')} onChange={(event) => setSearch(event.target.value)} />
+                        </div>
+
+                        {fileCards.length === 0 ? (
+                            <Card>
+                                <EmptyState>{t('section.no_files_yet')}</EmptyState>
+                            </Card>
+                        ) : (
+                            fileCards.map(({ key, file, columns, templateId }) => (
+                                <FileCard key={key} file={file} controller={controller} serverId={serverId} templateId={templateId} columns={columns} />
+                            ))
+                        )}
+                    </>
                 )}
             </div>
 
