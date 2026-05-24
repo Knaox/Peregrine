@@ -170,7 +170,10 @@
             "confirm_delete": "Delete template \"{{id}}\"? The JSON file will be removed.",
             "deleted": "Template deleted.",
             "imported": "Template imported.",
-            "import_failed": "Import failed. Check the JSON is valid."
+            "import_failed": "Import failed. Check the JSON is valid.",
+            "import_official": "Import official",
+            "official_imported": "{{ok}} official templates imported, {{skipped}} already present.",
+            "official_failed": "Official import failed."
         },
         "editor": {
             "title_new": "New template",

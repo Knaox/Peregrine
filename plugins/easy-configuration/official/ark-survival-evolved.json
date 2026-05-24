@@ -1,0 +1,3079 @@
+{
+  "id": "ark-survival-evolved",
+  "version": "1.0.0",
+  "name": {
+    "en": "ARK: Survival Evolved",
+    "fr": "ARK: Survival Evolved"
+  },
+  "description": {
+    "en": "Server rules & settings for ARK: Survival Evolved — rates, breeding, tribes, structures, combat multipliers, RCON and more, with clear bilingual labels.",
+    "fr": "Règles et paramètres serveur pour ARK: Survival Evolved — taux, élevage, tribus, structures, multiplicateurs de combat, RCON et plus, avec des libellés bilingues clairs."
+  },
+  "author": "Peregrine Team",
+  "target_eggs": [],
+  "columns": 2,
+  "boost": {
+    "enabled": true,
+    "parameter_blacklist": [
+      "RCONPort",
+      "OverrideOfficialDifficulty",
+      "MaxPlayers"
+    ]
+  },
+  "files": [
+    {
+      "id": "game-ini",
+      "path": "/ShooterGame/Saved/Config/LinuxServer/Game.ini",
+      "format": "ini",
+      "enabled": true,
+      "label": {
+        "en": "Game rules",
+        "fr": "Règles de jeu"
+      },
+      "parameters": {
+        "/script/shootergame.shootergamemode": {
+          "MaxTribeLogs": {
+            "display_type": "number",
+            "config": {
+              "default": "100",
+              "min": 0,
+              "max": 1000
+            },
+            "label": {
+              "en": "Tribe Log Entries",
+              "fr": "Entrées du journal de tribu"
+            },
+            "description": {
+              "en": "Sets how many recent events are kept in each tribe's activity log before old entries are dropped.",
+              "fr": "Définit le nombre d'événements récents conservés dans le journal d'activité de chaque tribu avant que les anciennes entrées ne soient supprimées."
+            }
+          },
+          "bDisableFriendlyFire": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable Friendly Fire",
+              "fr": "Désactiver les tirs amis"
+            },
+            "description": {
+              "en": "When enabled, members of the same tribe or alliance can no longer damage each other or each other's tames and structures.",
+              "fr": "Lorsqu'activé, les membres d'une même tribu ou alliance ne peuvent plus se blesser ni endommager leurs créatures et structures mutuelles."
+            }
+          },
+          "bPvEDisableFriendlyFire": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable Friendly Fire (PvE)",
+              "fr": "Désactiver les tirs amis (JcE)"
+            },
+            "description": {
+              "en": "On PvE servers, prevents tribe and alliance members from harming each other's players, tames and buildings.",
+              "fr": "Sur les serveurs JcE, empêche les membres d'une tribu et d'une alliance de nuire à leurs joueurs, créatures et bâtiments respectifs."
+            }
+          },
+          "bDisableLootCrates": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable Loot Crates",
+              "fr": "Désactiver les caisses de butin"
+            },
+            "description": {
+              "en": "When enabled, the supply drops and loot crates that normally spawn around the map no longer appear.",
+              "fr": "Lorsqu'activé, les largages de ravitaillement et caisses de butin qui apparaissent normalement sur la carte ne sont plus générés."
+            }
+          },
+          "bIncreasePvPRespawnInterval": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Scaling PvP Respawn Delay",
+              "fr": "Délai de réapparition JcJ progressif"
+            },
+            "description": {
+              "en": "When enabled, players who die repeatedly in PvP face a progressively longer respawn wait to discourage zerg-rushing.",
+              "fr": "Lorsqu'activé, les joueurs qui meurent à répétition en JcJ subissent un délai de réapparition de plus en plus long pour décourager les assauts en masse."
+            }
+          },
+          "bForceAllStructureLocking": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Lock New Structures by Default",
+              "fr": "Verrouiller les nouvelles structures par défaut"
+            },
+            "description": {
+              "en": "When enabled, newly placed lockable structures such as doors and storage start locked automatically instead of open.",
+              "fr": "Lorsqu'activé, les structures verrouillables nouvellement posées comme les portes et les coffres démarrent verrouillées automatiquement au lieu d'être ouvertes."
+            }
+          },
+          "bAutoPvETimer": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Scheduled PvE Mode",
+              "fr": "Mode JcE programmé"
+            },
+            "description": {
+              "en": "When enabled, the server automatically switches between PvP and PvE during the configured times of day.",
+              "fr": "Lorsqu'activé, le serveur bascule automatiquement entre JcJ et JcE selon les horaires configurés."
+            }
+          },
+          "MaxNumberOfPlayersInTribe": {
+            "display_type": "number",
+            "config": {
+              "default": "10",
+              "min": 1,
+              "max": 250
+            },
+            "label": {
+              "en": "Max Tribe Members",
+              "fr": "Membres maximum par tribu"
+            },
+            "description": {
+              "en": "Caps how many players can belong to a single tribe; set to 1 to effectively force solo play.",
+              "fr": "Limite le nombre de joueurs pouvant appartenir à une même tribu ; réglez sur 1 pour imposer le jeu en solo."
+            }
+          },
+          "MaxAlliancesPerTribe": {
+            "display_type": "number",
+            "config": {
+              "default": "2",
+              "min": 0,
+              "max": 50
+            },
+            "label": {
+              "en": "Max Alliances per Tribe",
+              "fr": "Alliances maximum par tribu"
+            },
+            "description": {
+              "en": "Limits how many separate alliances a single tribe is allowed to join at the same time.",
+              "fr": "Limite le nombre d'alliances distinctes auxquelles une même tribu peut adhérer simultanément."
+            }
+          },
+          "MaxTribesPerAlliance": {
+            "display_type": "number",
+            "config": {
+              "default": "3",
+              "min": 0,
+              "max": 50
+            },
+            "label": {
+              "en": "Max Tribes per Alliance",
+              "fr": "Tribus maximum par alliance"
+            },
+            "description": {
+              "en": "Limits how many tribes can be grouped together within a single alliance.",
+              "fr": "Limite le nombre de tribus pouvant être regroupées au sein d'une même alliance."
+            }
+          },
+          "bPvEAllowTribeWar": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Tribe Wars (PvE)",
+              "fr": "Autoriser les guerres de tribus (JcE)"
+            },
+            "description": {
+              "en": "When enabled, two tribes on a PvE server can mutually agree to a timed war where they can damage each other.",
+              "fr": "Lorsqu'activé, deux tribus sur un serveur JcE peuvent convenir mutuellement d'une guerre limitée dans le temps durant laquelle elles peuvent s'attaquer."
+            }
+          },
+          "bPvEAllowTribeWarCancel": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Tribe War Cancel (PvE)",
+              "fr": "Autoriser l'annulation de guerre de tribus (JcE)"
+            },
+            "description": {
+              "en": "When enabled, tribes on a PvE server can mutually call off an agreed war before it begins.",
+              "fr": "Lorsqu'activé, les tribus sur un serveur JcE peuvent annuler d'un commun accord une guerre convenue avant qu'elle ne commence."
+            }
+          },
+          "bAllowCustomRecipes": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Custom Recipes",
+              "fr": "Autoriser les recettes personnalisées"
+            },
+            "description": {
+              "en": "When enabled, players can write their own cooking recipes whose potency scales with their Crafting Skill.",
+              "fr": "Lorsqu'activé, les joueurs peuvent rédiger leurs propres recettes de cuisine dont l'efficacité dépend de leur compétence d'artisanat."
+            }
+          },
+          "bUseCorpseLocator": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Show Corpse Locator",
+              "fr": "Afficher le localisateur de cadavre"
+            },
+            "description": {
+              "en": "When enabled, a beam of light marks where a player died so they can find and recover their dropped items.",
+              "fr": "Lorsqu'activé, un faisceau lumineux indique l'endroit où un joueur est mort afin qu'il puisse retrouver et récupérer les objets laissés."
+            }
+          },
+          "bAllowUnlimitedRespecs": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Unlimited Respecs",
+              "fr": "Réinitialisations illimitées"
+            },
+            "description": {
+              "en": "When enabled, players can use the Mindwipe Tonic to reset their stats and engrams as often as they like without the usual cooldown.",
+              "fr": "Lorsqu'activé, les joueurs peuvent utiliser le tonique d'amnésie pour réinitialiser leurs statistiques et engrammes aussi souvent qu'ils le souhaitent, sans le temps de recharge habituel."
+            }
+          },
+          "bAllowPlatformSaddleMultiFloors": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Multi-Floor Platform Saddles",
+              "fr": "Selles-plateformes à plusieurs étages"
+            },
+            "description": {
+              "en": "When enabled, players can stack multiple floors of structures on platform saddles instead of being limited to a single level.",
+              "fr": "Lorsqu'activé, les joueurs peuvent empiler plusieurs étages de structures sur les selles-plateformes au lieu d'être limités à un seul niveau."
+            }
+          },
+          "bDisableGenesisMissions": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable Genesis Missions",
+              "fr": "Désactiver les missions Genesis"
+            },
+            "description": {
+              "en": "When enabled, the Genesis-style mission system is turned off so players cannot start or complete missions.",
+              "fr": "Lorsqu'activé, le système de missions de type Genesis est désactivé, empêchant les joueurs de lancer ou de terminer des missions."
+            }
+          },
+          "bDisableDefaultMapItemSets": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable Default Starter Gear",
+              "fr": "Désactiver l'équipement de départ par défaut"
+            },
+            "description": {
+              "en": "When enabled, the free starting item kits some maps grant on spawn (such as the Tek suit on Genesis 2) are no longer given.",
+              "fr": "Lorsqu'activé, les kits d'objets de départ que certaines cartes offrent à l'apparition (comme la combinaison Tek sur Genesis 2) ne sont plus accordés."
+            }
+          },
+          "bDisableWorldBuffs": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable World Buffs",
+              "fr": "Désactiver les bonus mondiaux"
+            },
+            "description": {
+              "en": "When enabled, the temporary server-wide bonuses normally earned by completing missions are turned off.",
+              "fr": "Lorsqu'activé, les bonus temporaires à l'échelle du serveur normalement obtenus en accomplissant des missions sont désactivés."
+            }
+          },
+          "bEnableWorldBuffScaling": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Scale World Buffs",
+              "fr": "Mettre à l'échelle les bonus mondiaux"
+            },
+            "description": {
+              "en": "When enabled, the strength of server-wide mission buffs is adjusted by the server's stat and rate multipliers instead of using fixed values.",
+              "fr": "Lorsqu'activé, la puissance des bonus de mission à l'échelle du serveur est ajustée par les multiplicateurs de statistiques et de taux du serveur au lieu de valeurs fixes."
+            }
+          },
+          "AdjustableMutagenSpawnDelayMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Mutagen Respawn Delay",
+              "fr": "Délai de réapparition du mutagène"
+            },
+            "description": {
+              "en": "Scales how long Mutagen bulbs take to respawn in the world; lower values make this rare breeding resource regrow more often.",
+              "fr": "Ajuste le temps de réapparition des bulbes de mutagène dans le monde ; des valeurs plus basses font réapparaître plus souvent cette ressource d'élevage rare."
+            }
+          },
+          "BaseHexagonRewardMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Mission Hexagon Reward",
+              "fr": "Récompense en hexagones des missions"
+            },
+            "description": {
+              "en": "Multiplies the amount of Hexagon currency players earn from completing missions.",
+              "fr": "Multiplie la quantité de monnaie hexagone que les joueurs gagnent en accomplissant des missions."
+            }
+          },
+          "HexagonCostMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Hexagon Store Prices",
+              "fr": "Prix de la boutique en hexagones"
+            },
+            "description": {
+              "en": "Multiplies the Hexagon currency price of items bought from the in-game Hexagon store.",
+              "fr": "Multiplie le prix en monnaie hexagone des objets achetés dans la boutique hexagone du jeu."
+            }
+          },
+          "DinoHarvestingDamageMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Tame Harvesting Yield",
+              "fr": "Rendement de récolte des créatures"
+            },
+            "description": {
+              "en": "Multiplies how much damage tamed creatures deal when harvesting, which increases the resources they gather per hit.",
+              "fr": "Multiplie les dégâts infligés par les créatures apprivoisées lors de la récolte, ce qui augmente les ressources qu'elles récoltent par coup."
+            }
+          },
+          "bUseDinoLevelUpAnimations": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Tame Level-Up Animations",
+              "fr": "Animations de montée de niveau des créatures"
+            },
+            "description": {
+              "en": "When enabled, tamed creatures play a visual animation each time they gain a level.",
+              "fr": "Lorsqu'activé, les créatures apprivoisées jouent une animation visuelle à chaque montée de niveau."
+            }
+          },
+          "bAllowUnclaimDinos": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Unclaiming Tames",
+              "fr": "Autoriser l'abandon des créatures"
+            },
+            "description": {
+              "en": "When enabled, players can release ownership of a tamed creature so that another player can claim it.",
+              "fr": "Lorsqu'activé, les joueurs peuvent abandonner la propriété d'une créature apprivoisée afin qu'un autre joueur puisse la revendiquer."
+            }
+          },
+          "StructureDamageRepairCooldown": {
+            "display_type": "number",
+            "config": {
+              "default": "600",
+              "min": 0,
+              "max": 86400
+            },
+            "label": {
+              "en": "Repair Cooldown (seconds)",
+              "fr": "Délai de réparation (secondes)"
+            },
+            "description": {
+              "en": "Sets how many seconds players must wait after a structure takes damage before it can be repaired.",
+              "fr": "Définit le nombre de secondes que les joueurs doivent attendre après qu'une structure a subi des dégâts avant de pouvoir la réparer."
+            }
+          },
+          "PvPZoneStructureDamageMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "PvP Zone Structure Damage",
+              "fr": "Dégâts aux structures en zone JcJ"
+            },
+            "description": {
+              "en": "Multiplies the damage structures take inside designated PvP zones, making bases there easier or harder to destroy.",
+              "fr": "Multiplie les dégâts subis par les structures dans les zones JcJ désignées, rendant les bases plus faciles ou plus difficiles à détruire."
+            }
+          },
+          "bPassiveDefensesDamageRiderlessDinos": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Spikes Hit Riderless Tames",
+              "fr": "Les pics blessent les créatures sans cavalier"
+            },
+            "description": {
+              "en": "When enabled, passive defenses like spike walls can damage wild and tamed creatures even when no one is riding them.",
+              "fr": "Lorsqu'activé, les défenses passives comme les murs à pics peuvent blesser les créatures sauvages et apprivoisées même sans cavalier."
+            }
+          },
+          "bDisableStructurePlacementCollision": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Terrain Clipping",
+              "fr": "Autoriser le chevauchement du terrain"
+            },
+            "description": {
+              "en": "When enabled, structures can be placed overlapping rocks and terrain, allowing building in spots normally blocked by geometry.",
+              "fr": "Lorsqu'activé, les structures peuvent être posées en chevauchant les rochers et le terrain, permettant de construire dans des endroits normalement bloqués par le décor."
+            }
+          },
+          "bLimitTurretsInRange": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Limit Turrets in Range",
+              "fr": "Limiter les tourelles à portée"
+            },
+            "description": {
+              "en": "When enabled, only a capped number of automated turrets may be placed within a given area to prevent excessive turret stacking.",
+              "fr": "Lorsqu'activé, seul un nombre limité de tourelles automatisées peut être placé dans une zone donnée afin d'éviter l'accumulation excessive de tourelles."
+            }
+          },
+          "bHardLimitTurretsInRange": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Strict Turret Limit",
+              "fr": "Limite stricte de tourelles"
+            },
+            "description": {
+              "en": "When enabled, the turret-in-range cap is enforced strictly so extra turrets simply will not activate beyond the limit.",
+              "fr": "Lorsqu'activé, le plafond de tourelles à portée est appliqué de manière stricte, de sorte que les tourelles excédentaires ne s'activent tout simplement pas au-delà de la limite."
+            }
+          },
+          "bIgnoreStructuresPreventionVolumes": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Build in Restricted Zones",
+              "fr": "Construire dans les zones restreintes"
+            },
+            "description": {
+              "en": "When enabled, players can build inside areas such as mission and resource zones that normally block structure placement.",
+              "fr": "Lorsqu'activé, les joueurs peuvent construire dans des zones telles que les zones de mission et de ressources qui empêchent normalement la pose de structures."
+            }
+          },
+          "MatingIntervalMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": "0.01"
+            },
+            "label": {
+              "en": "Mating Cooldown",
+              "fr": "Temps de récupération d'accouplement"
+            },
+            "description": {
+              "en": "Scales the cooldown before a female creature can mate again; lower values let tames breed far more frequently.",
+              "fr": "Ajuste le temps de récupération avant qu'une femelle puisse s'accoupler à nouveau ; des valeurs plus basses permettent aux créatures de se reproduire bien plus fréquemment."
+            }
+          },
+          "MatingSpeedMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "20"
+            },
+            "label": {
+              "en": "Mating Speed",
+              "fr": "Vitesse d'accouplement"
+            },
+            "description": {
+              "en": "Scales how quickly two creatures complete the mating process; higher values make them produce an egg or pregnancy faster.",
+              "fr": "Ajuste la vitesse à laquelle deux créatures terminent l'accouplement ; des valeurs plus élevées leur font produire un œuf ou une gestation plus rapidement."
+            }
+          },
+          "EggHatchSpeedMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "40"
+            },
+            "label": {
+              "en": "Egg Hatch Speed",
+              "fr": "Vitesse d'éclosion des œufs"
+            },
+            "description": {
+              "en": "Scales how fast fertilized eggs incubate and hatch; higher values shorten the wait for a baby to be born.",
+              "fr": "Ajuste la vitesse d'incubation et d'éclosion des œufs fécondés ; des valeurs plus élevées réduisent l'attente avant la naissance d'un bébé."
+            }
+          },
+          "BabyMatureSpeedMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "40"
+            },
+            "label": {
+              "en": "Baby Maturation Speed",
+              "fr": "Vitesse de maturation des bébés"
+            },
+            "description": {
+              "en": "Scales how quickly baby creatures grow into adults; higher values dramatically reduce the time spent raising them.",
+              "fr": "Ajuste la vitesse à laquelle les bébés créatures deviennent adultes ; des valeurs plus élevées réduisent fortement le temps d'élevage."
+            }
+          },
+          "BabyFoodConsumptionSpeedMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Baby Food Consumption Speed",
+              "fr": "Vitesse de consommation de nourriture des bébés"
+            },
+            "description": {
+              "en": "Scales how fast baby and juvenile creatures consume food while growing; lower values make them easier to keep fed.",
+              "fr": "Ajuste la vitesse à laquelle les bébés et juvéniles consomment de la nourriture durant leur croissance ; des valeurs plus basses facilitent leur alimentation."
+            }
+          },
+          "BabyImprintAmountMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "100"
+            },
+            "label": {
+              "en": "Imprint Amount per Care",
+              "fr": "Empreinte gagnée par soin"
+            },
+            "description": {
+              "en": "Scales how much imprint percentage a baby gains from each care action, affecting how easily 100% imprint is reached.",
+              "fr": "Ajuste le pourcentage d'empreinte qu'un bébé gagne à chaque soin, ce qui influe sur la facilité à atteindre 100 % d'empreinte."
+            }
+          },
+          "BabyImprintingStatScaleMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Imprint Stat Bonus Scale",
+              "fr": "Échelle du bonus de statistiques d'empreinte"
+            },
+            "description": {
+              "en": "Scales how strong the stat bonus from imprinting is; higher values make a fully imprinted creature significantly more powerful.",
+              "fr": "Ajuste la puissance du bonus de statistiques issu de l'empreinte ; des valeurs plus élevées rendent une créature pleinement empreinte nettement plus puissante."
+            }
+          },
+          "BabyCuddleIntervalMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": "0.01"
+            },
+            "label": {
+              "en": "Imprint Care Interval",
+              "fr": "Intervalle entre les soins d'empreinte"
+            },
+            "description": {
+              "en": "Scales how often a baby requests care for imprinting; lower values mean shorter waits between cuddle requests.",
+              "fr": "Ajuste la fréquence à laquelle un bébé réclame des soins pour l'empreinte ; des valeurs plus basses raccourcissent l'attente entre les demandes de câlins."
+            }
+          },
+          "BabyCuddleLoseImprintQualitySpeedMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "0.5"
+            },
+            "label": {
+              "en": "Imprint Decay Speed",
+              "fr": "Vitesse de perte d'empreinte"
+            },
+            "description": {
+              "en": "Scales how fast a baby loses imprint quality when a care request is missed; lower values are more forgiving of late care.",
+              "fr": "Ajuste la vitesse à laquelle un bébé perd sa qualité d'empreinte lorsqu'une demande de soin est manquée ; des valeurs plus basses pardonnent davantage les soins tardifs."
+            }
+          },
+          "CropGrowthSpeedMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "3"
+            },
+            "label": {
+              "en": "Crop Growth Speed",
+              "fr": "Vitesse de croissance des cultures"
+            },
+            "description": {
+              "en": "Scales how quickly crops grow in plots; higher values shorten the time before plants are ready to harvest.",
+              "fr": "Ajuste la vitesse de croissance des cultures dans les parcelles ; des valeurs plus élevées réduisent le temps avant que les plantes soient prêtes à être récoltées."
+            }
+          },
+          "PoopIntervalMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Defecation Interval",
+              "fr": "Intervalle de défécation"
+            },
+            "description": {
+              "en": "Scales how frequently players and tamed creatures produce feces; lower values yield fertilizer faster.",
+              "fr": "Ajuste la fréquence à laquelle les joueurs et les créatures apprivoisées produisent des excréments ; des valeurs plus basses produisent de l'engrais plus vite."
+            }
+          },
+          "LayEggIntervalMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Egg Laying Interval",
+              "fr": "Intervalle de ponte"
+            },
+            "description": {
+              "en": "Scales how often tamed creatures lay unfertilized eggs; lower values make egg-layers produce eggs more often.",
+              "fr": "Ajuste la fréquence à laquelle les créatures apprivoisées pondent des œufs non fécondés ; des valeurs plus basses font produire des œufs plus souvent."
+            }
+          },
+          "CustomRecipeEffectivenessMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Custom Recipe Effectiveness",
+              "fr": "Efficacité des recettes personnalisées"
+            },
+            "description": {
+              "en": "Scales how potent the food and effects of player-written custom recipes are.",
+              "fr": "Ajuste la puissance des effets et de la nourriture des recettes personnalisées rédigées par les joueurs."
+            }
+          },
+          "CustomRecipeSkillMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Custom Recipe Skill Influence",
+              "fr": "Influence de la compétence sur les recettes"
+            },
+            "description": {
+              "en": "Scales how much a player's Crafting Skill boosts the quality of their custom recipes.",
+              "fr": "Ajuste l'influence de la compétence d'artisanat d'un joueur sur la qualité de ses recettes personnalisées."
+            }
+          },
+          "SupplyCrateLootQualityMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Supply Drop Loot Quality",
+              "fr": "Qualité du butin des largages"
+            },
+            "description": {
+              "en": "Multiplies the quality of items found in supply drops and loot crates, increasing the chance of higher-tier gear.",
+              "fr": "Multiplie la qualité des objets trouvés dans les largages de ravitaillement et les caisses de butin, augmentant les chances d'obtenir de l'équipement de meilleur niveau."
+            }
+          },
+          "FishingLootQualityMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Fishing Loot Quality",
+              "fr": "Qualité du butin de pêche"
+            },
+            "description": {
+              "en": "Multiplies the quality of items obtained from fishing in a fishing rod.",
+              "fr": "Multiplie la qualité des objets obtenus à la pêche avec une canne à pêche."
+            }
+          },
+          "DinoTurretDamageMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Turret Damage vs Tames",
+              "fr": "Dégâts des tourelles aux créatures"
+            },
+            "description": {
+              "en": "Multiplies the damage automated turrets deal to tamed creatures, used to balance turret strength against mounts in PvP.",
+              "fr": "Multiplie les dégâts que les tourelles automatisées infligent aux créatures apprivoisées, utilisé pour équilibrer la puissance des tourelles face aux montures en JcJ."
+            }
+          },
+          "PerLevelStatsMultiplier_Player[7]": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player Oxygen per Level",
+              "fr": "Oxygène du joueur par niveau"
+            },
+            "description": {
+              "en": "Multiplies how much Oxygen a player gains from each point invested in that stat on level-up.",
+              "fr": "Multiplie la quantité d'oxygène qu'un joueur gagne à chaque point investi dans cette statistique lors d'une montée de niveau."
+            }
+          },
+          "PerLevelStatsMultiplier_DinoTamed[7]": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Tame Oxygen per Level",
+              "fr": "Oxygène des créatures par niveau"
+            },
+            "description": {
+              "en": "Multiplies how much Oxygen a tamed creature gains from each point invested in that stat on level-up.",
+              "fr": "Multiplie la quantité d'oxygène qu'une créature apprivoisée gagne à chaque point investi dans cette statistique lors d'une montée de niveau."
+            }
+          },
+          "MatingSpeedMultiplierPlayerInRange": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Mating Speed (Player Nearby)",
+              "fr": "Vitesse d'accouplement (joueur à proximité)"
+            },
+            "description": {
+              "en": "Additional mating-speed multiplier applied only while a player is standing close to the breeding pair.",
+              "fr": "Multiplicateur de vitesse d'accouplement supplémentaire appliqué uniquement lorsqu'un joueur se tient près du couple en reproduction."
+            }
+          },
+          "ConfigOverrideItemMaxQuantity": {
+            "display_type": "text",
+            "config": {
+              "default": "(ItemClassString=\"PrimalItemResource_CorruptedPolymer_C\",Quantity=(MaxItemQuantity=800, bIgnoreMultiplier=true))"
+            },
+            "label": {
+              "en": "Item Stack Size Override",
+              "fr": "Remplacement de la taille de pile d'objets"
+            },
+            "description": {
+              "en": "Overrides the maximum stack size for a specific item, here setting Corrupted Polymer to stack up to 800 regardless of global stack multipliers.",
+              "fr": "Remplace la taille de pile maximale d'un objet précis, ici en réglant le polymère corrompu pour s'empiler jusqu'à 800 indépendamment des multiplicateurs de pile globaux."
+            }
+          }
+        }
+      },
+      "section_labels": {
+        "/script/shootergame.shootergamemode": {
+          "en": "Game mode",
+          "fr": "Mode de jeu"
+        }
+      }
+    },
+    {
+      "id": "gameusersettings-ini",
+      "path": "/ShooterGame/Saved/Config/LinuxServer/GameUserSettings.ini",
+      "format": "ini",
+      "enabled": true,
+      "label": {
+        "en": "Server settings",
+        "fr": "Paramètres serveur"
+      },
+      "section_whitelist": [
+        "ServerSettings",
+        "SessionSettings",
+        "/Script/Engine.GameSession"
+      ],
+      "parameters": {
+        "ServerSettings": {
+          "XPMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "3"
+            },
+            "label": {
+              "en": "XP Multiplier",
+              "fr": "Multiplicateur d'XP"
+            },
+            "description": {
+              "en": "Scales how fast players and tamed creatures earn experience points.",
+              "fr": "Ajuste la vitesse à laquelle les joueurs et les créatures apprivoisées gagnent des points d'expérience."
+            }
+          },
+          "TamingSpeedMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "13.5"
+            },
+            "label": {
+              "en": "Taming Speed",
+              "fr": "Vitesse d'apprivoisement"
+            },
+            "description": {
+              "en": "Scales how quickly wild creatures are tamed; higher values make taming faster.",
+              "fr": "Ajuste la rapidité avec laquelle les créatures sauvages sont apprivoisées ; des valeurs élevées accélèrent l'apprivoisement."
+            }
+          },
+          "HarvestAmountMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "3"
+            },
+            "label": {
+              "en": "Harvest Amount",
+              "fr": "Quantité de récolte"
+            },
+            "description": {
+              "en": "Scales the amount of resources gathered from each harvest of trees, rocks and other nodes.",
+              "fr": "Ajuste la quantité de ressources obtenues à chaque récolte sur les arbres, rochers et autres gisements."
+            }
+          },
+          "HarvestHealthMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Harvest Node Health",
+              "fr": "Santé des gisements à récolter"
+            },
+            "description": {
+              "en": "Scales the health of harvestable nodes such as trees and rocks; higher values let them be harvested more times before depleting.",
+              "fr": "Ajuste la santé des gisements récoltables comme les arbres et les rochers ; des valeurs plus élevées permettent de les récolter davantage avant épuisement."
+            }
+          },
+          "ResourcesRespawnPeriodMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Resource Respawn Speed",
+              "fr": "Vitesse de réapparition des ressources"
+            },
+            "description": {
+              "en": "Scales how long harvested resource nodes take to respawn; lower values make trees and rocks come back faster.",
+              "fr": "Ajuste le temps de réapparition des gisements de ressources récoltés ; des valeurs plus basses font revenir les arbres et rochers plus vite."
+            }
+          },
+          "PlayerDamageMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player Damage",
+              "fr": "Dégâts des joueurs"
+            },
+            "description": {
+              "en": "Multiplies the damage players deal; values above 1 make survivors hit harder.",
+              "fr": "Multiplie les dégâts infligés par les joueurs ; des valeurs supérieures à 1 rendent les survivants plus puissants."
+            }
+          },
+          "PlayerResistanceMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player Damage Taken",
+              "fr": "Dégâts subis par les joueurs"
+            },
+            "description": {
+              "en": "Multiplies the damage players take; this works inversely, so lower values make survivors more resistant.",
+              "fr": "Multiplie les dégâts subis par les joueurs ; l'effet est inverse, donc des valeurs plus basses rendent les survivants plus résistants."
+            }
+          },
+          "DinoDamageMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Wild Creature Damage",
+              "fr": "Dégâts des créatures sauvages"
+            },
+            "description": {
+              "en": "Multiplies the damage dealt by wild creatures; higher values make the wilderness more dangerous.",
+              "fr": "Multiplie les dégâts infligés par les créatures sauvages ; des valeurs plus élevées rendent la nature plus dangereuse."
+            }
+          },
+          "DinoResistanceMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Wild Creature Damage Taken",
+              "fr": "Dégâts subis par les créatures sauvages"
+            },
+            "description": {
+              "en": "Multiplies the damage wild creatures take; this works inversely, so lower values make them tankier.",
+              "fr": "Multiplie les dégâts subis par les créatures sauvages ; l'effet est inverse, donc des valeurs plus basses les rendent plus résistantes."
+            }
+          },
+          "TamedDinoDamageMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Tamed Creature Damage",
+              "fr": "Dégâts des créatures apprivoisées"
+            },
+            "description": {
+              "en": "Multiplies the damage dealt by tamed creatures; higher values make your tames hit harder.",
+              "fr": "Multiplie les dégâts infligés par les créatures apprivoisées ; des valeurs plus élevées rendent vos créatures plus puissantes."
+            }
+          },
+          "TamedDinoResistanceMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Tamed Creature Damage Taken",
+              "fr": "Dégâts subis par les créatures apprivoisées"
+            },
+            "description": {
+              "en": "Multiplies the damage tamed creatures take; this works inversely, so lower values make your tames more durable.",
+              "fr": "Multiplie les dégâts subis par les créatures apprivoisées ; l'effet est inverse, donc des valeurs plus basses rendent vos créatures plus robustes."
+            }
+          },
+          "StructureDamageMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Structure Damage",
+              "fr": "Dégâts des structures"
+            },
+            "description": {
+              "en": "Multiplies the damage that structures (such as turrets) deal to targets.",
+              "fr": "Multiplie les dégâts que les structures (comme les tourelles) infligent aux cibles."
+            }
+          },
+          "StructureResistanceMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 100,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Structure Damage Taken",
+              "fr": "Dégâts subis par les structures"
+            },
+            "description": {
+              "en": "Multiplies the damage structures take; this works inversely, so lower values make bases harder to destroy.",
+              "fr": "Multiplie les dégâts subis par les structures ; l'effet est inverse, donc des valeurs plus basses rendent les bases plus difficiles à détruire."
+            }
+          },
+          "DinoCountMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Wild Creature Density",
+              "fr": "Densité des créatures sauvages"
+            },
+            "description": {
+              "en": "Scales how many wild creatures spawn across the map; higher values populate the world more densely.",
+              "fr": "Ajuste le nombre de créatures sauvages apparaissant sur la carte ; des valeurs plus élevées peuplent le monde plus densément."
+            }
+          },
+          "DifficultyOffset": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Difficulty Offset",
+              "fr": "Décalage de difficulté"
+            },
+            "description": {
+              "en": "Fine-tunes the difficulty between 0 and 1; combined with the difficulty override it sets how high wild creatures can spawn.",
+              "fr": "Ajuste finement la difficulté entre 0 et 1 ; combiné au remplacement de difficulté, il définit le niveau maximal d'apparition des créatures sauvages."
+            }
+          },
+          "DayCycleSpeedScale": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Day/Night Cycle Speed",
+              "fr": "Vitesse du cycle jour/nuit"
+            },
+            "description": {
+              "en": "Scales the overall speed of the full day-night cycle; lower values make days and nights last longer.",
+              "fr": "Ajuste la vitesse globale du cycle jour-nuit complet ; des valeurs plus basses rallongent les journées et les nuits."
+            }
+          },
+          "DayTimeSpeedScale": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Daytime Speed",
+              "fr": "Vitesse de la journée"
+            },
+            "description": {
+              "en": "Scales how fast daytime passes specifically; lower values lengthen the daylight hours.",
+              "fr": "Ajuste la vitesse d'écoulement de la journée en particulier ; des valeurs plus basses allongent les heures de jour."
+            }
+          },
+          "NightTimeSpeedScale": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Nighttime Speed",
+              "fr": "Vitesse de la nuit"
+            },
+            "description": {
+              "en": "Scales how fast nighttime passes specifically; higher values make nights go by quicker.",
+              "fr": "Ajuste la vitesse d'écoulement de la nuit en particulier ; des valeurs plus élevées font passer les nuits plus vite."
+            }
+          },
+          "PlayerCharacterFoodDrainMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player Food Drain",
+              "fr": "Faim des joueurs"
+            },
+            "description": {
+              "en": "Scales how quickly players get hungry; lower values mean food lasts longer.",
+              "fr": "Ajuste la vitesse à laquelle les joueurs ont faim ; des valeurs plus basses font durer la nourriture plus longtemps."
+            }
+          },
+          "PlayerCharacterWaterDrainMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player Water Drain",
+              "fr": "Soif des joueurs"
+            },
+            "description": {
+              "en": "Scales how quickly players get thirsty; lower values mean water lasts longer.",
+              "fr": "Ajuste la vitesse à laquelle les joueurs ont soif ; des valeurs plus basses font durer l'eau plus longtemps."
+            }
+          },
+          "PlayerCharacterStaminaDrainMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player Stamina Drain",
+              "fr": "Endurance des joueurs"
+            },
+            "description": {
+              "en": "Scales how quickly players use up stamina when sprinting and acting; lower values let them last longer.",
+              "fr": "Ajuste la vitesse à laquelle les joueurs consomment leur endurance en courant et en agissant ; des valeurs plus basses les font durer plus longtemps."
+            }
+          },
+          "PlayerCharacterHealthRecoveryMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Player Health Regen",
+              "fr": "Régénération de santé des joueurs"
+            },
+            "description": {
+              "en": "Scales how quickly players regenerate health; higher values heal survivors faster.",
+              "fr": "Ajuste la vitesse à laquelle les joueurs régénèrent leur santé ; des valeurs plus élevées les soignent plus vite."
+            }
+          },
+          "DinoCharacterFoodDrainMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Creature Food Drain",
+              "fr": "Faim des créatures"
+            },
+            "description": {
+              "en": "Scales how quickly creatures get hungry; lower values mean tames need feeding less often.",
+              "fr": "Ajuste la vitesse à laquelle les créatures ont faim ; des valeurs plus basses obligent à nourrir les créatures moins souvent."
+            }
+          },
+          "DinoCharacterStaminaDrainMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Creature Stamina Drain",
+              "fr": "Endurance des créatures"
+            },
+            "description": {
+              "en": "Scales how quickly creatures use up stamina; lower values let mounts run and fly longer.",
+              "fr": "Ajuste la vitesse à laquelle les créatures consomment leur endurance ; des valeurs plus basses permettent aux montures de courir et voler plus longtemps."
+            }
+          },
+          "DinoCharacterHealthRecoveryMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Creature Health Regen",
+              "fr": "Régénération de santé des créatures"
+            },
+            "description": {
+              "en": "Scales how quickly creatures regenerate health; higher values heal tames faster.",
+              "fr": "Ajuste la vitesse à laquelle les créatures régénèrent leur santé ; des valeurs plus élevées soignent les créatures plus vite."
+            }
+          },
+          "ShowMapPlayerLocation": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Show Player Location on Map",
+              "fr": "Afficher la position du joueur sur la carte"
+            },
+            "description": {
+              "en": "Shows each player their own precise position on the in-game map.",
+              "fr": "Affiche à chaque joueur sa position précise sur la carte du jeu."
+            }
+          },
+          "AllowThirdPersonPlayer": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Third-Person View",
+              "fr": "Autoriser la vue à la troisième personne"
+            },
+            "description": {
+              "en": "Lets players switch from first-person to a third-person camera view.",
+              "fr": "Permet aux joueurs de passer de la vue à la première personne à une caméra à la troisième personne."
+            }
+          },
+          "AllowRaidDinoFeeding": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Feeding Raid Dinos",
+              "fr": "Autoriser le nourrissage des dinos de raid"
+            },
+            "description": {
+              "en": "Allows raid creatures such as Titanosaurs to be fed so they can be kept tamed permanently.",
+              "fr": "Permet de nourrir les créatures de raid comme les Titanosaures afin de les conserver apprivoisées de façon permanente."
+            }
+          },
+          "ServerPVE": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "PvE Mode",
+              "fr": "Mode JcE"
+            },
+            "env_var": "SERVER_PVE",
+            "description": {
+              "en": "Enables Player-versus-Environment mode, disabling combat between players.",
+              "fr": "Active le mode Joueur contre Environnement, désactivant les combats entre joueurs."
+            }
+          },
+          "AllowFlyerCarryPvE": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Flyer Carry (PvE)",
+              "fr": "Autoriser le transport par volants (JcE)"
+            },
+            "description": {
+              "en": "Lets flying creatures pick up and carry wild and other creatures in PvE mode.",
+              "fr": "Permet aux créatures volantes d'attraper et de transporter des créatures sauvages et autres en mode JcE."
+            }
+          },
+          "ServerCrosshair": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Show Crosshair",
+              "fr": "Afficher le réticule"
+            },
+            "description": {
+              "en": "Displays an aiming crosshair in the center of the screen.",
+              "fr": "Affiche un réticule de visée au centre de l'écran."
+            }
+          },
+          "ServerPassword": {
+            "display_type": "text",
+            "config": {
+              "default": "Tau192192"
+            },
+            "label": {
+              "en": "Server Password",
+              "fr": "Mot de passe du serveur"
+            },
+            "env_var": "SERVER_PASSWORD",
+            "description": {
+              "en": "Password players must enter to join the server; leave empty for a public server.",
+              "fr": "Mot de passe que les joueurs doivent saisir pour rejoindre le serveur ; laissez vide pour un serveur public."
+            }
+          },
+          "ServerAdminPassword": {
+            "display_type": "text",
+            "config": {
+              "default": "changeme"
+            },
+            "label": {
+              "en": "Admin Password",
+              "fr": "Mot de passe administrateur"
+            },
+            "env_var": "ARK_ADMIN_PASSWORD",
+            "description": {
+              "en": "Password granting in-game admin command access; should be long and secret.",
+              "fr": "Mot de passe donnant accès aux commandes administrateur en jeu ; il doit être long et secret."
+            }
+          },
+          "RCONEnabled": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Enable RCON",
+              "fr": "Activer RCON"
+            },
+            "description": {
+              "en": "Enables the remote console (RCON) protocol for administering the server externally.",
+              "fr": "Active le protocole de console distante (RCON) pour administrer le serveur depuis l'extérieur."
+            }
+          },
+          "RCONPort": {
+            "display_type": "number",
+            "config": {
+              "default": "37015",
+              "min": 1,
+              "max": 65535
+            },
+            "label": {
+              "en": "RCON Port",
+              "fr": "Port RCON"
+            },
+            "env_var": "RCON_PORT",
+            "description": {
+              "en": "Network port on which the server listens for RCON connections.",
+              "fr": "Port réseau sur lequel le serveur écoute les connexions RCON."
+            }
+          },
+          "AdminLogging": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Log Admin Commands",
+              "fr": "Journaliser les commandes admin"
+            },
+            "description": {
+              "en": "Records every admin command in the server logs and broadcasts it for transparency.",
+              "fr": "Enregistre chaque commande administrateur dans les journaux du serveur et la diffuse pour plus de transparence."
+            }
+          },
+          "AutoSavePeriodMinutes": {
+            "display_type": "number",
+            "config": {
+              "default": "15.0",
+              "min": 1,
+              "max": 120
+            },
+            "label": {
+              "en": "Auto-Save Interval (minutes)",
+              "fr": "Intervalle de sauvegarde auto (minutes)"
+            },
+            "description": {
+              "en": "How often, in minutes, the server automatically saves world progress to disk.",
+              "fr": "Fréquence, en minutes, à laquelle le serveur sauvegarde automatiquement la progression du monde sur le disque."
+            }
+          },
+          "TribeLogDestroyedEnemyStructures": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Log Destroyed Enemy Structures",
+              "fr": "Journaliser les structures ennemies détruites"
+            },
+            "description": {
+              "en": "Adds an entry to the tribe log whenever the tribe destroys an enemy structure.",
+              "fr": "Ajoute une entrée au journal de tribu chaque fois que la tribu détruit une structure ennemie."
+            }
+          },
+          "AllowHideDamageSourceFromLogs": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Hide Damage Source in Logs",
+              "fr": "Masquer la source des dégâts dans les journaux"
+            },
+            "description": {
+              "en": "Hides the identity of the attacker in tribe damage logs to keep raiders anonymous.",
+              "fr": "Masque l'identité de l'attaquant dans les journaux de dégâts de tribu afin de garder les pillards anonymes."
+            }
+          },
+          "bFilterTribeNames": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Filter Tribe Names",
+              "fr": "Filtrer les noms de tribu"
+            },
+            "description": {
+              "en": "Applies a profanity filter to tribe names to block offensive language.",
+              "fr": "Applique un filtre anti-grossièretés aux noms de tribu pour bloquer le langage offensant."
+            }
+          },
+          "bFilterCharacterNames": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Filter Character Names",
+              "fr": "Filtrer les noms de personnage"
+            },
+            "description": {
+              "en": "Applies a profanity filter to player character names to block offensive language.",
+              "fr": "Applique un filtre anti-grossièretés aux noms de personnage pour bloquer le langage offensant."
+            }
+          },
+          "bFilterChat": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Filter Chat",
+              "fr": "Filtrer le chat"
+            },
+            "description": {
+              "en": "Applies a profanity filter to in-game chat messages to block offensive language.",
+              "fr": "Applique un filtre anti-grossièretés aux messages du chat en jeu pour bloquer le langage offensant."
+            }
+          },
+          "AllowSharedConnections": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Shared Connections",
+              "fr": "Autoriser les connexions partagées"
+            },
+            "description": {
+              "en": "Allows Family Sharing accounts to connect to the server.",
+              "fr": "Autorise les comptes en partage familial à se connecter au serveur."
+            }
+          },
+          "ServerHardcore": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Hardcore Mode",
+              "fr": "Mode hardcore"
+            },
+            "description": {
+              "en": "Resets a player's character back to level 1 on death instead of respawning at their level.",
+              "fr": "Réinitialise le personnage d'un joueur au niveau 1 à sa mort au lieu de le faire réapparaître à son niveau."
+            }
+          },
+          "AllowCaveBuildingPvE": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Cave Building (PvE)",
+              "fr": "Autoriser la construction en grotte (JcE)"
+            },
+            "description": {
+              "en": "Permits players to build structures inside caves on PvE servers.",
+              "fr": "Autorise les joueurs à construire des structures dans les grottes sur les serveurs JcE."
+            }
+          },
+          "AllowCaveBuildingPvP": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Cave Building (PvP)",
+              "fr": "Autoriser la construction en grotte (JcJ)"
+            },
+            "description": {
+              "en": "Permits players to build structures inside caves on PvP servers.",
+              "fr": "Autorise les joueurs à construire des structures dans les grottes sur les serveurs JcJ."
+            }
+          },
+          "EnableExtraStructurePreventionVolumes": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Extra Build Prevention Zones",
+              "fr": "Zones supplémentaires anti-construction"
+            },
+            "description": {
+              "en": "Disables building in certain extra protected areas such as resource-rich or artifact zones.",
+              "fr": "Interdit la construction dans certaines zones protégées supplémentaires comme les zones riches en ressources ou à artefacts."
+            }
+          },
+          "NoTributeDownloads": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable Tribute Downloads",
+              "fr": "Désactiver les téléchargements de tribut"
+            },
+            "description": {
+              "en": "Prevents players from downloading survivors, items and creatures stored in cross-server transfers.",
+              "fr": "Empêche les joueurs de télécharger les survivants, objets et créatures stockés lors des transferts inter-serveurs."
+            }
+          },
+          "PreventUploadSurvivors": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Prevent Survivor Uploads",
+              "fr": "Empêcher l'envoi de survivants"
+            },
+            "description": {
+              "en": "Stops players from uploading their characters for transfer to other servers.",
+              "fr": "Empêche les joueurs d'envoyer leurs personnages pour les transférer vers d'autres serveurs."
+            }
+          },
+          "PreventUploadItems": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Prevent Item Uploads",
+              "fr": "Empêcher l'envoi d'objets"
+            },
+            "description": {
+              "en": "Stops players from uploading items for transfer to other servers.",
+              "fr": "Empêche les joueurs d'envoyer des objets pour les transférer vers d'autres serveurs."
+            }
+          },
+          "PreventUploadDinos": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Prevent Dino Uploads",
+              "fr": "Empêcher l'envoi de dinos"
+            },
+            "description": {
+              "en": "Stops players from uploading tamed creatures for transfer to other servers.",
+              "fr": "Empêche les joueurs d'envoyer des créatures apprivoisées pour les transférer vers d'autres serveurs."
+            }
+          },
+          "CrossARKAllowForeignDinoDownloads": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Foreign Dino Downloads",
+              "fr": "Autoriser le téléchargement de dinos étrangers"
+            },
+            "description": {
+              "en": "Allows creatures uploaded on other servers in the cluster to be downloaded onto this server.",
+              "fr": "Autorise le téléchargement sur ce serveur des créatures envoyées depuis d'autres serveurs du cluster."
+            }
+          },
+          "PreventOfflinePvP": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Offline Raid Protection",
+              "fr": "Protection contre les raids hors ligne"
+            },
+            "description": {
+              "en": "Makes a tribe's structures and creatures invulnerable once all its members are offline.",
+              "fr": "Rend les structures et créatures d'une tribu invulnérables une fois que tous ses membres sont hors ligne."
+            }
+          },
+          "PreventOfflinePvPInterval": {
+            "display_type": "number",
+            "config": {
+              "default": "900",
+              "min": 0,
+              "max": 86400
+            },
+            "label": {
+              "en": "Offline Raid Protection Delay (s)",
+              "fr": "Délai de protection contre les raids hors ligne (s)"
+            },
+            "description": {
+              "en": "Time in seconds after the last tribe member logs off before offline raid protection takes effect.",
+              "fr": "Temps en secondes après la déconnexion du dernier membre de la tribu avant que la protection contre les raids hors ligne ne s'active."
+            }
+          },
+          "TribeNameChangeCooldown": {
+            "display_type": "number",
+            "config": {
+              "default": "0",
+              "min": 0,
+              "max": 86400
+            },
+            "label": {
+              "en": "Tribe Name Change Cooldown (s)",
+              "fr": "Délai de changement de nom de tribu (s)"
+            },
+            "description": {
+              "en": "Minimum time in seconds a tribe must wait before it can change its name again.",
+              "fr": "Temps minimum en secondes qu'une tribu doit attendre avant de pouvoir changer de nom à nouveau."
+            }
+          },
+          "PreventTribeAlliances": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Prevent Tribe Alliances",
+              "fr": "Empêcher les alliances de tribu"
+            },
+            "description": {
+              "en": "Disables the ability for tribes to form alliances with one another.",
+              "fr": "Désactive la possibilité pour les tribus de former des alliances entre elles."
+            }
+          },
+          "PreventDiseases": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Prevent Diseases",
+              "fr": "Empêcher les maladies"
+            },
+            "description": {
+              "en": "Completely disables diseases such as Swamp Fever on the server.",
+              "fr": "Désactive totalement les maladies comme la fièvre des marais sur le serveur."
+            }
+          },
+          "NonPermanentDiseases": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Non-Permanent Diseases",
+              "fr": "Maladies non permanentes"
+            },
+            "description": {
+              "en": "Makes diseases curable so that they are removed when a player respawns instead of being permanent.",
+              "fr": "Rend les maladies guérissables afin qu'elles disparaissent à la réapparition du joueur au lieu d'être permanentes."
+            }
+          },
+          "PreventSpawnAnimations": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Skip Spawn Animation",
+              "fr": "Ignorer l'animation de réapparition"
+            },
+            "description": {
+              "en": "Skips the wake-up animation when a player respawns so they gain control instantly.",
+              "fr": "Ignore l'animation de réveil lors de la réapparition d'un joueur afin qu'il reprenne le contrôle immédiatement."
+            }
+          },
+          "PlatformSaddleBuildAreaBoundsMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Platform Build Area Size",
+              "fr": "Taille de la zone de construction sur plateforme"
+            },
+            "description": {
+              "en": "Scales how far structures may be built around a platform saddle.",
+              "fr": "Ajuste la distance sur laquelle des structures peuvent être construites autour d'une selle-plateforme."
+            }
+          },
+          "MaxGateFrameOnSaddles": {
+            "display_type": "number",
+            "config": {
+              "default": "6",
+              "min": 0,
+              "max": 100
+            },
+            "label": {
+              "en": "Max Gateways on Saddles",
+              "fr": "Portails max sur les selles"
+            },
+            "description": {
+              "en": "Limits the number of gateway frame structures that can be built on platform saddles.",
+              "fr": "Limite le nombre de cadres de portail pouvant être construits sur les selles-plateformes."
+            }
+          },
+          "RandomSupplyCratePoints": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Randomize Supply Crates",
+              "fr": "Caisses de ravitaillement aléatoires"
+            },
+            "description": {
+              "en": "Randomizes the location and loot of supply drops instead of using fixed spawn points.",
+              "fr": "Rend aléatoires l'emplacement et le butin des largages de ravitaillement au lieu d'utiliser des points fixes."
+            }
+          },
+          "AllowTekSuitPowersInGenesis": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Tek Suit Powers in Genesis",
+              "fr": "Pouvoirs de combinaison Tek dans Genesis"
+            },
+            "description": {
+              "en": "Allows Tek armor special abilities to be used on the Genesis map.",
+              "fr": "Autorise l'utilisation des capacités spéciales de l'armure Tek sur la carte Genesis."
+            }
+          },
+          "EnableCryoSicknessPVE": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Cryo Sickness (PvE)",
+              "fr": "Mal de cryo (JcE)"
+            },
+            "description": {
+              "en": "Applies the cryo-sickness debuff to creatures released from a Cryopod in PvE.",
+              "fr": "Applique le malus de mal de cryo aux créatures sorties d'une Cryocapsule en JcE."
+            }
+          },
+          "EnableCryopodNerf": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Enable Cryopod Nerf",
+              "fr": "Activer le malus de cryocapsule"
+            },
+            "description": {
+              "en": "When enabled, creatures released from a Cryopod are temporarily weakened to discourage instant cryo-deployment in combat.",
+              "fr": "Lorsqu'activé, les créatures sorties d'une cryocapsule sont temporairement affaiblies afin de décourager le déploiement instantané en combat."
+            }
+          },
+          "CryopodNerfDuration": {
+            "display_type": "number",
+            "config": {
+              "default": "10",
+              "min": 0,
+              "max": 600
+            },
+            "label": {
+              "en": "Cryopod Nerf Duration (s)",
+              "fr": "Durée du malus de cryocapsule (s)"
+            },
+            "description": {
+              "en": "How long in seconds a creature released from a Cryopod stays weakened when the Cryopod nerf is enabled.",
+              "fr": "Durée en secondes pendant laquelle une créature sortie d'une cryocapsule reste affaiblie lorsque le malus de cryocapsule est activé."
+            }
+          },
+          "MaxHexagonsPerCharacter": {
+            "display_type": "number",
+            "config": {
+              "default": "1000",
+              "min": 0
+            },
+            "label": {
+              "en": "Max Hexagons per Character",
+              "fr": "Hexagones max par personnage"
+            },
+            "description": {
+              "en": "Caps the amount of Hexagon currency a single character can hold.",
+              "fr": "Limite la quantité de monnaie Hexagone qu'un seul personnage peut détenir."
+            }
+          },
+          "globalVoiceChat": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Global Voice Chat",
+              "fr": "Chat vocal global"
+            },
+            "description": {
+              "en": "Makes voice chat audible to every player on the server rather than only nearby ones.",
+              "fr": "Rend le chat vocal audible par tous les joueurs du serveur plutôt que seulement par ceux à proximité."
+            }
+          },
+          "proximityChat": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Proximity Chat",
+              "fr": "Chat de proximité"
+            },
+            "description": {
+              "en": "Limits text and voice chat so only nearby players can hear or read it.",
+              "fr": "Limite le chat texte et vocal afin que seuls les joueurs proches puissent l'entendre ou le lire."
+            }
+          },
+          "alwaysNotifyPlayerLeft": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Always Notify Player Left",
+              "fr": "Toujours notifier les départs de joueur"
+            },
+            "description": {
+              "en": "When enabled, always broadcasts a server message whenever a player leaves the server.",
+              "fr": "Lorsqu'il est activé, diffuse toujours un message serveur chaque fois qu'un joueur quitte le serveur."
+            }
+          },
+          "DontAlwaysNotifyPlayerJoined": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Suppress Player Joined Notice",
+              "fr": "Supprimer la notification d'arrivée de joueur"
+            },
+            "description": {
+              "en": "When enabled, suppresses the server-wide message announcing that a player has joined.",
+              "fr": "Lorsqu'il est activé, supprime le message diffusé à tout le serveur annonçant qu'un joueur a rejoint."
+            }
+          },
+          "ServerForceNoHud": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Force HUD Off",
+              "fr": "Forcer le masquage de l'ATH"
+            },
+            "description": {
+              "en": "Forces the heads-up display off for all players on the server.",
+              "fr": "Force la désactivation de l'interface (ATH) pour tous les joueurs du serveur."
+            }
+          },
+          "EnablePVPGamma": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Gamma in PvP",
+              "fr": "Autoriser le gamma en JcJ"
+            },
+            "description": {
+              "en": "Lets players adjust their gamma (brightness) on PvP servers, including at night.",
+              "fr": "Permet aux joueurs d'ajuster leur gamma (luminosité) sur les serveurs JcJ, y compris la nuit."
+            }
+          },
+          "DisablePvEGamma": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable Gamma in PvE",
+              "fr": "Désactiver le gamma en JcE"
+            },
+            "description": {
+              "en": "Prevents players from adjusting their gamma (brightness) on PvE servers.",
+              "fr": "Empêche les joueurs d'ajuster leur gamma (luminosité) sur les serveurs JcE."
+            }
+          },
+          "ShowFloatingDamageText": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Floating Damage Numbers",
+              "fr": "Nombres de dégâts flottants"
+            },
+            "description": {
+              "en": "Displays floating damage numbers above targets when they are hit.",
+              "fr": "Affiche des nombres de dégâts flottants au-dessus des cibles lorsqu'elles sont touchées."
+            }
+          },
+          "AllowHitMarkers": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Hit Markers",
+              "fr": "Marqueurs de coup"
+            },
+            "description": {
+              "en": "Shows a hit marker indicator when a player lands a ranged attack on a target.",
+              "fr": "Affiche un marqueur de coup lorsqu'un joueur touche une cible avec une attaque à distance."
+            }
+          },
+          "DisableDinoDecayPvE": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable Dino Decay (PvE)",
+              "fr": "Désactiver le déclin des dinos (JcE)"
+            },
+            "description": {
+              "en": "Disables the ownership decay timer on tamed creatures in PvE, preventing them from becoming claimable.",
+              "fr": "Désactive le minuteur de déclin de propriété des créatures apprivoisées en JcE, les empêchant de devenir réclamables."
+            }
+          },
+          "PvPDinoDecay": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Dino Decay (PvP)",
+              "fr": "Déclin des dinos (JcJ)"
+            },
+            "description": {
+              "en": "Enables the ownership decay timer on tamed creatures on PvP servers.",
+              "fr": "Active le minuteur de déclin de propriété des créatures apprivoisées sur les serveurs JcJ."
+            }
+          },
+          "AutoDestroyDecayedDinos": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Auto-Destroy Decayed Dinos",
+              "fr": "Détruire automatiquement les dinos déclinés"
+            },
+            "description": {
+              "en": "Automatically removes tamed creatures once their decay timer fully expires.",
+              "fr": "Supprime automatiquement les créatures apprivoisées une fois leur minuteur de déclin entièrement expiré."
+            }
+          },
+          "MaxTamedDinos": {
+            "display_type": "number",
+            "config": {
+              "default": "10000",
+              "min": 0
+            },
+            "label": {
+              "en": "Max Tamed Dinos (Server)",
+              "fr": "Dinos apprivoisés max (serveur)"
+            },
+            "description": {
+              "en": "Sets the maximum total number of tamed creatures allowed on the entire server.",
+              "fr": "Définit le nombre total maximum de créatures apprivoisées autorisées sur l'ensemble du serveur."
+            }
+          },
+          "MaxPersonalTamedDinos": {
+            "display_type": "number",
+            "config": {
+              "default": "10000",
+              "min": 0
+            },
+            "label": {
+              "en": "Max Tamed Dinos (Per Tribe)",
+              "fr": "Dinos apprivoisés max (par tribu)"
+            },
+            "description": {
+              "en": "Sets the maximum number of tamed creatures a single tribe may own.",
+              "fr": "Définit le nombre maximum de créatures apprivoisées qu'une seule tribu peut posséder."
+            }
+          },
+          "PersonalTamedDinosSaddleStructureCost": {
+            "display_type": "number",
+            "config": {
+              "default": "1",
+              "min": 0,
+              "max": 100
+            },
+            "label": {
+              "en": "Saddle Structure Tame Cost",
+              "fr": "Coût des structures de selle en tames"
+            },
+            "description": {
+              "en": "Sets how many tame slots each structure built on a platform saddle counts against the tribe's tamed-dino limit.",
+              "fr": "Définit combien de slots d'apprivoisement chaque structure construite sur une selle-plateforme consomme dans la limite de dinos de la tribu."
+            }
+          },
+          "DisableImprintDinoBuff": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable Imprint Buff",
+              "fr": "Désactiver le bonus d'empreinte"
+            },
+            "description": {
+              "en": "Disables the stat and damage bonus that imprinted creatures normally grant their imprinter.",
+              "fr": "Désactive le bonus de statistiques et de dégâts que les créatures empreintes accordent normalement à leur dresseur."
+            }
+          },
+          "AllowAnyoneBabyImprintCuddle": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Anyone Can Imprint Babies",
+              "fr": "Empreinte de bébé par tous"
+            },
+            "description": {
+              "en": "Lets any tribe member care for and imprint a baby creature, not only the player who claimed it.",
+              "fr": "Permet à n'importe quel membre de la tribu de s'occuper d'un bébé et de réaliser son empreinte, et pas seulement le joueur qui l'a réclamé."
+            }
+          },
+          "UseOptimizedHarvestingHealth": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Optimized Harvesting Health",
+              "fr": "Santé de récolte optimisée"
+            },
+            "description": {
+              "en": "Adjusts resource node health to yield more resources per hit and improve server performance.",
+              "fr": "Ajuste la santé des gisements de ressources pour produire plus de ressources par coup et améliorer les performances du serveur."
+            }
+          },
+          "ClampResourceHarvestDamage": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Clamp Harvest Damage",
+              "fr": "Limiter les dégâts de récolte"
+            },
+            "description": {
+              "en": "Caps how much resource a single hit can harvest, preventing high-damage creatures from overloading the server.",
+              "fr": "Plafonne la quantité de ressources récoltée par coup, empêchant les créatures à forts dégâts de surcharger le serveur."
+            }
+          },
+          "ClampItemSpoilingTimes": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Clamp Item Spoiling Times",
+              "fr": "Limiter les durées de péremption"
+            },
+            "description": {
+              "en": "When enabled, caps item spoil timers so they can never exceed the game's maximum spoil time.",
+              "fr": "Lorsqu'il est activé, plafonne les minuteurs de péremption des objets afin qu'ils ne dépassent jamais la durée maximale du jeu."
+            }
+          },
+          "PvPStructureDecay": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "PvP Structure Decay",
+              "fr": "Dégradation des structures en JcJ"
+            },
+            "description": {
+              "en": "Enables the gradual auto-decay and auto-destruction of player structures over time on PvP servers.",
+              "fr": "Active la dégradation et l'auto-destruction progressive des structures des joueurs au fil du temps sur les serveurs JcJ."
+            }
+          },
+          "TheMaxStructuresInRange": {
+            "display_type": "number",
+            "config": {
+              "default": "105000",
+              "min": 0,
+              "max": 500000
+            },
+            "label": {
+              "en": "Max Structures In Range",
+              "fr": "Structures maximum dans la zone"
+            },
+            "description": {
+              "en": "Sets the maximum number of structures that can be built within a given area of the map.",
+              "fr": "Définit le nombre maximum de structures pouvant être construites dans une zone donnée de la carte."
+            }
+          },
+          "DisableStructureDecayPVE": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable PvE Structure Decay",
+              "fr": "Désactiver la dégradation des structures en JcE"
+            },
+            "description": {
+              "en": "When enabled, player-built structures never decay or auto-destroy on PvE servers.",
+              "fr": "Lorsqu'activé, les structures construites par les joueurs ne se dégradent jamais et ne sont pas auto-détruites sur les serveurs JcE."
+            }
+          },
+          "PvEStructureDecayPeriodMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "PvE Structure Decay Period",
+              "fr": "Délai de dégradation des structures JcE"
+            },
+            "description": {
+              "en": "Scales how long player structures take to decay on PvE servers; higher values make them last longer.",
+              "fr": "Ajuste le temps que mettent les structures des joueurs à se dégrader sur les serveurs JcE ; des valeurs plus élevées les font durer plus longtemps."
+            }
+          },
+          "ForceAllStructureLocking": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Force All Structure Locking",
+              "fr": "Verrouillage forcé des structures"
+            },
+            "description": {
+              "en": "Forces every newly placed structure to be locked by default instead of being open to everyone.",
+              "fr": "Force chaque structure nouvellement placée à être verrouillée par défaut au lieu d'être accessible à tous."
+            }
+          },
+          "OnlyAutoDestroyCoreStructures": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Auto-Destroy Core Structures Only",
+              "fr": "Auto-détruire uniquement les structures principales"
+            },
+            "description": {
+              "en": "Restricts automatic decay destruction to core structures only, so non-core structures must be removed manually.",
+              "fr": "Limite la destruction automatique par dégradation aux seules structures principales, les autres structures devant être retirées manuellement."
+            }
+          },
+          "OnlyDecayUnsnappedCoreStructures": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Decay Unsnapped Core Structures Only",
+              "fr": "Dégrader uniquement les structures principales non accrochées"
+            },
+            "description": {
+              "en": "Limits decay to standalone core structures that are not snapped to any other structure.",
+              "fr": "Limite la dégradation aux structures principales isolées qui ne sont accrochées à aucune autre structure."
+            }
+          },
+          "FastDecayUnsnappedCoreStructures": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Fast Decay Unsnapped Core Structures",
+              "fr": "Dégradation rapide des structures principales non accrochées"
+            },
+            "description": {
+              "en": "Makes lone, unsnapped core structures such as single pillars or foundations decay much faster.",
+              "fr": "Fait se dégrader beaucoup plus vite les structures principales isolées et non accrochées, comme un pilier ou une fondation seule."
+            }
+          },
+          "DestroyUnconnectedWaterPipes": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Destroy Unconnected Water Pipes",
+              "fr": "Détruire les conduites d'eau isolées"
+            },
+            "description": {
+              "en": "Automatically destroys single water pipes that are not connected to any other pipe.",
+              "fr": "Détruit automatiquement les conduites d'eau isolées qui ne sont reliées à aucune autre conduite."
+            }
+          },
+          "IgnoreLimitMaxStructuresInRangeTypeFlag": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Ignore Max Structures In Range Limit",
+              "fr": "Ignorer la limite de structures dans la zone"
+            },
+            "description": {
+              "en": "Ignores the per-area structure cap, allowing players to build past the normal density limit.",
+              "fr": "Ignore le plafond de structures par zone, permettant aux joueurs de construire au-delà de la limite de densité normale."
+            }
+          },
+          "AlwaysAllowStructurePickup": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Always Allow Structure Pickup",
+              "fr": "Toujours autoriser le ramassage des structures"
+            },
+            "description": {
+              "en": "Lets players pick structures back up at any time instead of only within a short window after placement.",
+              "fr": "Permet aux joueurs de ramasser les structures à tout moment, et non plus seulement pendant un court délai après leur placement."
+            }
+          },
+          "StructurePickupTimeAfterPlacement": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 600,
+              "step": 1,
+              "default": "30"
+            },
+            "label": {
+              "en": "Structure Pickup Window (s)",
+              "fr": "Délai de ramassage après placement (s)"
+            },
+            "description": {
+              "en": "Time window in seconds during which a freshly placed structure can still be quick-picked up.",
+              "fr": "Délai en secondes pendant lequel une structure fraîchement placée peut encore être ramassée rapidement."
+            }
+          },
+          "AllowIntegratedSPlusStructures": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Integrated S+ Structures",
+              "fr": "Autoriser les structures S+ intégrées"
+            },
+            "description": {
+              "en": "Controls whether the integrated Structures Plus building set is available on the server.",
+              "fr": "Détermine si l'ensemble de construction Structures Plus intégré est disponible sur le serveur."
+            }
+          },
+          "PreventDownloadSurvivors": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Prevent Survivor Downloads",
+              "fr": "Empêcher le transfert des survivants"
+            },
+            "description": {
+              "en": "Blocks players from transferring their survivor characters onto this server.",
+              "fr": "Empêche les joueurs de transférer leurs personnages survivants vers ce serveur."
+            }
+          },
+          "PreventDownloadItems": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Prevent Item Downloads",
+              "fr": "Empêcher le transfert des objets"
+            },
+            "description": {
+              "en": "Blocks players from transferring items onto this server from another server or the obelisk.",
+              "fr": "Empêche les joueurs de transférer des objets vers ce serveur depuis un autre serveur ou un obélisque."
+            }
+          },
+          "PreventDownloadDinos": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Prevent Dino Downloads",
+              "fr": "Empêcher le transfert des créatures"
+            },
+            "description": {
+              "en": "Blocks players from transferring tamed creatures onto this server.",
+              "fr": "Empêche les joueurs de transférer des créatures apprivoisées vers ce serveur."
+            }
+          },
+          "PerPlatformMaxStructuresMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "default": "6"
+            },
+            "label": {
+              "en": "Platform Structure Limit Multiplier",
+              "fr": "Multiplicateur de structures sur plateforme"
+            },
+            "description": {
+              "en": "Multiplies how many structures can be built on platform saddles and rafts.",
+              "fr": "Multiplie le nombre de structures pouvant être construites sur les selles-plateformes et les radeaux."
+            }
+          },
+          "OverrideStructurePlatformPrevention": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Turrets On Platforms",
+              "fr": "Autoriser les tourelles sur les plateformes"
+            },
+            "description": {
+              "en": "Allows normally restricted structures such as turrets and spike walls to be placed on platform saddles.",
+              "fr": "Autorise le placement sur les selles-plateformes de structures normalement interdites, comme les tourelles et les murs à pointes."
+            }
+          },
+          "PvEAllowStructuresAtSupplyDrops": {
+            "display_type": "boolean",
+            "config": {
+              "default": "False",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Building At Supply Drops",
+              "fr": "Autoriser la construction près des largages"
+            },
+            "description": {
+              "en": "On PvE servers, allows building near supply drop (loot beacon) locations.",
+              "fr": "Sur les serveurs JcE, autorise la construction à proximité des emplacements de largages de ravitaillement (balises de butin)."
+            }
+          },
+          "bDisableStructurePlacementCollision": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Disable Structure Placement Collision",
+              "fr": "Désactiver les collisions de placement"
+            },
+            "description": {
+              "en": "Lets structures clip into terrain and each other for more flexible building.",
+              "fr": "Permet aux structures de s'imbriquer dans le terrain et entre elles pour une construction plus souple."
+            }
+          },
+          "OxygenSwimSpeedStatMultiplier": {
+            "display_type": "text",
+            "config": {
+              "default": null
+            },
+            "label": {
+              "en": "Oxygen Swim Speed Multiplier",
+              "fr": "Multiplicateur de vitesse de nage par oxygène"
+            },
+            "description": {
+              "en": "Adjusts how much the Oxygen stat boosts swimming speed.",
+              "fr": "Ajuste l'influence de la statistique d'oxygène sur la vitesse de nage."
+            }
+          },
+          "StructurePreventResourceRadiusMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Resource Block Radius Multiplier",
+              "fr": "Multiplicateur de rayon de blocage des ressources"
+            },
+            "description": {
+              "en": "Scales the radius around structures in which resource nodes are prevented from respawning.",
+              "fr": "Ajuste le rayon autour des structures dans lequel les gisements de ressources ne peuvent pas réapparaître."
+            }
+          },
+          "RaidDinoCharacterFoodDrainMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Raid Dino Food Drain Multiplier",
+              "fr": "Multiplicateur de faim des créatures de raid"
+            },
+            "description": {
+              "en": "Scales how quickly raid creatures such as the Titanosaur consume food; lower values make them last longer.",
+              "fr": "Ajuste la vitesse à laquelle les créatures de raid comme le Titanosaure consomment de la nourriture ; des valeurs plus basses les font durer plus longtemps."
+            }
+          },
+          "PvEDinoDecayPeriodMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "PvE Dino Decay Period Multiplier",
+              "fr": "Multiplicateur de délai de dégradation des créatures JcE"
+            },
+            "description": {
+              "en": "Scales how long unclaimed tamed creatures last before they can be claimed or auto-destroyed on PvE servers.",
+              "fr": "Ajuste la durée pendant laquelle les créatures apprivoisées non réclamées subsistent avant de pouvoir être réclamées ou auto-détruites sur les serveurs JcE."
+            }
+          },
+          "KickIdlePlayersPeriod": {
+            "display_type": "number",
+            "config": {
+              "default": "3600",
+              "min": 0,
+              "max": 86400
+            },
+            "label": {
+              "en": "Idle Player Kick Time",
+              "fr": "Délai d'expulsion des joueurs inactifs"
+            },
+            "description": {
+              "en": "Time in seconds an idle player can stay connected before being kicked from the server.",
+              "fr": "Durée en secondes pendant laquelle un joueur inactif peut rester connecté avant d'être expulsé du serveur."
+            }
+          },
+          "ListenServerTetherDistanceMultiplier": {
+            "display_type": "text",
+            "config": {
+              "default": null
+            },
+            "label": {
+              "en": "Tether Distance Multiplier",
+              "fr": "Multiplicateur de distance de laisse"
+            },
+            "description": {
+              "en": "Scales how far co-op players can roam from the host in non-dedicated sessions.",
+              "fr": "Ajuste la distance à laquelle les joueurs en coopération peuvent s'éloigner de l'hôte dans les sessions non dédiées."
+            }
+          },
+          "ItemStackSizeMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 1,
+              "max": 100,
+              "step": 1,
+              "default": "4"
+            },
+            "label": {
+              "en": "Item Stack Size Multiplier",
+              "fr": "Multiplicateur de taille des piles d'objets"
+            },
+            "description": {
+              "en": "Multiplies the maximum stack size of items, letting players carry more per slot.",
+              "fr": "Multiplie la taille maximale des piles d'objets, permettant aux joueurs de transporter davantage par emplacement."
+            }
+          },
+          "AllowAlliances": {
+            "display_type": "boolean",
+            "config": {
+              "default": "True",
+              "true_value": "True",
+              "false_value": "False"
+            },
+            "label": {
+              "en": "Allow Tribe Alliances",
+              "fr": "Autoriser les alliances de tribus"
+            },
+            "description": {
+              "en": "Allows tribes to form alliances to share defenses and fight together.",
+              "fr": "Permet aux tribus de former des alliances pour partager leurs défenses et combattre ensemble."
+            }
+          },
+          "CropGrowthSpeedMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 0.1,
+              "default": "3"
+            },
+            "label": {
+              "en": "Crop Growth Speed Multiplier",
+              "fr": "Multiplicateur de vitesse de croissance des cultures"
+            },
+            "description": {
+              "en": "Multiplies how fast crops grow in plots; higher values speed up farming.",
+              "fr": "Multiplie la vitesse de croissance des cultures dans les parcelles ; des valeurs plus élevées accélèrent l'agriculture."
+            }
+          },
+          "CropDecaySpeedMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Crop Decay Speed Multiplier",
+              "fr": "Multiplicateur de vitesse de dégradation des cultures"
+            },
+            "description": {
+              "en": "Scales how quickly planted crops wither when not watered or fertilized; lower values make them last longer.",
+              "fr": "Ajuste la vitesse à laquelle les cultures plantées se flétrissent sans eau ni engrais ; des valeurs plus basses les font durer plus longtemps."
+            }
+          },
+          "GlobalSpoilingTimeMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Food Spoiling Time",
+              "fr": "Durée de péremption des aliments"
+            },
+            "description": {
+              "en": "Scales how long perishable items take to spoil; higher values keep food fresh longer.",
+              "fr": "Ajuste le temps que mettent les objets périssables à se gâter ; des valeurs plus élevées conservent la nourriture plus longtemps."
+            }
+          },
+          "GlobalItemDecompositionTimeMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Dropped Item Decomposition Time",
+              "fr": "Durée de décomposition des objets au sol"
+            },
+            "description": {
+              "en": "Scales how long items dropped on the ground remain before disappearing; higher values let them stay longer.",
+              "fr": "Ajuste la durée pendant laquelle les objets lâchés au sol subsistent avant de disparaître ; des valeurs plus élevées les font rester plus longtemps."
+            }
+          },
+          "GlobalCorpseDecompositionTimeMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Corpse Decomposition Time",
+              "fr": "Durée de décomposition des cadavres"
+            },
+            "description": {
+              "en": "Scales how long player and creature corpses (and their bags) remain before disappearing.",
+              "fr": "Ajuste la durée pendant laquelle les cadavres de joueurs et de créatures (et leurs sacs) subsistent avant de disparaître."
+            }
+          },
+          "ResourceNoReplenishRadiusStructures": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Resource No-Replenish Radius (Structures)",
+              "fr": "Rayon sans réapparition de ressources (structures)"
+            },
+            "description": {
+              "en": "Scales the radius around structures where resources will not respawn; higher values widen the dead zone.",
+              "fr": "Ajuste le rayon autour des structures où les ressources ne réapparaissent pas ; des valeurs plus élevées élargissent la zone morte."
+            }
+          },
+          "ResourceNoReplenishRadiusPlayers": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 0.1,
+              "default": "1.0"
+            },
+            "label": {
+              "en": "Resource No-Replenish Radius (Players)",
+              "fr": "Rayon sans réapparition de ressources (joueurs)"
+            },
+            "description": {
+              "en": "Scales the radius around players where resources will not respawn; higher values widen the dead zone.",
+              "fr": "Ajuste le rayon autour des joueurs où les ressources ne réapparaissent pas ; des valeurs plus élevées élargissent la zone morte."
+            }
+          },
+          "OverrideOfficialDifficulty": {
+            "display_type": "number",
+            "config": {
+              "default": "6",
+              "min": 1,
+              "max": 10
+            },
+            "label": {
+              "en": "Difficulty Override",
+              "fr": "Remplacement de la difficulté"
+            },
+            "description": {
+              "en": "Sets the difficulty level that determines the maximum wild creature level (each point adds 30 levels, so 6 means level 180).",
+              "fr": "Définit le niveau de difficulté qui détermine le niveau maximum des créatures sauvages (chaque point ajoute 30 niveaux, donc 6 correspond au niveau 180)."
+            }
+          },
+          "MaxNumbersofPlayersInTribe": {
+            "display_type": "number",
+            "config": {
+              "default": "10",
+              "min": 1,
+              "max": 250
+            },
+            "label": {
+              "en": "Max Tribe Members (Server)",
+              "fr": "Membres maximum par tribu (serveur)"
+            },
+            "description": {
+              "en": "Caps how many players can belong to a single tribe; this GameUserSettings copy mirrors the Game.ini tribe-size limit.",
+              "fr": "Limite le nombre de joueurs pouvant appartenir à une même tribu ; cette copie dans GameUserSettings reflète la limite de taille de tribu de Game.ini."
+            }
+          },
+          "StartTimeHour": {
+            "display_type": "text",
+            "config": {
+              "default": null
+            },
+            "label": {
+              "en": "Server Start Hour",
+              "fr": "Heure de départ du serveur"
+            },
+            "description": {
+              "en": "Forces the in-game time of day the server starts at when first launched.",
+              "fr": "Force l'heure du jour dans le jeu à laquelle le serveur démarre lors de son premier lancement."
+            }
+          },
+          "OverrideSecondsUntilBuriedTreasureAutoReveals": {
+            "display_type": "number",
+            "config": {
+              "default": "3600",
+              "min": 0,
+              "max": 86400
+            },
+            "label": {
+              "en": "Buried Treasure Auto-Reveal Time",
+              "fr": "Délai de révélation du trésor enfoui"
+            },
+            "description": {
+              "en": "Time in seconds before a buried treasure automatically reveals its location on the map.",
+              "fr": "Durée en secondes avant qu'un trésor enfoui ne révèle automatiquement son emplacement sur la carte."
+            }
+          },
+          "RCONServerGameLogBuffer": {
+            "display_type": "number",
+            "config": {
+              "default": "120",
+              "min": 0,
+              "max": 1000
+            },
+            "label": {
+              "en": "RCON Game Log Buffer",
+              "fr": "Tampon de journal RCON"
+            },
+            "description": {
+              "en": "Number of recent game log lines kept in memory for retrieval through RCON.",
+              "fr": "Nombre de lignes de journal de jeu récentes conservées en mémoire pour consultation via RCON."
+            }
+          },
+          "ImplantSuicideCD": {
+            "display_type": "number",
+            "config": {
+              "default": "28800",
+              "min": 0,
+              "max": 86400
+            },
+            "label": {
+              "en": "Implant Suicide Cooldown",
+              "fr": "Délai de suicide par implant"
+            },
+            "description": {
+              "en": "Cooldown in seconds before a player can use the implant's suicide option again.",
+              "fr": "Délai en secondes avant qu'un joueur puisse réutiliser l'option de suicide de l'implant."
+            }
+          }
+        },
+        "SessionSettings": {
+          "SessionName": {
+            "display_type": "text",
+            "config": {
+              "default": "Biomebounty - The island"
+            },
+            "label": {
+              "en": "Server name",
+              "fr": "Nom du serveur"
+            },
+            "description": {
+              "en": "The public name of the server shown in the in-game server browser.",
+              "fr": "Le nom public du serveur affiché dans la liste des serveurs du jeu."
+            }
+          }
+        },
+        "/Script/Engine.GameSession": {
+          "MaxPlayers": {
+            "display_type": "slider",
+            "config": {
+              "min": 1,
+              "max": 255,
+              "step": 1,
+              "default": "70"
+            },
+            "label": {
+              "en": "Max players",
+              "fr": "Joueurs max"
+            },
+            "description": {
+              "en": "Maximum number of players that can be connected to the server at the same time.",
+              "fr": "Nombre maximum de joueurs pouvant être connectés au serveur en même temps."
+            }
+          }
+        }
+      },
+      "section_labels": {
+        "ServerSettings": {
+          "en": "Server settings",
+          "fr": "Réglages serveur"
+        },
+        "SessionSettings": {
+          "en": "Session",
+          "fr": "Session"
+        },
+        "/Script/Engine.GameSession": {
+          "en": "Slots",
+          "fr": "Slots / Joueurs"
+        }
+      }
+    }
+  ]
+}

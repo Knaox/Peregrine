@@ -1,4 +1,4 @@
-import { Download, FilePlus2, LayoutTemplate, Pencil, Trash2, Upload } from 'lucide-react';
+import { Download, FilePlus2, LayoutTemplate, PackageOpen, Pencil, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pickLabel, useT } from '../lib/i18n';
@@ -8,7 +8,7 @@ import { Dialog } from '../ui/Dialog';
 import { Textarea } from '../ui/inputs';
 import { Badge, Card, EmptyState, Spinner } from '../ui/surfaces';
 import { useToast } from '../ui/Toast';
-import { useDeleteTemplate, useImportTemplate, useTemplateList } from './hooks/useTemplates';
+import { useDeleteTemplate, useImportOfficialTemplates, useImportTemplate, useTemplateList } from './hooks/useTemplates';
 
 export function TemplateListPage() {
     const { t, lang } = useT();
@@ -17,6 +17,7 @@ export function TemplateListPage() {
     const list = useTemplateList();
     const remove = useDeleteTemplate();
     const importer = useImportTemplate();
+    const official = useImportOfficialTemplates();
     const [importOpen, setImportOpen] = useState(false);
     const [importText, setImportText] = useState('');
 
@@ -51,6 +52,13 @@ export function TemplateListPage() {
         });
     };
 
+    const onImportOfficial = (): void => {
+        official.mutate(undefined, {
+            onSuccess: (result) => toast.success(t('admin.list.official_imported', { ok: result.imported.length, skipped: result.skipped.length })),
+            onError: (error) => toast.error((error as unknown as ApiError).message ?? t('admin.list.official_failed')),
+        });
+    };
+
     return (
         <div className="ec-page">
             <div className="ec-between">
@@ -61,6 +69,9 @@ export function TemplateListPage() {
                 <div className="ec-row">
                     <Button variant="ghost" onClick={() => navigate(`${ADMIN_PATH}/example`)}>
                         <LayoutTemplate size={15} /> {t('admin.list.example')}
+                    </Button>
+                    <Button variant="secondary" loading={official.isPending} onClick={onImportOfficial}>
+                        <PackageOpen size={15} /> {t('admin.list.import_official')}
                     </Button>
                     <Button variant="secondary" onClick={() => setImportOpen(true)}>
                         <Upload size={15} /> {t('admin.list.import')}
