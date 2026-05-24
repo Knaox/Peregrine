@@ -20,7 +20,7 @@
   "files": [
     {
       "id": "servercfg",
-      "path": "Server.cfg",
+      "path": "config/config.cfg",
       "format": "theforest",
       "label": {
         "en": "Server configuration",

@@ -19,7 +19,7 @@
   "files": [
     {
       "id": "serversettings",
-      "path": "Astro/Saved/Config/LinuxServer/AstroServerSettings.ini",
+      "path": "Astro/Saved/Config/WindowsServer/AstroServerSettings.ini",
       "format": "ini",
       "label": {
         "en": "Server settings",
