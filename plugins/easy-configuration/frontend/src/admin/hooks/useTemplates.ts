@@ -62,7 +62,13 @@ export function useSaveTemplate() {
             id !== null
                 ? api(`${BASE}/admin/templates/${id}`, { method: 'PUT', body: JSON.stringify({ template }) })
                 : api(`${BASE}/admin/templates`, { method: 'POST', body: JSON.stringify({ template }) }),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+        // Invalidate BOTH the list and every detail query: without the detail
+        // invalidation, reopening a just-saved template re-hydrates the form from
+        // the stale cached definition and a re-save clobbers the new edits.
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: LIST_KEY });
+            void queryClient.invalidateQueries({ queryKey: ['ec-admin-template'] });
+        },
     });
 }
 
