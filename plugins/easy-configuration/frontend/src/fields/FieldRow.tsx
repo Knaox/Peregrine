@@ -112,7 +112,7 @@ export function FieldRow({
                     />
                 )}
                 {boost}
-                <FieldControl param={param} value={value} onChange={onChange} disabled={disabled} invalid={invalid} />
+                <FieldControl param={param} value={value} onChange={onChange} disabled={disabled} invalid={invalid} ariaLabel={label} />
                 {saved && (
                     <span className="ec-field-saved" aria-hidden>
                         <Check size={15} />

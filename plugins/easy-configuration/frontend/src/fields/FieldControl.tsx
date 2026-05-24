@@ -9,10 +9,13 @@ interface Props {
     onChange: (value: string) => void;
     disabled?: boolean;
     invalid?: boolean;
+    /** Accessible name for the control — the parameter's visible label lives in a
+     *  sibling element, so each control is named explicitly for screen readers. */
+    ariaLabel?: string;
 }
 
 /** Renders the interactive control for a parameter, dispatched by display_type. */
-export function FieldControl({ param, value, onChange, disabled, invalid }: Props) {
+export function FieldControl({ param, value, onChange, disabled, invalid, ariaLabel }: Props) {
     const { lang } = useT();
     const config = param.config;
     // Env-linked params hard-cap at `max` (the value also drives the Pelican
@@ -21,14 +24,15 @@ export function FieldControl({ param, value, onChange, disabled, invalid }: Prop
 
     switch (param.display_type) {
         case 'boolean':
-            return <BooleanControl config={config} value={value} onChange={onChange} disabled={disabled} />;
+            return <BooleanControl config={config} value={value} onChange={onChange} disabled={disabled} ariaLabel={ariaLabel} />;
         case 'slider':
-            return <SliderControl config={config} value={value} onChange={onChange} disabled={disabled} invalid={invalid} envLinked={envLinked} />;
+            return <SliderControl config={config} value={value} onChange={onChange} disabled={disabled} invalid={invalid} envLinked={envLinked} ariaLabel={ariaLabel} />;
         case 'number':
             return (
                 <Input
                     className="ec-input-narrow"
                     type="number"
+                    aria-label={ariaLabel}
                     min={envLinked ? config.min : undefined}
                     max={envLinked ? config.max : undefined}
                     step={config.step ?? (config.float ? 'any' : 1)}
@@ -40,7 +44,7 @@ export function FieldControl({ param, value, onChange, disabled, invalid }: Prop
             );
         case 'select':
             return (
-                <Select value={value} disabled={disabled} invalid={invalid} onChange={onChange}>
+                <Select value={value} disabled={disabled} invalid={invalid} ariaLabel={ariaLabel} onChange={onChange}>
                     {(config.options ?? []).map((option) => (
                         <option key={option.value} value={option.value}>
                             {pickLabel(option.label, lang, option.value)}
@@ -49,11 +53,12 @@ export function FieldControl({ param, value, onChange, disabled, invalid }: Prop
                 </Select>
             );
         case 'multiselect':
-            return <MultiSelectControl config={config} value={value} onChange={onChange} disabled={disabled} />;
+            return <MultiSelectControl config={config} value={value} onChange={onChange} disabled={disabled} ariaLabel={ariaLabel} />;
         case 'textarea':
             return (
                 <Textarea
                     value={value}
+                    aria-label={ariaLabel}
                     disabled={disabled}
                     invalid={invalid}
                     maxLength={config.max_length}
@@ -61,11 +66,12 @@ export function FieldControl({ param, value, onChange, disabled, invalid }: Prop
                 />
             );
         case 'color':
-            return <ColorControl value={value} onChange={onChange} disabled={disabled} invalid={invalid} />;
+            return <ColorControl value={value} onChange={onChange} disabled={disabled} invalid={invalid} ariaLabel={ariaLabel} />;
         default:
             return (
                 <Input
                     value={value}
+                    aria-label={ariaLabel}
                     disabled={disabled}
                     invalid={invalid}
                     maxLength={config.max_length}
@@ -75,14 +81,14 @@ export function FieldControl({ param, value, onChange, disabled, invalid }: Prop
     }
 }
 
-function BooleanControl({ config, value, onChange, disabled }: { config: ParamConfig; value: string; onChange: (v: string) => void; disabled?: boolean }) {
+function BooleanControl({ config, value, onChange, disabled, ariaLabel }: { config: ParamConfig; value: string; onChange: (v: string) => void; disabled?: boolean; ariaLabel?: string }) {
     const trueValue = config.true_value ?? 'true';
     const falseValue = config.false_value ?? 'false';
 
-    return <Toggle checked={value === trueValue} disabled={disabled} onChange={(on) => onChange(on ? trueValue : falseValue)} />;
+    return <Toggle checked={value === trueValue} disabled={disabled} label={ariaLabel} onChange={(on) => onChange(on ? trueValue : falseValue)} />;
 }
 
-function SliderControl({ config, value, onChange, disabled, invalid, envLinked }: { config: ParamConfig; value: string; onChange: (v: string) => void; disabled?: boolean; invalid?: boolean; envLinked?: boolean }) {
+function SliderControl({ config, value, onChange, disabled, invalid, envLinked, ariaLabel }: { config: ParamConfig; value: string; onChange: (v: string) => void; disabled?: boolean; invalid?: boolean; envLinked?: boolean; ariaLabel?: string }) {
     const min = config.min ?? 0;
     const max = config.max ?? 100;
     const step = config.step ?? 1;
@@ -92,6 +98,7 @@ function SliderControl({ config, value, onChange, disabled, invalid, envLinked }
             <input
                 type="range"
                 className="ec-slider"
+                aria-label={ariaLabel}
                 min={min}
                 max={max}
                 step={step}
@@ -102,6 +109,7 @@ function SliderControl({ config, value, onChange, disabled, invalid, envLinked }
             <Input
                 className="ec-slider-number"
                 type="number"
+                aria-label={ariaLabel}
                 min={envLinked ? min : undefined}
                 max={envLinked ? max : undefined}
                 step={step}
@@ -114,7 +122,7 @@ function SliderControl({ config, value, onChange, disabled, invalid, envLinked }
     );
 }
 
-function MultiSelectControl({ config, value, onChange, disabled }: { config: ParamConfig; value: string; onChange: (v: string) => void; disabled?: boolean }) {
+function MultiSelectControl({ config, value, onChange, disabled, ariaLabel }: { config: ParamConfig; value: string; onChange: (v: string) => void; disabled?: boolean; ariaLabel?: string }) {
     const { lang } = useT();
     const separator = config.separator && config.separator !== '' ? config.separator : ',';
     const selected = value.split(separator).map((item) => item.trim()).filter((item) => item !== '');
@@ -127,30 +135,35 @@ function MultiSelectControl({ config, value, onChange, disabled }: { config: Par
     };
 
     return (
-        <div className="ec-chips">
-            {(config.options ?? []).map((option) => (
-                <button
-                    key={option.value}
-                    type="button"
-                    disabled={disabled}
-                    className={clsx('ec-chip', selected.includes(option.value) && 'ec-chip-on')}
-                    onClick={() => toggle(option.value)}
-                >
-                    {pickLabel(option.label, lang, option.value)}
-                </button>
-            ))}
+        <div className="ec-chips" role="group" aria-label={ariaLabel}>
+            {(config.options ?? []).map((option) => {
+                const isOn = selected.includes(option.value);
+
+                return (
+                    <button
+                        key={option.value}
+                        type="button"
+                        disabled={disabled}
+                        aria-pressed={isOn}
+                        className={clsx('ec-chip', isOn && 'ec-chip-on')}
+                        onClick={() => toggle(option.value)}
+                    >
+                        {pickLabel(option.label, lang, option.value)}
+                    </button>
+                );
+            })}
         </div>
     );
 }
 
-function ColorControl({ value, onChange, disabled, invalid }: { value: string; onChange: (v: string) => void; disabled?: boolean; invalid?: boolean }) {
+function ColorControl({ value, onChange, disabled, invalid, ariaLabel }: { value: string; onChange: (v: string) => void; disabled?: boolean; invalid?: boolean; ariaLabel?: string }) {
     const hex = /^#[0-9a-fA-F]{6}$/.test(value) ? value : `#${value}`;
     const safe = /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : '#000000';
 
     return (
         <div className="ec-color">
-            <input type="color" className="ec-color-swatch" value={safe} disabled={disabled} onChange={(event) => onChange(event.target.value)} />
-            <Input className="ec-input-narrow" value={value} disabled={disabled} invalid={invalid} onChange={(event) => onChange(event.target.value)} />
+            <input type="color" className="ec-color-swatch" aria-label={ariaLabel} value={safe} disabled={disabled} onChange={(event) => onChange(event.target.value)} />
+            <Input className="ec-input-narrow" value={value} aria-label={ariaLabel} disabled={disabled} invalid={invalid} onChange={(event) => onChange(event.target.value)} />
         </div>
     );
 }
