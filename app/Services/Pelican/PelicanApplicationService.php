@@ -230,4 +230,30 @@ class PelicanApplicationService
     {
         return $this->infra->getEggVariables($eggId);
     }
+
+    /**
+     * @return array{egg: int, image: string, startup: string, environment: array<string, string>, egg_docker_images: array<string, string>}
+     *
+     * @throws RequestException
+     */
+    public function getServerContainer(int $pelicanServerId): array
+    {
+        return $this->infra->getServerContainer($pelicanServerId);
+    }
+
+    /** @throws RequestException */
+    public function updateServerStartupImage(int $pelicanServerId, string $newImage): void
+    {
+        $this->infra->updateServerStartupImage($pelicanServerId, $newImage);
+    }
+
+    /**
+     * @return array<string, string>
+     *
+     * @throws RequestException
+     */
+    public function getEggDockerImages(int $pelicanEggId): array
+    {
+        return $this->infra->getEggDockerImages($pelicanEggId);
+    }
 }

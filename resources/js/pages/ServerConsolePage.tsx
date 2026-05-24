@@ -13,6 +13,8 @@ import { Alert } from '@/components/ui/Alert';
 import { ServerPowerControls } from '@/components/server/ServerPowerControls';
 import { ConsoleOutput } from '@/components/console/ConsoleOutput';
 import { ConsoleInput } from '@/components/console/ConsoleInput';
+import { ServerBootFixPrompts } from '@/components/console/ServerBootFixPrompts';
+import { ServerConsoleHistoryModal } from '@/components/console/ServerConsoleHistoryModal';
 import type { ConsoleMessage } from '@/types/ConsoleMessage';
 import { useNamespace } from '@/i18n/useNamespace';
 
@@ -53,10 +55,16 @@ export function ServerConsolePage() {
     const canStart = perms.has('control.start');
     const canStop = perms.has('control.stop');
     const canRestart = perms.has('control.restart');
+    // EULA accept restarts the server → gate on restart; switching the Docker
+    // image is a startup-config change → gate on startup.update.
+    const canFixEula = canRestart;
+    const canFixJava = perms.has('startup.update');
 
-    const { messages, serverState, isConnected, sendCommand, clearMessages, installCompleted } = useWingsWebSocket(serverId, {
+    const { messages, history, serverState, isConnected, sendCommand, clearMessages, installCompleted, eulaRequired, javaIssue } = useWingsWebSocket(serverId, {
         console: true, stats: true,
     });
+
+    const [historyOpen, setHistoryOpen] = useState(false);
 
     const isProvisioning = server?.status === 'provisioning';
     const isSuspended = server?.status === 'suspended';
@@ -92,7 +100,9 @@ export function ServerConsolePage() {
             return [{ id: -4, text: `[Peregrine] ${t('server-overview:install.waiting_for_output')}`, timestamp: Date.now() }];
         }
         if (isProvisioning) return messages;
-        if (isStopped && messages.length === 0) {
+        // When the server is off, the live console is wiped to show only this
+        // placeholder — the prior output stays available via the History modal.
+        if (isStopped) {
             return [{ id: -1, text: `[Peregrine] ${t('server-console:console.server_stopped_message')}`, timestamp: Date.now() }];
         }
         if (isStarting && messages.length === 0) {
@@ -126,6 +136,14 @@ export function ServerConsolePage() {
                         : t('server-overview:operations.banner.server_installing')}
                 </Alert>
             ) : null}
+
+            <ServerBootFixPrompts
+                serverId={serverId}
+                eulaRequired={eulaRequired}
+                javaIssue={javaIssue}
+                canFixEula={canFixEula}
+                canFixJava={canFixJava}
+            />
 
             {/* Header bar */}
             <div className="flex flex-col gap-2 flex-shrink-0">
@@ -162,13 +180,22 @@ export function ServerConsolePage() {
                         </span>
                     </div>
 
-                    <Button variant="ghost" size="sm" onClick={clearMessages}
-                        className="glass-card-enhanced flex-shrink-0">
-                        <svg className="h-4 w-4 sm:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        <span className="hidden sm:inline">{t('server-console:console.clear')}</span>
-                    </Button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button variant="ghost" size="sm" onClick={() => setHistoryOpen(true)}
+                            className="glass-card-enhanced">
+                            <svg className="h-4 w-4 sm:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            <span className="hidden sm:inline">{t('server-console:history.button')}</span>
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={clearMessages}
+                            className="glass-card-enhanced">
+                            <svg className="h-4 w-4 sm:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <span className="hidden sm:inline">{t('server-console:console.clear')}</span>
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Row 2: power controls (hidden during install OR when
@@ -197,6 +224,12 @@ export function ServerConsolePage() {
                     disabled={!isConnected}
                 />
             )}
+
+            <ServerConsoleHistoryModal
+                open={historyOpen}
+                onClose={() => setHistoryOpen(false)}
+                history={history}
+            />
         </m.div>
     );
 }

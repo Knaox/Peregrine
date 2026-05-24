@@ -14,7 +14,6 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
-use UnitEnum;
 
 class Settings extends Page implements HasForms
 {
@@ -43,21 +42,30 @@ class Settings extends Page implements HasForms
 
     // Appearance
     public ?string $app_name = '';
+
     /** @var array<int, string>|null */
     public ?array $logo_url = [];
+
     /** @var array<int, string>|null */
     public ?array $logo_url_light = [];
+
     /** @var array<int, string>|null */
     public ?array $favicon_url = [];
+
     public bool $show_app_name = true;
+
     public ?string $logo_height = '40';
+
     public string $default_locale = 'en';
+
     /** @var array<int, array<string, mixed>> */
     public array $header_links = [];
 
     // Pelican
     public ?string $pelican_url = '';
+
     public ?string $pelican_admin_api_key = '';
+
     public ?string $pelican_client_api_key = '';
 
     // Authentication moved to the dedicated AuthSettings page — manages the
@@ -75,6 +83,10 @@ class Settings extends Page implements HasForms
     // General — runtime app timezone (IANA identifier, e.g. Europe/Paris)
     public string $app_timezone = 'UTC';
 
+    // General — "remember me" cookie lifetime in days (DB-backed; applied at
+    // boot by AppServiceProvider via SessionGuard::setRememberDuration).
+    public int $auth_remember_lifetime_days = 30;
+
     // Network
     /** @var array<int, string> */
     public array $trusted_proxies = [];
@@ -85,12 +97,19 @@ class Settings extends Page implements HasForms
 
     // SMTP
     public ?string $mail_mailer = 'smtp';
+
     public ?string $mail_host = '';
+
     public ?string $mail_port = '587';
+
     public ?string $mail_encryption = 'tls';
+
     public ?string $mail_username = '';
+
     public ?string $mail_password = '';
+
     public ?string $mail_from_address = '';
+
     public ?string $mail_from_name = '';
 
     public function mount(): void
@@ -125,6 +144,7 @@ class Settings extends Page implements HasForms
         // boot before an admin has saved the page once.
         $this->app_debug = ($settings->get('app_debug', config('app.debug') ? 'true' : 'false')) === 'true';
         $this->app_timezone = (string) $settings->get('app_timezone', config('app.timezone', 'UTC'));
+        $this->auth_remember_lifetime_days = (int) $settings->get('auth_remember_lifetime_days', 30);
 
         $proxiesRaw = (string) $settings->get('trusted_proxies', env('TRUSTED_PROXIES', '*'));
         $this->trusted_proxies = $proxiesRaw === '*' || $proxiesRaw === ''
@@ -178,6 +198,7 @@ class Settings extends Page implements HasForms
             'mail_from_name' => $this->mail_from_name,
             'app_debug' => $this->app_debug,
             'app_timezone' => $this->app_timezone,
+            'auth_remember_lifetime_days' => $this->auth_remember_lifetime_days,
             'trusted_proxies' => $this->trusted_proxies,
             'broadcasting_auth_rate_limit_per_minute' => $this->broadcasting_auth_rate_limit_per_minute,
             'pelican_proxy_rate_limit_per_minute' => $this->pelican_proxy_rate_limit_per_minute,
@@ -207,7 +228,7 @@ class Settings extends Page implements HasForms
     public function testSmtp(): void
     {
         $userEmail = (string) (auth()->user()?->email ?? '');
-        $result = (new TestSmtpConfigAction())->execute($userEmail);
+        $result = (new TestSmtpConfigAction)->execute($userEmail);
 
         $notification = Notification::make()
             ->title($result['ok'] ? __('admin/_shell.notifications.smtp_ok') : __('admin/_shell.notifications.smtp_failed'))

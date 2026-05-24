@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
+use App\Services\PluginManager;
+use App\Services\SettingsService;
 use Filament\Tables\Columns\Column;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
@@ -18,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(\App\Services\PluginManager::class);
+        $this->app->singleton(PluginManager::class);
     }
 
     /**
@@ -42,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
         // exists (fresh install, migrations not yet ran).
         try {
             if (Schema::hasTable('settings')) {
-                $settings = app(\App\Services\SettingsService::class);
+                $settings = app(SettingsService::class);
                 $debugSetting = $settings->get('app_debug', null);
                 if ($debugSetting !== null) {
                     config(['app.debug' => $debugSetting === 'true']);
@@ -51,6 +55,18 @@ class AppServiceProvider extends ServiceProvider
                 if ($tzSetting !== '' && in_array($tzSetting, \DateTimeZone::listIdentifiers(), true)) {
                     config(['app.timezone' => $tzSetting]);
                     date_default_timezone_set($tzSetting);
+                }
+
+                // "Remember me" cookie lifetime — DB-backed so it survives a
+                // Docker redeploy and applies without a config:clear. Only the
+                // HTTP `web` guard cares, so skip console/queue/Reverb where
+                // there is no interactive login.
+                if (! $this->app->runningInConsole()) {
+                    $rememberDays = (int) $settings->get('auth_remember_lifetime_days', 30);
+                    $guard = Auth::guard('web');
+                    if ($rememberDays > 0 && $guard instanceof SessionGuard) {
+                        $guard->setRememberDuration($rememberDays * 24 * 60);
+                    }
                 }
             }
         } catch (\Throwable) {
@@ -175,7 +191,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Boot active plugins
         if (config('panel.installed')) {
-            app(\App\Services\PluginManager::class)->bootPlugins();
+            app(PluginManager::class)->bootPlugins();
         }
     }
 
@@ -193,7 +209,7 @@ class AppServiceProvider extends ServiceProvider
     private static function resolveBroadcastingAuthLimit(): int
     {
         try {
-            $value = app(\App\Services\SettingsService::class)
+            $value = app(SettingsService::class)
                 ->get('broadcasting_auth_rate_limit_per_minute', 240);
         } catch (\Throwable) {
             return 240;
@@ -212,7 +228,7 @@ class AppServiceProvider extends ServiceProvider
     private static function resolvePelicanProxyLimit(): int
     {
         try {
-            $value = app(\App\Services\SettingsService::class)
+            $value = app(SettingsService::class)
                 ->get('pelican_proxy_rate_limit_per_minute', 6000);
         } catch (\Throwable) {
             return 6000;

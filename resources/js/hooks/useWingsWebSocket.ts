@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { fetchWebSocketCredentials } from '@/services/serverApi';
 import { useWsRetryState, type WsFailure } from '@/hooks/useWsRetryState';
+import { detectMinecraftIssue } from '@/services/minecraftConsole';
 import type { ServerResources } from '@/types/ServerResources';
 import type { ConsoleMessage } from '@/types/ConsoleMessage';
 
@@ -29,6 +30,12 @@ interface UseWingsWebSocketReturn {
     isGaveUp: boolean;
     /** True once Wings has emitted `install completed` since this hook mounted. */
     installCompleted: boolean;
+    /** The Minecraft server logged "you must accept the EULA" and won't boot. */
+    eulaRequired: boolean;
+    /** The server failed to boot on an incompatible Java version. */
+    javaIssue: { detected: boolean; requiredJava: number | null };
+    /** Rolling buffer of the last 1000 log lines — survives the offline clear. */
+    history: ConsoleMessage[];
     sendCommand: (command: string) => void;
     clearMessages: () => void;
 }
@@ -38,20 +45,75 @@ export function useWingsWebSocket(
     options: UseWingsWebSocketOptions = { stats: true },
 ): UseWingsWebSocketReturn {
     const [messages, setMessages] = useState<ConsoleMessage[]>([]);
+    const [history, setHistory] = useState<ConsoleMessage[]>([]);
     const [resources, setResources] = useState<ServerResources | undefined>(undefined);
     const [serverState, setServerState] = useState<string>('offline');
     const [isConnected, setIsConnected] = useState(false);
     const [isGaveUp, setIsGaveUp] = useState(false);
     const [installCompleted, setInstallCompleted] = useState(false);
+    const [eulaRequired, setEulaRequired] = useState(false);
+    const [javaIssue, setJavaIssue] = useState<{ detected: boolean; requiredJava: number | null }>({
+        detected: false,
+        requiredJava: null,
+    });
 
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const keepaliveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
     const msgId = useRef(0);
     const alive = useRef(false);
+    // True while the server is offline/stopped — freezes the live `messages`
+    // buffer (so a reconnect's re-sent logs don't repopulate a console the user
+    // expects to be cleared) while `history` keeps accumulating.
+    const offline = useRef(false);
     const retry = useWsRetryState();
 
     const clearMessages = useCallback(() => setMessages([]), []);
+
+    const resetIssues = useCallback(() => {
+        setEulaRequired(false);
+        setJavaIssue({ detected: false, requiredJava: null });
+    }, []);
+
+    // Pattern-match each incoming log line for a fixable Minecraft boot
+    // failure (EULA / Java). Cheap enough to run on every line.
+    const scanForIssues = useCallback((line: string) => {
+        const issue = detectMinecraftIssue(line);
+        if (!issue) return;
+        if (issue.type === 'eula') {
+            setEulaRequired(true);
+        } else {
+            setJavaIssue({ detected: true, requiredJava: issue.requiredJava });
+        }
+    }, []);
+
+    // Record a log line: always into `history` (rolling 1000, kept across the
+    // offline clear), and into the live `messages` only while not frozen.
+    const record = useCallback((text: string) => {
+        const entry = { id: ++msgId.current, text, timestamp: Date.now() };
+        setHistory((prev) => {
+            const next = [...prev, entry];
+            return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next;
+        });
+        if (!offline.current) {
+            setMessages((prev) => {
+                const next = [...prev, entry];
+                return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next;
+            });
+        }
+    }, []);
+
+    // Clear the live console the instant the server goes offline (so it shows
+    // the "server is offline" placeholder) and freeze it until it comes back.
+    const updateOfflineFreeze = useCallback((state: string) => {
+        const isOff = state === 'offline' || state === 'stopped';
+        if (isOff && !offline.current) {
+            offline.current = true;
+            setMessages([]);
+        } else if (!isOff && offline.current) {
+            offline.current = false;
+        }
+    }, []);
 
     const sendCommand = useCallback((command: string) => {
         const ws = wsRef.current;
@@ -149,11 +211,8 @@ export function useWingsWebSocket(
                 case 'console output':
                     if (options.console && data.args[0] !== undefined) {
                         const cleaned = data.args[0].replace(ANSI_REGEX, '');
-                        const id = ++msgId.current;
-                        setMessages((prev) => {
-                            const next = [...prev, { id, text: cleaned, timestamp: Date.now() }];
-                            return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next;
-                        });
+                        scanForIssues(cleaned);
+                        record(cleaned);
                     }
                     break;
 
@@ -164,44 +223,40 @@ export function useWingsWebSocket(
                 case 'install output':
                     if (options.console && data.args[0] !== undefined) {
                         const cleaned = data.args[0].replace(ANSI_REGEX, '');
-                        const id = ++msgId.current;
-                        setMessages((prev) => {
-                            const next = [...prev, { id, text: `[install] ${cleaned}`, timestamp: Date.now() }];
-                            return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next;
-                        });
+                        scanForIssues(cleaned);
+                        record(`[install] ${cleaned}`);
                     }
                     break;
 
                 case 'install started':
                     if (options.console) {
-                        const id = ++msgId.current;
-                        setMessages((prev) => [
-                            ...prev.slice(-MAX_MESSAGES + 1),
-                            { id, text: '[Peregrine] Installation starting…', timestamp: Date.now() },
-                        ]);
+                        record('[Peregrine] Installation starting…');
                     }
+                    // A fresh install attempt clears any stale boot-failure state.
+                    resetIssues();
                     setInstallCompleted(false);
                     break;
 
                 case 'install completed':
                     if (options.console) {
-                        const id = ++msgId.current;
-                        setMessages((prev) => [
-                            ...prev.slice(-MAX_MESSAGES + 1),
-                            { id, text: '[Peregrine] Installation completed.', timestamp: Date.now() },
-                        ]);
+                        record('[Peregrine] Installation completed.');
                     }
                     setInstallCompleted(true);
                     break;
 
                 case 'status':
                     if (data.args[0]) {
-                        setServerState(data.args[0]);
+                        const state = data.args[0];
+                        setServerState(state);
+                        // Server recovered — any prior boot-failure prompt is moot.
+                        if (state === 'running') resetIssues();
+                        // Clear/freeze the live console when the server goes down.
+                        updateOfflineFreeze(state);
                         // Re-broadcast the live power state so any plugin bundle
                         // can react (e.g. lock an editor) the instant the server
                         // starts/stops, reusing this single Wings connection
                         // instead of opening its own.
-                        window.dispatchEvent(new CustomEvent('peregrine:server-power', { detail: { serverId, state: data.args[0] } }));
+                        window.dispatchEvent(new CustomEvent('peregrine:server-power', { detail: { serverId, state } }));
                     }
                     break;
 
@@ -221,6 +276,8 @@ export function useWingsWebSocket(
                             });
                             if (s.state) {
                                 setServerState(s.state as string);
+                                if (s.state === 'running') resetIssues();
+                                updateOfflineFreeze(s.state as string);
                                 window.dispatchEvent(new CustomEvent('peregrine:server-power', { detail: { serverId, state: s.state } }));
                             }
                         } catch { /* ignore */ }
@@ -251,11 +308,8 @@ export function useWingsWebSocket(
 
                 case 'daemon error':
                     if (options.console && data.args[0]) {
-                        const id = ++msgId.current;
-                        setMessages((prev) => {
-                            const next = [...prev, { id, text: `[ERROR] ${data.args[0]}`, timestamp: Date.now() }];
-                            return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next;
-                        });
+                        scanForIssues(data.args[0]);
+                        record(`[ERROR] ${data.args[0]}`);
                     }
                     break;
             }
@@ -274,7 +328,7 @@ export function useWingsWebSocket(
         ws.onerror = () => {
             // onclose will fire after onerror
         };
-    }, [serverId, options.console, options.stats, cleanup, scheduleReconnect, startKeepalive]);
+    }, [serverId, options.console, options.stats, cleanup, scheduleReconnect, startKeepalive, scanForIssues, resetIssues, record, updateOfflineFreeze]);
 
     useEffect(() => {
         alive.current = true;
@@ -289,5 +343,5 @@ export function useWingsWebSocket(
         };
     }, [connect, cleanup]);
 
-    return { messages, resources, serverState, isConnected, isGaveUp, installCompleted, sendCommand, clearMessages };
+    return { messages, history, resources, serverState, isConnected, isGaveUp, installCompleted, eulaRequired, javaIssue, sendCommand, clearMessages };
 }

@@ -7,8 +7,6 @@ use App\Http\Controllers\Api\Auth\TwoFactorController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Bridge\PelicanWebhookController;
 use App\Http\Controllers\Api\Bridge\StripeWebhookController;
-use App\Http\Middleware\VerifyPelicanWebhookToken;
-use App\Http\Middleware\VerifyStripeSignature;
 use App\Http\Controllers\Api\MarketplaceController;
 use App\Http\Controllers\Api\PluginController;
 use App\Http\Controllers\Api\ServerBackupController;
@@ -18,11 +16,15 @@ use App\Http\Controllers\Api\ServerDatabaseController;
 use App\Http\Controllers\Api\ServerFileController;
 use App\Http\Controllers\Api\ServerNetworkController;
 use App\Http\Controllers\Api\ServerPowerController;
+use App\Http\Controllers\Api\ServerRuntimeFixController;
 use App\Http\Controllers\Api\ServerScheduleController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Setup\BackfillController;
 use App\Http\Controllers\Setup\SetupController;
+use App\Http\Middleware\VerifyPelicanWebhookToken;
+use App\Http\Middleware\VerifyStripeSignature;
+use App\Services\SettingsService;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('setup')->group(function () {
@@ -90,7 +92,7 @@ Route::post('pelican/webhook', [PelicanWebhookController::class, 'handle'])
 // 405 unhandled exception in error monitoring. No auth — the response only
 // reflects the public toggle state, no secrets.
 Route::get('pelican/webhook', function () {
-    $enabled = (string) app(\App\Services\SettingsService::class)
+    $enabled = (string) app(SettingsService::class)
         ->get('pelican_webhook_enabled', 'false');
     $isEnabled = $enabled === 'true' || $enabled === '1';
 
@@ -133,6 +135,16 @@ Route::middleware('auth')->group(function () {
     // Server startup variables
     Route::get('servers/{server}/startup', [ServerController::class, 'startupVariables']);
     Route::put('servers/{server}/startup/variable', [ServerController::class, 'updateStartupVariable']);
+
+    // Minecraft console quick-fixes — surfaced by the SPA when the live log
+    // stream reports a boot failure (unaccepted EULA / incompatible Java).
+    // The image-switch + EULA writes are state-mutating, so they share the
+    // power/reinstall `server-actions` throttle bucket.
+    Route::get('servers/{server}/docker-images', [ServerRuntimeFixController::class, 'dockerImages']);
+    Route::middleware('throttle:server-actions')->group(function () {
+        Route::post('servers/{server}/docker-image', [ServerRuntimeFixController::class, 'applyDockerImage']);
+        Route::post('servers/{server}/accept-eula', [ServerRuntimeFixController::class, 'acceptEula']);
+    });
 
     // Server settings (rename / reinstall) — rate-limited like power actions
     // because reinstall is irreversible and triggers egg install scripts.

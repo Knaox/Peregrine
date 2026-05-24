@@ -8,6 +8,7 @@ use App\Services\Pelican\DTOs\PelicanEgg;
 use App\Services\Pelican\DTOs\PelicanNode;
 use App\Services\Pelican\DTOs\PelicanServer;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Pelican Application API — servers, nodes, eggs. Everything related to
@@ -309,6 +310,125 @@ class PelicanInfrastructureClient
                 'name' => (string) ($attrs['name'] ?? $key),
                 'default' => (string) ($attrs['default_value'] ?? ''),
             ];
+        }
+
+        return $out;
+    }
+
+    // Console quick-fixes (Docker image / Java version) -------------------
+
+    /**
+     * Read a server's live container info: the Docker image currently in use,
+     * its startup command + environment (needed to PATCH the image without
+     * mutating anything else), the egg id, and — when Pelican includes it on
+     * the relationship — the egg's docker_images map.
+     *
+     * @return array{egg: int, image: string, startup: string, environment: array<string, string>, egg_docker_images: array<string, string>}
+     *
+     * @throws RequestException
+     */
+    public function getServerContainer(int $pelicanServerId): array
+    {
+        $response = $this->http->request()
+            ->get("/api/application/servers/{$pelicanServerId}", ['include' => 'egg'])
+            ->throw();
+
+        $attrs = (array) ($response->json('attributes') ?? []);
+        $container = is_array($attrs['container'] ?? null) ? $attrs['container'] : [];
+
+        $environment = [];
+        foreach ((array) ($container['environment'] ?? []) as $key => $value) {
+            if (is_string($key)) {
+                $environment[$key] = is_scalar($value) ? (string) $value : '';
+            }
+        }
+
+        $eggImages = $response->json('attributes.relationships.egg.attributes.docker_images');
+
+        return [
+            'egg' => (int) ($attrs['egg'] ?? 0),
+            'image' => (string) ($container['image'] ?? ''),
+            'startup' => (string) ($container['startup_command'] ?? ''),
+            'environment' => $environment,
+            'egg_docker_images' => is_array($eggImages) ? $this->normaliseDockerImages($eggImages) : [],
+        ];
+    }
+
+    /**
+     * Apply a new Docker image to a server WITHOUT touching its egg, startup
+     * command or environment. Mirrors the version-changer plugin's strategy:
+     * GET the current container, resend egg/startup/environment verbatim,
+     * override only `image`, and skip the install scripts. The caller restarts
+     * the server afterwards so Wings pulls the new image.
+     *
+     * @throws RequestException
+     */
+    public function updateServerStartupImage(int $pelicanServerId, string $newImage): void
+    {
+        $newImage = trim($newImage);
+        if ($newImage === '') {
+            throw new \InvalidArgumentException('Refusing to apply an empty Docker image.');
+        }
+
+        $container = $this->getServerContainer($pelicanServerId);
+        if ($container['egg'] <= 0) {
+            throw new \RuntimeException('Could not read the current egg id from Pelican.');
+        }
+
+        $this->http->request()
+            ->patch("/api/application/servers/{$pelicanServerId}/startup", [
+                'egg' => $container['egg'],
+                // Fall back to the egg's default startup if Pelican didn't
+                // surface an override — keeps the PATCH legal.
+                'startup' => $container['startup'] !== '' ? $container['startup'] : '{{SERVER_JARFILE}}',
+                'environment' => $container['environment'],
+                'image' => $newImage,
+                'skip_scripts' => true,
+            ])
+            ->throw();
+    }
+
+    /**
+     * Fetch an egg's `docker_images` map (label → image URL) from Pelican.
+     * Cached 5 min per egg — the operator rarely edits an egg's image list and
+     * the console quick-fix reads it on every modal open.
+     *
+     * @return array<string, string>
+     *
+     * @throws RequestException
+     */
+    public function getEggDockerImages(int $pelicanEggId): array
+    {
+        if ($pelicanEggId <= 0) {
+            return [];
+        }
+
+        return Cache::remember(
+            "peregrine:egg-docker-images:{$pelicanEggId}",
+            now()->addMinutes(5),
+            function () use ($pelicanEggId): array {
+                $response = $this->http->request()
+                    ->get("/api/application/eggs/{$pelicanEggId}")
+                    ->throw();
+
+                $images = $response->json('attributes.docker_images');
+
+                return is_array($images) ? $this->normaliseDockerImages($images) : [];
+            },
+        );
+    }
+
+    /**
+     * @param  array<int|string, mixed>  $raw
+     * @return array<string, string>
+     */
+    private function normaliseDockerImages(array $raw): array
+    {
+        $out = [];
+        foreach ($raw as $label => $image) {
+            if (is_string($label) && is_string($image) && trim($image) !== '') {
+                $out[trim($label)] = trim($image);
+            }
         }
 
         return $out;

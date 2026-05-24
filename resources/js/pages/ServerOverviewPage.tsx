@@ -13,6 +13,7 @@ import { SIDEBAR_ENTRY_PERMISSIONS } from '@/utils/serverPermissions';
 import { Alert } from '@/components/ui/Alert';
 import { Spinner } from '@/components/ui/Spinner';
 import { ServerPowerControls } from '@/components/server/ServerPowerControls';
+import { ServerBootFixPrompts } from '@/components/console/ServerBootFixPrompts';
 import { ServerResourceCards } from '@/components/server/ServerResourceCards';
 import { ServerInfoCard } from '@/components/server/ServerInfoCard';
 import { ServerSettingsActions } from '@/components/server/ServerSettingsActions';
@@ -74,7 +75,7 @@ export function ServerOverviewPage() {
     }, [completedOp, t]);
     // Subscribe to console output too — when the server is installing we
     // show a live tail of `install output` messages on the hero card.
-    const { resources, serverState: wsState, messages, installCompleted, isConnected } = useWingsWebSocket(serverId, { stats: true, console: true });
+    const { resources, serverState: wsState, messages, installCompleted, isConnected, eulaRequired, javaIssue } = useWingsWebSocket(serverId, { stats: true, console: true });
     const sidebarConfig = useSidebarConfig();
     const pluginManifests = usePluginStore((s) => s.manifests);
     const pluginHomeSectionComponents = usePluginStore((s) => s.serverHomeSectionComponents);
@@ -223,6 +224,16 @@ export function ServerOverviewPage() {
                     </div>
                 </Alert>
             ) : null}
+
+            {/* Minecraft boot-failure quick-fixes — same detection as the
+                console (this page also streams console output). */}
+            <ServerBootFixPrompts
+                serverId={serverId}
+                eulaRequired={eulaRequired}
+                javaIssue={javaIssue}
+                canFixEula={canRestart}
+                canFixJava={canEditStartup}
+            />
 
             {/* Hero banner */}
             <m.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}

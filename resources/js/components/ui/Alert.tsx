@@ -85,7 +85,7 @@ export function Alert({ variant, children, className }: AlertProps) {
             role='alert'
         >
             <AlertIcon variant={variant} />
-            <div>{children}</div>
+            <div className='min-w-0 flex-1'>{children}</div>
         </div>
     );
 }

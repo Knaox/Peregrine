@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import type { ConsoleOutputProps } from '@/components/console/ConsoleOutput.props';
 import { useNamespace } from '@/i18n/useNamespace';
 
-function colorize(text: string): { color: string; bold: boolean } {
+export function colorize(text: string): { color: string; bold: boolean } {
     if (text.startsWith('[Peregrine]')) return { color: 'var(--color-primary)', bold: true };
     if (/\b(error|exception|fatal|fail)/i.test(text)) return { color: 'var(--color-danger)', bold: false };
     if (/\b(warn|warning)/i.test(text)) return { color: 'var(--color-warning)', bold: false };

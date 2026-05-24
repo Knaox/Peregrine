@@ -110,3 +110,38 @@ export async function reinstallServer(id: number, options: { wipeData?: boolean 
         body: JSON.stringify({ wipe_data: !!options.wipeData }),
     });
 }
+
+// --- Minecraft console quick-fixes (EULA / Java version) -------------------
+
+export interface DockerImageOption {
+    label: string;
+    image: string;
+    java_major: number | null;
+    is_current: boolean;
+    is_recommended: boolean;
+}
+
+export interface DockerImagesResponse {
+    current: string | null;
+    images: DockerImageOption[];
+}
+
+export async function fetchServerDockerImages(
+    id: number,
+    requiredJava?: number | null,
+): Promise<DockerImagesResponse> {
+    const qs = requiredJava && requiredJava > 0 ? `?java=${requiredJava}` : '';
+    const { data } = await request<{ data: DockerImagesResponse }>(`/api/servers/${id}/docker-images${qs}`);
+    return data;
+}
+
+export async function applyServerDockerImage(id: number, image: string): Promise<void> {
+    await request(`/api/servers/${id}/docker-image`, {
+        method: 'POST',
+        body: JSON.stringify({ image }),
+    });
+}
+
+export async function acceptServerEula(id: number): Promise<void> {
+    await request(`/api/servers/${id}/accept-eula`, { method: 'POST' });
+}

@@ -4,6 +4,7 @@ namespace App\Services\Settings;
 
 use App\Services\SettingsService;
 use App\Services\SetupService;
+use Illuminate\Support\Facades\Crypt;
 
 /**
  * Maps a Filament Settings page form payload to its persistence layer:
@@ -53,10 +54,10 @@ final class SettingsPersister
             $this->settings->set('pelican_url', (string) $data['pelican_url']);
         }
         if (isset($data['pelican_admin_api_key']) && $data['pelican_admin_api_key'] !== '') {
-            $this->settings->set('pelican_admin_api_key', \Illuminate\Support\Facades\Crypt::encryptString((string) $data['pelican_admin_api_key']));
+            $this->settings->set('pelican_admin_api_key', Crypt::encryptString((string) $data['pelican_admin_api_key']));
         }
         if (isset($data['pelican_client_api_key']) && $data['pelican_client_api_key'] !== '') {
-            $this->settings->set('pelican_client_api_key', \Illuminate\Support\Facades\Crypt::encryptString((string) $data['pelican_client_api_key']));
+            $this->settings->set('pelican_client_api_key', Crypt::encryptString((string) $data['pelican_client_api_key']));
         }
     }
 
@@ -144,6 +145,15 @@ final class SettingsPersister
         // 'trusted_proxies' on every request.
         $this->settings->set('app_debug', ($data['app_debug'] ?? false) ? 'true' : 'false');
         $this->settings->set('app_timezone', (string) ($data['app_timezone'] ?? 'UTC'));
+
+        // "Remember me" cookie lifetime in days. Clamped 1–3650 so a typo
+        // can't disable it (0) or set an absurd value. AppServiceProvider
+        // reads this at boot and calls SessionGuard::setRememberDuration(),
+        // so a save applies to the next login without a config:clear.
+        if (array_key_exists('auth_remember_lifetime_days', $data)) {
+            $days = max(1, min(3650, (int) $data['auth_remember_lifetime_days']));
+            $this->settings->set('auth_remember_lifetime_days', (string) $days);
+        }
 
         $proxies = $data['trusted_proxies'] ?? [];
         $proxies = is_array($proxies)

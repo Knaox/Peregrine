@@ -32,5 +32,45 @@
         "pelican_throttled": "Pelican limite les requêtes pour ce serveur. Patiente un instant et réessaie.",
         "pelican_denied": "Pelican refuse l'accès à la console de ce serveur.",
         "pelican_unavailable": "Pelican est actuellement injoignable. La console se reconnectera automatiquement."
+    },
+    "fix": {
+        "eula": {
+            "banner": "Ce serveur n'a pas accepté le EULA de Minecraft, il ne peut donc pas démarrer.",
+            "banner_action": "Accepter le EULA",
+            "title": "Accepter le EULA de Minecraft",
+            "body": "Pour faire tourner un serveur Minecraft, tu dois accepter le contrat de licence utilisateur final (EULA) de Mojang. L'acceptes-tu ?",
+            "link": "Lire le EULA de Minecraft",
+            "accept": "Oui, j'accepte",
+            "decline": "Non",
+            "accepting": "Acceptation…",
+            "success": "EULA accepté — redémarrage du serveur…",
+            "error": "Impossible d'accepter le EULA. Réessaie."
+        },
+        "java": {
+            "banner": "Le serveur n'a pas pu démarrer : sa version de Java est incompatible.",
+            "banner_action": "Changer la version de Java",
+            "title": "Version de Java incompatible",
+            "body": "Le logiciel de ce serveur nécessite une autre version de Java. Choisis une image Docker ci-dessous.",
+            "body_with_version": "Le logiciel de ce serveur nécessite Java {{java}} ou plus récent. Choisis une image Docker ci-dessous — nous recommandons celle qui est mise en avant.",
+            "recommended": "Recommandée",
+            "current": "Actuelle",
+            "apply": "Utiliser cette image et redémarrer",
+            "applying": "Application…",
+            "cancel": "Annuler",
+            "loading": "Chargement des images disponibles…",
+            "empty": "Aucune image Docker n'est disponible pour ce serveur.",
+            "not_allowed": "Cette image n'est pas autorisée pour ce serveur.",
+            "success": "Image mise à jour — redémarrage du serveur…",
+            "error": "Impossible de changer l'image. Réessaie."
+        }
+    },
+    "history": {
+        "button": "Historique",
+        "title": "Historique de la console",
+        "show_last": "Afficher les",
+        "lines": "dernières lignes",
+        "count": "{{shown}} sur {{total}} lignes",
+        "empty": "Aucun historique pour le moment.",
+        "close": "Fermer"
     }
 }

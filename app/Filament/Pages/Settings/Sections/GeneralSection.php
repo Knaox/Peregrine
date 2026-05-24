@@ -39,6 +39,15 @@ final class GeneralSection
                     ->required()
                     ->searchable()
                     ->helperText(__('admin/settings.form.general.timezone_helper')),
+                TextInput::make('auth_remember_lifetime_days')
+                    ->label(__('admin/settings.form.general.remember_lifetime'))
+                    ->helperText(__('admin/settings.form.general.remember_lifetime_helper'))
+                    ->numeric()
+                    ->minValue(1)
+                    ->maxValue(3650)
+                    ->default(30)
+                    ->required()
+                    ->suffix(__('admin/settings.form.general.remember_lifetime_suffix')),
                 Repeater::make('header_links')
                     ->label(__('admin/settings.form.general.header_links'))
                     ->helperText(__('admin/settings.form.general.header_links_helper'))

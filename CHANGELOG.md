@@ -8,6 +8,24 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.13] — 2026-05-24
+
+### Added
+
+- **Minecraft console quick-fixes.** The live console now detects two common boot failures and offers a one-click fix — surfaced on both the console and the server home page, gated by the relevant server permissions:
+  - **EULA not accepted** → a prompt writes `eula=true` to `eula.txt` and cleanly power-cycles the server (force-stop → wait until offline → start).
+  - **Incompatible Java version** → a picker lists the egg's Docker images (plus a `pelican-eggs/yolks` Java 8 / 11 / 17 / 21 fallback when the egg ships too few), highlights the recommended one — derived from the `UnsupportedClassVersionError` class-file version in the log — then applies it and cleanly power-cycles. The image switch is validated against the egg's allowed set and preserves the egg / startup command / environment (only the image changes).
+- **Configurable "remember me" duration.** `/admin/settings → General` now exposes the remember-me cookie lifetime (in days, 1–3650). Stored in the database so it survives a Docker redeploy and applies to new logins without a `config:clear` — same DB-backed runtime pattern as the application timezone.
+- **Console history + auto-clear on shutdown.** When the server is stopped the console clears to the "server is offline" placeholder; a new **History** button opens the last 1000 log lines, filterable by the number of lines to show.
+
+### Plugins
+
+- **Easy Configuration → 1.2.0.** Read-only browsable configuration editor while the server is running (instead of a hard stop-the-server lock for read access); clearer state that distinguishes an unreachable Wings daemon from genuinely absent files; an accessibility pass (accessible names + pressed state on the custom controls); a Vitest frontend test suite; and an **AI prompt generator** tab in the template editor — a pure prompt builder scoped to the parameters/sections detected on the server, to hand to an AI when authoring a new template.
+
+### Fixed
+
+- **`TwoFactorTest`** assertions aligned with the actual `auth-2fa:*` error-key format returned by the 2FA challenge endpoints (test-only; no runtime behaviour change).
+
 ## [1.0.0-alpha.12b] — 2026-05-24
 
 ### Changed

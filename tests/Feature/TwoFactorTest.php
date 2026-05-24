@@ -7,8 +7,8 @@ use App\Models\User;
 use App\Services\Auth\TwoFactorChallengeStore;
 use App\Services\Auth\TwoFactorService;
 use App\Services\SettingsService;
+use Filament\Panel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
@@ -64,7 +64,7 @@ class TwoFactorTest extends TestCase
         $this->actingAs($user)
             ->postJson('/api/auth/2fa/confirm', ['secret' => $secret, 'code' => '000000'])
             ->assertStatus(422)
-            ->assertJsonFragment(['error' => 'auth.2fa.invalid_code']);
+            ->assertJsonFragment(['error' => 'auth-2fa:invalid_code']);
     }
 
     public function test_login_requires_2fa_when_user_has_it(): void
@@ -106,7 +106,7 @@ class TwoFactorTest extends TestCase
         $this->postJson('/api/auth/2fa/challenge', [
             'challenge_id' => '00000000-0000-0000-0000-000000000000',
             'code' => '123456',
-        ])->assertStatus(410)->assertJsonFragment(['error' => 'auth.2fa.challenge_expired']);
+        ])->assertStatus(410)->assertJsonFragment(['error' => 'auth-2fa:challenge_expired']);
     }
 
     public function test_recovery_code_cannot_be_reused(): void
@@ -193,7 +193,7 @@ class TwoFactorTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
 
         $this->assertFalse($admin->canAccessPanel(
-            app(\Filament\Panel::class, ['id' => 'admin']) ?? $this->stubPanel()
+            app(Panel::class, ['id' => 'admin']) ?? $this->stubPanel()
         ));
     }
 
@@ -201,9 +201,9 @@ class TwoFactorTest extends TestCase
      * Tiny helper: Filament Panel instantiation in tests is heavy — we only
      * need the method invocation, not the panel's behavior.
      */
-    private function stubPanel(): \Filament\Panel
+    private function stubPanel(): Panel
     {
-        return new \Filament\Panel();
+        return new Panel;
     }
 
     /**

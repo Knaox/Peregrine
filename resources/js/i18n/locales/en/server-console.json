@@ -32,5 +32,45 @@
         "pelican_throttled": "Pelican is rate-limiting requests for this server. Wait a moment and retry.",
         "pelican_denied": "Pelican refused access to this server's console.",
         "pelican_unavailable": "Pelican is currently unreachable. The console will reconnect automatically."
+    },
+    "fix": {
+        "eula": {
+            "banner": "This server hasn't accepted the Minecraft EULA, so it can't start.",
+            "banner_action": "Accept the EULA",
+            "title": "Accept the Minecraft EULA",
+            "body": "To run a Minecraft server you must accept Mojang's End User License Agreement (EULA). Do you accept it?",
+            "link": "Read the Minecraft EULA",
+            "accept": "Yes, I accept",
+            "decline": "No",
+            "accepting": "Accepting…",
+            "success": "EULA accepted — restarting the server…",
+            "error": "Couldn't accept the EULA. Please try again."
+        },
+        "java": {
+            "banner": "The server failed to start: its Java version is incompatible.",
+            "banner_action": "Change the Java version",
+            "title": "Incompatible Java version",
+            "body": "This server's software needs a different Java version. Pick a Docker image below.",
+            "body_with_version": "This server's software needs Java {{java}} or newer. Pick a Docker image below — we recommend the highlighted one.",
+            "recommended": "Recommended",
+            "current": "Current",
+            "apply": "Use this image & restart",
+            "applying": "Applying…",
+            "cancel": "Cancel",
+            "loading": "Loading available images…",
+            "empty": "No Docker images are available for this server.",
+            "not_allowed": "That image isn't allowed for this server.",
+            "success": "Image updated — restarting the server…",
+            "error": "Couldn't change the image. Please try again."
+        }
+    },
+    "history": {
+        "button": "History",
+        "title": "Console history",
+        "show_last": "Show the last",
+        "lines": "lines",
+        "count": "{{shown}} of {{total}} lines",
+        "empty": "No history yet.",
+        "close": "Close"
     }
 }
