@@ -7,6 +7,7 @@ namespace Plugins\PeregrinePlayerCounter\Services;
 use App\Models\Server;
 use App\Services\Pelican\PelicanClientService;
 use App\Services\Pelican\PelicanNetworkService;
+use Illuminate\Support\Facades\Cache;
 use Plugins\PeregrinePlayerCounter\PlayerCounterServiceProvider;
 
 /**
@@ -74,6 +75,12 @@ class RconResolver
             // The common cause is "no free port / allocation limit reached".
             return ['ok' => false, 'error' => 'no_free_allocation'];
         }
+
+        // A new allocation now exists — drop the core's cached network +
+        // primary-allocation snapshots (10-min TTL) so the panel and the next
+        // player query see it immediately. Mirrors ServerNetworkController.
+        Cache::forget("server_network:{$server->identifier}");
+        Cache::forget("server_allocation:{$server->identifier}");
 
         $attrs = $allocation['attributes'] ?? $allocation;
         $port = (int) ($attrs['port'] ?? 0);
