@@ -8,9 +8,20 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.14] — 2026-05-25
+
+### Added
+
+- **Unified save bar on the server screen.** Editing startup variables — and any plugin config editor — now flows through a single floating save bar instead of one save button per variable. Change several environment variables *and* several Easy Configuration fields, then save everything in one click (or `⌘/Ctrl+S`). It's built on a decoupled save coordinator: the core exposes `registerSaveSource` / `unregisterSaveSource` on the plugin bridge (`window.__PEREGRINE_PLUGINS__`), so a plugin opts in by feature detection — no hard dependency in either direction, and a plugin keeps its own save bar on older panels. A new batch endpoint `PUT /api/servers/{server}/startup/variables` persists every edited variable in one round-trip with partial-success semantics (Pelican has no bulk endpoint and throttles per server, so failed keys are reported and stay dirty for a retry while the rest apply). Leaving the page or switching server tabs with unsaved changes now warns first.
+
 ### Fixed
 
+- **Clearing a startup variable now saves.** Emptying an environment variable value failed with `422`: the value was `required`, and the global `ConvertEmptyStringsToNull` middleware turned `""` into `null` before validation. Empty values are now accepted (`present|nullable`) and forwarded to Pelican as an empty string.
 - **Easy Configuration → 1.2.3** (plugin-only release, not tied to a panel version). The game-config editor no longer blanks out entirely ("the game server configuration can't be reached") when a *single* config file fails to read: a file that is absent (404) or unreadable (Wings 5xx / timeout / a per-file throttle or bad path) is now skipped, and every config file that loaded is still shown; the full "unreachable" message appears only when *nothing at all* could be read. This bit multi-file templates (e.g. Hytale's server + world configs) where one file's path errored — and it was never a JSON-format problem (the parser tolerates malformed input by design). Also refreshes the bundled **official Hytale template** with a complete, fully bilingual (FR/EN) server + `default`-world schema.
+
+### Plugins
+
+- **Easy Configuration → 1.3.0.** Opts into the new unified save bar: when the panel exposes it, the config editor registers its dirty changes with the host's single bar — so config edits save together with env-variable edits in one click — and hides its own floating bar; on older panels it falls back to its own bar (pure feature detection, no hard dependency on the host). Also fixes a display bug where, in 2- or 3-column layouts with boost mode enabled, the boost controls' tooltips ("Inclure dans le boost", × / ÷) overflowed and were clipped at the card's left edge — tooltips now anchor to the trigger's edge and stay inside the card.
 
 ## [1.0.0-alpha.13c] — 2026-05-24
 
