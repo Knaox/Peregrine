@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { m, AnimatePresence } from 'motion/react';
 import clsx from 'clsx';
 import { getIcon } from '@/utils/icons';
+import { useUnsavedNavGuard } from '@/hooks/useUnsavedNavGuard';
 import { SidebarBackButton } from '@/components/server/sidebar/SidebarBackButton';
 import { ServerContextPill } from '@/components/server/sidebar/ServerContextPill';
 import { SidebarUserMenu } from '@/components/server/sidebar/SidebarUserMenu';
@@ -183,6 +184,7 @@ function DockItem({
     to, end, ariaLabel, className, style, children,
 }: DockItemProps) {
     const linkRef = useRef<HTMLAnchorElement>(null);
+    const guardNav = useUnsavedNavGuard();
     return (
         <m.div
             initial={{ opacity: 0, y: 10 }}
@@ -201,6 +203,7 @@ function DockItem({
                 aria-label={ariaLabel}
                 className={className}
                 style={style}
+                onClick={(e) => guardNav(e)}
             >
                 {children}
             </NavLink>

@@ -38,11 +38,21 @@
         "count": "{{count}} variable(s)",
         "saved": "Variable enregistrée.",
         "save": "Enregistrer",
+        "modified": "Modifié",
+        "reset": "Réinitialiser",
         "not_editable": "Non modifiable",
         "linked": "Lié",
         "linked_hint": "Cette variable est gérée par un plugin.",
         "advanced": "Configuration avancée",
         "advanced_count": "{{count}} fichier(s)"
+    },
+    "save_bar": {
+        "unsaved": "{{count}} modification(s) non enregistrée(s)",
+        "save": "Tout enregistrer",
+        "saving": "Enregistrement…",
+        "saved": "Enregistré",
+        "error": "Échec de l'enregistrement",
+        "leave_confirm": "Vous avez des modifications non enregistrées. Quitter sans enregistrer ?"
     },
     "settings": {
         "title": "Actions serveur",

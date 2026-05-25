@@ -5,6 +5,7 @@ import * as ReactRouterDom from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n/config';
 import { getEcho } from '@/services/echo';
+import type { SaveSource } from '@/stores/saveCoordinatorStore';
 
 declare global {
     interface Window {
@@ -51,6 +52,17 @@ declare global {
                 type: 'modpack' | 'modpack_uninstall' | string,
                 opts: { serverId: number; name?: string | null }
             ) => void;
+            /**
+             * Register a "save source" with the unified save bar so a plugin's
+             * dirty changes are flushed together with the core's in a single
+             * click. Optional on purpose: a plugin must feature-detect it
+             * (`typeof registerSaveSource === 'function'`) and fall back to its
+             * own save UI when running on an older shell. Core never imports the
+             * plugin; the plugin never imports the store — this bridge is the
+             * only contract.
+             */
+            registerSaveSource: (id: string, source: SaveSource) => void;
+            unregisterSaveSource: (id: string) => void;
         };
     }
 }
@@ -73,4 +85,6 @@ window.__PEREGRINE_PLUGINS__ = {
     registerServerHomeSection: () => {},
     notifyOperationStart: () => {},
     notifyOperationComplete: () => {},
+    registerSaveSource: () => {},
+    unregisterSaveSource: () => {},
 };

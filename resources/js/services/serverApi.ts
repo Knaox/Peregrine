@@ -96,6 +96,33 @@ export async function updateStartupVariable(id: number, key: string, value: stri
     });
 }
 
+export interface StartupVariableUpdate {
+    key: string;
+    value: string;
+}
+
+/** Per-key failures keyed by env variable name (partial-success model). */
+export interface BatchStartupResult {
+    success: boolean;
+    updated: number;
+    errors: Record<string, string>;
+}
+
+/**
+ * Batch update — backs the unified save bar. Pelican has no bulk endpoint, so
+ * the server applies them one by one and returns partial-success info: a 200
+ * body with `success:false` + `errors` means some keys failed (the rest saved).
+ */
+export async function updateStartupVariables(
+    id: number,
+    variables: StartupVariableUpdate[],
+): Promise<BatchStartupResult> {
+    return request<BatchStartupResult>(`/api/servers/${id}/startup/variables`, {
+        method: 'PUT',
+        body: JSON.stringify({ variables }),
+    });
+}
+
 export async function renameServer(id: number, name: string): Promise<Server> {
     const { data } = await request<{ data: Server }>(`/api/servers/${id}/rename`, {
         method: 'POST',

@@ -38,11 +38,21 @@
         "count": "{{count}} variable(s)",
         "saved": "Variable saved.",
         "save": "Save",
+        "modified": "Modified",
+        "reset": "Reset",
         "not_editable": "Not editable",
         "linked": "Linked",
         "linked_hint": "This variable is managed by a plugin.",
         "advanced": "Advanced Configuration",
         "advanced_count": "{{count}} file(s)"
+    },
+    "save_bar": {
+        "unsaved": "{{count}} unsaved change(s)",
+        "save": "Save all",
+        "saving": "Saving…",
+        "saved": "Saved",
+        "error": "Save failed",
+        "leave_confirm": "You have unsaved changes. Leave without saving?"
     },
     "settings": {
         "title": "Server actions",

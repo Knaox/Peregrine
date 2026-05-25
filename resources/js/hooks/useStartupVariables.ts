@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchStartupVariables, updateStartupVariable } from '@/services/serverApi';
+import { fetchStartupVariables, updateStartupVariables, type StartupVariableUpdate } from '@/services/serverApi';
 
 export function useStartupVariables(serverId: number) {
     const queryClient = useQueryClient();
@@ -12,8 +12,7 @@ export function useStartupVariables(serverId: number) {
     });
 
     const mutation = useMutation({
-        mutationFn: ({ key, value }: { key: string; value: string }) =>
-            updateStartupVariable(serverId, key, value),
+        mutationFn: (vars: StartupVariableUpdate[]) => updateStartupVariables(serverId, vars),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['servers', serverId, 'startup'] });
         },
@@ -22,7 +21,7 @@ export function useStartupVariables(serverId: number) {
     return {
         variables: variables ?? [],
         isLoading,
-        updateVariable: mutation.mutate,
-        isUpdating: mutation.isPending,
+        saveVariables: mutation.mutateAsync,
+        isSaving: mutation.isPending,
     };
 }

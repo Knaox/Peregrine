@@ -11,6 +11,7 @@ import { SIDEBAR_ENTRY_PERMISSIONS } from '@/utils/serverPermissions';
 import { Spinner } from '@/components/ui/Spinner';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { ServerSidebar } from '@/components/server/ServerSidebar';
+import { GlobalSaveBar } from '@/components/server/GlobalSaveBar';
 import { EggBackground } from '@/components/EggBackground';
 import { ServerOverviewPage } from '@/pages/ServerOverviewPage';
 import { ServerConsolePage } from '@/pages/ServerConsolePage';
@@ -271,6 +272,9 @@ export function ServerDetailPage() {
                     </Routes>
                 </div>
             </m.main>
+            {/* Single floating save bar shared across every server sub-page.
+                Self-hides when no editor has registered dirty changes. */}
+            <GlobalSaveBar />
         </div>
     );
 }

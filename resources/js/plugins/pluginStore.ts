@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { PluginManifest } from '@/plugins/types';
+import { useSaveCoordinatorStore } from '@/stores/saveCoordinatorStore';
 
 interface PluginStore {
     manifests: PluginManifest[];
@@ -77,6 +78,16 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
                 window.dispatchEvent(new CustomEvent('peregrine:operation-complete', {
                     detail: { type, ...opts },
                 }));
+            },
+            // Unified save bar bridge. Delegates to the core save coordinator so
+            // a plugin can register its dirty changes without importing the
+            // store (and the store stays plugin-agnostic). Plugins feature-detect
+            // these before use, so older shells simply lack them.
+            registerSaveSource: (id, source) => {
+                useSaveCoordinatorStore.getState().registerSource(id, source);
+            },
+            unregisterSaveSource: (id) => {
+                useSaveCoordinatorStore.getState().unregisterSource(id);
             },
         };
 

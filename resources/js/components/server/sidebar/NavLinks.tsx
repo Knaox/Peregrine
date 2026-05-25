@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { m, AnimatePresence } from 'motion/react';
 import clsx from 'clsx';
 import { getIcon } from '@/utils/icons';
+import { useUnsavedNavGuard } from '@/hooks/useUnsavedNavGuard';
 import type { SidebarEntry } from '@/hooks/useSidebarConfig';
 
 interface NavLinksProps {
@@ -48,6 +49,7 @@ function getActiveStyle(style: string, isActive: boolean, isTop: boolean): React
  */
 export function NavLinks({ entries, serverId, style, isTop, onNavClick }: NavLinksProps) {
     const { t } = useTranslation();
+    const guardNav = useUnsavedNavGuard();
     const isRail = style === 'compact' && !isTop;
     const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -71,7 +73,7 @@ export function NavLinks({ entries, serverId, style, isTop, onNavClick }: NavLin
                         <NavLink
                             to={`/servers/${serverId}${entry.route_suffix}`}
                             end={entry.route_suffix === ''}
-                            onClick={onNavClick}
+                            onClick={(e) => { if (guardNav(e)) onNavClick?.(); }}
                             aria-label={isRail ? label : undefined}
                             className={({ isActive }) => clsx(
                                 'flex items-center text-sm font-medium transition-all duration-150',
