@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\ServerConfigurationResource;
 
+use App\Models\Node;
+use App\Models\ResourceTemplate;
+use App\Support\EggVariableOptions;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -13,6 +17,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Support\HtmlString;
 
 /**
  * Form schema for ServerConfigurationResource. Three tabs :
@@ -84,7 +89,7 @@ final class ServerConfigurationFormSchema
     private static function resourceFields(): array
     {
         return [
-            \Filament\Forms\Components\Select::make('resource_template_id')
+            Select::make('resource_template_id')
                 ->label(__('admin/server_configurations.fields.resource_template'))
                 ->helperText(__('admin/server_configurations.helpers.resource_template'))
                 ->relationship('resourceTemplate', 'name')
@@ -94,9 +99,9 @@ final class ServerConfigurationFormSchema
                 ->required()
                 ->placeholder(__('admin/server_configurations.placeholders.resource_template')),
 
-            \Filament\Forms\Components\Placeholder::make('resource_template_preview')
+            Placeholder::make('resource_template_preview')
                 ->label(__('admin/server_configurations.fields.resource_template_preview'))
-                ->content(fn (\Filament\Schemas\Components\Utilities\Get $get) => self::renderTemplatePreview($get('resource_template_id'))),
+                ->content(fn (Get $get) => self::renderTemplatePreview($get('resource_template_id'))),
         ];
     }
 
@@ -104,16 +109,16 @@ final class ServerConfigurationFormSchema
      * Read-only preview of the picked ResourceTemplate's specs. Empty
      * placeholder when nothing is picked yet.
      */
-    private static function renderTemplatePreview(mixed $templateId): \Illuminate\Support\HtmlString
+    private static function renderTemplatePreview(mixed $templateId): HtmlString
     {
         if (! $templateId) {
-            return new \Illuminate\Support\HtmlString(
+            return new HtmlString(
                 '<em class="opacity-60">'.e(__('admin/server_configurations.helpers.resource_template_empty')).'</em>'
             );
         }
-        $tpl = \App\Models\ResourceTemplate::find((int) $templateId);
+        $tpl = ResourceTemplate::find((int) $templateId);
         if ($tpl === null) {
-            return new \Illuminate\Support\HtmlString(
+            return new HtmlString(
                 '<em class="opacity-60">'.e(__('admin/server_configurations.helpers.resource_template_not_found')).'</em>'
             );
         }
@@ -131,7 +136,7 @@ final class ServerConfigurationFormSchema
         }
         $html .= '</dl>';
 
-        return new \Illuminate\Support\HtmlString($html);
+        return new HtmlString($html);
     }
 
     /** @return array<int, mixed> */
@@ -144,6 +149,9 @@ final class ServerConfigurationFormSchema
                 ->searchable()
                 ->preload()
                 ->required()
+                // Live so the env_var_mapping repeater and the IP-variable
+                // picker can list THIS egg's variables (EggVariableOptions).
+                ->live()
                 ->helperText(__('admin/server_configurations.helpers.egg')),
 
             Toggle::make('auto_deploy')
@@ -162,7 +170,7 @@ final class ServerConfigurationFormSchema
             Select::make('allowed_node_ids')
                 ->label(__('admin/server_configurations.fields.allowed_nodes'))
                 ->multiple()
-                ->options(fn () => \App\Models\Node::pluck('name', 'id')->toArray())
+                ->options(fn () => Node::pluck('name', 'id')->toArray())
                 ->searchable()
                 ->visible(fn (Get $get) => (bool) $get('auto_deploy'))
                 ->required(fn (Get $get) => (bool) $get('auto_deploy'))
@@ -187,11 +195,26 @@ final class ServerConfigurationFormSchema
                 ->label(__('admin/server_configurations.fields.env_mapping'))
                 ->helperText(__('admin/server_configurations.helpers.env_mapping'))
                 ->schema([
-                    TextInput::make('variable_name')
+                    Select::make('variable_name')
                         ->label(__('admin/server_configurations.fields.variable_name'))
-                        ->required()
-                        ->alphaDash()
-                        ->maxLength(100),
+                        ->helperText(__('admin/server_configurations.helpers.variable_name'))
+                        ->options(function (Get $get): array {
+                            // `../../egg_id` : two levels up from a repeater
+                            // item field to the form root, same traversal the
+                            // offset_value field uses for `../../port_count`.
+                            $options = EggVariableOptions::forEgg($get('../../egg_id'));
+                            // Keep a previously-saved value selectable even if
+                            // it's not in the egg's live list (egg changed, or
+                            // Pelican unreachable while editing).
+                            $current = $get('variable_name');
+                            if (is_string($current) && $current !== '' && ! array_key_exists($current, $options)) {
+                                $options[$current] = $current;
+                            }
+
+                            return $options;
+                        })
+                        ->searchable()
+                        ->required(),
                     Select::make('type')
                         ->label(__('admin/server_configurations.fields.mapping_type'))
                         ->options([
@@ -212,6 +235,7 @@ final class ServerConfigurationFormSchema
                                     ? __('admin/server_configurations.fields.main_port')
                                     : __('admin/server_configurations.fields.main_port_plus', ['n' => $i]);
                             }
+
                             return $options;
                         })
                         ->default(0)
@@ -241,6 +265,8 @@ final class ServerConfigurationFormSchema
             Toggle::make('dedicated_ip')
                 ->label(__('admin/server_configurations.fields.dedicated_ip'))
                 ->helperText(__('admin/server_configurations.helpers.dedicated_ip')),
+
+            IpVariableSchema::make(),
 
             Section::make(__('admin/server_configurations.fields.feature_limits'))
                 ->columns(3)

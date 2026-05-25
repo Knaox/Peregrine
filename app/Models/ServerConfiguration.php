@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\HasResourceTemplate;
+use App\Observers\ServerConfigurationObserver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,7 +40,7 @@ class ServerConfiguration extends Model
     /**
      * @var list<string>
      */
-    use \App\Models\Concerns\HasResourceTemplate;
+    use HasResourceTemplate;
 
     protected $fillable = [
         // Identity (technical-only)
@@ -75,6 +77,12 @@ class ServerConfiguration extends Model
         'start_on_completion',
         'skip_install_script',
         'dedicated_ip',
+
+        // IP variable — push the server's public IP into a chosen egg
+        // variable at provisioning time (see App\Services\Bridge\IpVariableResolver).
+        'ip_variable_enabled',
+        'ip_variable_name',
+        'ip_variable_source',
 
         // Pelican feature limits
         'feature_limits_databases',
@@ -116,6 +124,7 @@ class ServerConfiguration extends Model
             'start_on_completion' => 'boolean',
             'skip_install_script' => 'boolean',
             'dedicated_ip' => 'boolean',
+            'ip_variable_enabled' => 'boolean',
             'feature_limits_databases' => 'integer',
             'feature_limits_backups' => 'integer',
             'feature_limits_allocations' => 'integer',
@@ -236,7 +245,7 @@ class ServerConfiguration extends Model
 
         // Outbound catalog webhooks (Phase 3). The observer fans out to
         // authorised shops + their subscribed endpoints.
-        static::observe(\App\Observers\ServerConfigurationObserver::class);
+        static::observe(ServerConfigurationObserver::class);
     }
 
     public function egg(): BelongsTo

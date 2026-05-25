@@ -12,6 +12,7 @@ use App\Models\Server;
 use App\Models\ServerConfiguration;
 use App\Models\User;
 use App\Services\Bridge\EnvironmentResolver;
+use App\Services\Bridge\IpVariableResolver;
 use App\Services\Bridge\PortAllocator;
 use App\Services\Pelican\DTOs\CreateServerRequest;
 use App\Services\Pelican\PelicanApplicationService;
@@ -73,6 +74,7 @@ class ProvisionServerJob implements ShouldQueue
     public function handle(
         PortAllocator $portAllocator,
         EnvironmentResolver $environmentResolver,
+        IpVariableResolver $ipVariableResolver,
         PelicanApplicationService $pelican,
         EnsurePelicanAccountAction $ensurePelicanAccount,
     ): void {
@@ -82,6 +84,7 @@ class ProvisionServerJob implements ShouldQueue
                 'idempotency_key' => $this->idempotencyKey,
                 'server_id' => $existing->id,
             ]);
+
             return;
         }
 
@@ -92,6 +95,7 @@ class ProvisionServerJob implements ShouldQueue
             $this->fail(new \RuntimeException(
                 "ServerConfiguration #{$this->serverConfigurationId} or user #{$this->userId} not found"
             ));
+
             return;
         }
 
@@ -99,6 +103,7 @@ class ProvisionServerJob implements ShouldQueue
             $this->fail(new \RuntimeException(
                 "ServerConfiguration #{$configuration->id} is not ready to provision"
             ));
+
             return;
         }
 
@@ -173,10 +178,17 @@ class ProvisionServerJob implements ShouldQueue
             $eggDefaults = $pelican->getEggVariableDefaults((int) $egg->pelican_egg_id);
             $environment = $environmentResolver->resolve($configuration, $allocations, $eggDefaults);
 
-            $startup = $egg->startup;
-
             $defaultAllocation = $allocations[0];
             $additionalAllocations = array_map(fn ($a) => $a->id, array_slice($allocations, 1));
+
+            // Push the server's public IP into the admin-chosen egg variable
+            // when the "IP variable" feature is enabled. Source = the node's
+            // FQDN or the default allocation's alias, resolved via Cloudflare
+            // DoH. No-op when disabled ; never throws (a DNS miss leaves the
+            // variable at its egg default).
+            $environment = $ipVariableResolver->apply($environment, $configuration, $node, $defaultAllocation);
+
+            $startup = $egg->startup;
 
             $pelicanServer = $pelican->createServerAdvanced(new CreateServerRequest(
                 name: $server->name,

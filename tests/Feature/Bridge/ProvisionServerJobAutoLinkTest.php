@@ -9,6 +9,7 @@ use App\Models\Node;
 use App\Models\ServerConfiguration;
 use App\Models\User;
 use App\Services\Bridge\EnvironmentResolver;
+use App\Services\Bridge\IpVariableResolver;
 use App\Services\Bridge\PortAllocator;
 use App\Services\Pelican\PelicanApplicationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -96,6 +97,7 @@ class ProvisionServerJobAutoLinkTest extends TestCase
             $job->handle(
                 app(PortAllocator::class),
                 app(EnvironmentResolver::class),
+                app(IpVariableResolver::class),
                 app(PelicanApplicationService::class),
                 app(EnsurePelicanAccountAction::class),
             );
