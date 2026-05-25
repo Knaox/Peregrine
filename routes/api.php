@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ServerNetworkController;
 use App\Http\Controllers\Api\ServerPowerController;
 use App\Http\Controllers\Api\ServerRuntimeFixController;
 use App\Http\Controllers\Api\ServerScheduleController;
+use App\Http\Controllers\Api\ServerStartupController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Setup\BackfillController;
@@ -133,8 +134,10 @@ Route::middleware('auth')->group(function () {
     });
 
     // Server startup variables
-    Route::get('servers/{server}/startup', [ServerController::class, 'startupVariables']);
-    Route::put('servers/{server}/startup/variable', [ServerController::class, 'updateStartupVariable']);
+    Route::get('servers/{server}/startup', [ServerStartupController::class, 'index']);
+    Route::put('servers/{server}/startup/variable', [ServerStartupController::class, 'update']);
+    // Batch update — backs the unified save bar (one round-trip for N edits).
+    Route::put('servers/{server}/startup/variables', [ServerStartupController::class, 'updateBatch']);
 
     // Minecraft console quick-fixes — surfaced by the SPA when the live log
     // stream reports a boot failure (unaccepted EULA / incompatible Java).
