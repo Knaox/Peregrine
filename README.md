@@ -293,6 +293,51 @@ After saving the trusted proxy IPs and reloading the reverse proxy, hit any HTTP
 
 ---
 
+## 🔌 Wings WebSocket (live console & stats)
+
+The player console (xterm.js) and the live CPU / RAM / disk / network graphs on the server overview are streamed **directly from Wings** over a WebSocket — the browser connects to your node, not to the panel. Wings refuses any WebSocket whose `Origin` header isn't on its allow-list, so when Peregrine is served from a different domain than your Pelican panel (it almost always is), the console stays stuck on *"connecting…"* until you whitelist Peregrine's origin.
+
+### 1. Edit the Wings config
+
+On the **node** (the machine running Wings), open its config file:
+
+```bash
+nano /etc/pelican/config.yml
+```
+
+Find the `allowed_origins` key — by default it's empty:
+
+```yaml
+allowed_origins: []
+```
+
+Replace it with your Peregrine origin — the URL players load the panel from (scheme included, no trailing slash). Running more than one panel? Add one line per origin:
+
+```yaml
+allowed_origins:
+  - https://panel.example.com   # your Peregrine URL
+allow_cors_private_network: true
+```
+
+### 2. What each line does
+
+| Line | Why |
+|---|---|
+| `allowed_origins` | The exact origins Wings accepts WebSocket / API requests from. Without your Peregrine domain here, the browser's `Origin` header is rejected and the console never connects. Use the full origin (`https://host`), one entry per line. |
+| `allow_cors_private_network` | Sends the `Access-Control-Allow-Private-Network` header. Set it to `true` when the panel is served over public HTTPS but Wings listens on a private / LAN IP — otherwise modern Chrome blocks those cross-context requests. |
+
+### 3. Restart Wings
+
+`config.yml` is only read at boot, so apply the change with:
+
+```bash
+systemctl restart wings
+```
+
+> Reload the server page — the console should connect and the live graphs start moving. Still stuck on *"connecting…"*? Make sure the origin is **byte-for-byte** identical to your browser's address bar — scheme, subdomain, and no trailing slash.
+
+---
+
 ## 🔄 Updates
 
 Admin → **About & Updates** shows the installed version, checks GitHub for the latest panel release (plugin releases are filtered out), and gives you the exact command with a clipboard button.

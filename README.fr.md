@@ -293,6 +293,51 @@ Après avoir sauvé les IPs de proxy de confiance et rechargé le reverse proxy,
 
 ---
 
+## 🔌 WebSocket Wings (console & stats temps réel)
+
+La console joueur (xterm.js) et les graphes live CPU / RAM / disque / réseau de la vue d'ensemble sont streamés **directement depuis Wings** via un WebSocket — le navigateur se connecte à votre node, pas au panel. Wings refuse tout WebSocket dont l'en-tête `Origin` n'est pas dans sa liste blanche : donc quand Peregrine est servi depuis un domaine différent de votre panel Pelican (c'est presque toujours le cas), la console reste bloquée sur *« connexion… »* tant que vous n'avez pas autorisé l'origine de Peregrine.
+
+### 1. Éditer la config Wings
+
+Sur le **node** (la machine qui fait tourner Wings), ouvrez son fichier de config :
+
+```bash
+nano /etc/pelican/config.yml
+```
+
+Repérez la clé `allowed_origins` — par défaut elle est vide :
+
+```yaml
+allowed_origins: []
+```
+
+Remplacez-la par l'origine de Peregrine — l'URL depuis laquelle les joueurs chargent le panel (schéma inclus, sans slash final). Plusieurs panels ? Ajoutez une ligne par origine :
+
+```yaml
+allowed_origins:
+  - https://panel.example.com   # votre URL Peregrine
+allow_cors_private_network: true
+```
+
+### 2. Ce que fait chaque ligne
+
+| Ligne | Pourquoi |
+|---|---|
+| `allowed_origins` | Les origines exactes depuis lesquelles Wings accepte les requêtes WebSocket / API. Sans votre domaine Peregrine ici, l'en-tête `Origin` du navigateur est rejeté et la console ne se connecte jamais. Utilisez l'origine complète (`https://host`), une entrée par ligne. |
+| `allow_cors_private_network` | Envoie l'en-tête `Access-Control-Allow-Private-Network`. À mettre à `true` quand le panel est servi en HTTPS public mais que Wings écoute sur une IP privée / LAN — sinon Chrome bloque ces requêtes cross-contexte. |
+
+### 3. Redémarrer Wings
+
+`config.yml` n'est lu qu'au démarrage : appliquez donc le changement avec :
+
+```bash
+systemctl restart wings
+```
+
+> Rechargez la page du serveur — la console doit se connecter et les graphes live se mettre à bouger. Toujours bloqué sur *« connexion… »* ? Vérifiez que l'origine est **strictement identique** (caractère pour caractère) à la barre d'adresse du navigateur — schéma, sous-domaine, et pas de slash final.
+
+---
+
 ## 🔄 Mises à jour
 
 Admin → **About & Updates** affiche la version installée, vérifie GitHub pour la dernière release du panel (les releases plugins sont filtrées), et donne la commande exacte avec un bouton clipboard.
