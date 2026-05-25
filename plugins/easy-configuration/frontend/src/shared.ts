@@ -10,6 +10,16 @@ import type { ComponentType } from 'react';
 interface PeregrinePlugins {
     register: (pluginId: string, component: ComponentType) => void;
     registerServerHomeSection: (sectionId: string, component: ComponentType<{ serverId: number }>) => void;
+    /**
+     * Optional unified-save-bar bridge (newer shells only). When present, the
+     * plugin registers its dirty changes so the host's single save bar flushes
+     * them alongside the core's; when absent, the plugin renders its own
+     * FloatingSaveBar. Feature-detect with `typeof P.registerSaveSource ===
+     * 'function'` — never assume it exists. Keeps the plugin autonomous, with
+     * no hard dependency on the host's save coordinator.
+     */
+    registerSaveSource?: (id: string, source: { dirtyCount: number; save: () => Promise<void> }) => void;
+    unregisterSaveSource?: (id: string) => void;
 }
 
 declare global {

@@ -1,14 +1,10 @@
 import { Copy, Search, SlidersHorizontal } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { backendFieldKey, fieldKeyOf } from '../lib/fieldKey';
-import { pickLabel, useT } from '../lib/i18n';
-import { validateValue } from '../lib/validate';
-import type { ApiError } from '../shared';
-import type { ConfigParam, ConfigPermissions, ConfigTemplate, ServerState } from '../types';
+import { useState } from 'react';
+import { useT } from '../lib/i18n';
+import type { ConfigPermissions, ConfigTemplate, ServerState } from '../types';
 import { Button } from '../ui/Button';
 import { Input, Toggle } from '../ui/inputs';
 import { Card, EmptyState } from '../ui/surfaces';
-import { useToast } from '../ui/Toast';
 import { BoostSection } from './boost/BoostSection';
 import { useBoosts } from './boost/useBoosts';
 import { useBoostSelection } from './boost/useBoostSelection';
@@ -16,25 +12,8 @@ import type { EditorController } from './controller';
 import { CopyDialog } from './copy/CopyDialog';
 import { FileCard } from './FileCard';
 import { FloatingSaveBar } from './FloatingSaveBar';
-import { useSaveConfig, type SaveFilePayload } from './hooks/useServerConfig';
+import { useConfigSave } from './hooks/useConfigSave';
 import { RunningBanner } from './RunningBanner';
-
-/**
- * Add keys present in `source` but missing from `target`, preserving every
- * existing entry (so unsaved edits survive). Returns the same reference when
- * nothing is added, to avoid a needless re-render.
- */
-function mergeMissing(target: Record<string, string>, source: Record<string, string>): Record<string, string> {
-    let merged: Record<string, string> | null = null;
-    for (const [key, value] of Object.entries(source)) {
-        if (!(key in target)) {
-            merged ??= { ...target };
-            merged[key] = value;
-        }
-    }
-
-    return merged ?? target;
-}
 
 export function ConfigEditor({
     serverId,
@@ -56,8 +35,6 @@ export function ConfigEditor({
     onStop: () => void;
 }) {
     const { t, lang } = useT();
-    const toast = useToast();
-    const save = useSaveConfig(serverId);
 
     // No payload `permissions` → owner/admin (full access). Subusers get the
     // explicit flags from the backend so we can render read-only / hide actions.
@@ -70,27 +47,8 @@ export function ConfigEditor({
     const hardDisabled = ! canWrite;
     const canEdit = canWrite && ! running;
 
-    const { initial, index } = useMemo(() => {
-        const initialValues: Record<string, string> = {};
-        const paramIndex = new Map<string, { param: ConfigParam; fileId: string }>();
-        for (const template of templates) {
-            for (const file of template.files) {
-                for (const param of file.parameters) {
-                    const key = fieldKeyOf(file.id, param);
-                    initialValues[key] = param.value;
-                    paramIndex.set(key, { param, fileId: file.id });
-                }
-            }
-        }
+    const editor = useConfigSave({ serverId, templates, running, hardDisabled, canEdit });
 
-        return { initial: initialValues, index: paramIndex };
-    }, [templates]);
-
-    const [values, setValues] = useState<Record<string, string>>(initial);
-    const [original, setOriginal] = useState<Record<string, string>>(initial);
-    const [invalid, setInvalid] = useState<Record<string, boolean>>({});
-    const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
-    const [justSaved, setJustSaved] = useState(false);
     const [search, setSearchState] = useState<string>(() => {
         try {
             return localStorage.getItem(`ec:search:${serverId}`) ?? '';
@@ -110,122 +68,16 @@ export function ConfigEditor({
     const boosts = useBoosts(serverId);
     const boost = useBoostSelection(templates, boosts.data, lang, canBoost);
 
-    // A refetch (e.g. after adding a parameter) brings new keys in `initial`.
-    // Merge their values into local state so they render with their value —
-    // without clobbering unsaved edits to existing fields. `original` gets them
-    // too, so a freshly added parameter isn't flagged dirty.
-    useEffect(() => {
-        setValues((current) => mergeMissing(current, initial));
-        setOriginal((current) => mergeMissing(current, initial));
-    }, [initial]);
-
-    const dirtyKeys = useMemo(() => Object.keys(values).filter((key) => values[key] !== original[key]), [values, original]);
-    const isDirty = dirtyKeys.length > 0;
-    const hasInvalid = Object.values(invalid).some(Boolean);
-
-    const onChange = useCallback(
-        (fieldKey: string, param: ConfigParam, value: string) => {
-            if (hardDisabled) {
-                return;
-            }
-            // Running server: keep the control interactive but explain why the edit
-            // didn't take, instead of silently disabling everything.
-            if (running) {
-                toast.warning(t('overlay.edit_blocked'));
-
-                return;
-            }
-            setJustSaved(false);
-            setValues((current) => ({ ...current, [fieldKey]: value }));
-            const reason = validateValue(param, value);
-            setInvalid((current) => ({ ...current, [fieldKey]: reason !== null }));
-            if (reason !== null) {
-                toast.warning(t('validation.invalid_value', { param: pickLabel(param.label, lang, param.key), type: t(`validation.type.${reason}`) }));
-            }
-        },
-        [toast, t, lang, hardDisabled, running],
-    );
-
-    const onReset = useCallback(
-        (fieldKey: string, param: ConfigParam) => {
-            if (param.config.default !== undefined) {
-                onChange(fieldKey, param, String(param.config.default));
-            }
-        },
-        [onChange],
-    );
-
-    const doSave = useCallback(() => {
-        if (!isDirty || !canEdit || save.isPending) {
-            return;
-        }
-        if (hasInvalid) {
-            toast.error(t('save.fix_invalid'));
-
-            return;
-        }
-
-        const byFile = new Map<string, SaveFilePayload['values']>();
-        for (const key of dirtyKeys) {
-            const entry = index.get(key);
-            if (entry === undefined) {
-                continue;
-            }
-            const list = byFile.get(entry.fileId) ?? [];
-            list.push({ key: entry.param.key, section: entry.param.section, value: values[key] ?? '', occurrence: entry.param.occurrence ?? 0 });
-            byFile.set(entry.fileId, list);
-        }
-
-        save.mutate([...byFile.entries()].map(([id, vals]) => ({ id, values: vals })), {
-            onSuccess: () => {
-                setOriginal({ ...values });
-                setSavedKeys(new Set(dirtyKeys));
-                setJustSaved(true);
-                setInvalid({});
-                window.setTimeout(() => {
-                    setJustSaved(false);
-                    setSavedKeys(new Set());
-                }, 2000);
-                toast.success(t('save.saved'));
-            },
-            onError: (error) => {
-                const apiError = error as unknown as ApiError;
-                if (apiError.status === 422 && apiError.fields) {
-                    const next: Record<string, boolean> = {};
-                    for (const [fileId, fields] of Object.entries(apiError.fields)) {
-                        for (const composite of Object.keys(fields)) {
-                            next[backendFieldKey(fileId, composite)] = true;
-                        }
-                    }
-                    setInvalid(next);
-                }
-                toast.error(t('save.error'));
-            },
-        });
-    }, [isDirty, canEdit, hasInvalid, dirtyKeys, index, values, save, toast, t]);
-
-    useEffect(() => {
-        const onKey = (event: KeyboardEvent): void => {
-            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
-                event.preventDefault();
-                doSave();
-            }
-        };
-        window.addEventListener('keydown', onKey);
-
-        return () => window.removeEventListener('keydown', onKey);
-    }, [doSave]);
-
     const controller: EditorController = {
-        getValue: (key) => values[key] ?? '',
-        isDirty: (key) => values[key] !== original[key],
-        isSaved: (key) => savedKeys.has(key),
-        isInvalid: (key) => invalid[key] ?? false,
+        getValue: editor.getValue,
+        isDirty: editor.isDirtyKey,
+        isSaved: editor.isSavedKey,
+        isInvalid: editor.isInvalidKey,
         disabled: hardDisabled,
         locked: running,
         search,
-        onChange,
-        onReset,
+        onChange: editor.onChange,
+        onReset: editor.onReset,
         boostMode: boost.boostMode,
         isBoostable: boost.isBoostable,
         isBoostSelected: boost.isBoostSelected,
@@ -321,7 +173,11 @@ export function ConfigEditor({
                 )}
             </div>
 
-            {(isDirty || justSaved) && canEdit && <FloatingSaveBar saving={save.isPending} saved={justSaved} onSave={doSave} />}
+            {/* Own save bar ONLY when the host doesn't provide the unified one;
+                otherwise the host's GlobalSaveBar drives doSave via the bridge. */}
+            {!editor.useHostBar && (editor.isDirty || editor.justSaved) && canEdit && (
+                <FloatingSaveBar saving={editor.saving} saved={editor.justSaved} onSave={editor.doSave} />
+            )}
 
             <CopyDialog open={copyOpen} onClose={() => setCopyOpen(false)} serverId={serverId} templates={templates} />
         </div>
