@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { PluginManifest } from '@/plugins/types';
+import type { Database } from '@/types/Database';
 import { useSaveCoordinatorStore } from '@/stores/saveCoordinatorStore';
 
 interface PluginStore {
@@ -7,6 +8,7 @@ interface PluginStore {
     components: Record<string, React.ComponentType>;
     serverPageComponents: Record<string, React.ComponentType>;
     serverHomeSectionComponents: Record<string, React.ComponentType<{ serverId: number }>>;
+    databaseRowActionComponents: Record<string, React.ComponentType<{ serverId: number; database: Database }>>;
     isLoading: boolean;
     isInitialized: boolean;
 
@@ -15,6 +17,7 @@ interface PluginStore {
     registerComponent: (pluginId: string, component: React.ComponentType) => void;
     registerServerPage: (pageId: string, component: React.ComponentType) => void;
     registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number }>) => void;
+    registerDatabaseRowAction: (id: string, component: React.ComponentType<{ serverId: number; database: Database }>) => void;
     getComponent: (pluginId: string) => React.ComponentType | undefined;
     init: () => void;
 }
@@ -24,6 +27,7 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
     components: {},
     serverPageComponents: {},
     serverHomeSectionComponents: {},
+    databaseRowActionComponents: {},
     isLoading: true,
     isInitialized: false,
 
@@ -48,6 +52,12 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
         }));
     },
 
+    registerDatabaseRowAction: (id, component) => {
+        set((state) => ({
+            databaseRowActionComponents: { ...state.databaseRowActionComponents, [id]: component },
+        }));
+    },
+
     getComponent: (pluginId) => get().components[pluginId],
 
     init: () => {
@@ -62,6 +72,9 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
             },
             registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number }>) => {
                 get().registerServerHomeSection(sectionId, component);
+            },
+            registerDatabaseRowAction: (id: string, component: React.ComponentType<{ serverId: number; database: Database }>) => {
+                get().registerDatabaseRowAction(id, component);
             },
             // Plugin → shell bridge for long-running operation lifecycle.
             // Implemented as plain DOM CustomEvents so the listener side

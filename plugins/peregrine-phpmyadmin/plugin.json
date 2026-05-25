@@ -1,0 +1,19 @@
+{
+    "id": "peregrine-phpmyadmin",
+    "name": "phpMyAdmin Integration",
+    "version": "1.0.0",
+    "description": "Adds a one-click phpMyAdmin button to each server database, with auto-login via the phpMyAdmin signon mechanism. phpMyAdmin is self-hosted by the admin; the plugin ships the full bilingual setup guide.",
+    "author": "Peregrine",
+    "vendor": "peregrine",
+    "official": true,
+    "license": "MIT",
+    "min_peregrine_version": "1.0.0",
+    "bundled": true,
+    "auto_activate_on_setup": true,
+    "service_provider": "PhpMyAdminServiceProvider",
+    "manage_url": "/admin/pma-settings",
+    "frontend": {
+        "bundle": "frontend/dist/bundle.js"
+    },
+    "settings_schema": []
+}

@@ -8,7 +8,10 @@
         "username": "Utilisateur",
         "password": "Mot de passe",
         "remote": "Connexions distantes",
-        "remote_help": "D'où les connexions sont autorisées. Utilisez % pour tout autoriser.",
+        "remote_help": "Choisissez d'où les connexions sont autorisées. Sélectionnez une IP/hôte spécifique pour restreindre l'accès.",
+        "remote_anywhere": "Depuis n'importe où (%)",
+        "remote_specific": "Adresse IP / hôte spécifique",
+        "remote_required": "Veuillez saisir une adresse IP.",
         "show_password": "Afficher le mot de passe",
         "hide_password": "Masquer le mot de passe",
         "rotate_password": "Changer le mot de passe",
@@ -20,6 +23,9 @@
         "created": "Base de données créée.",
         "no_databases": "Aucune base de données n'a été créée.",
         "connections_from": "Connexions depuis",
-        "max_connections": "Connexions max"
+        "max_connections": "Connexions max",
+        "action_failed": "Une erreur est survenue. Veuillez réessayer.",
+        "name_required": "Veuillez saisir un nom avant de valider.",
+        "password_load_failed": "Impossible de charger le mot de passe. Veuillez réessayer."
     }
 }

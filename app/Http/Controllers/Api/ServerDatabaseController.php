@@ -39,16 +39,17 @@ class ServerDatabaseController extends Controller
      */
     public function credentials(Server $server, string $database): JsonResponse
     {
-        $this->authorize('readDatabase', $server);
+        $this->authorize('viewDatabasePassword', $server);
 
-        $databases = $this->databaseService->listDatabases($server->identifier);
+        $databases = $this->databaseService->listDatabases($server->identifier, includePassword: true);
 
         foreach ($databases as $row) {
             $attrs = $row['attributes'] ?? $row;
             $attrId = (string) ($attrs['id'] ?? '');
             if ($attrId === $database) {
                 $this->audit($server, 'server.database.show_credentials', ['database' => $database]);
-                return response()->json(['data' => $attrs]);
+
+                return response()->json(['data' => $this->flattenPassword($attrs)]);
             }
         }
 
@@ -59,11 +60,11 @@ class ServerDatabaseController extends Controller
     {
         $validated = $request->validated();
 
-        $result = $this->databaseService->createDatabase(
+        $result = $this->flattenPassword($this->databaseService->createDatabase(
             $server->identifier,
             $validated['database'],
             $validated['remote'],
-        );
+        ));
 
         Cache::forget("server_databases:{$server->identifier}");
 
@@ -79,10 +80,10 @@ class ServerDatabaseController extends Controller
     {
         $this->authorize('updateDatabase', $server);
 
-        $result = $this->databaseService->rotateDatabasePassword(
+        $result = $this->flattenPassword($this->databaseService->rotateDatabasePassword(
             $server->identifier,
             $database,
-        );
+        ));
 
         Cache::forget("server_databases:{$server->identifier}");
 
@@ -102,6 +103,31 @@ class ServerDatabaseController extends Controller
         $this->audit($server, 'server.database.delete', ['database' => $database]);
 
         return response()->json(['message' => 'success']);
+    }
+
+    /**
+     * Pelican nests the plaintext password under
+     * `relationships.password.attributes.password` (create + rotate responses,
+     * and list calls made with `?include=password`). Flatten it to a top-level
+     * `password` string so the SPA can display it, then drop the relationships
+     * envelope. No-op when no password is present.
+     *
+     * @param  array<string, mixed>  $attrs
+     * @return array<string, mixed>
+     */
+    private function flattenPassword(array $attrs): array
+    {
+        $password = $attrs['relationships']['password']['attributes']['password']
+            ?? $attrs['password']
+            ?? null;
+
+        if ($password !== null) {
+            $attrs['password'] = $password;
+        }
+
+        unset($attrs['relationships']);
+
+        return $attrs;
     }
 
     /**

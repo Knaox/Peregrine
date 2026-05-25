@@ -1,0 +1,7 @@
+{
+    "button": {
+        "open": "phpMyAdmin",
+        "opening": "Ouverture…",
+        "open_title": "Ouvrir {{name}} dans phpMyAdmin"
+    }
+}

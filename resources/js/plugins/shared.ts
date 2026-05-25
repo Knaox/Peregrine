@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n/config';
 import { getEcho } from '@/services/echo';
 import type { SaveSource } from '@/stores/saveCoordinatorStore';
+import type { Database } from '@/types/Database';
 
 declare global {
     interface Window {
@@ -63,6 +64,17 @@ declare global {
              */
             registerSaveSource: (id: string, source: SaveSource) => void;
             unregisterSaveSource: (id: string) => void;
+            /**
+             * Register a per-row action rendered in the server "Databases" tab,
+             * once for every database row, receiving the server id and the
+             * database it belongs to. Core never imports the plugin; the plugin
+             * feature-detects this (`typeof registerDatabaseRowAction === 'function'`)
+             * so older shells simply lack the slot.
+             */
+            registerDatabaseRowAction: (
+                id: string,
+                component: React.ComponentType<{ serverId: number; database: Database }>
+            ) => void;
         };
     }
 }
@@ -87,4 +99,5 @@ window.__PEREGRINE_PLUGINS__ = {
     notifyOperationComplete: () => {},
     registerSaveSource: () => {},
     unregisterSaveSource: () => {},
+    registerDatabaseRowAction: () => {},
 };

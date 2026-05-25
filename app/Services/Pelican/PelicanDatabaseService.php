@@ -12,14 +12,23 @@ class PelicanDatabaseService
     /**
      * List all databases for a server.
      *
+     * @param  bool  $includePassword  Ask Pelican for the plaintext password too.
+     *                                 It is only returned when explicitly requested,
+     *                                 nested under attributes.relationships.password.
      * @return array<int, array<string, mixed>>
      *
      * @throws RequestException
      */
-    public function listDatabases(string $serverIdentifier): array
+    public function listDatabases(string $serverIdentifier, bool $includePassword = false): array
     {
+        $url = "/api/client/servers/{$serverIdentifier}/databases";
+
+        if ($includePassword) {
+            $url .= '?include=password';
+        }
+
         $response = $this->request()
-            ->get("/api/client/servers/{$serverIdentifier}/databases")
+            ->get($url)
             ->throw();
 
         return $response->json('data') ?? [];

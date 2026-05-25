@@ -8,6 +8,28 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.15] — 2026-05-25
+
+### Added
+
+- **New official plugin — phpMyAdmin Integration (1.0.0).** A one-click **Open in phpMyAdmin** button on every server database. phpMyAdmin is **self-hosted by the admin** (never bundled) — the plugin supplies everything else: the database credentials, short-lived **one-shot signon tokens**, the React button, and a **bilingual (FR/EN) in-page install guide** with copy-to-clipboard code blocks (the `peregrine_signon.php` SignonScript and the `config.inc.php` block, pre-filled with your Peregrine URL and shared secret). Two modes via an **Automatic login** toggle: signon auto-login, or open phpMyAdmin's normal login for manual credential entry. Configured from **`/admin/pma-settings`** (PMA URL, shared secret with one-click regenerate, token TTL, signon **server index** so multi-server phpMyAdmin keeps its normal login on the default server, reachability + ready-to-paste `curl` tests). Launching is gated by the `database.view_password` permission.
+- **Generic per-row plugin slot in the server Databases tab.** A new `registerDatabaseRowAction(id, component)` on the plugin bridge (`window.__PEREGRINE_PLUGINS__`) lets a plugin render an action button on every database row — feature-detected, with no hard dependency in either direction. Used by the phpMyAdmin plugin; reusable by any plugin.
+- **`composer run dev:network`.** Serves the panel on `0.0.0.0:8000` with the compiled assets (no Vite dev server), for testing from another machine on the LAN — e.g. an external phpMyAdmin host reaching the redeem endpoint. `composer run dev` stays the localhost HMR workflow.
+
+### Changed
+
+- **Creating a database: "Remote connections" is now a dropdown** instead of a raw `%` text field — pick **From anywhere (%)** or **Specific IP / host** (with an address field). Clearer and less error-prone.
+
+### Security
+
+- **phpMyAdmin plugin redeem hardening.** Signon tokens are one-shot (atomic get-and-delete) and **hashed at rest** in the cache, with a short TTL (default 30s). The public redeem endpoint is guarded by a constant-time shared-secret check (**fails closed** when unset) plus an optional **IP allowlist**, and every launch/redeem is written to an audit ledger (`pma_launch_logs`). HTTPS strongly recommended for production.
+
+### Fixed
+
+- **Database passwords are shown again.** The server Databases tab never displayed a password ("Show password" did nothing): the list endpoint doesn't return it and the credentials endpoint was never wired up on the SPA. The password is now fetched **on demand** when you reveal it, surfaced **once on create**, and **refreshed after a rotation**. Server-side, Pelican's nested `relationships.password` (only returned with `?include=password`) is flattened to a plain field on the credentials / create / rotate responses; the plain list still never carries it.
+- **"Rotate password" now gives visible feedback.** Rotating — and creating / deleting — a database now shows a success or error banner; previously the action ran with no visible result.
+- **Creating a database without a name** no longer fires a request that comes back as a generic error: the form stays open with an amber warning to enter a name (and the remote field warns if you choose a specific host but leave it empty).
+
 ## [1.0.0-alpha.14] — 2026-05-25
 
 ### Added

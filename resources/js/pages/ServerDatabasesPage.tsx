@@ -5,18 +5,18 @@ import { m } from 'motion/react';
 import { useDatabases } from '@/hooks/useDatabases';
 import { useServer } from '@/hooks/useServer';
 import { useServerPermissions } from '@/hooks/useServerPermissions';
-import { getDatabaseHostString } from '@/types/Database';
-import { copyToClipboard } from '@/utils/clipboard';
+import type { Database } from '@/types/Database';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { withServerConflictGate } from '@/components/server/withServerConflictGate';
 import { ResourceQuota } from '@/components/server/ResourceQuota';
+import { DatabaseRow } from '@/components/server/DatabaseRow';
+import { usePluginStore } from '@/plugins/pluginStore';
 import { useNamespace } from '@/i18n/useNamespace';
 
 const INPUT_CLS = 'w-full rounded-[var(--radius)] border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none';
 
 function DatabaseIcon({ className }: { className?: string }) {
-    useNamespace(["server-databases","server-overview"] as const);
     return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <ellipse cx="12" cy="5" rx="9" ry="3" />
@@ -26,25 +26,9 @@ function DatabaseIcon({ className }: { className?: string }) {
     );
 }
 
-function CopyIcon({ className }: { className?: string }) {
-    return (
-        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-        </svg>
-    );
-}
-
-function CheckIcon({ className }: { className?: string }) {
-    return (
-        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-        </svg>
-    );
-}
-
 function ServerDatabasesPageImpl() {
     const { t } = useTranslation();
+    useNamespace(['server-databases', 'server-overview', 'common'] as const);
     const { id } = useParams<{ id: string }>();
     const serverId = Number(id);
     const { data: databases, isLoading, create, rotate, remove } = useDatabases(serverId);
@@ -54,6 +38,7 @@ function ServerDatabasesPageImpl() {
     const canUpdate = perms.has('database.update');
     const canDelete = perms.has('database.delete');
     const canViewPassword = perms.has('database.view_password');
+    const rowActions = usePluginStore((s) => s.databaseRowActionComponents);
 
     const usedDatabases = databases?.length ?? 0;
     const databaseLimit = server?.feature_limits?.databases;
@@ -61,34 +46,77 @@ function ServerDatabasesPageImpl() {
 
     const [showCreate, setShowCreate] = useState(false);
     const [dbName, setDbName] = useState('');
-    const [dbRemote, setDbRemote] = useState('%');
-    const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
-    const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [remoteMode, setRemoteMode] = useState<'anywhere' | 'specific'>('anywhere');
+    const [remoteHost, setRemoteHost] = useState('');
+    // Passwords surfaced by create/rotate, keyed by database id, passed to the
+    // matching row so it can auto-reveal without a credentials round-trip.
+    const [seeded, setSeeded] = useState<Record<string, string>>({});
+    const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
+
+    const notify = (type: 'success' | 'error' | 'warning', message: string) => {
+        setFeedback({ type, message });
+        window.setTimeout(() => setFeedback(null), 4000);
+    };
 
     const handleCreate = () => {
-        create.mutate({ database: dbName, remote: dbRemote }, {
-            onSuccess: () => { setShowCreate(false); setDbName(''); setDbRemote('%'); },
+        // Validate client-side: keep the form open and warn instead of firing a
+        // request that would only come back as a generic error.
+        if (!dbName.trim()) {
+            notify('warning', t('server-databases:databases.name_required'));
+            return;
+        }
+        const remote = remoteMode === 'specific' ? remoteHost.trim() : '%';
+        if (remoteMode === 'specific' && remote === '') {
+            notify('warning', t('server-databases:databases.remote_required'));
+            return;
+        }
+        create.mutate({ database: dbName.trim(), remote }, {
+            onSuccess: (created) => {
+                setShowCreate(false);
+                setDbName('');
+                setRemoteMode('anywhere');
+                setRemoteHost('');
+                if (created.password) setSeeded((s) => ({ ...s, [created.id]: created.password as string }));
+                notify('success', t('server-databases:databases.created'));
+            },
+            onError: () => notify('error', t('server-databases:databases.action_failed')),
         });
     };
 
-    const togglePassword = (dbId: string) => {
-        setVisiblePasswords((prev) => {
-            const next = new Set(prev);
-            next.has(dbId) ? next.delete(dbId) : next.add(dbId);
-            return next;
+    const handleRotate = (db: Database) => {
+        rotate.mutate(db.id, {
+            onSuccess: (updated) => {
+                if (updated.password) setSeeded((s) => ({ ...s, [db.id]: updated.password as string }));
+                notify('success', t('server-databases:databases.rotated'));
+            },
+            onError: () => notify('error', t('server-databases:databases.action_failed')),
         });
     };
 
-    const handleCopyPassword = async (dbId: string, password: string) => {
-        await copyToClipboard(password);
-        setCopiedId(dbId);
-        setTimeout(() => setCopiedId(null), 2000);
+    const handleDelete = (db: Database) => {
+        if (!window.confirm(t('server-databases:databases.confirm_delete', { name: db.name }))) return;
+        remove.mutate(db.id, {
+            onSuccess: () => notify('success', t('server-databases:databases.deleted')),
+            onError: () => notify('error', t('server-databases:databases.action_failed')),
+        });
     };
 
     if (isLoading) return <div className="flex justify-center py-12"><Spinner size="lg" /></div>;
 
     return (
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-6">
+            {feedback && (
+                <div className={`rounded-[var(--radius-lg)] border px-4 py-3 text-sm ${
+                    feedback.type === 'success'
+                        ? 'border-[var(--color-success)]/30 bg-[var(--color-success)]/10 text-[var(--color-success)]'
+                        : feedback.type === 'warning'
+                            ? 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+                            : 'border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 text-[var(--color-danger)]'
+                }`}>
+                    {feedback.message}
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -124,7 +152,22 @@ function ServerDatabasesPageImpl() {
                         </div>
                         <div>
                             <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">{t('server-databases:databases.remote')}</label>
-                            <input value={dbRemote} onChange={(e) => setDbRemote(e.target.value)} placeholder="%" className={INPUT_CLS} />
+                            <select
+                                value={remoteMode}
+                                onChange={(e) => setRemoteMode(e.target.value as 'anywhere' | 'specific')}
+                                className={INPUT_CLS}
+                            >
+                                <option value="anywhere">{t('server-databases:databases.remote_anywhere')}</option>
+                                <option value="specific">{t('server-databases:databases.remote_specific')}</option>
+                            </select>
+                            {remoteMode === 'specific' && (
+                                <input
+                                    value={remoteHost}
+                                    onChange={(e) => setRemoteHost(e.target.value)}
+                                    placeholder="192.168.1.50"
+                                    className={`${INPUT_CLS} mt-2`}
+                                />
+                            )}
                             <p className="mt-1 text-xs text-[var(--color-text-muted)]">{t('server-databases:databases.remote_help')}</p>
                         </div>
                         <div className="flex items-end gap-2">
@@ -146,68 +189,22 @@ function ServerDatabasesPageImpl() {
             ) : (
                 <div className="space-y-3">
                     {databases.map((db, index) => (
-                        <m.div
+                        <DatabaseRow
                             key={db.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.05 }}
-                            className="glass-card-enhanced hover-lift rounded-[var(--radius-lg)] p-4"
-                        >
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="min-w-0 space-y-1.5">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <p className="text-sm font-semibold text-[var(--color-text-primary)]">{db.name}</p>
-                                        <span className="rounded-[var(--radius-sm)] bg-[var(--color-accent)]/10 px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-accent)]">
-                                            {db.connections_from}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-[var(--color-text-muted)]">
-                                        {getDatabaseHostString(db)} &middot; {db.username}
-                                    </p>
-                                    {db.password && canViewPassword && (
-                                        <div className="flex items-center gap-2">
-                                            <code className="text-xs text-[var(--color-text-secondary)]" style={{ fontFamily: 'var(--font-mono)' }}>
-                                                {visiblePasswords.has(db.id) ? db.password : '••••••••'}
-                                            </code>
-                                            <button
-                                                type="button"
-                                                onClick={() => togglePassword(db.id)}
-                                                className="cursor-pointer text-xs text-[var(--color-primary)] hover:underline"
-                                            >
-                                                {visiblePasswords.has(db.id) ? t('server-databases:databases.hide_password') : t('server-databases:databases.show_password')}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => void handleCopyPassword(db.id, db.password as string)}
-                                                className="cursor-pointer rounded-[var(--radius-sm)] p-1 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
-                                                title={t('server-overview:list.copy_ip')}
-                                            >
-                                                {copiedId === db.id
-                                                    ? <CheckIcon className="h-3.5 w-3.5 text-[var(--color-success)]" />
-                                                    : <CopyIcon className="h-3.5 w-3.5" />
-                                                }
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {canUpdate && (
-                                        <Button variant="secondary" size="sm" isLoading={rotate.isPending} onClick={() => rotate.mutate(db.id)}>
-                                            {t('server-databases:databases.rotate_password')}
-                                        </Button>
-                                    )}
-                                    {canDelete && (
-                                        <Button variant="danger" size="sm" isLoading={remove.isPending} onClick={() => {
-                                            if (window.confirm(t('server-databases:databases.confirm_delete', { name: db.name }))) {
-                                                remove.mutate(db.id);
-                                            }
-                                        }}>
-                                            {t('server-databases:databases.delete')}
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                        </m.div>
+                            db={db}
+                            serverId={serverId}
+                            index={index}
+                            canUpdate={canUpdate}
+                            canDelete={canDelete}
+                            canViewPassword={canViewPassword}
+                            seededPassword={seeded[db.id]}
+                            rotatePending={rotate.isPending}
+                            removePending={remove.isPending}
+                            onRotate={handleRotate}
+                            onDelete={handleDelete}
+                            onNotify={notify}
+                            rowActions={rowActions}
+                        />
                     ))}
                 </div>
             )}

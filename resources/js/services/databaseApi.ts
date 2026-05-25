@@ -6,6 +6,15 @@ export async function fetchDatabases(serverId: number): Promise<Database[]> {
     return data;
 }
 
+/**
+ * Live fetch of a single database including its plaintext password (the list
+ * endpoint never carries it). Backs the on-demand "Show password" reveal.
+ */
+export async function fetchDatabaseCredentials(serverId: number, databaseId: string): Promise<Database> {
+    const { data } = await request<{ data: Database }>(`/api/servers/${serverId}/databases/${databaseId}/credentials`);
+    return data;
+}
+
 export async function createDatabase(serverId: number, database: string, remote: string): Promise<Database> {
     const { data } = await request<{ data: Database }>(`/api/servers/${serverId}/databases`, {
         method: 'POST',

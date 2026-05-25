@@ -48,6 +48,14 @@ public/fonts/filament/
 /plugins/easy-configuration/frontend/node_modules
 /plugins/easy-configuration/tests/.phpunit.cache
 
+# phpMyAdmin Integration — first-party plugin shipped through this repo.
+# Mirrors the exceptions above: sources + built bundle tracked, deps + test
+# cache ignored.
+!/plugins/peregrine-phpmyadmin/
+!/plugins/peregrine-phpmyadmin/**
+/plugins/peregrine-phpmyadmin/frontend/node_modules
+/plugins/peregrine-phpmyadmin/tests/.phpunit.cache
+
 # Plugin asset symlinks — created at activation time by PluginManager,
 # never committed (point to absolute host paths).
 /public/plugins/

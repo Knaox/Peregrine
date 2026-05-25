@@ -8,7 +8,10 @@
         "username": "Username",
         "password": "Password",
         "remote": "Remote Connections",
-        "remote_help": "Where connections are allowed from. Use % for wildcard.",
+        "remote_help": "Choose where connections may come from. Pick a specific IP/host to restrict access.",
+        "remote_anywhere": "From anywhere (%)",
+        "remote_specific": "Specific IP / host",
+        "remote_required": "Please enter an IP address.",
         "show_password": "Show password",
         "hide_password": "Hide password",
         "rotate_password": "Rotate Password",
@@ -20,6 +23,9 @@
         "created": "Database created.",
         "no_databases": "No databases have been created.",
         "connections_from": "Connections From",
-        "max_connections": "Max Connections"
+        "max_connections": "Max Connections",
+        "action_failed": "Something went wrong. Please try again.",
+        "name_required": "Please enter a name before submitting.",
+        "password_load_failed": "Could not load the password. Please try again."
     }
 }
