@@ -22,14 +22,14 @@ export function BoostSelectToggle({ selected, locked, divide, onToggle, onToggle
 
     return (
         <span className="ec-row" style={{ gap: '0.4rem' }}>
-            <Tooltip content={t(locked ? 'boost.already_boosted' : 'boost.boost_this')}>
+            <Tooltip content={t(locked ? 'boost.already_boosted' : 'boost.boost_this')} align="start">
                 <label className="ec-row" style={{ cursor: locked ? 'not-allowed' : 'pointer' }}>
                     <input type="checkbox" checked={selected} disabled={locked} onChange={onToggle} />
                 </label>
             </Tooltip>
             {selected && !locked && (
                 <span className="ec-seg" role="group" aria-label={t('boost.factor_aria')}>
-                    <Tooltip content={t('boost.multiply_tooltip')}>
+                    <Tooltip content={t('boost.multiply_tooltip')} align="start">
                         <button
                             type="button"
                             className={clsx('ec-seg-btn', !divide && 'ec-seg-on')}
@@ -43,7 +43,7 @@ export function BoostSelectToggle({ selected, locked, divide, onToggle, onToggle
                             {t('boost.factor_multiply')}
                         </button>
                     </Tooltip>
-                    <Tooltip content={t('boost.divide_tooltip')}>
+                    <Tooltip content={t('boost.divide_tooltip')} align="start">
                         <button
                             type="button"
                             className={clsx('ec-seg-btn', divide && 'ec-seg-on')}

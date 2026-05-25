@@ -77,7 +77,7 @@ export function FieldRow({
                 <span className="ec-field-label">
                     {label}
                     {description !== '' && (
-                        <Tooltip content={description}>
+                        <Tooltip content={description} align="start">
                             <span className="ec-help">
                                 <HelpCircle size={13} />
                             </span>
@@ -85,7 +85,7 @@ export function FieldRow({
                     )}
                     {param.inferred && <Badge variant="muted">{t('field.auto_detected')}</Badge>}
                     {param.env_var && (
-                        <Tooltip content={t('field.env_linked', { name: param.env_var })}>
+                        <Tooltip content={t('field.env_linked', { name: param.env_var })} align="start">
                             <span className="ec-help">
                                 <Badge variant="info">
                                     <Link2 size={11} /> {param.env_var}

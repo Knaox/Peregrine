@@ -43,11 +43,29 @@ export function Tabs({ tabs, active, onChange }: { tabs: TabItem[]; active: stri
     );
 }
 
-export function Tooltip({ content, children }: { content: string; children: ReactNode }) {
+/**
+ * `align` controls which edge of the trigger the popup anchors to. Default
+ * `center`. Use `start` for triggers that sit at the left edge of a narrow
+ * container (e.g. the boost controls in a multi-column card) so the popup
+ * extends rightward and never spills past the container's left edge — where an
+ * ancestor `overflow: hidden` would otherwise clip it.
+ */
+export function Tooltip({
+    content,
+    children,
+    align = 'center',
+}: {
+    content: string;
+    children: ReactNode;
+    align?: 'center' | 'start' | 'end';
+}) {
     return (
         <span className="ec-tooltip" tabIndex={0}>
             {children}
-            <span role="tooltip" className="ec-tooltip-pop">
+            <span
+                role="tooltip"
+                className={clsx('ec-tooltip-pop', align === 'start' && 'ec-tooltip-pop-start', align === 'end' && 'ec-tooltip-pop-end')}
+            >
                 {content}
             </span>
         </span>

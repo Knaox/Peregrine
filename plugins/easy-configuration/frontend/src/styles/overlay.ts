@@ -57,8 +57,13 @@ export const overlayCss = `
 .ec-tooltip { position: relative; display: inline-flex; }
 .ec-tooltip-pop { position: absolute; bottom: calc(100% + 0.4rem); left: 50%; transform: translateX(-50%);
     background: var(--color-surface-elevated); color: var(--color-text-primary); border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm); padding: 0.4rem 0.6rem; font-size: 0.7rem; font-weight: 400; white-space: normal; width: max-content; max-width: 16rem;
+    border-radius: var(--radius-sm); padding: 0.4rem 0.6rem; font-size: 0.7rem; font-weight: 400; white-space: normal; width: max-content; max-width: 14rem;
     box-shadow: var(--shadow-md); z-index: 70; opacity: 0; pointer-events: none; transition: opacity var(--transition-fast); }
+/* Anchor to the trigger's left/right edge instead of centring — keeps the popup
+   inside narrow column cards (where a centred popup overflows and gets clipped
+   by the section group's overflow:hidden). */
+.ec-tooltip-pop-start { left: 0; right: auto; transform: none; }
+.ec-tooltip-pop-end { left: auto; right: 0; transform: none; }
 .ec-tooltip:hover .ec-tooltip-pop, .ec-tooltip:focus-within .ec-tooltip-pop { opacity: 1; }
 
 .ec-server-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem; border-radius: var(--radius);
