@@ -2,11 +2,11 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { fetchWebSocketCredentials } from '@/services/serverApi';
 import { useWsRetryState, type WsFailure } from '@/hooks/useWsRetryState';
 import { detectMinecraftIssue } from '@/services/minecraftConsole';
+import { stripAnsi } from '@/services/ansi';
 import type { ServerResources } from '@/types/ServerResources';
 import type { ConsoleMessage } from '@/types/ConsoleMessage';
 
 const MAX_MESSAGES = 1000;
-const ANSI_REGEX = /\x1b\[[0-9;]*[a-zA-Z]/g;
 const KEEPALIVE_INTERVAL = 10_000;
 
 interface WsEvent {
@@ -210,7 +210,7 @@ export function useWingsWebSocket(
 
                 case 'console output':
                     if (options.console && data.args[0] !== undefined) {
-                        const cleaned = data.args[0].replace(ANSI_REGEX, '');
+                        const cleaned = stripAnsi(data.args[0]);
                         scanForIssues(cleaned);
                         record(cleaned);
                     }
@@ -222,7 +222,7 @@ export function useWingsWebSocket(
                 // tagged with [install] for visual distinction.
                 case 'install output':
                     if (options.console && data.args[0] !== undefined) {
-                        const cleaned = data.args[0].replace(ANSI_REGEX, '');
+                        const cleaned = stripAnsi(data.args[0]);
                         scanForIssues(cleaned);
                         record(`[install] ${cleaned}`);
                     }

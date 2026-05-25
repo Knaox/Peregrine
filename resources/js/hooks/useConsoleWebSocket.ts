@@ -2,9 +2,9 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import type { ConsoleMessage, WebSocketEvent } from '@/types/ConsoleMessage';
 import { fetchWebSocketCredentials } from '@/services/serverApi';
 import { useWsRetryState } from '@/hooks/useWsRetryState';
+import { stripAnsi } from '@/services/ansi';
 
 const MAX_MESSAGES = 1000;
-const ANSI_REGEX = /\x1b\[[0-9;]*[a-zA-Z]/g;
 
 export function useConsoleWebSocket(serverId: number) {
     const [messages, setMessages] = useState<ConsoleMessage[]>([]);
@@ -34,7 +34,7 @@ export function useConsoleWebSocket(serverId: number) {
     }, []);
 
     const addMessage = useCallback((text: string) => {
-        const cleaned = text.replace(ANSI_REGEX, '');
+        const cleaned = stripAnsi(text);
         const id = ++messageIdRef.current;
         const msg: ConsoleMessage = { id, text: cleaned, timestamp: Date.now() };
 
