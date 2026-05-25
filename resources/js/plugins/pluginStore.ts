@@ -7,7 +7,7 @@ interface PluginStore {
     manifests: PluginManifest[];
     components: Record<string, React.ComponentType>;
     serverPageComponents: Record<string, React.ComponentType>;
-    serverHomeSectionComponents: Record<string, React.ComponentType<{ serverId: number }>>;
+    serverHomeSectionComponents: Record<string, React.ComponentType<{ serverId: number; serverState?: string }>>;
     databaseRowActionComponents: Record<string, React.ComponentType<{ serverId: number; database: Database }>>;
     isLoading: boolean;
     isInitialized: boolean;
@@ -16,7 +16,7 @@ interface PluginStore {
     setLoading: (loading: boolean) => void;
     registerComponent: (pluginId: string, component: React.ComponentType) => void;
     registerServerPage: (pageId: string, component: React.ComponentType) => void;
-    registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number }>) => void;
+    registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number; serverState?: string }>) => void;
     registerDatabaseRowAction: (id: string, component: React.ComponentType<{ serverId: number; database: Database }>) => void;
     getComponent: (pluginId: string) => React.ComponentType | undefined;
     init: () => void;
@@ -70,7 +70,7 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
             registerServerPage: (pageId: string, component: React.ComponentType) => {
                 get().registerServerPage(pageId, component);
             },
-            registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number }>) => {
+            registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number; serverState?: string }>) => {
                 get().registerServerHomeSection(sectionId, component);
             },
             registerDatabaseRowAction: (id: string, component: React.ComponentType<{ serverId: number; database: Database }>) => {

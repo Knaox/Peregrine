@@ -108,7 +108,7 @@ export function ServerOverviewPage() {
     // behaviour so plugins can dynamically opt out of mounting on servers
     // they have no data for (e.g. egg-config-editor sets it from DB).
     const pluginHomeSections = useMemo(() => {
-        const out: { key: string; Component: React.ComponentType<{ serverId: number }>; order: number }[] = [];
+        const out: { key: string; Component: React.ComponentType<{ serverId: number; serverState?: string }>; order: number; placement?: string }[] = [];
         if (!server) return out;
         const currentEggId = Number(server.egg?.id ?? 0);
         for (const manifest of pluginManifests) {
@@ -120,7 +120,7 @@ export function ServerOverviewPage() {
                 }
                 const Component = pluginHomeSectionComponents[section.id];
                 if (!Component) continue;
-                out.push({ key: `${manifest.id}:${section.id}`, Component, order: section.order ?? 100 });
+                out.push({ key: `${manifest.id}:${section.id}`, Component, order: section.order ?? 100, placement: section.placement });
             }
         }
         return out.sort((a, b) => a.order - b.order);
@@ -317,6 +317,12 @@ export function ServerOverviewPage() {
             {/* Quick actions — filtered by permissions */}
             <OverviewQuickActions serverId={serverId} entries={filteredEntries} />
 
+            {/* Plugin home sections that opt into `placement: "before_stats"`
+                render above the stats; the rest render after the core sections. */}
+            {pluginHomeSections.filter((s) => s.placement === 'before_stats').map(({ key, Component }) => (
+                <section key={key}><Component serverId={serverId} serverState={state} /></section>
+            ))}
+
             {/* Stats — visible if overview.stats permission */}
             {canViewStats && (
                 <section><ServerResourceCards resources={resources} plan={server.plan ?? (server.limits ? { ram: server.limits.memory, cpu: server.limits.cpu, disk: server.limits.disk } : null)} isLoading={!resources} /></section>
@@ -327,11 +333,9 @@ export function ServerOverviewPage() {
                 <section><ServerVariables serverId={serverId} canEdit={canEditStartup} /></section>
             )}
 
-            {/* Plugin-contributed home sections (e.g. egg-config-editor). Each
-                plugin renders its own card right after the env-variable panel
-                so they read as a continuous "configuration" group. */}
-            {pluginHomeSections.map(({ key, Component }) => (
-                <section key={key}><Component serverId={serverId} /></section>
+            {/* Remaining plugin home sections (default placement) — grouped at the end. */}
+            {pluginHomeSections.filter((s) => s.placement !== 'before_stats').map(({ key, Component }) => (
+                <section key={key}><Component serverId={serverId} serverState={state} /></section>
             ))}
 
             {/* Server info — only if owner or has settings permission */}

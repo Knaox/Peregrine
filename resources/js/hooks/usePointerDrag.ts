@@ -28,6 +28,7 @@ const LONG_PRESS_MS = 300;
 const SCROLL_EDGE = 60;
 const SCROLL_SPEED = 12;
 const DRAG_CLASS = 'peregrine-dragging-source';
+const BODY_DRAG_CLASS = 'peregrine-dragging';
 
 interface DragState {
     itemId: string;
@@ -42,13 +43,29 @@ interface DragState {
 function createGhost(rect: DOMRect): HTMLDivElement {
     const g = document.createElement('div');
     Object.assign(g.style, {
-        position: 'fixed', width: `${rect.width}px`, height: `${rect.height}px`,
+        position: 'fixed', left: '0', top: '0', width: `${rect.width}px`, height: `${rect.height}px`,
         background: 'var(--color-surface)', border: '1px solid var(--color-primary)',
-        opacity: '0.85', borderRadius: 'var(--radius-lg)', pointerEvents: 'none',
-        zIndex: '9999', boxShadow: '0 12px 40px rgba(0,0,0,0.5)', transition: 'none',
+        opacity: '0.92', borderRadius: 'var(--radius-lg)', pointerEvents: 'none',
+        zIndex: '9999', boxShadow: '0 18px 50px rgba(0,0,0,0.55)',
+        transition: 'none', willChange: 'transform', transformOrigin: 'center center',
     });
     document.body.appendChild(g);
     return g;
+}
+
+// Position the ghost with a GPU-composited transform (no layout/reflow) so it
+// tracks the pointer smoothly at 60fps. A tiny scale gives a "lifted" feel.
+function moveGhost(g: HTMLDivElement, cx: number, cy: number): void {
+    const w = parseFloat(g.style.width);
+    const h = parseFloat(g.style.height);
+    g.style.transform = `translate3d(${cx - w / 2}px, ${cy - h / 2}px, 0) scale(1.03)`;
+}
+
+// Hard block for the browser's native text-selection / image-drag gestures.
+// Attached while a handle is pressed so nothing can be highlighted — covers the
+// window *before* the drag threshold is crossed, in every browser.
+function blockSelectionEvent(e: Event): void {
+    e.preventDefault();
 }
 
 function dist(dx: number, dy: number): number {
@@ -76,6 +93,7 @@ export function usePointerDrag(config: PointerDragConfig): UsePointerDragReturn 
     useEffect(() => { idxRef.current = insertIndex; }, [insertIndex]);
 
     const cleanup = useCallback(() => {
+        document.body.classList.remove(BODY_DRAG_CLASS);
         ghostRef.current?.remove();
         ghostRef.current = null;
         sourceRef.current?.classList.remove(DRAG_CLASS);
@@ -99,8 +117,7 @@ export function usePointerDrag(config: PointerDragConfig): UsePointerDragReturn 
         el.classList.add(DRAG_CLASS);
         const rect = el.getBoundingClientRect();
         const ghost = createGhost(rect);
-        ghost.style.left = `${cx - rect.width / 2}px`;
-        ghost.style.top = `${cy - rect.height / 2}px`;
+        moveGhost(ghost, cx, cy);
         ghostRef.current = ghost;
         setIsDragging(true);
         setDraggedItemId(s.itemId);
@@ -157,12 +174,7 @@ export function usePointerDrag(config: PointerDragConfig): UsePointerDragReturn 
         }
 
         e.preventDefault();
-        if (ghostRef.current) {
-            const w = parseFloat(ghostRef.current.style.width);
-            const h = parseFloat(ghostRef.current.style.height);
-            ghostRef.current.style.left = `${e.clientX - w / 2}px`;
-            ghostRef.current.style.top = `${e.clientY - h / 2}px`;
-        }
+        if (ghostRef.current) moveGhost(ghostRef.current, e.clientX, e.clientY);
 
         const zid = findZone(e.clientX, e.clientY);
         setActiveDropZoneId(zid);
@@ -218,6 +230,8 @@ export function usePointerDrag(config: PointerDragConfig): UsePointerDragReturn 
         document.removeEventListener('pointermove', stableMove);
         document.removeEventListener('pointerup', stableUp);
         document.removeEventListener('pointercancel', stableCancel);
+        document.removeEventListener('selectstart', blockSelectionEvent);
+        document.removeEventListener('dragstart', blockSelectionEvent);
     };
 
     useEffect(() => {
@@ -238,6 +252,14 @@ export function usePointerDrag(config: PointerDragConfig): UsePointerDragReturn 
                 timerRef.current = null;
             }, LONG_PRESS_MS);
         }
+        // Lock text selection for the ENTIRE press — from the very first pixel,
+        // before the drag threshold is reached and during the touch long-press
+        // hold. Three layers so no browser slips through: clear any active
+        // range, CSS user-select via the body class, and a selectstart guard.
+        window.getSelection?.()?.removeAllRanges();
+        document.body.classList.add(BODY_DRAG_CLASS);
+        document.addEventListener('selectstart', blockSelectionEvent);
+        document.addEventListener('dragstart', blockSelectionEvent);
         document.addEventListener('pointermove', stableMove);
         document.addEventListener('pointerup', stableUp);
         document.addEventListener('pointercancel', stableCancel);
@@ -245,7 +267,7 @@ export function usePointerDrag(config: PointerDragConfig): UsePointerDragReturn 
 
     const getDragHandleProps = useCallback((itemId: string, zoneId: string): DragHandleProps => ({
         onPointerDown: (e: React.PointerEvent) => onDown(e, itemId, zoneId),
-        style: { touchAction: 'none', cursor: 'grab' },
+        style: { touchAction: 'none', cursor: 'grab', userSelect: 'none', WebkitUserSelect: 'none' },
         'data-drag-id': itemId,
         'data-drag-zone': zoneId,
     }), [onDown]);

@@ -37,6 +37,12 @@ export interface PluginServerHomeSection {
     id: string;
     /** Render position relative to the core sections. Lower values render earlier. */
     order?: number;
+    /**
+     * Where to render relative to the core stats. `'before_stats'` puts the
+     * section above the stats (prominent); omitted = grouped after the core
+     * sections (the default). Generic — no plugin is hardcoded in core.
+     */
+    placement?: 'before_stats';
     /** Optional Peregrine permission key (e.g. `startup.read`) gating visibility. Owners always see it. */
     required_permission?: string;
     /**

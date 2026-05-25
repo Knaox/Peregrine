@@ -8,6 +8,17 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.16] — 2026-05-25
+
+### Added
+
+- **New official plugin — Player Counter (1.0.0).** Shows the **live connected-player count** (and up to 5 player names) on each server's overview. It queries through a small **self-hosted GameDig sidecar** shipped inside the plugin (`plugins/peregrine-player-counter/sidecar`): **Steam/Source** (A2S), **Minecraft** (Java + Bedrock), **EOS / ARK: Survival Ascended** (via RCON — Epic blocks the public EOS matchmaking query with a 403, so ARK is counted through Source RCON `ListPlayers`), and **Hytale** (via the `hytale-plugin-query` server mod). The card is tied to the **live WebSocket power state** — it only queries a server that's actually running, so it never competes with the console socket or page load, and reads "offline" instantly otherwise; the count then refreshes on a short poll. A one-click **"Resolve RCON"** action (with an inline confirmation, since it restarts the server) allocates an RCON port and points the server's RCON variable at it when an EOS game's RCON isn't reachable — with a clean error when the server has no free allocation. Configured from **`/admin/player-counter-settings`** (enable, sidecar URL, optional shared token), with a **bilingual (FR/EN) Docker setup guide** on the config page (copy-paste docker-compose snippet).
+- **Plugin server-home sections: live server state + placement.** The `server_home_sections` plugin contract now passes the **live WebSocket power state** (`serverState`) to each plugin card, so a card can gate its work on a fully-running server, and a **`placement: "before_stats"`** manifest field lets a section render above the core stats instead of after them. Generic — no plugin is hardcoded in core.
+
+### Fixed
+
+- **Dragging a server or category no longer selects page text.** Holding the mouse to reorder a server or a category triggered the browser's text selection (lots of highlighted text). Selection is now locked for the entire drag — a `selectstart`/`dragstart` guard plus a global `user-select` lock applied from `pointerdown` (before the drag threshold) — the grabbing cursor applies document-wide, and the drag preview follows the cursor via a GPU `transform` for a smoother, jank-free feel.
+
 ## [1.0.0-alpha.15] — 2026-05-25
 
 ### Added

@@ -56,6 +56,14 @@ public/fonts/filament/
 /plugins/peregrine-phpmyadmin/frontend/node_modules
 /plugins/peregrine-phpmyadmin/tests/.phpunit.cache
 
+# Player Counter — first-party plugin shipped through this repo. Mirrors the
+# exceptions above: sources + built bundle tracked, deps ignored. The sidecar's
+# node_modules (the gamedig runtime) are installed at deploy time, not committed.
+!/plugins/peregrine-player-counter/
+!/plugins/peregrine-player-counter/**
+/plugins/peregrine-player-counter/sidecar/node_modules
+/plugins/peregrine-player-counter/frontend/node_modules
+
 # Plugin asset symlinks — created at activation time by PluginManager,
 # never committed (point to absolute host paths).
 /public/plugins/

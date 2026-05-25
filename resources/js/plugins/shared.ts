@@ -33,7 +33,7 @@ declare global {
         __PEREGRINE_PLUGINS__: {
             register: (pluginId: string, component: React.ComponentType) => void;
             registerServerPage: (pageId: string, component: React.ComponentType) => void;
-            registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number }>) => void;
+            registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number; serverState?: string }>) => void;
             /**
              * Notify the shell that a long-running, plugin-managed operation
              * has just started on the given server. The shell currently uses

@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'settings' => [
+        'title' => 'Player Counter',
+        'save' => 'Save settings',
+        'saved' => 'Settings saved.',
+        'close' => 'Close',
+
+        'section_connection' => 'Connection',
+        'enabled' => 'Enabled',
+        'enabled_help' => 'Show the live connected-player count (and up to 5 names) on every server overview.',
+        'sidecar_url' => 'Sidecar URL',
+        'sidecar_url_help' => 'Where Peregrine reaches the GameDig sidecar. Docker: http://game-query:9899 — bare-metal: http://127.0.0.1:9899. See the guide.',
+        'sidecar_token' => 'Shared token (optional)',
+        'sidecar_token_help' => 'If set, Peregrine sends it as a Bearer token; set the SAME value as GAME_QUERY_TOKEN on the sidecar. Leave empty for a loopback-only sidecar.',
+        'regenerate' => 'Generate a token',
+        'regenerated' => 'Token generated — save, then set the same value on the sidecar.',
+
+        'guide' => 'Docker setup guide',
+        'copy' => 'Copy',
+        'copied' => 'Copied!',
+        'test' => 'Test sidecar',
+        'test_no_url' => 'Set the Sidecar URL first.',
+        'test_ok' => 'Sidecar is reachable from Peregrine.',
+        'test_fail' => 'Could not reach the sidecar from Peregrine.',
+    ],
+];

@@ -341,8 +341,22 @@ body {
 
 /* Drag source opacity during pointer drag */
 .peregrine-dragging-source {
-    opacity: 0.3 !important;
+    opacity: 0.35 !important;
     transition: opacity 150ms ease;
+}
+
+/* While a pointer drag is active, lock text selection and force the grabbing
+   cursor across the whole document. This is what stops the browser from
+   highlighting text as the pointer sweeps over server / category labels. */
+body.peregrine-dragging,
+body.peregrine-dragging * {
+    cursor: grabbing !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+}
+body.peregrine-dragging {
+    -webkit-touch-callout: none;
 }
 
 /* Reduced motion support */
