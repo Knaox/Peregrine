@@ -15,8 +15,7 @@ use Plugins\PeregrinePlayerCounter\PlayerCounterServiceProvider;
  * trivially unit-testable.
  *
  * @phpstan-type PortStrategy array{mode: string, value?: int, env?: string, applied_by_gamedig?: bool}
- * @phpstan-type ConsolePatterns array{count: string, name: ?string, flags: string}
- * @phpstan-type QueryTarget array{type: ?string, family: string, queryable: bool, query_port: PortStrategy, console: ?ConsolePatterns}
+ * @phpstan-type QueryTarget array{type: ?string, family: string, queryable: bool, query_port: PortStrategy}
  */
 class EggGameTypeResolver
 {
@@ -28,21 +27,14 @@ class EggGameTypeResolver
     public function resolve(?Egg $egg): array
     {
         if (! $egg) {
-            return ['type' => null, 'family' => 'unknown', 'queryable' => false, 'query_port' => ['mode' => 'same'], 'console' => null];
+            return ['type' => null, 'family' => 'unknown', 'queryable' => false, 'query_port' => ['mode' => 'same']];
         }
 
-        $haystack = $this->haystack($egg);
-        $target = $this->matchType($haystack);
-
-        // Console-count fallback patterns (crossplay games with no wire query),
-        // attached independently of the A2S/RCON type — used only if that fails.
-        $target['console'] = $this->consoleFor($haystack);
-
-        return $target;
+        return $this->matchType($this->haystack($egg));
     }
 
     /**
-     * @return array{type: ?string, family: string, queryable: bool, query_port: PortStrategy}
+     * @return QueryTarget
      */
     private function matchType(string $haystack): array
     {
@@ -69,33 +61,6 @@ class EggGameTypeResolver
         }
 
         return ['type' => null, 'family' => 'unknown', 'queryable' => false, 'query_port' => ['mode' => 'same']];
-    }
-
-    /**
-     * First `console_count` rule whose any `match` substring is in the haystack.
-     *
-     * @return ConsolePatterns|null
-     */
-    private function consoleFor(string $haystack): ?array
-    {
-        foreach ((array) config(self::NS.'.console_count', []) as $rule) {
-            foreach ((array) ($rule['match'] ?? []) as $needle) {
-                $needle = strtolower((string) $needle);
-                if ($needle === '' || ! str_contains($haystack, $needle)) {
-                    continue;
-                }
-                $count = $rule['count'] ?? null;
-                if (is_string($count) && $count !== '') {
-                    return [
-                        'count' => $count,
-                        'name' => is_string($rule['name'] ?? null) ? $rule['name'] : null,
-                        'flags' => is_string($rule['flags'] ?? null) ? $rule['flags'] : '',
-                    ];
-                }
-            }
-        }
-
-        return null;
     }
 
     private function haystack(Egg $egg): string

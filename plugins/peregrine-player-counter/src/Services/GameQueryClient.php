@@ -74,62 +74,6 @@ class GameQueryClient
     }
 
     /**
-     * Count players by reading the server console (games with no usable wire
-     * query, e.g. crossplay Valheim). The sidecar opens the Wings websocket with
-     * these credentials, grabs the log backlog and applies the regexes.
-     *
-     * @param  array{count: string, name?: ?string, flags?: ?string}  $patterns
-     * @return QueryResult
-     */
-    public function console(string $socket, string $token, array $patterns, string $origin): array
-    {
-        $settings = PlayerCounterSettings::make();
-        $base = rtrim($settings->sidecarUrl, '/');
-
-        if ($base === '') {
-            return ['ok' => false, 'error' => 'sidecar URL not configured'];
-        }
-
-        try {
-            $request = Http::timeout((float) config(self::NS.'.console_timeout', 10))->acceptJson();
-
-            if ($settings->sidecarToken !== '') {
-                $request = $request->withToken($settings->sidecarToken);
-            }
-
-            $response = $request->post("{$base}/console", [
-                'socket' => $socket,
-                'token' => $token,
-                'count' => $patterns['count'],
-                'name' => $patterns['name'] ?? null,
-                'flags' => $patterns['flags'] ?? '',
-                'origin' => $origin,
-                'maxNames' => (int) config(self::NS.'.max_names', 5),
-            ]);
-
-            $data = $response->json();
-
-            if (! $response->successful() || ! is_array($data)) {
-                return $this->fail('console', $socket, 0, 'sidecar HTTP '.$response->status());
-            }
-
-            if (($data['ok'] ?? false) !== true) {
-                return $this->fail('console', $socket, 0, is_string($data['error'] ?? null) ? $data['error'] : 'console read failed');
-            }
-
-            return [
-                'ok' => true,
-                'online' => max(0, (int) ($data['online'] ?? 0)),
-                'max' => null,
-                'name' => null,
-                'players' => $this->names($data['players'] ?? null),
-            ];
-        } catch (\Throwable $e) {
-            return $this->fail('console', $socket, 0, $e->getMessage());
-        }
-    }
-
-    /**
      * @return array{ok: false, error: string}
      */
     private function fail(string $type, string $host, int $port, string $error): array

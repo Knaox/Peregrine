@@ -13,10 +13,6 @@ return [
     // ceiling (now a single attempt) or PHP aborts first with a cURL 28.
     'timeout' => (float) env('GAME_QUERY_TIMEOUT', 8),
     'eos_timeout' => (float) env('GAME_QUERY_EOS_TIMEOUT', 14),
-    // Console-count fallback (reads the Wings console over a websocket via the
-    // sidecar). Must exceed the sidecar's CONSOLE_MAX_MS (4s) + handshake.
-    'console_timeout' => (float) env('GAME_QUERY_CONSOLE_TIMEOUT', 10),
-    'max_names' => (int) env('GAME_QUERY_MAX_NAMES', 5),
 
     // Single cache lifetime (seconds). A server-home plugin section only gets
     // `serverId` (no console stream), so freshness is poll-driven by this TTL
@@ -85,23 +81,6 @@ return [
 
         // 7 Days to Die: keep the extra legacy aliases the catalogue drops.
         ['match' => ['7 days to die', '7dtd', '7d2d', 'sdtd'], 'type' => 'sdtd', 'family' => 'source'],
-    ],
-
-    // Console-count fallback: games with NO usable wire query (e.g. crossplay
-    // Valheim — PlayFab relay, no A2S listener) but that print an ABSOLUTE player
-    // count in their console. Tried only when the A2S/RCON query fails. Matched
-    // like `overrides` against the egg haystack. `count`/`name` are JS-regex
-    // SOURCE strings (the sidecar runs them); capture group 1 is the count/name;
-    // the LAST matching console line wins (most recent state).
-    'console_count' => [
-        // Valheim logs "… now N player(s)" on join/leave and "… is active with N
-        // player(s)" periodically; "Got character ZDOID from <name> :" gives names.
-        [
-            'match' => ['valheim'],
-            'count' => '(\\d+) player\\(s\\)',
-            'name' => 'Got character ZDOID from (.+?) :',
-            'flags' => 'i',
-        ],
     ],
 
     // Full GameDig catalogue (auto-generated — see config/games.php). Scanned

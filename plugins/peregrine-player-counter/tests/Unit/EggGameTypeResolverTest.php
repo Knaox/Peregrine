@@ -95,20 +95,4 @@ class EggGameTypeResolverTest extends TestCase
         $this->assertNotSame('actionsource', $target['type']);
         $this->assertSame('protocol-valve', $target['type']); // generic fallback
     }
-
-    #[Test]
-    public function valheim_carries_console_count_patterns_for_the_crossplay_fallback(): void
-    {
-        $target = $this->resolver->resolve($this->egg('Valheim Dedicated Server'));
-
-        $this->assertIsArray($target['console']);
-        $this->assertArrayHasKey('count', $target['console']);
-        $this->assertSame('(\\d+) player\\(s\\)', $target['console']['count']);
-    }
-
-    #[Test]
-    public function games_without_a_console_rule_have_no_console_patterns(): void
-    {
-        $this->assertNull($this->resolver->resolve($this->egg('Rust'))['console']);
-    }
 }

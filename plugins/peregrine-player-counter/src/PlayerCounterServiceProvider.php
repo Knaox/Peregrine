@@ -6,6 +6,7 @@ namespace Plugins\PeregrinePlayerCounter;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Plugins\PeregrinePlayerCounter\Services\AdjacentPortResolver;
 use Plugins\PeregrinePlayerCounter\Services\EggGameTypeResolver;
 use Plugins\PeregrinePlayerCounter\Services\GameQueryClient;
 use Plugins\PeregrinePlayerCounter\Services\PlayerCounterDocRenderer;
@@ -40,6 +41,7 @@ class PlayerCounterServiceProvider extends ServiceProvider
         $this->app->singleton(GameQueryClient::class);
         $this->app->singleton(RconClient::class);
         $this->app->singleton(RconPlayerQuery::class);
+        $this->app->singleton(AdjacentPortResolver::class);
         $this->app->singleton(QueryAccessResolver::class);
         $this->app->singleton(ServerPlayerCountService::class);
         $this->app->singleton(PlayerCounterDocRenderer::class);
