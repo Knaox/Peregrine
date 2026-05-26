@@ -1,6 +1,5 @@
 import type { Server } from '@/types/Server';
 import type { ServerStatsMap } from '@/types/ServerStats';
-import type { ServerResources } from '@/types/ServerResources';
 import type { WebSocketCredentials } from '@/types/WebSocketCredentials';
 import type { PowerSignal } from '@/types/PowerSignal';
 import type { StartupVariable } from '@/types/StartupVariable';
@@ -39,11 +38,6 @@ export async function fetchServer(id: number): Promise<Server> {
 
 export async function fetchServerStats(): Promise<ServerStatsMap> {
     const { data } = await request<{ data: ServerStatsMap }>('/api/servers/stats');
-    return data;
-}
-
-export async function fetchServerResources(id: number): Promise<ServerResources> {
-    const { data } = await request<{ data: ServerResources }>(`/api/servers/${id}/resources`);
     return data;
 }
 

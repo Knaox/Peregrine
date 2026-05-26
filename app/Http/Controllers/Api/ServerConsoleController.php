@@ -205,24 +205,6 @@ class ServerConsoleController extends Controller
         ]);
     }
 
-    public function resources(Request $request, Server $server): JsonResponse
-    {
-        $this->authorize('readStats', $server);
-
-        $resources = $this->clientService->getServerResources($server->identifier);
-
-        return response()->json([
-            'data' => [
-                'state' => $resources->state,
-                'cpu' => $resources->cpuAbsolute,
-                'memory_bytes' => $resources->memoryBytes,
-                'disk_bytes' => $resources->diskBytes,
-                'network_rx' => $resources->networkRxBytes,
-                'network_tx' => $resources->networkTxBytes,
-            ],
-        ]);
-    }
-
     /**
      * Cached + single-flight WebSocket credentials fetch.
      *
