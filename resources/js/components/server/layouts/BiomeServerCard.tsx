@@ -53,8 +53,11 @@ function BiomeServerCardImpl({
     // Stats arrive on a poll a beat after the server list. Until the first
     // payload lands we show skeletons rather than a flash of 0 % / 0 B / —.
     const statsLoading = !isInactive && stats === undefined;
-    const ramLimit = server.plan?.ram ?? server.limits?.memory ?? 0;
-    const diskLimit = server.plan?.disk ?? server.limits?.disk ?? 0;
+    // The dashboard list payload exposes the quota under `configuration`
+    // (plan/limits are detail-only) — without it the meters had no limit and
+    // stayed empty.
+    const ramLimit = server.plan?.ram ?? server.limits?.memory ?? server.configuration?.ram ?? 0;
+    const diskLimit = server.plan?.disk ?? server.limits?.disk ?? server.configuration?.disk ?? 0;
     const address = server.allocation ? `${server.allocation.ip}:${server.allocation.port}` : null;
 
     const handlePrefetch = useCallback(() => {
@@ -152,7 +155,7 @@ function BiomeServerCardImpl({
                 ) : cardConfig.show_stats_bars ? (
                     <div className="flex items-center gap-4">
                         <BiomeGauge cpu={stats?.cpu} label="CPU" loading={statsLoading} live={isRunning}
-                            from="var(--color-primary)" to="var(--color-primary-hover)" />
+                            to="var(--color-primary)" />
                         <div className="flex flex-1 flex-col gap-2.5">
                             <BiomeMetricBar label="RAM" bytes={stats?.memory_bytes} limitMb={ramLimit} loading={statsLoading} live={isRunning} />
                             <BiomeMetricBar label="Disk" bytes={stats?.disk_bytes} limitMb={diskLimit} loading={statsLoading} live={isRunning} />

@@ -12,6 +12,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 - **Server sidebar position & style now survive publishing.** Choosing the floating dock (or a nav style) in Theme Studio reverted to the left sidebar on save — `validated()` was stripping `sidebar_config.position` / `style` / `show_server_*` because `sidebar_config.entries.*` declared nested rules (which makes Laravel drop sibling keys without a rule). Added the missing rules so the dock and nav style persist.
 - **Biome card RAM / Disk meters track live consumption again.** The values are read straight from the live stats instead of going through a count-up that could leave them stale; the fill still animates.
+- **Resource gauges/meters now render their fill.** Two issues left CPU/RAM/Disk looking empty: (1) the dashboard biome cards read the quota from `plan`/`limits`, which the server-list payload doesn't carry — it exposes `configuration.ram`/`disk` — so the bars had no limit and stayed flat; added that fallback. (2) The CPU/overview gauges used an SVG gradient whose `var()` / `color-mix()` stops don't paint reliably, leaving the coloured arc invisible — reverted to a solid theme-coloured stroke. Affects the dashboard cards and the server overview page.
 
 ## [1.0.0-alpha.17] — 2026-05-26
 

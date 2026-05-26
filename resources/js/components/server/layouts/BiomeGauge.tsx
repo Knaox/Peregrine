@@ -1,4 +1,4 @@
-import { memo, useId } from 'react';
+import { memo } from 'react';
 import { useCountUp } from '@/hooks/useCountUp';
 import { formatCpu } from '@/utils/format';
 
@@ -7,9 +7,7 @@ interface BiomeGaugeProps {
     cpu: number | undefined;
     /** Small caption under the value, e.g. "CPU". */
     label: string;
-    /** Gradient start (CSS var). */
-    from: string;
-    /** Gradient end (CSS var). */
+    /** Ring colour (CSS var). */
     to: string;
     /** True before the first stats poll — render a skeleton ring. */
     loading: boolean;
@@ -20,12 +18,10 @@ interface BiomeGaugeProps {
 }
 
 /**
- * Focal CPU dial — a ring with a two-stop gradient stroke, soft glow and an
- * animated sweep that counts up smoothly with the live value. Pure theme
- * tokens, so it retints with the active palette. Skeleton-pulses on load.
+ * Focal CPU dial — a ring with a solid theme-coloured stroke, soft glow and an
+ * animated sweep that counts up with the live value. Skeleton-pulses on load.
  */
-function BiomeGaugeImpl({ cpu, label, from, to, loading, live, size = 88 }: BiomeGaugeProps) {
-    const id = useId().replace(/:/g, '');
+function BiomeGaugeImpl({ cpu, label, to, loading, live, size = 88 }: BiomeGaugeProps) {
     const animated = useCountUp(cpu ?? 0, { enabled: live && !loading });
     const pct = Math.max(0, Math.min(100, animated));
     const stroke = 7;
@@ -43,16 +39,12 @@ function BiomeGaugeImpl({ cpu, label, from, to, loading, live, size = 88 }: Biom
     return (
         <div className="relative flex shrink-0 flex-col items-center justify-center" style={{ width: size, height: size }} aria-hidden>
             <svg width={size} height={size} className="block -rotate-90">
-                <defs>
-                    <linearGradient id={`bg-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor={from} />
-                        <stop offset="100%" stopColor={to} />
-                    </linearGradient>
-                </defs>
                 <circle cx={c} cy={c} r={r} fill="none" stroke="var(--color-border)" strokeWidth={stroke} />
+                {/* Solid stroke (CSS var) — an SVG gradient with var()/color-mix
+                    stops doesn't render reliably, leaving the arc invisible. */}
                 <circle
                     cx={c} cy={c} r={r} fill="none"
-                    stroke={`url(#bg-${id})`}
+                    stroke={to}
                     strokeWidth={stroke}
                     strokeLinecap="round"
                     strokeDasharray={`${progress} ${circumference}`}

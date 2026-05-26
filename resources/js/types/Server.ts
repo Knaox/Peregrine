@@ -37,6 +37,15 @@ export interface Server {
         backups: number;
         databases: number;
     } | null;
+    /** Technical-catalog row (ServerResource). Carries the RAM/disk quota the
+     *  list endpoint exposes — `plan`/`limits` are only present on detail. */
+    configuration?: {
+        id: number;
+        internal_name?: string;
+        ram?: number;
+        cpu?: number;
+        disk?: number;
+    } | null;
     created_at: string;
     /** User's role on this server: owner has all permissions, subuser has limited */
     role?: 'owner' | 'subuser';
