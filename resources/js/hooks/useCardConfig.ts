@@ -7,7 +7,7 @@ export type CardAccentStrength = 'none' | 'subtle' | 'bold';
 export type CardBorderStyle = 'full' | 'accent-left' | 'none';
 export type CardQuickActionsLayout = 'full' | 'compact' | 'icon-only';
 export type CardHoverEffect = 'lift' | 'scale' | 'glow' | 'none';
-export type CardLayoutVariant = 'classic' | 'command-bar' | 'bento' | 'pulse-grid';
+export type CardLayoutVariant = 'classic' | 'command-bar' | 'bento' | 'pulse-grid' | 'biome';
 
 export interface CardConfig {
     layout: string;

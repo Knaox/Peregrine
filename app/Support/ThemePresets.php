@@ -26,13 +26,13 @@ final class ThemePresets
     public static function all(): array
     {
         return [
-            'orange'  => ['label' => Orange::label(),  'dark' => Orange::dark(),  'light' => Orange::light()],
-            'amber'   => ['label' => Amber::label(),   'dark' => Amber::dark(),   'light' => Amber::light()],
+            'orange' => ['label' => Orange::label(),  'dark' => Orange::dark(),  'light' => Orange::light()],
+            'amber' => ['label' => Amber::label(),   'dark' => Amber::dark(),   'light' => Amber::light()],
             'crimson' => ['label' => Crimson::label(), 'dark' => Crimson::dark(), 'light' => Crimson::light()],
             'emerald' => ['label' => Emerald::label(), 'dark' => Emerald::dark(), 'light' => Emerald::light()],
-            'indigo'  => ['label' => Indigo::label(),  'dark' => Indigo::dark(),  'light' => Indigo::light()],
-            'violet'  => ['label' => Violet::label(),  'dark' => Violet::dark(),  'light' => Violet::light()],
-            'slate'   => ['label' => Slate::label(),   'dark' => Slate::dark(),   'light' => Slate::light()],
+            'indigo' => ['label' => Indigo::label(),  'dark' => Indigo::dark(),  'light' => Indigo::light()],
+            'violet' => ['label' => Violet::label(),  'dark' => Violet::dark(),  'light' => Violet::light()],
+            'slate' => ['label' => Slate::label(),   'dark' => Slate::dark(),   'light' => Slate::light()],
         ];
     }
 

@@ -18,22 +18,39 @@ export function ConsoleOutput({ messages }: ConsoleOutputProps) {
     const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const [autoScroll, setAutoScroll] = useState(true);
+    // Ref mirror so the auto-scroll effect reads the latest intent without
+    // re-subscribing, and a flag to ignore the onScroll our own programmatic
+    // scroll fires (otherwise fast log bursts grow scrollHeight mid-scroll and
+    // flip auto-scroll off — the console "loses the rhythm").
+    const autoScrollRef = useRef(true);
+    const programmaticRef = useRef(false);
 
     const handleScroll = useCallback(() => {
+        if (programmaticRef.current) return;
         const el = containerRef.current;
         if (!el) return;
-        setAutoScroll(el.scrollTop + el.clientHeight >= el.scrollHeight - 50);
+        const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 80;
+        autoScrollRef.current = atBottom;
+        setAutoScroll(atBottom);
     }, []);
 
     useEffect(() => {
-        if (!autoScroll) return;
+        if (!autoScrollRef.current) return;
         const el = containerRef.current;
-        if (el) el.scrollTop = el.scrollHeight;
-    }, [messages, autoScroll]);
+        if (!el) return;
+        // Scroll after layout so wrapped lines are measured, and shield the
+        // programmatic scroll from handleScroll.
+        programmaticRef.current = true;
+        const raf = requestAnimationFrame(() => {
+            el.scrollTop = el.scrollHeight;
+            requestAnimationFrame(() => { programmaticRef.current = false; });
+        });
+        return () => cancelAnimationFrame(raf);
+    }, [messages]);
 
     const scrollToBottom = useCallback(() => {
         const el = containerRef.current;
-        if (el) { el.scrollTop = el.scrollHeight; setAutoScroll(true); }
+        if (el) { el.scrollTop = el.scrollHeight; autoScrollRef.current = true; setAutoScroll(true); }
     }, []);
 
     return (

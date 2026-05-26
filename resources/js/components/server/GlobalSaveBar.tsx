@@ -107,7 +107,10 @@ export function GlobalSaveBar() {
                     exit={{ opacity: 0, y: 20 }}
                     transition={{ duration: 0.2, ease: 'easeOut' }}
                     className={clsx(
-                        'glass-card-enhanced fixed bottom-6 left-1/2 z-50 -translate-x-1/2',
+                        // Sit above the floating dock when present (it sets
+                        // --bottom-safe-area = 5.5rem); fall back to 1.5rem so the
+                        // two bottom-centered bars never overlap.
+                        'glass-card-enhanced fixed bottom-[calc(var(--bottom-safe-area,1.5rem)+0.75rem)] left-1/2 z-50 -translate-x-1/2',
                         'flex items-center gap-3.5 rounded-full py-2.5 pl-5 pr-2.5',
                         'shadow-[var(--shadow-lg)]',
                     )}

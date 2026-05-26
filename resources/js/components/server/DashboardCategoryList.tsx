@@ -9,6 +9,7 @@ import type { usePointerDrag } from '@/hooks/usePointerDrag';
 import type { useServerSelection } from '@/hooks/useServerSelection';
 import type { useCardConfig } from '@/hooks/useCardConfig';
 import { ServerCard } from '@/components/server/ServerCard';
+import { BiomeServerCard } from '@/components/server/layouts/BiomeServerCard';
 import { ServerGroupHeader } from '@/components/server/ServerGroupHeader';
 import { CategoryHeader } from '@/components/server/CategoryHeader';
 import { DropZoneIndicator } from '@/components/server/DropZoneIndicator';
@@ -113,6 +114,7 @@ function ServerGrid({
     // card of a 50-server dashboard would otherwise wait 2.5s before
     // appearing. Skip the stagger entirely past 30 items (instant fade-in).
     const useStagger = shouldAnimate && filtered.length <= 30;
+    const CardComponent = cardConfig.card_layout_variant === 'biome' ? BiomeServerCard : ServerCard;
 
     return (
         <div
@@ -142,14 +144,14 @@ function ServerGrid({
                                 : { duration: 0 }
                             }
                         >
-                            <div className="relative">
+                            <div className="group/row relative">
                                 <div
-                                    className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-2 z-20"
+                                    className="hidden sm:flex items-center absolute left-0 top-0 bottom-0 -translate-x-full pr-2 z-20 opacity-0 transition-opacity duration-200 group-hover/row:opacity-100"
                                     {...drag.getDragHandleProps(String(server.id), zoneId)}
                                 >
                                     <GripIcon />
                                 </div>
-                                <ServerCard
+                                <CardComponent
                                     server={server}
                                     stats={statsMap?.[server.id]}
                                     onPower={handlePower}

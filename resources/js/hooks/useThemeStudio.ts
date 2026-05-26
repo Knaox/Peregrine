@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { request, ApiError } from '@/services/http';
 import { fetchServers } from '@/services/api';
-import { buildModeVariants } from '@/lib/themeStudio/buildModeVariants';
-import { buildPreviewPayload } from '@/lib/themeStudio/buildPreviewPayload';
+import { useThemeStudioPreview } from '@/hooks/useThemeStudioPreview';
+import { buildExportPayload, type ThemeExport, type ParsedImport } from '@/lib/themeStudio/themeTransfer';
 import type {
     PreviewBreakpoint,
     PreviewMode,
@@ -34,8 +34,6 @@ interface PresetsResponse {
     presets: Record<string, PresetEntry>;
 }
 
-const PEER_ORIGIN = typeof window !== 'undefined' ? window.location.origin : '';
-
 interface UseThemeStudioReturn {
     draft: ThemeDraft | null;
     cardDraft: CardConfig | null;
@@ -65,6 +63,10 @@ interface UseThemeStudioReturn {
     save: () => Promise<void>;
     reset: () => Promise<void>;
     discard: () => void;
+    /** Folds a parsed import into the draft — leaves it dirty for Publish. */
+    loadFromExport: (parsed: ParsedImport) => void;
+    /** Serialisable snapshot of the current draft (CLI-compatible shape). */
+    exportPayload: () => ThemeExport | null;
 }
 
 export function useThemeStudio(): UseThemeStudioReturn {
@@ -110,7 +112,6 @@ export function useThemeStudio(): UseThemeStudioReturn {
     const [saveError, setSaveError] = useState<string | null>(null);
     const [revision, setRevision] = useState<number | null>(null);
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
-    const iframeReadyRef = useRef(false);
 
     useEffect(() => {
         if (!data) return;
@@ -133,44 +134,16 @@ export function useThemeStudio(): UseThemeStudioReturn {
         [draft, baseline, cardDraft, cardBaseline, sidebarDraft, sidebarBaseline],
     );
 
-    const sendThemeToIframe = useCallback(
-        (next: ThemeDraft, mode: PreviewMode): void => {
-            const win = iframeRef.current?.contentWindow;
-            if (!win) return;
-            const preset = presetsData?.presets[next.theme_preset] ?? null;
-            const variants = buildModeVariants(next, preset);
-            // Fold the flat draft into the nested ThemeData payload the iframe
-            // expects (extracted to a sibling builder to keep this hook lean).
-            const payload = buildPreviewPayload(
-                next,
-                mode,
-                variants,
-                cardDraft ?? data?.card_config ?? null,
-                sidebarDraft ?? data?.sidebar_config ?? null,
-            );
-            win.postMessage({ type: 'peregrine:theme:update', payload }, PEER_ORIGIN);
-            win.postMessage({ type: 'peregrine:theme:setMode', payload: mode }, PEER_ORIGIN);
-        },
-        [data, presetsData, cardDraft, sidebarDraft],
-    );
-
-    useEffect(() => {
-        const onMessage = (event: MessageEvent): void => {
-            if (event.origin !== PEER_ORIGIN) return;
-            const msg = event.data as { type?: unknown } | null;
-            if (msg && typeof msg === 'object' && msg.type === 'peregrine:theme:ready') {
-                iframeReadyRef.current = true;
-                if (draft) sendThemeToIframe(draft, previewMode);
-            }
-        };
-        window.addEventListener('message', onMessage);
-        return () => window.removeEventListener('message', onMessage);
-    }, [draft, previewMode, sendThemeToIframe]);
-
-    useEffect(() => {
-        if (!draft || !iframeReadyRef.current) return;
-        sendThemeToIframe(draft, previewMode);
-    }, [draft, previewMode, cardDraft, sidebarDraft, sendThemeToIframe]);
+    useThemeStudioPreview({
+        iframeRef,
+        draft,
+        previewMode,
+        cardDraft,
+        sidebarDraft,
+        presets: presetsData?.presets,
+        fallbackCard: data?.card_config ?? null,
+        fallbackSidebar: data?.sidebar_config ?? null,
+    });
 
     const setField = useCallback(<K extends keyof ThemeDraft>(key: K, value: ThemeDraft[K]) => {
         setDraft((cur) => (cur === null ? cur : { ...cur, [key]: value }));
@@ -253,6 +226,20 @@ export function useThemeStudio(): UseThemeStudioReturn {
         setSidebarDraft(sidebarBaseline);
     }, [baseline, cardBaseline, sidebarBaseline]);
 
+    // Merge so keys absent from the import (e.g. older exports missing
+    // theme_suspended) keep their current value. Leaves the studio dirty;
+    // the admin reviews in the preview, then clicks Publish to persist.
+    const loadFromExport = useCallback((parsed: ParsedImport) => {
+        setDraft((cur) => (cur === null ? cur : { ...cur, ...parsed.draft }));
+        if (parsed.cardConfig) setCardDraft((cur) => (cur === null ? cur : { ...cur, ...parsed.cardConfig }));
+        if (parsed.sidebarConfig) setSidebarDraft((cur) => (cur === null ? cur : { ...cur, ...parsed.sidebarConfig }));
+    }, []);
+
+    const exportPayload = useCallback(
+        (): ThemeExport | null => (draft ? buildExportPayload(draft, cardDraft, sidebarDraft) : null),
+        [draft, cardDraft, sidebarDraft],
+    );
+
     return {
         draft,
         cardDraft,
@@ -280,5 +267,7 @@ export function useThemeStudio(): UseThemeStudioReturn {
         save,
         reset,
         discard,
+        loadFromExport,
+        exportPayload,
     };
 }

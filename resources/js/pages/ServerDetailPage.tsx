@@ -226,7 +226,9 @@ export function ServerDetailPage() {
     const contentPaddingClass = [
         'server-page-content relative z-10 flex flex-col min-h-full p-3 sm:p-4 md:p-6',
         hasMobileHamburger && 'pt-14 sm:pt-6 md:pt-6',
-        isDockLayout && 'pt-6 sm:pt-6 md:pt-8 pb-24 sm:pb-28 md:pb-32',
+        // Clear the fixed top-left back+context pill / top-right user menu
+        // (both at top-3, ~52px tall) so page headers don't collide with them.
+        isDockLayout && 'pt-16 sm:pt-16 md:pt-16 pb-24 sm:pb-28 md:pb-32',
     ].filter(Boolean).join(' ');
 
     // Tag the wrapper with the current sub-route so per-page CSS overrides

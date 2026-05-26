@@ -58,7 +58,8 @@ export interface ThemeDraft {
         | 'grid'
         | 'aurora'
         | 'orbs'
-        | 'noise';
+        | 'noise'
+        | 'biome';
     theme_login_background_images: string[];
     theme_login_carousel_enabled: boolean;
     theme_login_carousel_interval: number;
@@ -89,7 +90,8 @@ export interface ThemeDraft {
         | 'grid'
         | 'aurora'
         | 'orbs'
-        | 'noise';
+        | 'noise'
+        | 'biome';
     /** Mega shell switch — `default` = top-nav AppLayout (legacy);
      *  `workspace` = left vertical rail with logo + nav icons + UserMenu. */
     theme_app_shell_variant: 'default' | 'workspace';

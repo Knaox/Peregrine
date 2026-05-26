@@ -22,6 +22,7 @@ const PATTERN_OPTIONS = [
     { value: 'dots', label: 'Dots pattern' },
     { value: 'grid', label: 'Grid lines' },
     { value: 'noise', label: 'Noise texture' },
+    { value: 'biome', label: 'Biome (organic glow)' },
     { value: 'none', label: 'None (solid)' },
 ] as const;
 

@@ -8,6 +8,14 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.17] — 2026-05-26
+
+### Added
+
+- **Theme Studio: custom “biome” dashboard layout + 1-click import/export.** New `biome` dashboard variant — banner-led server cards with a live CPU ring gauge, animated RAM/Disk meters, a pulsing status orb, a mouse-follow spotlight and hover glow — selectable in Theme Studio and rendered through the existing categories / drag-reorder / responsive system. Adds a dedicated animated `biome` background pattern, and **Import / Export buttons** in the Studio header that read/write a theme JSON interchangeable with `php artisan theme:export` / `theme:import` (CSS-sanitised, unknown keys stripped). Revert is the existing one-click **Reset to defaults**.
+- **Biome dashboard hero header** with live fleet stats (total / online / offline) that count up.
+- **Optimistic power state on the dashboard.** Starting / stopping / killing a server from the home page shows a transitional “starting… / stopping…” state instantly (a shared transition store merged into the polled stats) until the real stats arrive — on both classic and biome cards.
+
 ### Changed
 
 - **Player Counter 1.0.0 — supported-games notice + egg whitelist.** Distributed through the **marketplace registry** (not bundled in the repo). The counter reads six games reliably — **Minecraft** (Java + Bedrock), **Valheim**, **7 Days to Die**, **ARK: Survival Ascended**, **ARK: Survival Evolved** and **Palworld** — shown as an **informational notice** on the settings page (`/admin/player-counter-settings`). Which servers display the card is controlled solely by an **egg whitelist** (settings → *Visibility*): **empty = every egg**, otherwise only the listed eggs. A whitelisted egg whose game isn't one of the six still gets a card with a best-effort generic A2S probe (`fallback_type`, default `protocol-valve`) — no "unsupported" message; whether it returns a count is up to the admin who whitelisted it.
@@ -15,6 +23,16 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
   - **The "RCON port not reachable" notice + one-click Resolve RCON only appear when the server is running** but its RCON query returned nothing (ARK, Palworld) — never on a normally-stopped server. Driven by an `rcon` payload flag, so it covers every RCON game.
   - **Fixed: card visibility now respects the whitelist even on stopped servers.** The front-end always asks the backend for the verdict (resolved without a network query) and forwards the live power state, so a non-whitelisted egg hides the card even while the server is off, while a supported-but-stopped server reads "offline" instantly (no slow query). The settings notice uses inline styles (Tailwind doesn't scan plugin Blade), fixing its broken rendering.
   - Advanced/opt-in: a best-effort generic Steam probe (`GAME_QUERY_STEAM_FALLBACK=true`, off by default) can count other A2S games, and a per-rule `query_offset` handles games whose query port differs from the game port.
+- **Server overview page modernised.** The hero was extracted into its own component, made branded and lively (drifting halo), with a **light bottom scrim** so egg artwork shows without a dark veil; the resource ring gauges gained a gradient + glow and now roll their values up **only while the server is running**.
+- **Admin servers view (`/admin/servers`) redesigned** to match the biome style: a branded hero header with a live total, egg thumbnails + owner avatars, status orbs, staggered rows and a polished search / status-filter bar.
+- **Sidebar nav style now applies everywhere.** `default` / `compact` / `pills` produce a visible difference in the dock and top layouts, not just the left sidebar.
+- Server-card banners keep the artwork clean (the bottom seam fade applies only to the art-less brand wash), and biome cards keep a **stable height** during start / stop.
+
+### Fixed
+
+- **Console no longer “loses the rhythm” during a startup log burst.** The programmatic auto-scroll is shielded from the scroll handler and runs after layout, so the view sticks to the newest line while the user can still scroll up freely.
+- **Floating dock no longer overlaps page content or the save bar.** Server pages get top clearance in dock mode, and the “unsaved changes” bar now sits above the dock instead of under it.
+- Theme Studio header status counters show whole numbers (no fractional value mid count-up).
 
 ## [1.0.0-alpha.16] — 2026-05-25
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 
 interface CircularGaugeProps {
     value: number;
@@ -24,6 +24,7 @@ function getGaugeColor(percent: number, defaultColor: string): string {
 export function CircularGauge({
     value, max, color, label, sublabel, size = 80, strokeWidth = 6,
 }: CircularGaugeProps) {
+    const gid = useId().replace(/:/g, '');
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
     const percent = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
@@ -43,6 +44,12 @@ export function CircularGauge({
     return (
         <div className="relative flex flex-col items-center">
             <svg width={size} height={size} className="gauge-ring">
+                <defs>
+                    <linearGradient id={`gauge-${gid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor={activeColor} />
+                        <stop offset="100%" stopColor={`color-mix(in srgb, ${activeColor} 65%, #ffffff)`} />
+                    </linearGradient>
+                </defs>
                 {/* Background track */}
                 <circle
                     cx={size / 2} cy={size / 2} r={radius}
@@ -52,7 +59,7 @@ export function CircularGauge({
                 {/* Active arc */}
                 <circle
                     cx={size / 2} cy={size / 2} r={radius}
-                    fill="none" stroke={activeColor}
+                    fill="none" stroke={`url(#gauge-${gid})`}
                     strokeWidth={strokeWidth} strokeLinecap="round"
                     strokeDasharray={circumference}
                     strokeDashoffset={animatedOffset}

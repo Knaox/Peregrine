@@ -1,0 +1,84 @@
+/* -------------------------------------------------------------------------
+ * Biome dashboard variant — motion + glow primitives
+ * -------------------------------------------------------------------------
+ * Scoped keyframes used by the BiomeLayout cards + hero header. All colours
+ * come from theme tokens so the BiomeBounty (or any) palette drives them.
+ * Animations are paused under prefers-reduced-motion at the bottom.
+ * ------------------------------------------------------------------------- */
+
+/* Breathing glow ring for the "alive" status orb. */
+@keyframes biome-orb-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0.55); }
+    50%      { box-shadow: 0 0 0 6px rgba(var(--color-primary-rgb), 0); }
+}
+
+/* Slow drifting conic halo behind the hero header. */
+@keyframes biome-hero-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Gradient text shimmer for the hero greeting. */
+@keyframes biome-text-shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+
+.biome-orb-alive {
+    animation: biome-orb-pulse 2s ease-out infinite;
+}
+
+/* Loading shimmer for metrics before the first stats poll lands. */
+@keyframes biome-skeleton {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+.biome-skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--color-border) 0%,
+        color-mix(in srgb, var(--color-border) 40%, var(--color-text-muted)) 50%,
+        var(--color-border) 100%
+    );
+    background-size: 200% 100%;
+    animation: biome-skeleton 1.4s ease-in-out infinite;
+}
+
+.biome-hero-halo {
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(var(--color-primary-rgb), 0.35) 70deg,
+        transparent 150deg,
+        rgba(var(--color-secondary-rgb), 0.28) 250deg,
+        transparent 360deg
+    );
+    filter: blur(48px);
+    animation: biome-hero-spin 28s linear infinite;
+}
+
+.biome-shimmer-text {
+    background: linear-gradient(
+        100deg,
+        var(--color-text-primary) 0%,
+        var(--color-primary) 35%,
+        var(--color-secondary) 55%,
+        var(--color-text-primary) 80%
+    );
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: biome-text-shimmer 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .biome-orb-alive,
+    .biome-hero-halo,
+    .biome-shimmer-text,
+    .biome-skeleton {
+        animation: none;
+    }
+    .biome-shimmer-text {
+        background-position: 0% 50%;
+    }
+}

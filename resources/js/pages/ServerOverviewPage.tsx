@@ -12,16 +12,15 @@ import { usePluginStore } from '@/plugins/pluginStore';
 import { SIDEBAR_ENTRY_PERMISSIONS } from '@/utils/serverPermissions';
 import { Alert } from '@/components/ui/Alert';
 import { Spinner } from '@/components/ui/Spinner';
-import { ServerPowerControls } from '@/components/server/ServerPowerControls';
 import { ServerBootFixPrompts } from '@/components/console/ServerBootFixPrompts';
 import { ServerResourceCards } from '@/components/server/ServerResourceCards';
 import { ServerInfoCard } from '@/components/server/ServerInfoCard';
 import { ServerSettingsActions } from '@/components/server/ServerSettingsActions';
 import { ServerVariables } from '@/components/server/ServerVariables';
 import { OverviewQuickActions } from '@/components/server/OverviewQuickActions';
+import { ServerOverviewHero } from '@/components/server/overview/ServerOverviewHero';
 import { InstallationOverview } from '@/components/server/InstallationOverview';
 import { SuspendedOverview } from '@/components/server/SuspendedOverview';
-import { formatUptime } from '@/utils/format';
 import type { SidebarEntry } from '@/hooks/useSidebarConfig';
 import { useNamespace } from '@/i18n/useNamespace';
 
@@ -235,84 +234,20 @@ export function ServerOverviewPage() {
                 canFixJava={canEditStartup}
             />
 
-            {/* Hero banner */}
-            <m.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
-                className="relative overflow-hidden rounded-[var(--radius-xl)]"
-                style={{ border: '1px solid var(--color-border)' }}>
-                <div className="relative" style={{ minHeight: 200 }}>
-                    {server.egg?.banner_image ? (
-                        <m.img src={server.egg.banner_image} alt={server.egg.name}
-                            className="absolute inset-0 h-full w-full object-cover"
-                            initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 0.8, ease: 'easeOut' }} />
-                    ) : (
-                        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--color-surface-hover), var(--color-background))' }} />
-                    )}
-                    <div className="absolute inset-0" style={{
-                        background: 'linear-gradient(to bottom, transparent 0%, var(--banner-overlay-soft) 40%, var(--banner-overlay) 70%, var(--color-background) 95%)',
-                    }} />
-                    <div className="absolute bottom-0 left-1/4 h-40 w-1/2 pointer-events-none"
-                        style={{ background: 'radial-gradient(ellipse, rgba(var(--color-primary-rgb), 0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-
-                    <div className="relative flex h-full flex-col justify-between p-4 sm:p-5 md:p-6" style={{ minHeight: 200 }}>
-                        {/* Top: status + uptime */}
-                        <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
-                            className="flex items-center gap-3 flex-wrap">
-                            <span className="relative flex items-center gap-2 rounded-full text-sm font-medium px-3.5 py-1.5"
-                                style={{
-                                    background: isRunningState ? 'rgba(var(--color-success-rgb), 0.15)' : 'rgba(var(--color-text-secondary-rgb), 0.12)',
-                                    color: isRunningState ? 'var(--color-success)' : 'var(--color-text-secondary)',
-                                    backdropFilter: 'blur(12px)',
-                                    border: `1px solid ${isRunningState ? 'rgba(var(--color-success-rgb), 0.2)' : 'rgba(255,255,255,0.06)'}`,
-                                }}>
-                                <span className="relative flex h-2.5 w-2.5">
-                                    {isRunningState && <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: 'var(--color-success)' }} />}
-                                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full" style={{ background: isRunningState ? 'var(--color-success)' : 'var(--color-text-muted)' }} />
-                                </span>
-                                {statusLabel}
-                            </span>
-                            {isRunningState && uptime != null && uptime > 0 && (
-                                <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-mono text-white"
-                                    style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    {formatUptime(uptime)}
-                                </span>
-                            )}
-                        </m.div>
-
-                        {/* Bottom: name + actions */}
-                        <div className="space-y-3">
-                            <m.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.5 }}
-                                className="text-xl sm:text-3xl md:text-4xl font-extrabold text-white" style={{ textShadow: '0 2px 30px rgba(0,0,0,0.6)' }}>
-                                {server.name}
-                            </m.h1>
-                            <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                                className="flex flex-wrap items-center gap-2 sm:gap-3">
-                                {address && (
-                                    <button type="button" onClick={handleCopy}
-                                        className="inline-flex items-center gap-2 rounded-full text-sm text-white cursor-pointer transition-all duration-200 hover:scale-[1.03]"
-                                        style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 14px', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
-                                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.6)'; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.45)'; }}>
-                                        <svg className="h-3.5 w-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" /></svg>
-                                        <span>{copied ? t('server-overview:list.copied') : address}</span>
-                                    </button>
-                                )}
-                                {server.egg && (
-                                    <span className="inline-flex items-center gap-1.5 rounded-full text-sm text-white"
-                                        style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)', padding: '4px 14px', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-                                        {server.egg.banner_image && <img src={server.egg.banner_image} alt="" className="h-4 w-4 rounded object-cover" />}
-                                        {server.egg.name}
-                                    </span>
-                                )}
-                                {canPower && (
-                                    <div className="sm:ml-auto"><ServerPowerControls serverId={server.id} state={state} canStart={canStart} canStop={canStop} canRestart={canRestart} /></div>
-                                )}
-                            </m.div>
-                        </div>
-                    </div>
-                </div>
-            </m.div>
+            <ServerOverviewHero
+                server={server}
+                state={state}
+                statusLabel={statusLabel}
+                isRunningState={isRunningState}
+                uptime={uptime}
+                address={address}
+                copied={copied}
+                onCopy={handleCopy}
+                canPower={canPower}
+                canStart={canStart}
+                canStop={canStop}
+                canRestart={canRestart}
+            />
 
             {/* Quick actions — filtered by permissions */}
             <OverviewQuickActions serverId={serverId} entries={filteredEntries} />
@@ -325,7 +260,7 @@ export function ServerOverviewPage() {
 
             {/* Stats — visible if overview.stats permission */}
             {canViewStats && (
-                <section><ServerResourceCards resources={resources} plan={server.plan ?? (server.limits ? { ram: server.limits.memory, cpu: server.limits.cpu, disk: server.limits.disk } : null)} isLoading={!resources} /></section>
+                <section><ServerResourceCards resources={resources} plan={server.plan ?? (server.limits ? { ram: server.limits.memory, cpu: server.limits.cpu, disk: server.limits.disk } : null)} isLoading={!resources} live={isRunningState} /></section>
             )}
 
             {/* Variables — only if user has startup.read permission */}

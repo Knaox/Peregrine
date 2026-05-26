@@ -255,7 +255,9 @@ function getDockItemStyle(style: string, isActive: boolean): React.CSSProperties
             ? { borderRadius: 'var(--radius)', color: 'var(--color-primary)', borderBottom: '2px solid var(--color-primary)' }
             : { borderRadius: 'var(--radius)', color: 'var(--color-text-secondary)', borderBottom: '2px solid transparent' };
     }
-    const radius = '9999px';
+    // `default` = soft rounded-rect chip (with labels), `pills` = full pill —
+    // so the style picker is visibly distinct in the dock too.
+    const radius = style === 'pills' ? '9999px' : 'var(--radius-lg)';
     return isActive
         ? {
             borderRadius: radius,

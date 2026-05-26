@@ -11,28 +11,11 @@ import { ThemePreviewFrame } from '@/components/admin/theme-studio/ThemePreviewF
 import { ThemeResetDialog } from '@/components/admin/theme-studio/ThemeResetDialog';
 import { ThemeStudioMobileGuard } from '@/components/admin/theme-studio/ThemeStudioMobileGuard';
 import { ThemeStudioErrorScreen } from '@/components/admin/theme-studio/ThemeStudioErrorScreen';
+import { ThemeTransferButtons } from '@/components/admin/theme-studio/ThemeTransferButtons';
+import { StudioIcon as Icon, ARROW_LEFT, SAVE_ICON, RESET_ICON, UNDO_ICON } from '@/components/admin/theme-studio/StudioIcon';
+import { useThemeTransfer } from '@/hooks/useThemeTransfer';
 import type { ThemeDraft } from '@/types/themeStudio.types';
 import { useNamespace } from '@/i18n/useNamespace';
-
-const Icon = ({ d, size = 14 }: { d: string; size?: number }) => (
-    <svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-    >
-        <path d={d} />
-    </svg>
-);
-
-const ARROW_LEFT = 'M19 12H5 M12 19l-7-7 7-7';
-const SAVE_ICON = 'M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z M17 21v-8H7v8 M7 3v5h8';
-const RESET_ICON = 'M3 12a9 9 0 1015-7 M3 4v5h5';
-const UNDO_ICON = 'M3 7v6h6 M21 17a9 9 0 00-15-6.7L3 13';
 
 const PRESET_KEYS: ReadonlyArray<keyof ThemeDraft> = [
     'theme_primary',
@@ -63,6 +46,10 @@ export function ThemeStudioPage() {
     const { user, isLoading: authLoading, loadUser } = useAuthStore();
     const studio = useThemeStudio();
     const [resetOpen, setResetOpen] = useState(false);
+    const { importError, handleExport, handleImport } = useThemeTransfer({
+        exportPayload: studio.exportPayload,
+        loadFromExport: studio.loadFromExport,
+    });
     const [isWide, setIsWide] = useState(
         () => typeof window !== 'undefined' && window.innerWidth >= 1200,
     );
@@ -195,6 +182,12 @@ export function ThemeStudioPage() {
                 </div>
 
                 <div className="flex items-center gap-1.5">
+                    <ThemeTransferButtons
+                        onExport={handleExport}
+                        onImport={handleImport}
+                        disabled={studio.isSaving}
+                    />
+                    <span className="mx-1 h-5 w-px bg-[var(--color-border)]/50" aria-hidden />
                     <Button
                         variant="ghost"
                         size="sm"
@@ -226,6 +219,12 @@ export function ThemeStudioPage() {
                     </Button>
                 </div>
             </header>
+
+            {importError && (
+                <div className="border-b border-[var(--color-danger)] bg-[var(--color-danger-glow)] px-5 py-2 text-xs text-[var(--color-danger)]">
+                    {t('theme-studio:import_failed', 'Import failed:')} {importError}
+                </div>
+            )}
 
             {studio.saveError && (
                 <div className="border-b border-[var(--color-danger)] bg-[var(--color-danger-glow)] px-5 py-2 text-xs text-[var(--color-danger)]">

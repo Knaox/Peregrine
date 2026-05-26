@@ -21,6 +21,8 @@ export function resolveHealthColor(state: string): ServerHealth {
             return { color: 'var(--color-success)', labelKey: 'running', isAlive: true };
         case 'starting':
             return { color: 'var(--color-info)', labelKey: 'starting', isAlive: true };
+        case 'stopping':
+            return { color: 'var(--color-warning)', labelKey: 'stopping', isAlive: false };
         case 'provisioning':
             return { color: 'var(--color-installing)', labelKey: 'provisioning', isAlive: false };
         case 'provisioning_failed':

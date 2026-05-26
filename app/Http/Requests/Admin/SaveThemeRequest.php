@@ -77,7 +77,7 @@ class SaveThemeRequest extends FormRequest
             'theme_login_template' => ['nullable', 'in:centered,split,overlay,minimal'],
             'theme_login_background_image' => ['nullable', 'string', 'max:500'],
             'theme_login_background_blur' => ['nullable', 'integer', 'min:0', 'max:24'],
-            'theme_login_background_pattern' => ['nullable', 'in:none,gradient,mesh,dots,grid,aurora,orbs,noise'],
+            'theme_login_background_pattern' => ['nullable', 'in:none,gradient,mesh,dots,grid,aurora,orbs,noise,biome'],
             // Carousel — optional multi-image rotation behind the form.
             'theme_login_background_images' => ['nullable', 'array', 'max:8'],
             'theme_login_background_images.*' => ['string', 'max:500'],
@@ -106,7 +106,7 @@ class SaveThemeRequest extends FormRequest
             'theme_border_width' => ['nullable', 'integer', 'min:1', 'max:3'],
             'theme_glass_blur_global' => ['nullable', 'integer', 'min:0', 'max:48'],
             'theme_font_size_scale' => ['nullable', 'in:small,default,large,xl'],
-            'theme_app_background_pattern' => ['nullable', 'in:none,gradient,mesh,dots,grid,aurora,orbs,noise'],
+            'theme_app_background_pattern' => ['nullable', 'in:none,gradient,mesh,dots,grid,aurora,orbs,noise,biome'],
             'theme_app_shell_variant' => ['nullable', 'in:default,workspace'],
             'theme_workspace_rail_width' => ['nullable', 'integer', 'min:60', 'max:120'],
 
@@ -138,17 +138,18 @@ class SaveThemeRequest extends FormRequest
                 return;
             }
             $patterns = [
-                '/@import\b/i'                       => '@import declarations',
-                '/url\s*\(\s*["\']?\s*https?:/i'     => 'external URLs in url()',
-                '/url\s*\(\s*["\']?\s*\/\//i'        => 'protocol-relative URLs in url()',
-                '/expression\s*\(/i'                 => 'expression()',
-                '/behavior\s*:/i'                    => 'behavior: declarations',
-                '/javascript\s*:/i'                  => 'javascript: URIs',
-                '/<\s*script\b/i'                    => '<script tags',
+                '/@import\b/i' => '@import declarations',
+                '/url\s*\(\s*["\']?\s*https?:/i' => 'external URLs in url()',
+                '/url\s*\(\s*["\']?\s*\/\//i' => 'protocol-relative URLs in url()',
+                '/expression\s*\(/i' => 'expression()',
+                '/behavior\s*:/i' => 'behavior: declarations',
+                '/javascript\s*:/i' => 'javascript: URIs',
+                '/<\s*script\b/i' => '<script tags',
             ];
             foreach ($patterns as $regex => $label) {
                 if (preg_match($regex, $value)) {
                     $fail("Custom CSS cannot contain {$label}.");
+
                     return;
                 }
             }

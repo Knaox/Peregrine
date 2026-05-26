@@ -103,11 +103,42 @@
         url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/></svg>");
 }
 
+/* Biome — layered organic glow. Brand-tinted radial blobs over a slow
+ * rotating conic sheen. Reads as a lush, living backdrop distinct from the
+ * flat aurora/mesh patterns. All colours derive from theme tokens. */
+.bg-pattern-biome {
+    background-color: var(--color-background);
+    background-image:
+        radial-gradient(60% 55% at 12% 8%, rgba(var(--color-primary-rgb), 0.30) 0%, transparent 60%),
+        radial-gradient(50% 50% at 88% 18%, rgba(var(--color-secondary-rgb), 0.22) 0%, transparent 62%),
+        radial-gradient(70% 60% at 50% 108%, rgba(var(--color-primary-rgb), 0.20) 0%, transparent 60%);
+    overflow: hidden;
+}
+.bg-pattern-biome::before {
+    content: '';
+    position: absolute;
+    inset: -40%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(var(--color-primary-rgb), 0.10) 90deg,
+        transparent 180deg,
+        rgba(var(--color-secondary-rgb), 0.08) 270deg,
+        transparent 360deg
+    );
+    filter: blur(60px);
+    animation: biome-drift 38s linear infinite;
+}
+@keyframes biome-drift {
+    to { transform: rotate(360deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .bg-pattern-gradient,
     .bg-pattern-aurora,
     .bg-pattern-orbs::before,
-    .bg-pattern-orbs::after {
+    .bg-pattern-orbs::after,
+    .bg-pattern-biome::before {
         animation: none;
     }
 }

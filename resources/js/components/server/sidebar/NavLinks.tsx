@@ -18,6 +18,13 @@ interface NavLinksProps {
 
 function getActiveStyle(style: string, isActive: boolean, isTop: boolean): React.CSSProperties {
     if (isTop) {
+        // Top bar honours the style too: pills → rounded chips, otherwise
+        // underline tabs (default / compact).
+        if (style === 'pills') {
+            return isActive
+                ? { borderRadius: '9999px', background: 'rgba(var(--color-primary-rgb), 0.15)', color: 'var(--color-primary)', boxShadow: '0 0 12px rgba(var(--color-primary-rgb), 0.1)' }
+                : { borderRadius: '9999px', color: 'var(--color-text-secondary)' };
+        }
         return isActive
             ? { borderBottom: '2px solid var(--color-primary)', color: 'var(--color-primary)', background: 'transparent' }
             : { borderBottom: '2px solid transparent', color: 'var(--color-text-secondary)' };

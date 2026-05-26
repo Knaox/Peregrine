@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { useAuthStore } from '@/stores/authStore';
@@ -10,7 +10,9 @@ import { useDashboardLayout } from '@/hooks/useDashboardLayout';
 import { usePointerDrag } from '@/hooks/usePointerDrag';
 import { useServerSelection } from '@/hooks/useServerSelection';
 import { useCardConfig } from '@/hooks/useCardConfig';
+import { usePowerTransitionStore } from '@/stores/powerTransitionStore';
 import type { PowerSignal } from '@/types/PowerSignal';
+import type { ServerStats, ServerStatsMap } from '@/types/ServerStats';
 import { ServerCardSkeleton } from '@/components/server/ServerCardSkeleton';
 import { ServerEmptyState } from '@/components/server/ServerEmptyState';
 import { ServerBulkBar } from '@/components/server/ServerBulkBar';
@@ -20,7 +22,18 @@ import { DashboardCategoryList } from '@/components/server/DashboardCategoryList
 import { CommandBarLayout } from '@/components/server/layouts/CommandBarLayout';
 import { BentoMosaicLayout } from '@/components/server/layouts/BentoMosaicLayout';
 import { PulseGridLayout } from '@/components/server/layouts/PulseGridLayout';
+import { BiomeDashboardHeader } from '@/components/server/layouts/BiomeDashboardHeader';
 import { useNamespace } from '@/i18n/useNamespace';
+
+const TRANSITION_TIMEOUT = 120_000;
+const EMPTY_STATS: ServerStats = { state: 'offline', cpu: 0, memory_bytes: 0, disk_bytes: 0, network_rx: 0, network_tx: 0, uptime: 0 };
+
+/** True once the real polled state has reached an optimistic transition's target. */
+function transitionReached(target: 'running' | 'stopped', realState: string | undefined): boolean {
+    return target === 'running'
+        ? realState === 'running' || realState === 'active'
+        : realState === 'stopped' || realState === 'offline';
+}
 
 export function DashboardPage() {
     useNamespace(["server-overview"] as const);
@@ -35,6 +48,37 @@ export function DashboardPage() {
     const [search, setSearch] = useState('');
     const hasAnimatedRef = useRef(false);
     const servers = data?.data ?? [];
+
+    // Optimistic start/stop transitions merged into the polled stats so cards
+    // show "starting…/stopping…" until the real state catches up.
+    const transitions = usePowerTransitionStore((s) => s.transitions);
+    const clearTransition = usePowerTransitionStore((s) => s.clear);
+    const effectiveStatsMap = useMemo<ServerStatsMap | undefined>(() => {
+        const ids = Object.keys(transitions);
+        if (ids.length === 0) return statsMap;
+        const merged: ServerStatsMap = { ...(statsMap ?? {}) };
+        for (const idStr of ids) {
+            const id = Number(idStr);
+            const tr = transitions[id];
+            if (!tr) continue;
+            const real = statsMap?.[id]?.state;
+            const settled = transitionReached(tr.target, real) || Date.now() - tr.since > TRANSITION_TIMEOUT;
+            if (settled) continue;
+            merged[id] = { ...(statsMap?.[id] ?? EMPTY_STATS), state: tr.display };
+        }
+        return merged;
+    }, [statsMap, transitions]);
+
+    useEffect(() => {
+        for (const idStr of Object.keys(transitions)) {
+            const id = Number(idStr);
+            const tr = transitions[id];
+            if (!tr) continue;
+            if (transitionReached(tr.target, statsMap?.[id]?.state) || Date.now() - tr.since > TRANSITION_TIMEOUT) {
+                clearTransition(id);
+            }
+        }
+    }, [statsMap, transitions, clearTransition]);
 
     const layout = useDashboardLayout(servers);
     const drag = usePointerDrag({
@@ -69,7 +113,10 @@ export function DashboardPage() {
 
     const hasSearch = search.trim().length > 0;
     const variant = cardConfig.card_layout_variant;
-    const isAlternativeVariant = variant !== 'classic';
+    // `biome` renders through the classic category list (it shares ServerCard's
+    // prop shape) so it keeps categories, drag-reorder and responsive columns.
+    // Only the three standalone presentations bypass that system.
+    const isAlternativeVariant = variant !== 'classic' && variant !== 'biome';
 
     const filteredServers = useMemo(() => {
         const term = search.trim().toLowerCase();
@@ -80,14 +127,18 @@ export function DashboardPage() {
     }, [servers, search]);
 
     const gridProps = {
-        search, statsMap, drag, selection, handlePower, isPowerPending, cardConfig,
+        search, statsMap: effectiveStatsMap, drag, selection, handlePower, isPowerPending, cardConfig,
         shouldAnimate, cardIndexRef,
     };
 
     return (
         <div className="relative pb-16">
             <div className="relative z-10">
-                <DashboardHeader userName={user?.name} isAdmin={user?.is_admin} serverCount={servers.length} />
+                {variant === 'biome' ? (
+                    <BiomeDashboardHeader userName={user?.name} isAdmin={user?.is_admin} servers={servers} statsMap={effectiveStatsMap} />
+                ) : (
+                    <DashboardHeader userName={user?.name} isAdmin={user?.is_admin} serverCount={servers.length} />
+                )}
 
                 {isLoading ? (
                     <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
@@ -114,7 +165,7 @@ export function DashboardPage() {
                                 {variant === 'command-bar' && (
                                     <CommandBarLayout
                                         servers={filteredServers}
-                                        statsMap={statsMap}
+                                        statsMap={effectiveStatsMap}
                                         cardConfig={cardConfig}
                                         isSelectionMode={selection.isSelectionMode}
                                         isSelected={selection.isSelected}
@@ -126,7 +177,7 @@ export function DashboardPage() {
                                 {variant === 'bento' && (
                                     <BentoMosaicLayout
                                         servers={filteredServers}
-                                        statsMap={statsMap}
+                                        statsMap={effectiveStatsMap}
                                         cardConfig={cardConfig}
                                         isSelectionMode={selection.isSelectionMode}
                                         isSelected={selection.isSelected}
@@ -138,7 +189,7 @@ export function DashboardPage() {
                                 {variant === 'pulse-grid' && (
                                     <PulseGridLayout
                                         servers={filteredServers}
-                                        statsMap={statsMap}
+                                        statsMap={effectiveStatsMap}
                                         cardConfig={cardConfig}
                                         isSelectionMode={selection.isSelectionMode}
                                         isSelected={selection.isSelected}

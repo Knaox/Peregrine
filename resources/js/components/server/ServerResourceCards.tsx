@@ -26,17 +26,9 @@ const fadeUp = {
     animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: [0.34, 1.56, 0.64, 1] as [number, number, number, number] } },
 };
 
-export function ServerResourceCards({ resources, plan, isLoading }: ServerResourceCardsProps) {
+export function ServerResourceCards({ resources, plan, isLoading, live = false }: ServerResourceCardsProps) {
     useNamespace(["server-shell"] as const);
     const { t } = useTranslation();
-
-    if (isLoading) {
-        return (
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:gap-4 lg:grid-cols-4">
-                {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
-            </div>
-        );
-    }
 
     const cpu = resources?.cpu ?? 0;
     const memBytes = resources?.memory_bytes ?? 0;
@@ -48,6 +40,18 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
     const diskMax = plan?.disk ? plan.disk * 1024 * 1024 : undefined;
     const memPercent = ramMax ? (memBytes / ramMax) * 100 : 0;
     const diskPercent = diskMax ? (diskBytes / diskMax) * 100 : 0;
+    // Roll values up only while running (hooks must precede the early return).
+    const cpuAnim = useCountUp(cpu, { enabled: live });
+    const memAnim = useCountUp(memBytes, { enabled: live });
+    const diskAnim = useCountUp(diskBytes, { enabled: live });
+
+    if (isLoading) {
+        return (
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:gap-4 lg:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+        );
+    }
 
     return (
         <m.div variants={stagger} initial="initial" animate="animate" className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:gap-4 lg:grid-cols-4">
@@ -62,7 +66,7 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
                     <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.cpu')}</span>
                 </div>
                 <div className="flex items-center justify-center py-2">
-                    <CircularGauge value={cpu} max={cpuMax} color="var(--color-primary)" label={formatCpu(cpu)} sublabel={`/ ${cpuMax}%`} />
+                    <CircularGauge value={cpu} max={cpuMax} color="var(--color-primary)" label={formatCpu(cpuAnim)} sublabel={`/ ${cpuMax}%`} />
                 </div>
             </m.div>
 
@@ -77,7 +81,7 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
                     <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.memory')}</span>
                 </div>
                 <div className="flex items-center justify-center py-2">
-                    <CircularGauge value={memPercent} max={100} color="var(--color-info)" label={formatBytes(memBytes)} sublabel={ramMax ? `/ ${formatBytes(ramMax)}` : undefined} />
+                    <CircularGauge value={memPercent} max={100} color="var(--color-info)" label={formatBytes(memAnim)} sublabel={ramMax ? `/ ${formatBytes(ramMax)}` : undefined} />
                 </div>
             </m.div>
 
@@ -92,7 +96,7 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
                     <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.disk')}</span>
                 </div>
                 <div className="flex items-center justify-center py-2">
-                    <CircularGauge value={diskPercent} max={100} color="var(--color-accent)" label={formatBytes(diskBytes)} sublabel={diskMax ? `/ ${formatBytes(diskMax)}` : undefined} />
+                    <CircularGauge value={diskPercent} max={100} color="var(--color-accent)" label={formatBytes(diskAnim)} sublabel={diskMax ? `/ ${formatBytes(diskMax)}` : undefined} />
                 </div>
             </m.div>
 
@@ -107,8 +111,8 @@ export function ServerResourceCards({ resources, plan, isLoading }: ServerResour
                     <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.network')}</span>
                 </div>
                 <div className="space-y-3 pt-2">
-                    <NetworkRow direction="down" label={t('server-shell:resources.download')} value={netRx} />
-                    <NetworkRow direction="up" label={t('server-shell:resources.upload')} value={netTx} />
+                    <NetworkRow direction="down" label={t('server-shell:resources.download')} value={netRx} live={live} />
+                    <NetworkRow direction="up" label={t('server-shell:resources.upload')} value={netTx} live={live} />
                 </div>
             </m.div>
         </m.div>
@@ -123,8 +127,8 @@ function IconCircle({ children, color }: { children: React.ReactNode; color: str
     );
 }
 
-function NetworkRow({ direction, label, value }: { direction: 'up' | 'down'; label: string; value: number }) {
-    const animated = useCountUp(value);
+function NetworkRow({ direction, label, value, live }: { direction: 'up' | 'down'; label: string; value: number; live: boolean }) {
+    const animated = useCountUp(value, { enabled: live });
     return (
         <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>

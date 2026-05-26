@@ -7,6 +7,10 @@
     "discard": "Annuler",
     "reset": "Réinitialiser",
     "publish": "Publier",
+    "export": "Exporter",
+    "import": "Importer",
+    "import_failed": "Échec de l'import :",
+    "import_loaded": "Thème chargé — vérifiez puis publiez pour appliquer.",
     "save_error": "Échec de l'enregistrement :",
     "reset_confirm": "Réinitialiser entièrement le thème ? Cette action est irréversible.",
     "unsaved_leave_confirm": "Des modifications de thème ne sont pas publiées. Quitter quand même ?",
@@ -170,7 +174,8 @@
         "aurora": "Aurore animée",
         "dots": "Pois",
         "grid": "Lignes (grille)",
-        "noise": "Texture bruit"
+        "noise": "Texture bruit",
+        "biome": "Biome (halo organique)"
     },
     "login_templates": {
         "centered": "Centré (défaut)",
@@ -186,7 +191,8 @@
         "grid": "Lignes (grille)",
         "aurora": "Aurore animée",
         "orbs": "Orbes flottantes",
-        "noise": "Texture bruit"
+        "noise": "Texture bruit",
+        "biome": "Biome (halo organique)"
     },
     "card_style": {
         "default": "Standard",
@@ -236,7 +242,8 @@
         "classic": "Cartes classiques (grille)",
         "command-bar": "Command bar (liste dense)",
         "bento": "Bento mosaïque (tuiles asymétriques)",
-        "pulse-grid": "Pulse grid (heatmap)"
+        "pulse-grid": "Pulse grid (heatmap)",
+        "biome": "Biome (bannière + jauges)"
     },
     "card_sort": {
         "name": "Nom",

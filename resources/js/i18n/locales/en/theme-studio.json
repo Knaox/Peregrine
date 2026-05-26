@@ -7,6 +7,10 @@
     "discard": "Discard",
     "reset": "Reset to defaults",
     "publish": "Publish",
+    "export": "Export",
+    "import": "Import",
+    "import_failed": "Import failed:",
+    "import_loaded": "Theme loaded — review and publish to apply.",
     "save_error": "Save failed:",
     "reset_confirm": "Reset the entire theme to its defaults? This cannot be undone.",
     "unsaved_leave_confirm": "You have unpublished theme changes. Leave anyway and lose them?",
@@ -170,7 +174,8 @@
         "aurora": "Aurora flow",
         "dots": "Dots pattern",
         "grid": "Grid lines",
-        "noise": "Noise texture"
+        "noise": "Noise texture",
+        "biome": "Biome (organic glow)"
     },
     "login_templates": {
         "centered": "Centered (default)",
@@ -186,7 +191,8 @@
         "grid": "Grid lines",
         "aurora": "Aurora flow",
         "orbs": "Floating orbs",
-        "noise": "Noise texture"
+        "noise": "Noise texture",
+        "biome": "Biome (organic glow)"
     },
     "card_style": {
         "default": "Default",
@@ -236,7 +242,8 @@
         "classic": "Classic cards (grid)",
         "command-bar": "Command bar (dense list)",
         "bento": "Bento mosaic (asymmetric tiles)",
-        "pulse-grid": "Pulse grid (heatmap)"
+        "pulse-grid": "Pulse grid (heatmap)",
+        "biome": "Biome (banner + gauges)"
     },
     "card_sort": {
         "name": "Name",

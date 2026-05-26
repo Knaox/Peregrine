@@ -15,6 +15,7 @@ const LAYOUT_VARIANT_OPTIONS = [
     { value: 'command-bar', label: 'Command bar (dense list)' },
     { value: 'bento', label: 'Bento mosaic (asymmetric tiles)' },
     { value: 'pulse-grid', label: 'Pulse grid (heatmap)' },
+    { value: 'biome', label: 'Biome (banner + gauges)' },
 ] as const;
 
 const STYLE_OPTIONS = [
