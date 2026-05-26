@@ -1,10 +1,10 @@
 # game-query sidecar
 
 A small Node service that wraps [GameDig](https://github.com/gamedig/node-gamedig)
-so the **Player Counter** plugin can read live connected-player counts: Steam/
-Source (A2S — including a generic probe for *any* Steam game), Minecraft (Java +
-Bedrock), EOS games (ARK: Survival Ascended via the Epic API), Hytale (via the
-`hytale-plugin-query` server mod), and more.
+so the **Player Counter** plugin can read live connected-player counts over A2S —
+Minecraft (Java + Bedrock), Valheim, 7 Days to Die, and any other Steam/Source
+game (best-effort). ARK (ASA/ASE) and Palworld are counted by the plugin over
+RCON, not through this sidecar.
 
 The panel talks to it over HTTP and caches each answer; the sidecar reaches the
 game servers (and, for EOS, `api.epicgames.dev`). The full bilingual setup guide
@@ -13,11 +13,15 @@ guide**) — including a ready-to-paste docker-compose snippet.
 
 ## Run it
 
-```bash
-# Docker (recommended) — see the guide for the compose snippet:
-docker compose up -d --build game-query
+The recommended setup uses the **pre-built image** (published to GHCR by CI, see
+`.github/workflows/docker.yml`) — no local build needed. This is what the
+in-panel guide's compose snippet uses:
 
-# Bare-metal:
+```bash
+# Docker (recommended): pulls ghcr.io/knaox/peregrine-game-query:latest
+docker compose up -d game-query
+
+# Bare-metal (development, from this folder):
 npm install
 node index.mjs            # listens on http://127.0.0.1:9899
 ```
