@@ -8,6 +8,7 @@ use App\Events\ServerReinstallStarting;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ServerResource;
 use App\Models\Server;
+use App\Services\Pelican\PelicanApplicationService;
 use App\Services\Pelican\PelicanClientService;
 use App\Services\Pelican\PelicanNetworkService;
 use Illuminate\Http\JsonResponse;
@@ -20,11 +21,17 @@ class ServerController extends Controller
     public function __construct(
         private PelicanClientService $clientService,
         private PelicanNetworkService $networkService,
+        private PelicanApplicationService $applicationService,
     ) {}
 
     public function index(Request $request): JsonResponse
     {
         $viewAll = $request->query('view') === 'all' && $request->user()->is_admin;
+
+        // Real RAM/CPU/Disk quotas come from Pelican (one cached bulk call for
+        // the whole panel), so the dashboard cards show the actual limit even
+        // for servers whose catalog config carries no resource template.
+        $limitsMap = $this->getServerLimitsMap();
 
         if ($viewAll) {
             $servers = Server::query()
@@ -32,11 +39,12 @@ class ServerController extends Controller
                 ->orderBy('name')
                 ->get();
 
-            $enriched = $servers->map(function (Server $server) {
+            $enriched = $servers->map(function (Server $server) use ($limitsMap) {
                 $data = (new ServerResource($server))->toArray(request());
                 $data['allocation'] = $server->identifier
                     ? $this->getCachedAllocation($server->identifier)
                     : null;
+                $data['limits'] = $limitsMap[$server->pelican_server_id] ?? null;
                 $data['role'] = 'admin';
                 $data['permissions'] = null;
                 $data['owner'] = $server->user
@@ -55,11 +63,12 @@ class ServerController extends Controller
             ->orderBy('name')
             ->get();
 
-        $enriched = $servers->map(function (Server $server) {
+        $enriched = $servers->map(function (Server $server) use ($limitsMap) {
             $data = (new ServerResource($server))->toArray(request());
             $data['allocation'] = $server->identifier
                 ? $this->getCachedAllocation($server->identifier)
                 : null;
+            $data['limits'] = $limitsMap[$server->pelican_server_id] ?? null;
             $data['role'] = $server->pivot->role ?? 'owner';
             $data['permissions'] = $server->pivot->role === 'subuser'
                 ? (is_string($server->pivot->permissions) ? json_decode($server->pivot->permissions, true) : $server->pivot->permissions)
@@ -266,6 +275,43 @@ class ServerController extends Controller
         }
 
         return response()->json(['data' => $stats]);
+    }
+
+    /**
+     * Bulk RAM/CPU/Disk quotas for every Pelican server, keyed by Pelican
+     * server id, from a single Application API call cached 5 min for the
+     * whole panel. The list endpoint can't afford a per-server raw fetch
+     * (the detail endpoint does that), so the dashboard cards read the
+     * quota from here. A Pelican limit of 0 means "uncapped" → the card
+     * renders the ∞ treatment. On failure we return an empty map (and do
+     * NOT cache it) so the next request retries; cards fall back to the
+     * catalog config / ∞ meanwhile.
+     *
+     * @return array<int, array{memory: int, cpu: int, disk: int}>
+     */
+    private function getServerLimitsMap(): array
+    {
+        $cached = Cache::get('pelican_server_limits_map');
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        try {
+            $map = [];
+            foreach ($this->applicationService->listServers() as $pelicanServer) {
+                $map[$pelicanServer->id] = [
+                    'memory' => $pelicanServer->limits->memory,
+                    'cpu' => $pelicanServer->limits->cpu,
+                    'disk' => $pelicanServer->limits->disk,
+                ];
+            }
+        } catch (\Throwable) {
+            return [];
+        }
+
+        Cache::put('pelican_server_limits_map', $map, 300);
+
+        return $map;
     }
 
     /**
