@@ -8,6 +8,16 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.18] — 2026-05-27
+
+### Changed
+
+- **Dashboard live server stats (`GET /api/servers/stats`) are now micro-cached 2 s per server.** Many concurrent dashboards watching the same servers (admin + owner, popular servers, multiple tabs) used to fan out one uncached Pelican Client-API resources call per server *per poll*; they now collapse into a single fetch per server per 2 s window, shielding Pelican's per-server throttle. The 2 s TTL sits well below the SPA's 10 s poll, so a lone viewer sees no added staleness; transient errors are not cached.
+
+### Removed
+
+- **Dead per-server stats path.** `GET /api/servers/{server}/resources`, its controller action, and the unused `useServerResources` / `fetchServerResources` client were removed — live CPU/RAM/disk/network gauges come from the Wings WebSocket (`useWingsWebSocket`), not an HTTP poll, so the endpoint was never called by the SPA.
+
 ### Fixed
 
 - **Server sidebar position & style now survive publishing.** Choosing the floating dock (or a nav style) in Theme Studio reverted to the left sidebar on save — `validated()` was stripping `sidebar_config.position` / `style` / `show_server_*` because `sidebar_config.entries.*` declared nested rules (which makes Laravel drop sibling keys without a rule). Added the missing rules so the dock and nav style persist.
