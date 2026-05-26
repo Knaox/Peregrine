@@ -113,6 +113,15 @@ class SaveThemeRequest extends FormRequest
             'sidebar_preset' => ['nullable', 'string', 'max:32'],
             'card_config' => ['nullable', 'array'],
             'sidebar_config' => ['nullable', 'array'],
+            // These siblings MUST have rules: because `sidebar_config.entries.*`
+            // declares nested rules, Laravel's validated() becomes dot-aware for
+            // sidebar_config and drops any sibling key without a rule. Without
+            // these, position/style/visibility were silently stripped on save —
+            // so the floating dock / nav style reverted to defaults on publish.
+            'sidebar_config.position' => ['nullable', 'in:left,top,dock'],
+            'sidebar_config.style' => ['nullable', 'in:default,compact,pills'],
+            'sidebar_config.show_server_status' => ['nullable', 'boolean'],
+            'sidebar_config.show_server_name' => ['nullable', 'boolean'],
             'sidebar_config.entries' => ['nullable', 'array'],
             'sidebar_config.entries.*.id' => ['required_with:sidebar_config.entries', 'string', 'max:32'],
             'sidebar_config.entries.*.label_key' => ['nullable', 'string', 'max:128'],

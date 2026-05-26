@@ -8,6 +8,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Fixed
+
+- **Server sidebar position & style now survive publishing.** Choosing the floating dock (or a nav style) in Theme Studio reverted to the left sidebar on save — `validated()` was stripping `sidebar_config.position` / `style` / `show_server_*` because `sidebar_config.entries.*` declared nested rules (which makes Laravel drop sibling keys without a rule). Added the missing rules so the dock and nav style persist.
+- **Biome card RAM / Disk meters track live consumption again.** The values are read straight from the live stats instead of going through a count-up that could leave them stale; the fill still animates.
+
 ## [1.0.0-alpha.17] — 2026-05-26
 
 ### Added

@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import { useCountUp } from '@/hooks/useCountUp';
 import { formatBytes } from '@/utils/format';
 
 interface BiomeMetricBarProps {
@@ -22,7 +21,6 @@ interface BiomeMetricBarProps {
  * when the quota saturates. No-quota servers show a quiet baseline track.
  */
 function BiomeMetricBarImpl({ label, bytes, limitMb, loading, live }: BiomeMetricBarProps) {
-    const animatedBytes = useCountUp(bytes ?? 0, { enabled: live && !loading });
     const limitBytes = limitMb * 1024 * 1024;
     const hasLimit = limitMb > 0;
     const pct = hasLimit && bytes !== undefined ? Math.max(0, Math.min(100, (bytes / limitBytes) * 100)) : 0;
@@ -35,8 +33,10 @@ function BiomeMetricBarImpl({ label, bytes, limitMb, loading, live }: BiomeMetri
                 {loading ? (
                     <span className="biome-skeleton h-2.5 w-10 rounded" />
                 ) : (
+                    // Show the real usage directly (no count-up indirection) so the
+                    // value always tracks live consumption; the bar fill animates.
                     <span className="font-mono text-[11px] font-semibold tabular-nums text-[var(--color-text-secondary)]">
-                        {bytes === undefined ? '—' : formatBytes(animatedBytes)}
+                        {bytes === undefined ? '—' : formatBytes(bytes)}
                     </span>
                 )}
             </div>
