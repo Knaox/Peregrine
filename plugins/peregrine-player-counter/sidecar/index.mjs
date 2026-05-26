@@ -22,6 +22,7 @@
 import { createServer } from 'node:http';
 import dns from 'node:dns';
 import { GameDig } from 'gamedig';
+import WebSocket from 'ws';
 
 const PORT = Number(process.env.GAME_QUERY_PORT ?? 9899);
 const HOST = process.env.GAME_QUERY_HOST ?? '127.0.0.1';
@@ -29,7 +30,11 @@ const TOKEN = process.env.GAME_QUERY_TOKEN ?? '';
 const TIMEOUT_MS = Number(process.env.GAME_QUERY_TIMEOUT_MS ?? 5000);
 const EOS_TIMEOUT_MS = Number(process.env.GAME_QUERY_EOS_TIMEOUT_MS ?? 6000);
 const MAX_NAMES = Number(process.env.GAME_QUERY_MAX_NAMES ?? 5);
-const MAX_BODY = Number(process.env.GAME_QUERY_MAX_BODY ?? 4096);
+const MAX_BODY = Number(process.env.GAME_QUERY_MAX_BODY ?? 8192);
+// Console-count (crossplay games like Valheim that expose no A2S): how long to
+// keep the Wings websocket open collecting the log backlog before parsing.
+const CONSOLE_SETTLE_MS = Number(process.env.GAME_QUERY_CONSOLE_SETTLE_MS ?? 700);
+const CONSOLE_MAX_MS = Number(process.env.GAME_QUERY_CONSOLE_MAX_MS ?? 4000);
 
 // EOS matches sessions by the server's PUBLIC IP. The host we receive may be an
 // internal alias (split-horizon DNS resolves it to a LAN IP), so for EOS we
@@ -196,12 +201,121 @@ async function handleQuery(req, res) {
     }
 }
 
+/**
+ * Open the Wings server websocket, request the console log backlog, collect the
+ * `console output` lines until the burst goes quiet, then close. Short-lived and
+ * stateless — no token refresh needed. Wings validates the Origin header against
+ * the panel URL, so the caller must pass it.
+ */
+function readConsole(socket, token, origin) {
+    return new Promise((resolve, reject) => {
+        const lines = [];
+        let settle, hard, done = false;
+        const ws = new WebSocket(socket, {
+            headers: origin ? { Origin: origin } : {},
+            handshakeTimeout: 5000,
+        });
+        const finish = (err) => {
+            if (done) return;
+            done = true;
+            clearTimeout(settle);
+            clearTimeout(hard);
+            try { ws.terminate(); } catch { /* already closed */ }
+            err ? reject(err) : resolve(lines);
+        };
+        const bump = () => { clearTimeout(settle); settle = setTimeout(() => finish(), CONSOLE_SETTLE_MS); };
+        hard = setTimeout(() => finish(), CONSOLE_MAX_MS);
+        ws.on('open', () => ws.send(JSON.stringify({ event: 'auth', args: [token] })));
+        ws.on('message', (raw) => {
+            let msg;
+            try { msg = JSON.parse(raw.toString()); } catch { return; }
+            if (msg.event === 'auth success') {
+                ws.send(JSON.stringify({ event: 'send logs', args: [] }));
+                bump();
+            } else if (msg.event === 'console output' || msg.event === 'daemon output') {
+                const line = Array.isArray(msg.args) ? msg.args[0] : null;
+                if (typeof line === 'string') lines.push(line);
+                bump();
+            } else if (msg.event === 'jwt error' || msg.event === 'token expired') {
+                finish(new Error('auth failed'));
+            }
+        });
+        ws.on('error', (e) => finish(e));
+        ws.on('close', () => finish());
+    });
+}
+
+/**
+ * POST /console — count players from the server console for games with no usable
+ * wire query (e.g. crossplay Valheim). The latest line matching `count` carries
+ * the absolute count; `name` (optional) extracts player names. Both are plain
+ * JS regex source strings applied with `flags`.
+ */
+async function handleConsole(req, res) {
+    if (!authorized(req)) return send(res, 401, { ok: false, error: 'unauthorized' });
+
+    let payload;
+    try {
+        payload = JSON.parse((await readBody(req)) || '{}');
+    } catch {
+        return send(res, 400, { ok: false, error: 'invalid json' });
+    }
+
+    const { socket, token, count, name, origin } = payload;
+    const flags = typeof payload.flags === 'string' ? payload.flags : '';
+    const maxNames = Number.isInteger(payload.maxNames) ? payload.maxNames : MAX_NAMES;
+    if (!socket || !token || !count) {
+        return send(res, 400, { ok: false, error: 'socket, token and count are required' });
+    }
+
+    let countRe, nameRe;
+    try {
+        countRe = new RegExp(count, flags);
+        nameRe = name ? new RegExp(name, flags) : null;
+    } catch {
+        return send(res, 400, { ok: false, error: 'invalid regex' });
+    }
+
+    let lines;
+    try {
+        lines = await readConsole(socket, token, origin);
+    } catch (err) {
+        return send(res, 200, { ok: false, error: String(err?.message ?? err) });
+    }
+
+    // Absolute count: the LAST matching line wins (most recent state).
+    let online = null;
+    for (const line of lines) {
+        const m = line.match(countRe);
+        if (m && m[1] != null) online = Number(m[1]);
+    }
+    if (online === null) {
+        return send(res, 200, { ok: false, error: 'no count line in console backlog' });
+    }
+
+    // Names are best-effort: keep the most recent distinct matches, capped.
+    let players = [];
+    if (nameRe && online > 0) {
+        const seen = [];
+        for (const line of lines) {
+            const m = line.match(nameRe);
+            if (m && m[1]) seen.push(m[1].trim());
+        }
+        players = [...new Set(seen.reverse())].slice(0, Math.min(maxNames, online)).reverse();
+    }
+
+    return send(res, 200, { ok: true, online, max: null, name: null, players });
+}
+
 const server = createServer((req, res) => {
     if (req.method === 'GET' && req.url === '/healthz') {
         return send(res, 200, { ok: true });
     }
     if (req.method === 'POST' && (req.url === '/query' || req.url?.startsWith('/query?'))) {
         return void handleQuery(req, res);
+    }
+    if (req.method === 'POST' && (req.url === '/console' || req.url?.startsWith('/console?'))) {
+        return void handleConsole(req, res);
     }
     return send(res, 404, { ok: false, error: 'not found' });
 });

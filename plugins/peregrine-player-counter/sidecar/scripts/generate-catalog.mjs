@@ -50,13 +50,22 @@ const portStrategy = (opts) => {
   return { mode: 'same' }
 }
 
-// Build match keywords from the human name + any legacy id. The full name is
-// specific enough to avoid most false positives ("sons of the forest"); curated
-// overrides handle the genuinely ambiguous short names.
+// Build match keywords from the human name, the GameDig type id and any legacy
+// id. Keywords SHORTER THAN 4 CHARS ARE DROPPED — a 2-char legacy id like
+// "as" (Action: Source) is a substring of unrelated eggs ("AStroneer") and
+// caused false positives. The full name is specific enough on its own; curated
+// overrides in game-query.php handle the genuinely ambiguous short-named games.
+const MIN_KEYWORD = 4
+
 const matchKeywords = (id, game) => {
   const set = new Set()
-  set.add(game.name.toLowerCase())
-  if (game.extra?.old_id) set.add(String(game.extra.old_id).toLowerCase())
+  const add = (s) => {
+    const k = String(s).toLowerCase().trim()
+    if (k.length >= MIN_KEYWORD) set.add(k)
+  }
+  add(game.name)
+  add(id)
+  if (game.extra?.old_id) add(game.extra.old_id)
   return [...set]
 }
 

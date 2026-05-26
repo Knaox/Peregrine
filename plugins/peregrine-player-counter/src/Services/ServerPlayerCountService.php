@@ -124,6 +124,29 @@ class ServerPlayerCountService
         return $isRcon || in_array($target['query_port']['mode'] ?? 'same', ['var', 'fixed', 'offset'], true);
     }
 
+    /**
+     * Read the player count from the server console (websocket via the sidecar).
+     * Needs fresh websocket credentials; the short-lived connection means no
+     * token refresh. Returns the sidecar's structured result.
+     *
+     * @param  array{count: string, name: ?string, flags: string}  $patterns
+     * @return array{ok: bool, online?: int, max?: ?int, name?: ?string, players?: list<string>, error?: string}
+     */
+    private function consoleCount(Server $server, array $patterns): array
+    {
+        if (! $server->identifier) {
+            return ['ok' => false, 'error' => 'no identifier'];
+        }
+
+        try {
+            $ws = $this->pelican->getWebsocket($server->identifier);
+        } catch (\Throwable) {
+            return ['ok' => false, 'error' => 'websocket credentials unavailable'];
+        }
+
+        return $this->client->console($ws->socket, $ws->token, $patterns, (string) config('app.url', ''));
+    }
+
     private function cacheKey(Server $server): string
     {
         return 'pc_players:'.$server->id;
@@ -179,6 +202,16 @@ class ServerPlayerCountService
 
         if (($result['ok'] ?? false) === true) {
             return $this->store($server, $this->payload($result['online'] ?? 0, $result['max'] ?? null, 'online', $target, $result['name'] ?? null, $result['players'] ?? []));
+        }
+
+        // Console-count fallback: games with no usable wire query (e.g. crossplay
+        // Valheim — PlayFab relay, no A2S listener) print an absolute count in
+        // their console. Read it over the Wings websocket via the sidecar.
+        if (is_array($target['console'] ?? null)) {
+            $console = $this->consoleCount($server, $target['console']);
+            if (($console['ok'] ?? false) === true) {
+                return $this->store($server, $this->payload($console['online'] ?? 0, $console['max'] ?? null, 'online', $target, $console['name'] ?? null, $console['players'] ?? []));
+            }
         }
 
         // Query failed. We NEVER reconfigure the server automatically: when the
