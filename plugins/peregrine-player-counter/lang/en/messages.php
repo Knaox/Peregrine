@@ -20,8 +20,8 @@ return [
         'regenerated' => 'Token generated — save, then set the same value on the sidecar.',
 
         'supported_title' => 'Officially supported games',
-        'supported_intro' => 'These are the games the player counter can read:',
-        'supported_note' => 'Informational only — use the egg whitelist below to choose which servers actually show the card.',
+        'supported_intro' => 'Games the counter reads reliably (tested):',
+        'supported_note' => 'Informational only. Other games still get a card and a best-effort A2S query — use the egg whitelist below to choose which servers show it.',
 
         'section_visibility' => 'Visibility',
         'egg_whitelist' => 'Allowed eggs (whitelist)',

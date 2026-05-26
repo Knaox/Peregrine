@@ -40,10 +40,11 @@ class EggGameTypeResolver
             }
         }
 
-        if ($steam = $this->steamFallback($egg)) {
-            return $steam;
-        }
-
+        // No dedicated rule: fall back to a generic A2S probe so the card still
+        // shows and attempts a count (config `fallback_type`, default
+        // 'protocol-valve'). Whether it actually returns anything is up to the
+        // admin who whitelisted the egg. Set it to '' to mark unmapped games
+        // unqueryable instead.
         $fallback = config(self::NS.'.fallback_type');
         if (is_string($fallback) && $fallback !== '') {
             return ['type' => $fallback, 'family' => 'other', 'queryable' => true, 'query_offset' => 0];
@@ -52,44 +53,11 @@ class EggGameTypeResolver
         return $unknown;
     }
 
-    /**
-     * Generic Steam/A2S detection: an egg that installs via SteamCMD or ships a
-     * Source dedicated-server binary is queryable with GameDig's generic
-     * 'protocol-valve' even without a dedicated rule — this is what lets "any
-     * Steam server" report a count. Matches a wider haystack that also covers
-     * the startup command (where SteamCMD's `app_update <id>` lives). Runs only
-     * after the explicit rules, so a mapped game (e.g. an EOS title that also
-     * installs through SteamCMD) keeps its own handling.
-     *
-     * @return QueryTarget|null
-     */
-    private function steamFallback(Egg $egg): ?array
-    {
-        $cfg = (array) config(self::NS.'.steam_fallback', []);
-        $type = $cfg['type'] ?? null;
-
-        if (($cfg['enabled'] ?? false) !== true || ! is_string($type) || $type === '') {
-            return null;
-        }
-
-        $haystack = $this->haystack($egg, withStartup: true);
-
-        foreach ((array) ($cfg['match'] ?? []) as $needle) {
-            $needle = strtolower((string) $needle);
-            if ($needle !== '' && str_contains($haystack, $needle)) {
-                return ['type' => $type, 'family' => (string) ($cfg['family'] ?? 'source'), 'queryable' => true, 'query_offset' => 0];
-            }
-        }
-
-        return null;
-    }
-
-    private function haystack(Egg $egg, bool $withStartup = false): string
+    private function haystack(Egg $egg): string
     {
         $tags = is_array($egg->tags) ? implode(' ', $egg->tags) : (string) $egg->tags;
-        $extra = $withStartup ? " {$egg->startup} {$egg->description}" : '';
 
-        return strtolower(trim("{$egg->name} {$egg->docker_image} {$tags}{$extra}"));
+        return strtolower(trim("{$egg->name} {$egg->docker_image} {$tags}"));
     }
 
     /**

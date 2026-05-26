@@ -20,8 +20,8 @@ return [
         'regenerated' => 'Jeton généré — enregistrez, puis mettez la même valeur sur le sidecar.',
 
         'supported_title' => 'Jeux officiellement supportés',
-        'supported_intro' => 'Ce sont les jeux que le compteur sait lire :',
-        'supported_note' => 'Purement informatif — utilisez la liste blanche d\'eggs ci-dessous pour choisir les serveurs où la carte s\'affiche réellement.',
+        'supported_intro' => 'Jeux lus de façon fiable (testés) :',
+        'supported_note' => 'Purement informatif. Les autres jeux ont aussi une carte et une requête A2S best-effort — utilisez la liste blanche d\'eggs ci-dessous pour choisir les serveurs où elle s\'affiche.',
 
         'section_visibility' => 'Visibilité',
         'egg_whitelist' => 'Eggs autorisés (liste blanche)',

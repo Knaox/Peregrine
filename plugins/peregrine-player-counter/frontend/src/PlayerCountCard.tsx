@@ -85,16 +85,15 @@ export function PlayerCountCard({ serverId, serverState }: { serverId: number; s
     const max = data?.max ?? null;
     const names = effState === 'online' ? (data?.players ?? []) : [];
     const isOnline = effState === 'online' && online !== null;
-    const isUnsupported = effState === 'unsupported';
     // Only when the server is actually RUNNING but its RCON query returned
     // nothing (port unreachable) — never on a normally-stopped server.
     const canResolveRcon = isRunning && effState === 'offline' && data?.rcon === true;
     const showSkeleton = isLoading && !data;
     const animated = useCountUp(online ?? 0, !reduced() && isOnline);
 
-    // Hidden only when the plugin is off or the egg isn't whitelisted. The card
-    // still appears for whitelisted eggs whose game isn't supported (it shows a
-    // short "not available for this game" note instead of a count).
+    // Hidden only when the plugin is off or the egg isn't whitelisted. Every
+    // whitelisted server shows the card and attempts a count — whether the game
+    // answers is the admin's responsibility (they whitelisted that egg).
     if (data?.state === 'unavailable') return null;
 
     const pct = isOnline && max && max > 0 ? Math.min(100, (online! / max) * 100) : 0;
@@ -113,8 +112,6 @@ export function PlayerCountCard({ serverId, serverState }: { serverId: number; s
 
             {showSkeleton ? (
                 <div style={{ marginTop: 16, height: 34, width: 110, borderRadius: 8, background: 'color-mix(in srgb, var(--color-text-muted) 14%, transparent)' }} />
-            ) : isUnsupported ? (
-                <p style={{ marginTop: 12, fontSize: 14, color: 'var(--color-text-secondary)' }}>{t('unsupported')}</p>
             ) : (
                 <div style={{ marginTop: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>

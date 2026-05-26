@@ -74,24 +74,14 @@ return [
         ['match' => ['palworld'], 'type' => 'palworld', 'family' => 'source'],
     ],
 
-    // Optional generic Steam probe — OFF by default. The counter officially
-    // supports only the games mapped above; this is an opt-in escape hatch. When
-    // enabled (GAME_QUERY_STEAM_FALLBACK=true), any egg that looks Steam-powered
-    // (SteamCMD/srcds/`app_update`/a "steam" tag, matched against name + image +
-    // tags + startup) is probed with GameDig's generic A2S ('protocol-valve').
-    // Unsupported + best-effort: may read "offline" when A2S is disabled or the
-    // query port differs from the game port.
-    'steam_fallback' => [
-        'enabled' => filter_var(env('GAME_QUERY_STEAM_FALLBACK', false), FILTER_VALIDATE_BOOL),
-        'type' => 'protocol-valve',
-        'family' => 'source',
-        'match' => ['steamcmd', 'app_update', 'srcds', 'steam'],
-    ],
-
-    // Last-resort type when no rule matched AND the Steam heuristic is off/idle.
-    // Default null => mark the game "unsupported" (no card) rather than risk a
-    // wrong "offline". Leave null to keep the official-games-only behaviour.
-    'fallback_type' => env('GAME_QUERY_FALLBACK_TYPE'),
+    // Last-resort GameDig type for any egg WITHOUT a dedicated rule above:
+    // 'protocol-valve' (generic A2S). Every whitelisted server then still shows a
+    // card and attempts a count — whether it returns anything is the admin's
+    // call (they chose to whitelist that egg). The games listed in `rules` are
+    // queried with their precise type; everything else uses this best-effort
+    // probe. Set the env to an empty string (GAME_QUERY_FALLBACK_TYPE=) to mark
+    // unmapped games unqueryable instead.
+    'fallback_type' => env('GAME_QUERY_FALLBACK_TYPE', 'protocol-valve'),
 
     // Display-only list for the settings "Supported games" notice
     // (resources/views/partials/supported-games.blade.php). Keep in sync with

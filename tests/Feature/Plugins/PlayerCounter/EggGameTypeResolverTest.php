@@ -9,10 +9,10 @@ use Plugins\PeregrinePlayerCounter\Services\EggGameTypeResolver;
 use Tests\TestCase;
 
 /**
- * Covers the egg→GameDig mapping. The counter officially supports six games
- * only (Minecraft, Valheim, 7 Days to Die, ARK ASA/ASE, Palworld); every other
- * egg resolves to "unsupported". The generic Steam fallback is opt-in (off by
- * default). The resolver is pure, so eggs are built in memory.
+ * Covers the egg→GameDig mapping. Six games have dedicated rules (Minecraft,
+ * Valheim, 7 Days to Die, ARK ASA/ASE, Palworld); every other egg falls back to
+ * a generic A2S probe ('protocol-valve') so the card still shows and attempts a
+ * count. The resolver is pure, so eggs are built in memory.
  */
 class EggGameTypeResolverTest extends TestCase
 {
@@ -45,7 +45,7 @@ class EggGameTypeResolverTest extends TestCase
         $this->assertSame('sdtd', $this->resolve(['name' => '7 Days to Die'])['type']);
     }
 
-    public function test_both_ark_games_are_supported(): void
+    public function test_both_ark_games_use_their_dedicated_type(): void
     {
         $asa = $this->resolve(['name' => 'ARK: Survival Ascended']);
         $this->assertSame('asa', $asa['type']);
@@ -63,65 +63,39 @@ class EggGameTypeResolverTest extends TestCase
         $this->assertTrue($r['queryable']);
     }
 
-    public function test_removed_games_are_unsupported(): void
+    public function test_unmapped_games_fall_back_to_generic_a2s(): void
     {
-        // CS2, Rust, Hytale, Sons of the Forest, Squad, … are no longer mapped.
-        foreach (['Counter-Strike 2', 'Rust', 'Hytale', 'Sons of the Forest', 'Squad'] as $name) {
+        // No dedicated rule → generic A2S probe so the card still shows/queries.
+        foreach (['Counter-Strike 2', 'Rust', 'Hytale', 'Sons of the Forest', 'Some Random Game'] as $name) {
             $r = $this->resolve(['name' => $name]);
-            $this->assertNull($r['type'], "$name should be unsupported");
-            $this->assertFalse($r['queryable'], "$name should not be queryable");
+            $this->assertSame('protocol-valve', $r['type'], "$name should fall back to protocol-valve");
+            $this->assertSame('other', $r['family']);
+            $this->assertTrue($r['queryable']);
         }
     }
 
-    public function test_steam_fallback_is_off_by_default(): void
+    public function test_dedicated_rule_wins_over_fallback(): void
     {
-        // An unknown SteamCMD egg is NOT auto-detected unless the opt-in fallback is on.
-        $r = $this->resolve([
-            'name' => 'Some Random Steam Game',
-            'docker_image' => 'ghcr.io/pelican-eggs/steamcmd:debian',
-            'startup' => 'steamcmd +app_update 123 +quit && ./srcds_run',
-        ]);
+        // A supported game keeps its precise type, never the generic fallback.
+        $this->assertSame('valheim', $this->resolve(['name' => 'Valheim'])['type']);
+        $this->assertSame('asa', $this->resolve(['name' => 'ARK Survival Ascended'])['type']);
+    }
+
+    public function test_fallback_type_can_be_disabled(): void
+    {
+        config()->set('peregrine-player-counter.fallback_type', '');
+
+        $r = $this->resolve(['name' => 'Counter-Strike 2']);
 
         $this->assertNull($r['type']);
         $this->assertFalse($r['queryable']);
     }
 
-    public function test_steam_fallback_can_be_enabled(): void
-    {
-        config()->set('peregrine-player-counter.steam_fallback.enabled', true);
-
-        $r = $this->resolve([
-            'name' => 'Some Random Steam Game',
-            'docker_image' => 'ghcr.io/pelican-eggs/steamcmd:debian',
-            'startup' => './srcds_run',
-        ]);
-
-        $this->assertSame('protocol-valve', $r['type']);
-        $this->assertSame('source', $r['family']);
-    }
-
-    public function test_supported_game_wins_over_steam_fallback_when_enabled(): void
-    {
-        config()->set('peregrine-player-counter.steam_fallback.enabled', true);
-
-        // ARK installs via SteamCMD, but the explicit rule must win over the
-        // heuristic (which only runs after the rules).
-        $r = $this->resolve([
-            'name' => 'ARK Survival Ascended',
-            'docker_image' => 'steamcmd/steamcmd',
-            'startup' => 'steamcmd +app_update 2430930',
-        ]);
-
-        $this->assertSame('asa', $r['type']);
-        $this->assertSame('eos', $r['family']);
-    }
-
-    public function test_null_egg_is_unsupported(): void
+    public function test_egg_without_type_is_unqueryable(): void
     {
         $r = (new EggGameTypeResolver)->resolve(null);
 
         $this->assertNull($r['type']);
-        $this->assertSame('unknown', $r['family']);
         $this->assertFalse($r['queryable']);
     }
 }

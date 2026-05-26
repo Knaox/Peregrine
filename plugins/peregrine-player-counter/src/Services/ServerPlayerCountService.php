@@ -44,15 +44,16 @@ class ServerPlayerCountService
 
         $target = $this->resolver->resolve($server->egg);
 
-        // Not an officially-supported game → no card, whatever the power state.
-        // Resolved without touching the network, so it's correct even when the
-        // server is stopped (the front-end relies on this to hide the card).
+        // No queryable type at all (e.g. a server without an egg yet) → just
+        // show offline. With `fallback_type` set, every real egg is queryable,
+        // so the card always appears for a whitelisted server — counting it is
+        // the admin's responsibility (they chose to whitelist that egg).
         if (! $target['queryable'] || ! is_string($target['type'])) {
-            return $this->payload(null, null, 'unsupported', $target);
+            return $this->payload(null, null, 'offline', $target);
         }
 
-        // Supported + whitelisted but the server isn't running → report offline
-        // without firing the (slow) network/RCON query.
+        // Whitelisted but the server isn't running → report offline without
+        // firing the (slow) network/RCON query.
         if (! $running) {
             return $this->payload(null, null, 'offline', $target);
         }
