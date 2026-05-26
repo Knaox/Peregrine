@@ -39,17 +39,12 @@ class PlayerCounterDocRenderer
 
         return <<<YAML
   game-query:
-    build: ./{$this->sidecarPath()}
+    image: ghcr.io/knaox/peregrine-game-query:latest
     container_name: peregrine-game-query
     restart: unless-stopped
     environment:
       GAME_QUERY_HOST: 0.0.0.0
       GAME_QUERY_PORT: "9899"{$tokenLine}
 YAML;
-    }
-
-    private function sidecarPath(): string
-    {
-        return self::SIDECAR_PATH;
     }
 }

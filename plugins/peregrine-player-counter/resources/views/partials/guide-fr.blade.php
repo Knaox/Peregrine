@@ -8,7 +8,7 @@
 <p style="{{ $p }}">Le compteur de joueurs a besoin d'un petit service compagnon — le <strong>sidecar GameDig</strong> — qui parle le protocole de requête de chaque jeu (A2S pour Minecraft, Valheim et 7 Days to Die ; ARK et Palworld sont lus via RCON). Peregrine le contacte en HTTP et met le résultat en cache ; le sidecar, lui, joint vos serveurs de jeu. Il est livré dans ce plugin sous <code style="{{ $code }}">plugins/peregrine-player-counter/sidecar</code>.</p>
 
 <h3 style="{{ $h }}">1 — Ajoutez le sidecar à votre <code style="{{ $code }}">docker-compose.yml</code></h3>
-<p style="{{ $p }}">Collez ce service sous <code style="{{ $code }}">services:</code>, à côté du service <code style="{{ $code }}">peregrine</code>, puis lancez <code style="{{ $code }}">docker compose up -d --build game-query</code>.</p>
+<p style="{{ $p }}">Collez ce service sous <code style="{{ $code }}">services:</code>, à côté du service <code style="{{ $code }}">peregrine</code>, puis lancez <code style="{{ $code }}">docker compose up -d game-query</code> (l'image pré-construite est récupérée — aucun build local nécessaire).</p>
 @include('peregrine-player-counter::partials.copy-block', ['code' => $ctx['composeSnippet'], 'filename' => 'docker-compose.yml — à ajouter sous services:'])
 
 <div style="{{ $note }}">Le sidecar reste sur le réseau interne Docker (aucun port publié) et a besoin d'un accès <strong>sortant</strong> : UDP pour A2S/Minecraft, et HTTPS vers Epic pour les jeux EOS (ARK). Docker autorise le sortant par défaut.</div>

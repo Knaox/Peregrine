@@ -190,6 +190,52 @@ jobs:
         run: docker buildx imagetools inspect "$IMAGE_REF:$VERSION"
 
   # ---------------------------------------------------------------
+  # Player Counter GameDig sidecar — published as its own image so prod stacks
+  # can use `image: ghcr.io/knaox/peregrine-game-query` instead of building from
+  # the repo (the plugin ships in a volume / pre-built panel image, so there's
+  # no plugins/ path next to the compose file to `build:` from).
+  # ---------------------------------------------------------------
+  sidecar:
+    if: github.event_name != 'schedule' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Read sidecar version
+        id: ver
+        run: echo "version=$(node -p "require('./plugins/peregrine-player-counter/plugin.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push sidecar (multi-arch)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./plugins/peregrine-player-counter/sidecar
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/knaox/peregrine-game-query:latest
+            ${{ env.REGISTRY }}/knaox/peregrine-game-query:${{ steps.ver.outputs.version }}
+          cache-from: type=gha,scope=sidecar
+          cache-to: type=gha,mode=max,scope=sidecar
+          provenance: false
+
+  # ---------------------------------------------------------------
   # Weekly GHCR cleanup — delete untagged versions > 7 days old
   # ---------------------------------------------------------------
   cleanup:

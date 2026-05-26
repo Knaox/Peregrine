@@ -8,7 +8,7 @@
 <p style="{{ $p }}">The player counter needs a tiny companion service — the <strong>GameDig sidecar</strong> — that speaks each game's query protocol (A2S for Minecraft, Valheim and 7 Days to Die; ARK and Palworld are read over RCON instead). Peregrine talks to it over HTTP and caches the result; the sidecar reaches your game servers. It ships inside this plugin under <code style="{{ $code }}">plugins/peregrine-player-counter/sidecar</code>.</p>
 
 <h3 style="{{ $h }}">1 — Add the sidecar to your <code style="{{ $code }}">docker-compose.yml</code></h3>
-<p style="{{ $p }}">Paste this service under <code style="{{ $code }}">services:</code>, next to the <code style="{{ $code }}">peregrine</code> service, then run <code style="{{ $code }}">docker compose up -d --build game-query</code>.</p>
+<p style="{{ $p }}">Paste this service under <code style="{{ $code }}">services:</code>, next to the <code style="{{ $code }}">peregrine</code> service, then run <code style="{{ $code }}">docker compose up -d game-query</code> (it pulls the pre-built image — no local build needed).</p>
 @include('peregrine-player-counter::partials.copy-block', ['code' => $ctx['composeSnippet'], 'filename' => 'docker-compose.yml — add under services:'])
 
 <div style="{{ $note }}">The sidecar stays on the internal Docker network (no published port) and needs <strong>outbound</strong> access: UDP for A2S/Minecraft, and HTTPS to Epic for EOS games (ARK). Docker allows outbound by default.</div>
