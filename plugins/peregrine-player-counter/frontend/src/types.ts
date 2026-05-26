@@ -12,8 +12,11 @@ export interface ServerPlayers {
     state: PlayerQueryState;
     family: string;
     queryable: boolean;
-    /** True when this game is counted over RCON (ARK, Palworld) — enables the Resolve RCON helper. */
+    /** True when this game is counted over RCON (ARK, Palworld). */
     rcon: boolean;
+    /** True when Peregrine can fix an unreachable query/RCON port (allocate + repoint a startup
+     *  variable, or move the game port) — enables the manual "Resolve" helper. Never automatic. */
+    resolvable: boolean;
     name: string | null;
     players: string[];
     queried_at: string;

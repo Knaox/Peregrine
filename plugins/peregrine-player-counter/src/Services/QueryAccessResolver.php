@@ -228,7 +228,8 @@ class QueryAccessResolver
         foreach ($this->client->getStartupVariables($server->identifier) as $v) {
             $key = $v['env_variable'] ?? null;
             if (is_string($key)) {
-                $vars[$key] = (string) ($v['server_value'] ?? '');
+                $value = $v['server_value'] ?? '';
+                $vars[$key] = (string) (($value === '' || $value === null) ? ($v['default_value'] ?? '') : $value);
             }
         }
 

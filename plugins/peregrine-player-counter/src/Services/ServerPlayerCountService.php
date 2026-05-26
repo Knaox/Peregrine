@@ -9,7 +9,6 @@ use App\Services\Pelican\PelicanClientService;
 use App\Services\Pelican\PelicanNetworkService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Plugins\PeregrinePlayerCounter\Jobs\ResolveQueryAccessJob;
 use Plugins\PeregrinePlayerCounter\PlayerCounterServiceProvider;
 use Plugins\PeregrinePlayerCounter\Settings\PlayerCounterSettings;
 
@@ -19,7 +18,7 @@ use Plugins\PeregrinePlayerCounter\Settings\PlayerCounterSettings;
  * `cache_ttl`) controls freshness and shields the upstream (the Epic API for
  * EOS games) from rate-limiting.
  *
- * @phpstan-type PlayerPayload array{online: ?int, max: ?int, state: string, family: string, queryable: bool, rcon: bool, name: ?string, players: list<string>, detail: ?string, queried_at: string}
+ * @phpstan-type PlayerPayload array{online: ?int, max: ?int, state: string, family: string, queryable: bool, rcon: bool, resolvable: bool, name: ?string, players: list<string>, detail: ?string, queried_at: string}
  */
 class ServerPlayerCountService
 {
@@ -96,7 +95,8 @@ class ServerPlayerCountService
                 foreach ($this->pelican->getStartupVariables((string) $server->identifier) as $v) {
                     $key = $v['env_variable'] ?? null;
                     if (is_string($key)) {
-                        $map[$key] = (string) ($v['server_value'] ?? '');
+                        $value = $v['server_value'] ?? '';
+                        $map[$key] = (string) (($value === '' || $value === null) ? ($v['default_value'] ?? '') : $value);
                     }
                 }
             } catch (\Throwable) {
@@ -108,33 +108,20 @@ class ServerPlayerCountService
     }
 
     /**
-     * One-time, marker-guarded dispatch of the query-port auto-resolver. The
-     * marker prevents restart-spam on a genuinely-unresolvable game; once
-     * resolved the query succeeds, so this branch stops firing on its own.
+     * Whether Peregrine can fix this game's query/RCON port by reconfiguring the
+     * server (allocate a port + repoint a startup variable, or move the game port
+     * for adjacent-port games). Drives the card's manual "Resolve" button — we
+     * never reconfigure automatically. 'same'-port games (incl. the generic A2S
+     * fallback) have nothing to reconfigure: offline means genuinely empty/down.
      *
-     * @param  array{type: ?string, family: string, queryable: bool, query_port: array{mode: string}}  $target
+     * @param  array{type: ?string, family: string, queryable: bool, query_port?: array{mode?: string}}  $target
      */
-    private function autoResolve(Server $server, array $target, bool $isRcon): void
+    private function isResolvable(array $target): bool
     {
-        if (! (bool) config(self::NS.'.auto_resolve.enabled', true)) {
-            return;
-        }
+        $isRcon = is_string($target['type'] ?? null)
+            && in_array($target['type'], (array) config(self::NS.'.rcon.types', []), true);
 
-        // RCON and same-port games never need a port reallocated.
-        if (! $isRcon && in_array($target['query_port']['mode'] ?? 'same', ['same'], true)) {
-            return;
-        }
-
-        $marker = "pc_resolve_attempted:{$server->id}";
-        if (Cache::has($marker)) {
-            return;
-        }
-        Cache::put($marker, true, 3600);
-
-        // Drop the cached startup vars so the next query reflects the new port.
-        Cache::forget("pc_vars:{$server->id}");
-
-        ResolveQueryAccessJob::dispatch($server);
+        return $isRcon || in_array($target['query_port']['mode'] ?? 'same', ['var', 'fixed', 'offset'], true);
     }
 
     private function cacheKey(Server $server): string
@@ -194,12 +181,11 @@ class ServerPlayerCountService
             return $this->store($server, $this->payload($result['online'] ?? 0, $result['max'] ?? null, 'online', $target, $result['name'] ?? null, $result['players'] ?? []));
         }
 
-        // Query failed: the port may simply not be allocated yet. Kick off the
-        // one-time auto-resolver (off the request path, marker-guarded) so the
-        // admin/player has nothing to do. It re-checks reachability itself, so a
-        // spurious trigger is a safe no-op.
-        $this->autoResolve($server, $target, $isRcon);
-
+        // Query failed. We NEVER reconfigure the server automatically: when the
+        // game needs a query/RCON port that Peregrine can fix (allocate + repoint
+        // a startup variable, or move the game port for adjacent-port games), the
+        // payload's `resolvable` flag tells the card to show a warning + a manual
+        // "Resolve" button (it restarts the server, so it's the player's choice).
         return $this->store($server, $this->payload(null, null, 'offline', $target, null, [], is_string($result['error'] ?? null) ? $result['error'] : null));
     }
 
@@ -220,6 +206,7 @@ class ServerPlayerCountService
             'queryable' => (bool) $target['queryable'],
             'rcon' => is_string($target['type'] ?? null)
                 && in_array($target['type'], (array) config(self::NS.'.rcon.types', []), true),
+            'resolvable' => $this->isResolvable($target),
             'name' => $name,
             'players' => $players,
             'detail' => $detail,

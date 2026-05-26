@@ -1,8 +1,8 @@
 {
     "id": "peregrine-player-counter",
     "name": "Player Counter",
-    "version": "1.1.0",
-    "description": "Shows the live number of connected players (and up to 5 names) on each server's overview, with automatic detection of the full GameDig catalogue (350+ games — Minecraft, Valheim, Sons of the Forest, ARK, Palworld, Rust, Enshrouded, V Rising…) via a self-hosted GameDig sidecar. When a game needs a dedicated query/RCON port it is allocated and configured automatically — no admin or player action. Includes an egg whitelist and a bilingual Docker setup guide.",
+    "version": "1.1.1",
+    "description": "Shows the live number of connected players (and up to 5 names) on each server's overview, with automatic detection of the full GameDig catalogue (350+ games — Minecraft, Valheim, Sons of the Forest, ARK, Palworld, Rust, Enshrouded, V Rising…) via a self-hosted GameDig sidecar. When a game needs a dedicated query/RCON port that isn't reachable, the card shows a one-click \"Resolve\" button that allocates the port, configures the server variable and restarts — your choice, never automatic. Includes an egg whitelist and a bilingual Docker setup guide.",
     "author": "Peregrine",
     "vendor": "peregrine",
     "official": true,

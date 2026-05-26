@@ -85,9 +85,10 @@ export function PlayerCountCard({ serverId, serverState }: { serverId: number; s
     const max = data?.max ?? null;
     const names = effState === 'online' ? (data?.players ?? []) : [];
     const isOnline = effState === 'online' && online !== null;
-    // Only when the server is actually RUNNING but its RCON query returned
-    // nothing (port unreachable) — never on a normally-stopped server.
-    const canResolveRcon = isRunning && effState === 'offline' && data?.rcon === true;
+    // Only when the server is actually RUNNING but the query returned nothing
+    // (port unreachable) AND Peregrine can fix it by reconfiguring the server —
+    // never on a normally-stopped server, and never automatically.
+    const canResolve = isRunning && effState === 'offline' && data?.resolvable === true;
     const showSkeleton = isLoading && !data;
     const animated = useCountUp(online ?? 0, !reduced() && isOnline);
 
@@ -148,7 +149,7 @@ export function PlayerCountCard({ serverId, serverState }: { serverId: number; s
                         </div>
                     )}
 
-                    {canResolveRcon && <ResolveRconNotice serverId={serverId} t={t} />}
+                    {canResolve && <ResolveRconNotice serverId={serverId} t={t} />}
                 </div>
             )}
         </section>

@@ -20,7 +20,7 @@ return [
         'regenerated' => 'Token generated — save, then set the same value on the sidecar.',
 
         'supported_title' => 'Automatic game detection',
-        'supported_intro' => 'All :count games in the GameDig catalogue are detected automatically from the egg, with the right protocol. When a game needs a dedicated query port (Valheim, Sons of the Forest, ARK…) it is allocated and configured automatically — no admin or player action.',
+        'supported_intro' => 'All :count games in the GameDig catalogue are detected automatically from the egg, with the right protocol. When a game needs a dedicated query port (Valheim, Sons of the Forest, ARK…), the server card offers a "Resolve" button that allocates the port and configures the server — never automatically.',
         'supported_note' => 'Games outside the catalogue still attempt a best-effort A2S query. Use the egg whitelist below to choose which servers show the counter.',
 
         'section_visibility' => 'Visibility',

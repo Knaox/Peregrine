@@ -94,15 +94,13 @@ return [
     // instead of showing a best-effort card.
     'fallback_type' => env('GAME_QUERY_FALLBACK_TYPE', 'protocol-valve'),
 
-    // Auto-provisioning of the query/RCON port (see Services\QueryAccessResolver).
-    // When a game's query port isn't reachable on a fresh allocation, the
-    // resolver allocates one, points the relevant startup variable at it and
-    // restarts — the same one-click flow ARK already uses, run automatically.
-    // `enabled` master switch; `restart` controls whether the resolver may
-    // restart a running server to apply the change (mirrors the ARK behaviour).
+    // Query/RCON-port resolution (see Services\QueryAccessResolver). This is
+    // NEVER run automatically: when a game's query port isn't reachable, the
+    // card shows a warning + a manual "Resolve" button (the same one-click,
+    // server-restarting flow ARK uses). The resolver allocates a port and points
+    // the relevant startup variable at it, or moves the game port for
+    // adjacent-port games (Valheim & co).
     'auto_resolve' => [
-        'enabled' => (bool) env('GAME_QUERY_AUTO_RESOLVE', true),
-        'restart' => (bool) env('GAME_QUERY_AUTO_RESOLVE_RESTART', true),
         // Startup-variable name candidates the resolver points at the new port,
         // by strategy. RCON reuses the rcon.port_vars list above.
         'query_port_vars' => ['QUERY_PORT', 'QUERYPORT', 'SERVER_QUERY_PORT', 'A2S_PORT'],

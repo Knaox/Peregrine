@@ -20,7 +20,7 @@ return [
         'regenerated' => 'Jeton généré — enregistrez, puis mettez la même valeur sur le sidecar.',
 
         'supported_title' => 'Détection automatique des jeux',
-        'supported_intro' => 'Les :count jeux du catalogue GameDig sont détectés automatiquement depuis l\'egg, avec le bon protocole. Quand un jeu nécessite un port de requête dédié (Valheim, Sons of the Forest, ARK…), il est alloué et configuré automatiquement — aucune action admin ni joueur.',
+        'supported_intro' => 'Les :count jeux du catalogue GameDig sont détectés automatiquement depuis l\'egg, avec le bon protocole. Quand un jeu nécessite un port de requête dédié (Valheim, Sons of the Forest, ARK…), la carte du serveur propose un bouton « Résoudre » qui alloue le port et configure le serveur — jamais automatiquement.',
         'supported_note' => 'Les jeux hors catalogue tentent quand même une requête A2S best-effort. Utilisez la liste blanche d\'eggs ci-dessous pour choisir les serveurs où le compteur s\'affiche.',
 
         'section_visibility' => 'Visibilité',

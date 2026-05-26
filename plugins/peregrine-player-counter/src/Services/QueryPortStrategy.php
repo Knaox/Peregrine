@@ -55,7 +55,7 @@ class QueryPortStrategy
         // RCON-counted games read their port from a startup variable regardless
         // of the catalogue's wire strategy — treat them as the 'var' case.
         if ($isRcon) {
-            return $this->planVar($this->rconPortVars(), $allocatedPorts, $startupVars, $gamePort);
+            return $this->planVar($this->rconPortVars(), 'rcon', $gamePort, $allocatedPorts, $startupVars);
         }
 
         return match ($mode) {
@@ -63,9 +63,10 @@ class QueryPortStrategy
             'offset' => $this->planOffset((int) ($portRule['value'] ?? 0), $primary, $allocatedPorts),
             'var' => $this->planVar(
                 $this->queryPortVars((string) ($portRule['env'] ?? '')),
+                'query',
+                $gamePort,
                 $allocatedPorts,
                 $startupVars,
-                $gamePort,
             ),
             'fixed' => $this->planFixed((int) ($portRule['value'] ?? 0), $allocatedPorts, $startupVars, $gamePort),
             default => ['send_port' => $gamePort, 'reachable' => true, 'kind' => 'none'],
@@ -119,37 +120,50 @@ class QueryPortStrategy
     }
 
     /**
-     * Query port is redirectable through a startup variable. Reachable if the
-     * variable already points at an allocated port; otherwise the resolver must
-     * allocate one and repoint the variable.
+     * Query/RCON port is redirectable through a startup variable. The variable
+     * is matched by name (configured candidates first, then any var whose name
+     * mentions both the keyword — 'query'/'rcon' — and 'port'). If it's found
+     * but holds no allocated port (empty default, or a local port never tied to
+     * an allocation — the common Sons of the Forest QUERY_PORT case), it's NOT
+     * reachable: the resolver allocates a port and repoints the variable. Only
+     * when the variable already points at an allocated port is it reachable.
      *
      * @param  list<string>  $candidates  variable-name candidates
+     * @param  string  $keyword  fuzzy name keyword ('query' | 'rcon')
+     * @param  int  $fallbackPort  port to query before resolution (fixed/game port)
      * @param  list<int>  $allocatedPorts
      * @param  array<string, string>  $startupVars
      * @return QueryPlan
      */
-    private function planVar(array $candidates, array $allocatedPorts, array $startupVars, int $gamePort): array
+    private function planVar(array $candidates, string $keyword, int $fallbackPort, array $allocatedPorts, array $startupVars): array
     {
-        foreach ($candidates as $name) {
-            $value = isset($startupVars[$name]) ? (int) $startupVars[$name] : 0;
-            if ($value >= 1 && $value <= 65535) {
-                return [
-                    'send_port' => $value,
-                    'reachable' => in_array($value, $allocatedPorts, true),
-                    'kind' => 'var',
-                    'env' => $name,
-                ];
-            }
+        $name = $this->findVar($candidates, $keyword, $startupVars);
+
+        // No redirectable variable at all: the port can't be reconfigured, so
+        // it's only reachable if the fallback port happens to be allocated.
+        if ($name === null) {
+            return [
+                'send_port' => $fallbackPort,
+                'reachable' => in_array($fallbackPort, $allocatedPorts, true),
+                'kind' => 'unreachable',
+            ];
         }
 
-        // No usable variable found — fall back to the game port (best effort).
-        return ['send_port' => $gamePort, 'reachable' => true, 'kind' => 'none'];
+        $value = (int) ($startupVars[$name] ?? 0);
+        $valid = $value >= 1 && $value <= 65535;
+
+        return [
+            'send_port' => $valid ? $value : $fallbackPort,
+            'reachable' => $valid && in_array($value, $allocatedPorts, true),
+            'kind' => 'var',
+            'env' => $name,
+        ];
     }
 
     /**
-     * Absolute fixed query port (Sons of the Forest 27016). If a query-port
-     * variable exists we treat it as the 'var' case (allocate + redirect);
-     * otherwise it's only reachable if that exact port happens to be allocated.
+     * Absolute fixed query port (Sons of the Forest 27016, Enshrouded 15637…).
+     * These games expose a configurable query-port variable, so we resolve it
+     * exactly like the 'var' case, querying the fixed port until then.
      *
      * @param  list<int>  $allocatedPorts
      * @param  array<string, string>  $startupVars
@@ -157,22 +171,35 @@ class QueryPortStrategy
      */
     private function planFixed(int $fixedPort, array $allocatedPorts, array $startupVars, int $gamePort): array
     {
-        $vars = $this->queryPortVars('');
-        foreach ($vars as $name) {
-            if (isset($startupVars[$name])) {
-                return $this->planVar([$name], $allocatedPorts, $startupVars, $gamePort);
+        $fallback = ($fixedPort >= 1 && $fixedPort <= 65535) ? $fixedPort : $gamePort;
+
+        return $this->planVar($this->queryPortVars(''), 'query', $fallback, $allocatedPorts, $startupVars);
+    }
+
+    /**
+     * Find the startup variable to redirect: a configured candidate first, then
+     * any variable whose name mentions both the keyword and 'port'. Returns the
+     * variable NAME even when its value is empty — its mere presence means the
+     * port is reconfigurable (and should be resolved).
+     *
+     * @param  list<string>  $candidates
+     * @param  array<string, string>  $startupVars
+     */
+    private function findVar(array $candidates, string $keyword, array $startupVars): ?string
+    {
+        foreach ($candidates as $name) {
+            if (array_key_exists($name, $startupVars)) {
+                return $name;
             }
         }
 
-        if ($fixedPort >= 1 && $fixedPort <= 65535) {
-            return [
-                'send_port' => $fixedPort,
-                'reachable' => in_array($fixedPort, $allocatedPorts, true),
-                'kind' => 'unreachable',
-            ];
+        foreach (array_keys($startupVars) as $name) {
+            if (stripos($name, $keyword) !== false && stripos($name, 'port') !== false) {
+                return $name;
+            }
         }
 
-        return ['send_port' => $gamePort, 'reachable' => true, 'kind' => 'none'];
+        return null;
     }
 
     /**
