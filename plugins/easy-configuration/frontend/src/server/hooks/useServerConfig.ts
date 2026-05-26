@@ -30,12 +30,19 @@ export function useServerStatus(serverId: number, enabled: boolean) {
 }
 
 export function useSaveConfig(serverId: number) {
+    const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: (files: SaveFilePayload[]) =>
             api<{ data: { written: number } }>(`${BASE}/servers/${serverId}/config`, {
                 method: 'PUT',
                 body: JSON.stringify({ files }),
             }),
+        // The config query is cached with staleTime: Infinity (loaded once per
+        // mount). Without this, navigating away and back re-reads the stale
+        // pre-save payload until a hard refresh — so refetch the live file after
+        // a successful write, the same way useAddParameter does.
+        onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['ec-config', serverId] }),
     });
 }
 
