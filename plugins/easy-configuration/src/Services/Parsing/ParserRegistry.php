@@ -25,6 +25,8 @@ final class ParserRegistry
             new TomlFormat,
             new PalworldFormat,
             new TheForestFormat,
+            new XmlFormat,
+            new XmlPropertyFormat,
         ] as $format) {
             $this->formats[$format->format()] = $format;
         }

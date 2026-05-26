@@ -38,7 +38,7 @@ function resolveSectionDefault(file: ConfigFile, section: string | null): boolea
     return true;
 }
 
-export function FileCard({ file, controller, serverId, templateId, columns }: { file: ConfigFile; controller: EditorController; serverId: number; templateId: string; columns?: number }) {
+export function FileCard({ file, controller, serverId, templateId, columns, locked }: { file: ConfigFile; controller: EditorController; serverId: number; templateId: string; columns?: number; locked: boolean }) {
     const { t, lang } = useT();
     const title = pickLabel(file.label, lang, file.path);
     const [addOpen, setAddOpen] = useState(false);
@@ -80,7 +80,7 @@ export function FileCard({ file, controller, serverId, templateId, columns }: { 
                 saved={controller.isSaved(key)}
                 invalid={controller.isInvalid(key)}
                 disabled={controller.disabled}
-                locked={controller.locked}
+                locked={locked}
                 onChange={(value) => controller.onChange(key, param, value)}
                 onReset={() => controller.onReset(key, param)}
                 boost={param.boost ? <BoostBadge boost={param.boost} /> : undefined}
@@ -138,7 +138,7 @@ export function FileCard({ file, controller, serverId, templateId, columns }: { 
                                 </div>
                             )}
 
-                            {!controller.disabled && !controller.locked && (
+                            {!controller.disabled && !locked && (
                                 <div>
                                     <Button variant="ghost" size="sm" onClick={() => setAddOpen(true)}>
                                         <Plus size={14} /> {t('add_param.button')}

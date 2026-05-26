@@ -26,7 +26,7 @@ final class ConfigMerger
     public function merge(array $fileDef, ParsedConfig $parsed): array
     {
         $format = (string) ($fileDef['format'] ?? '');
-        $sectioned = in_array($format, ['ini', 'toml'], true);
+        $sectioned = in_array($format, ['ini', 'toml', 'xml-property'], true);
         $whitelist = is_array($fileDef['section_whitelist'] ?? null) ? $fileDef['section_whitelist'] : [];
 
         $parameters = [];

@@ -53,11 +53,19 @@ export function useConfigSave(params: {
 
     const useHostBar = typeof P.registerSaveSource === 'function';
 
-    const { initial, index } = useMemo(() => {
+    const { initial, index, lockedFiles } = useMemo(() => {
         const initialValues: Record<string, string> = {};
         const paramIndex = new Map<string, { param: ConfigParam; fileId: string }>();
+        // A file is locked while the server runs only when its template requires
+        // a shutdown to edit (the default). Templates with require_shutdown=false
+        // stay editable on a running server.
+        const locked = new Set<string>();
         for (const template of templates) {
+            const requiresShutdown = template.require_shutdown !== false;
             for (const file of template.files) {
+                if (running && requiresShutdown) {
+                    locked.add(file.id);
+                }
                 for (const param of file.parameters) {
                     const key = fieldKeyOf(file.id, param);
                     initialValues[key] = param.value;
@@ -65,8 +73,8 @@ export function useConfigSave(params: {
                 }
             }
         }
-        return { initial: initialValues, index: paramIndex };
-    }, [templates]);
+        return { initial: initialValues, index: paramIndex, lockedFiles: locked };
+    }, [templates, running]);
 
     const [values, setValues] = useState<Record<string, string>>(initial);
     const [original, setOriginal] = useState<Record<string, string>>(initial);
@@ -88,7 +96,7 @@ export function useConfigSave(params: {
             if (hardDisabled) {
                 return;
             }
-            if (running) {
+            if (lockedFiles.has(index.get(fieldKey)?.fileId ?? '')) {
                 toast.warning(t('overlay.edit_blocked'));
                 return;
             }
@@ -100,7 +108,7 @@ export function useConfigSave(params: {
                 toast.warning(t('validation.invalid_value', { param: pickLabel(param.label, lang, param.key), type: t(`validation.type.${reason}`) }));
             }
         },
-        [toast, t, lang, hardDisabled, running],
+        [toast, t, lang, hardDisabled, lockedFiles, index],
     );
 
     const onReset = useCallback(

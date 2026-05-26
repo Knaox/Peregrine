@@ -31,7 +31,8 @@ final class ImportConfigController
         $data = $request->validated();
         $path = trim((string) $data['path']);
 
-        $format = $data['format'] ?? ConfigImportScaffolder::detectFormat($path);
+        $explicitFormat = $data['format'] ?? null;
+        $format = $explicitFormat ?? ConfigImportScaffolder::detectFormat($path);
         if ($format === null || ! $parsers->has($format)) {
             return $this->error('unsupported_format', __('easy-configuration::messages.import.unsupported_format'));
         }
@@ -47,6 +48,13 @@ final class ImportConfigController
             report($e);
 
             return $this->error('read_failed', __('easy-configuration::messages.import.read_failed'));
+        }
+
+        // Auto-upgrade a generic-XML auto-detection to the property-list format
+        // when the file clearly uses `<property name= value=>` (e.g. 7DTD). An
+        // explicit admin choice is always respected.
+        if ($explicitFormat === null && $format === 'xml' && ConfigImportScaffolder::looksLikePropertyXml($raw)) {
+            $format = 'xml-property';
         }
 
         $parsed = $parsers->get($format)->parse($raw);

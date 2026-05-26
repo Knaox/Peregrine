@@ -43,9 +43,12 @@ export function ConfigEditor({
     const canBoost = permissions?.boost ?? true;
     // Two read-only reasons, handled differently: no write permission HARD-disables
     // the controls; a running server LOCKS them (still interactive so a tap explains
-    // "stop the server first"). Editing is only possible with write AND offline.
+    // "stop the server first") — but ONLY for templates that require a shutdown to
+    // edit (the default). A template with require_shutdown=false stays editable live.
     const hardDisabled = ! canWrite;
-    const canEdit = canWrite && ! running;
+    const anyEditableWhileRunning = templates.some((template) => template.require_shutdown === false);
+    const anyLocked = running && templates.some((template) => template.require_shutdown !== false);
+    const canEdit = canWrite && (! running || anyEditableWhileRunning);
 
     const editor = useConfigSave({ serverId, templates, running, hardDisabled, canEdit });
 
@@ -74,7 +77,7 @@ export function ConfigEditor({
         isSaved: editor.isSavedKey,
         isInvalid: editor.isInvalidKey,
         disabled: hardDisabled,
-        locked: running,
+        locked: anyLocked,
         search,
         onChange: editor.onChange,
         onReset: editor.onReset,
@@ -96,7 +99,14 @@ export function ConfigEditor({
     const fileCards = templates.flatMap((template) =>
         template.files
             .filter((file) => file.exists !== false && file.read_error !== true)
-            .map((file) => ({ key: `${template.id}:${file.id}`, file, columns: template.columns, templateId: template.id })),
+            .map((file) => ({
+                key: `${template.id}:${file.id}`,
+                file,
+                columns: template.columns,
+                templateId: template.id,
+                // Per-template lock: only templates requiring a shutdown lock while running.
+                locked: running && template.require_shutdown !== false,
+            })),
     );
 
     // Only declare the whole section unreachable when NOTHING could be read AND
@@ -143,8 +153,10 @@ export function ConfigEditor({
                 />
             )}
 
-            {/* Running server: read-only banner (layout unchanged, edits blocked with a message). */}
-            {running && <RunningBanner state={state} stopping={stopping} onStop={onStop} />}
+            {/* Running server: read-only banner — only when at least one template
+                actually locks (require_shutdown). Templates that allow live edits
+                don't trigger it. */}
+            {anyLocked && <RunningBanner state={state} stopping={stopping} onStop={onStop} />}
 
             <div className="ec-stack">
                 {unreachable ? (
@@ -165,8 +177,8 @@ export function ConfigEditor({
                                 <EmptyState>{t('section.no_files_yet')}</EmptyState>
                             </Card>
                         ) : (
-                            fileCards.map(({ key, file, columns, templateId }) => (
-                                <FileCard key={key} file={file} controller={controller} serverId={serverId} templateId={templateId} columns={columns} />
+                            fileCards.map(({ key, file, columns, templateId, locked }) => (
+                                <FileCard key={key} file={file} controller={controller} serverId={serverId} templateId={templateId} columns={columns} locked={locked} />
                             ))
                         )}
                     </>

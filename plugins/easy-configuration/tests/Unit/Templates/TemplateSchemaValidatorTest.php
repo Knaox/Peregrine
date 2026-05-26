@@ -108,4 +108,30 @@ final class TemplateSchemaValidatorTest extends TestCase
 
         self::assertContains('files[0].section_expanded.ServerSettings: must be a boolean', $errors);
     }
+
+    public function test_require_shutdown_flag_is_accepted(): void
+    {
+        $template = $this->validTemplate();
+        $template['require_shutdown'] = false;
+
+        self::assertSame([], (new TemplateSchemaValidator)->validate($template));
+    }
+
+    public function test_it_reports_a_non_boolean_require_shutdown(): void
+    {
+        $template = $this->validTemplate();
+        $template['require_shutdown'] = 'always';
+
+        $errors = (new TemplateSchemaValidator)->validate($template);
+
+        self::assertContains('require_shutdown: must be a boolean', $errors);
+    }
+
+    public function test_xml_is_an_accepted_format(): void
+    {
+        $template = $this->validTemplate();
+        $template['files'][0]['format'] = 'xml';
+
+        self::assertSame([], (new TemplateSchemaValidator)->validate($template));
+    }
 }

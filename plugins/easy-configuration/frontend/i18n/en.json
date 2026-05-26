@@ -190,6 +190,8 @@
             "columns_2": "2 columns",
             "columns_3": "3 columns",
             "columns_hint": "How parameters are laid out in the player editor.",
+            "require_shutdown": "Require the server to be off for any change",
+            "require_shutdown_hint": "On by default: players must stop the server before editing any value. Turn off to let them edit while the server is running.",
             "id": "Template id (slug)",
             "name_en": "Name (EN)",
             "name_fr": "Name (FR)",

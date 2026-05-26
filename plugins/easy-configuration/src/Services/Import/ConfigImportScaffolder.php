@@ -30,6 +30,7 @@ final class ConfigImportScaffolder
         'yml' => 'yaml',
         'yaml' => 'yaml',
         'json' => 'json',
+        'xml' => 'xml',
     ];
 
     public function __construct(private readonly TypeDetector $detector) {}
@@ -43,6 +44,18 @@ final class ConfigImportScaffolder
         $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
         return self::EXTENSION_FORMATS[$extension] ?? null;
+    }
+
+    /**
+     * A `.xml` extension alone can't tell apart a generic XML file from a
+     * `<property name="K" value="V"/>` list (7 Days to Die's `serverconfig.xml`
+     * and friends). When the content clearly uses that idiom, the dedicated
+     * `xml-property` format is the right pick — one editable field per setting,
+     * instead of every name/value attribute surfaced twice.
+     */
+    public static function looksLikePropertyXml(string $raw): bool
+    {
+        return preg_match('/<property\s[^>]*\bname\s*=\s*["\'][^"\']*["\'][^>]*\bvalue\s*=/i', $raw) === 1;
     }
 
     /**

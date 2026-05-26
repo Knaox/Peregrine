@@ -3,7 +3,7 @@ import { detectSections, flattenParams, isSectionVisible, sectionLabel, setExpan
 import { Input, Select, Toggle } from '../../../ui/inputs';
 import { ParameterCard } from './ParameterCard';
 
-const FILE_FORMATS = ['properties', 'ini', 'yaml', 'json', 'toml', 'palworld', 'theforest'] as const;
+const FILE_FORMATS = ['properties', 'ini', 'yaml', 'json', 'toml', 'palworld', 'theforest', 'xml', 'xml-property'] as const;
 
 interface Props {
     file: Json;

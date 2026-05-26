@@ -64,6 +64,16 @@ final class TemplateDefinition
         return (bool) (($this->data['boost']['enabled'] ?? false));
     }
 
+    /**
+     * Whether the server must be stopped before any value in this template can
+     * be edited. Defaults to true (the safe stance): only an explicit `false`
+     * lets players edit while the server is running.
+     */
+    public function requireShutdown(): bool
+    {
+        return ($this->data['require_shutdown'] ?? true) !== false;
+    }
+
     /** @return list<string> */
     public function boostBlacklist(): array
     {

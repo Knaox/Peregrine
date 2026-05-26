@@ -12,7 +12,7 @@ namespace Plugins\EasyConfiguration\Services\Templates;
  */
 final class TemplateSchemaValidator
 {
-    private const FORMATS = ['properties', 'ini', 'yaml', 'json', 'toml', 'palworld', 'theforest'];
+    private const FORMATS = ['properties', 'ini', 'yaml', 'json', 'toml', 'palworld', 'theforest', 'xml', 'xml-property'];
 
     private const DISPLAY_TYPES = ['boolean', 'slider', 'select', 'multiselect', 'text', 'number', 'textarea', 'color'];
 
@@ -45,6 +45,10 @@ final class TemplateSchemaValidator
 
         if (isset($data['columns']) && (! is_int($data['columns']) || $data['columns'] < 1 || $data['columns'] > 3)) {
             $errors[] = 'columns: must be 1, 2 or 3';
+        }
+
+        if (isset($data['require_shutdown']) && ! is_bool($data['require_shutdown'])) {
+            $errors[] = 'require_shutdown: must be a boolean';
         }
 
         if (! isset($data['files']) || ! is_array($data['files']) || $data['files'] === []) {

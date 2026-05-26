@@ -89,6 +89,7 @@ export function EditorForm({ initial, isNew }: { initial: Draft; isNew: boolean 
             author: draft.author === '' ? null : draft.author,
             target_eggs: draft.targetEggs,
             columns: draft.columns,
+            require_shutdown: draft.requireShutdown,
             boost: {
                 enabled: draft.boostEnabled,
                 parameter_blacklist: draft.blacklist.split(',').map((item) => item.trim()).filter((item) => item !== ''),
@@ -196,6 +197,16 @@ export function EditorForm({ initial, isNew }: { initial: Draft; isNew: boolean 
                                 <option value="3">{t('admin.editor.columns_3')}</option>
                             </Select>
                             <span className="ec-field-desc ec-muted">{t('admin.editor.columns_hint')}</span>
+                        </div>
+                    </Card>
+
+                    <Card>
+                        <div className="ec-stack">
+                            <div className="ec-between">
+                                <span className="ec-field-label">{t('admin.editor.require_shutdown')}</span>
+                                <Toggle checked={draft.requireShutdown} onChange={(on) => patch({ requireShutdown: on })} label={t('admin.editor.require_shutdown')} />
+                            </div>
+                            <span className="ec-field-desc ec-muted">{t('admin.editor.require_shutdown_hint')}</span>
                         </div>
                     </Card>
 

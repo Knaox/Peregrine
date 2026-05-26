@@ -62,6 +62,7 @@ final class ConfigReaderService
                 'boost_enabled' => $definition->boostEnabled(),
                 'boost_blacklist' => $definition->boostBlacklist(),
                 'columns' => $definition->columns(),
+                'require_shutdown' => $definition->requireShutdown(),
                 'files' => $files,
             ];
         }

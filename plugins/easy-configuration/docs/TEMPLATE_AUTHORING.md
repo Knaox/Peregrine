@@ -25,6 +25,7 @@ A template is one `<id>.json` file. It is matched to servers by Pelican egg id
 | `author` | string | — | Template author. |
 | `target_eggs` | integer[] | ✅ | Pelican egg ids this template applies to (`[]` = none). |
 | `columns` | 1 \| 2 \| 3 | — | Player editor layout (default 1). |
+| `require_shutdown` | boolean | — | Default `true`. When `true`, players must stop the server before any value can be edited; set `false` to allow live edits while the server runs. |
 | `boost` | object | — | `{ "enabled": bool, "parameter_blacklist": string[] }`. |
 | `files` | file[] | ✅ | At least one file. |
 
@@ -42,7 +43,7 @@ be boostable (e.g. ports).
 |-------|------|----------|-------|
 | `id` | string | ✅ | Stable id for this file within the template. |
 | `path` | string | ✅ | Path on the server, e.g. `server.properties`, `Config/Game.ini`. |
-| `format` | enum | ✅ | One of: `properties`, `ini`, `yaml`, `json`, `toml`, `palworld`, `theforest`. |
+| `format` | enum | ✅ | One of: `properties`, `ini`, `yaml`, `json`, `toml`, `palworld`, `theforest`, `xml`, `xml-property`. |
 | `enabled` | boolean | — | Default `true`. |
 | `label` | localeLabel | — | File heading. |
 | `section_labels` | object | — | Friendly FR/EN names per native section, keyed by raw section name. |
@@ -51,9 +52,22 @@ be boostable (e.g. ports).
 
 **`parameters` shape depends on the format:**
 
-- **Flat** (`properties`, `json`, `yaml`, `theforest`) → `{ "key": parameter }`.
-- **Sectioned** (`ini`, `toml`, `palworld`) → `{ "section": { "key": parameter } }`.
+- **Flat** (`properties`, `json`, `yaml`, `theforest`, `xml`) → `{ "key": parameter }`.
+- **Sectioned** (`ini`, `toml`, `palworld`, `xml-property`) → `{ "section": { "key": parameter } }`.
   Use the raw section header verbatim, e.g. `"/script/shootergame.shootergamemode"`.
+
+> **Two XML formats** — pick by how the file is shaped:
+> - `xml` (generic): keys are flat dotted paths. Element text is `parent.child`
+>   (e.g. `server.port`); an attribute is `path@attr` (e.g. `slot@enabled`).
+> - `xml-property`: for files made of `<property name="K" value="V"/>` rows
+>   (**7 Days to Die** `serverconfig.xml`, etc.). Each row is ONE parameter keyed
+>   by its `name`, nested under its parent element as the section (e.g.
+>   `{ "ServerSettings": { "ServerName": { … } } }`); only the `value` attribute
+>   is edited. Use this — NOT `xml` — for 7DTD, otherwise every `name`/`value`
+>   attribute shows up as its own field and each setting appears twice.
+>
+> In both, the writer substitutes existing values in place; a key absent from
+> the file is left untouched (no insertion).
 
 > **Discovery**: any key found in the real file but **absent** from the template
 > is auto-detected and shown anyway (raw key, type inferred). An admin can then

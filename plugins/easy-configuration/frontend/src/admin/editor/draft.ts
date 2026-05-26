@@ -11,6 +11,8 @@ export interface Draft {
     boostEnabled: boolean;
     blacklist: string;
     columns: number;
+    /** Require the server to be stopped before any value can be edited. */
+    requireShutdown: boolean;
     filesJson: string;
 }
 
@@ -40,6 +42,7 @@ export function blankDraft(): Draft {
         boostEnabled: false,
         blacklist: '',
         columns: 1,
+        requireShutdown: true,
         filesJson: STARTER_FILES,
     };
 }
@@ -72,6 +75,7 @@ export function draftFrom(id: string, def: Record<string, unknown> | null): Draf
         boostEnabled: boost.enabled === true,
         blacklist: blacklist.join(', '),
         columns: typeof def.columns === 'number' ? def.columns : 1,
+        requireShutdown: def.require_shutdown !== false,
         filesJson: JSON.stringify(def.files ?? [], null, 2),
     };
 }

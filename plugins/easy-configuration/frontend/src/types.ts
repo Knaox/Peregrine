@@ -88,6 +88,9 @@ export interface ConfigTemplate {
     boost_blacklist: string[];
     /** Player editor layout: 1 (default), 2 or 3 columns. */
     columns?: number;
+    /** When false, players may edit this template's values while the server runs.
+     *  Absent (older backends) → treated as true (require the server stopped). */
+    require_shutdown?: boolean;
     files: ConfigFile[];
 }
 

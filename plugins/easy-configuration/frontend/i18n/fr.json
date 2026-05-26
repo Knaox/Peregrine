@@ -190,6 +190,8 @@
             "columns_2": "2 colonnes",
             "columns_3": "3 colonnes",
             "columns_hint": "Comment les paramètres sont disposés dans l'éditeur joueur.",
+            "require_shutdown": "Exiger que le serveur soit éteint pour toute modification",
+            "require_shutdown_hint": "Activé par défaut : les joueurs doivent éteindre le serveur avant de modifier une valeur. Désactivez pour leur permettre de modifier pendant que le serveur tourne.",
             "id": "Identifiant du template (slug)",
             "name_en": "Nom (EN)",
             "name_fr": "Nom (FR)",
