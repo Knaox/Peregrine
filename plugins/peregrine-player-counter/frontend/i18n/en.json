@@ -29,6 +29,8 @@
     "no_target_variable": "No port variable to configure on this server.",
     "no_game_port_variable": "No game-port variable (SERVER_PORT…) found on this server.",
     "no_adjacent_pair": "Couldn't get an adjacent free port pair — free some ports or raise the allocation limit.",
-    "manual_required": "This game needs the query port configured manually."
+    "manual_required": "This game needs the query port configured manually.",
+    "query_port_unavailable": "The query port (game port +1) isn't in the node's pool — a node admin needs to add it.",
+    "query_port_taken": "The query port (game port +1) is already used by another server."
   }
 }

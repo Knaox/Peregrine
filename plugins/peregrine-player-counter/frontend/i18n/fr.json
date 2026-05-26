@@ -29,6 +29,8 @@
     "no_target_variable": "Aucune variable de port à configurer sur ce serveur.",
     "no_game_port_variable": "Aucune variable de port de jeu (SERVER_PORT…) trouvée sur ce serveur.",
     "no_adjacent_pair": "Impossible d'obtenir une paire de ports adjacents libres — libère des ports ou augmente la limite d'allocations.",
-    "manual_required": "Ce jeu nécessite une configuration manuelle du port de requête."
+    "manual_required": "Ce jeu nécessite une configuration manuelle du port de requête.",
+    "query_port_unavailable": "Le port de requête (port du jeu +1) n'existe pas dans le pool du node — un admin du node doit l'ajouter.",
+    "query_port_taken": "Le port de requête (port du jeu +1) est déjà utilisé par un autre serveur."
   }
 }

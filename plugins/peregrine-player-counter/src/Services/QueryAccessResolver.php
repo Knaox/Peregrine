@@ -5,28 +5,28 @@ declare(strict_types=1);
 namespace Plugins\PeregrinePlayerCounter\Services;
 
 use App\Models\Server;
+use App\Services\Pelican\DTOs\PelicanServer;
+use App\Services\Pelican\PelicanApplicationService;
 use App\Services\Pelican\PelicanClientService;
 use App\Services\Pelican\PelicanNetworkService;
 use Illuminate\Support\Facades\Cache;
 use Plugins\PeregrinePlayerCounter\PlayerCounterServiceProvider;
 
 /**
- * Makes a server's query port reachable with zero admin/player action — the
- * one-click ARK flow, generalised and run automatically. The sidecar reaches
- * servers over the public IP, so only ALLOCATED ports are queryable; this
- * resolver guarantees the right port is allocated, by strategy:
+ * Makes a server's query port reachable — the one-click "Resolve" flow, never
+ * automatic. The sidecar reaches servers over the public IP, so only ALLOCATED
+ * ports are queryable; this resolver guarantees the right port is allocated, by
+ * strategy:
  *
  *   - 'var'      : redirectable via a startup variable (ARK RCON_PORT, Sons of
- *                  the Forest QueryPort). Allocate a port, point the variable
- *                  at it, restart. Never touches the game port — safe anytime.
- *   - 'adjacent' : query port hard-wired to game_port + offset (Valheim, 7DtD).
- *                  Acquire an adjacent allocation pair, move the GAME port onto
- *                  the lower one (so game+offset is allocated too) and restart.
- *                  Surplus allocations added while hunting are released so we
- *                  never accumulate dead ports.
+ *                  the Forest QUERY_PORT). Allocate a port, point the variable
+ *                  at it, restart. Never touches the game port.
+ *   - 'adjacent' : query port hard-wired to game_port + offset (Valheim, 7DtD —
+ *                  no variable to redirect). Assign the node's free allocation at
+ *                  that exact port to the server via the Application API and
+ *                  restart — the game port is left untouched.
  *
- * Destructive (restarts the server); the caller gates on a running server and
- * an attempt marker so an unresolvable game can't trigger a restart loop.
+ * Destructive (restarts the server); the caller gates on a running server.
  */
 class QueryAccessResolver
 {
@@ -35,6 +35,7 @@ class QueryAccessResolver
     public function __construct(
         private PelicanClientService $client,
         private PelicanNetworkService $network,
+        private PelicanApplicationService $app,
         private EggGameTypeResolver $resolver,
         private QueryPortStrategy $strategy,
         private ServerPlayerCountService $players,
@@ -120,84 +121,94 @@ class QueryAccessResolver
     }
 
     /**
-     * Acquire an adjacent allocation pair (P, P+offset), move the game port onto
-     * P (so P+offset — the hard-wired query port — is allocated too), make P
-     * primary and restart. Releases any surplus ports added while hunting.
+     * Make the hard-wired query port (game_port + offset — e.g. Valheim's
+     * game+1) reachable WITHOUT touching the game port: find the node's free
+     * allocation at that exact port and assign it to the server via the
+     * Application API (which can target a specific port; the client API can't),
+     * then restart. No startup variable needed — fixes games like Valheim that
+     * expose none.
      *
      * @param  array{primary: array{ip: string, port: int}, ports: array<int, int>, vars: array<string, string>}  $context
-     * @return array{ok: bool, message?: string, error?: string, port?: int, variable?: string, kind?: string}
+     * @return array{ok: bool, message?: string, error?: string, port?: int, kind?: string}
      */
     private function resolveAdjacent(Server $server, int $offset, array $context): array
     {
-        $gamePortVar = $this->firstPresent($context['vars'], (array) config(self::NS.'.auto_resolve.game_port_vars', []));
-        if ($gamePortVar === null) {
-            return ['ok' => false, 'error' => 'no_game_port_variable'];
+        $pelicanId = $server->pelican_server_id;
+        if ($pelicanId === null) {
+            return ['ok' => false, 'error' => 'no_identifier'];
         }
 
-        $ports = $context['ports']; // id => port
-        $added = [];
-        $cap = (int) config(self::NS.'.auto_resolve.max_alloc_attempts', 12);
-
-        // Add allocations until the set contains an adjacent pair (P, P+offset).
-        for ($i = 0; $i <= $cap; $i++) {
-            $pair = $this->findAdjacentPair($ports, $offset);
-            if ($pair !== null) {
-                $surplus = array_diff_key($added, [$pair['low_id'] => true, $pair['high_id'] => true]);
-                $this->release($server, array_keys($surplus));
-
-                return $this->applyAdjacent($server, $gamePortVar, $pair);
-            }
-            if ($i === $cap) {
-                break;
-            }
-            $allocation = $this->addAllocation($server);
-            if (! $allocation) {
-                break;
-            }
-            $ports[$allocation['id']] = $allocation['port'];
-            $added[$allocation['id']] = $allocation['port'];
+        $targetPort = $context['primary']['port'] + $offset;
+        if ($targetPort < 1 || $targetPort > 65535) {
+            return ['ok' => false, 'error' => 'manual_required'];
         }
 
-        $this->release($server, array_keys($added));
-
-        return ['ok' => false, 'error' => 'no_adjacent_pair'];
-    }
-
-    /**
-     * @param  array{low_id: int, low_port: int, high_id: int}  $pair
-     * @return array{ok: bool, message?: string, error?: string, port?: int, variable?: string, kind?: string}
-     */
-    private function applyAdjacent(Server $server, string $gamePortVar, array $pair): array
-    {
         try {
-            $this->client->updateStartupVariable($server->identifier, $gamePortVar, (string) $pair['low_port']);
-            $this->network->setPrimaryAllocation($server->identifier, $pair['low_id']);
+            $pserver = $this->app->getServer($pelicanId);
+            $nodeAllocations = $this->app->listNodeAllocations($pserver->nodeId, true);
+        } catch (\Throwable) {
+            return ['ok' => false, 'error' => 'read_context_failed'];
+        }
+
+        $ip = $context['primary']['ip'];
+        $match = null;
+        foreach ($nodeAllocations as $a) {
+            if ($a->port === $targetPort && ($a->ip === $ip || $a->ipAlias === $ip)) {
+                $match = $a;
+                break;
+            }
+        }
+
+        if ($match === null) {
+            // The node pool has no allocation at that port — only a node admin
+            // can add one (the client/build API can't create arbitrary ports).
+            return ['ok' => false, 'error' => 'query_port_unavailable', 'port' => $targetPort];
+        }
+        if ($match->assigned && $match->serverId !== $pelicanId) {
+            return ['ok' => false, 'error' => 'query_port_taken', 'port' => $targetPort];
+        }
+
+        try {
+            if (! $match->assigned) {
+                $this->app->updateServerBuild($pelicanId, $this->buildAddingAllocation($server, $pserver, $match->id, count($context['ports'])));
+            }
             $this->client->setPowerState($server->identifier, 'restart');
         } catch (\Throwable) {
             return ['ok' => false, 'error' => 'apply_failed'];
         }
 
+        Cache::forget("server_network:{$server->identifier}");
         Cache::forget("server_allocation:{$server->identifier}");
         $this->players->invalidate($server);
 
-        return ['ok' => true, 'message' => 'query_resolved', 'port' => $pair['low_port'], 'variable' => $gamePortVar, 'kind' => 'adjacent'];
+        return ['ok' => true, 'message' => 'query_resolved', 'port' => $targetPort, 'kind' => 'adjacent'];
     }
 
     /**
-     * @param  array<int, int>  $ports  id => port
-     * @return array{low_id: int, low_port: int, high_id: int}|null
+     * Build PATCH payload that adds one allocation, preserving the current limits
+     * and lifting the allocation feature-limit so Pelican accepts the extra port.
+     *
+     * @return array<string, mixed>
      */
-    private function findAdjacentPair(array $ports, int $offset): ?array
+    private function buildAddingAllocation(Server $server, PelicanServer $pserver, int $allocationId, int $currentAllocations): array
     {
-        foreach ($ports as $lowId => $lowPort) {
-            $highPort = $lowPort + $offset;
-            $highId = array_search($highPort, $ports, true);
-            if ($highId !== false && $highId !== $lowId) {
-                return ['low_id' => (int) $lowId, 'low_port' => $lowPort, 'high_id' => (int) $highId];
-            }
-        }
+        $features = (array) ($this->client->getRawServer($server->identifier)['feature_limits'] ?? []);
+        $limits = $pserver->limits;
 
-        return null;
+        return [
+            'allocation' => $pserver->defaultAllocationId,
+            'memory' => $limits->memory,
+            'swap' => $limits->swap,
+            'disk' => $limits->disk,
+            'io' => $limits->io,
+            'cpu' => $limits->cpu,
+            'feature_limits' => [
+                'databases' => (int) ($features['databases'] ?? 0),
+                'backups' => (int) ($features['backups'] ?? 0),
+                'allocations' => max((int) ($features['allocations'] ?? 1), $currentAllocations + 1),
+            ],
+            'add_allocations' => [$allocationId],
+        ];
     }
 
     /**
@@ -262,34 +273,5 @@ class QueryAccessResolver
         $port = (int) ($a['port'] ?? 0);
 
         return ($id > 0 && $port >= 1 && $port <= 65535) ? ['id' => $id, 'port' => $port] : null;
-    }
-
-    /**
-     * @param  list<int>  $allocationIds
-     */
-    private function release(Server $server, array $allocationIds): void
-    {
-        foreach ($allocationIds as $id) {
-            try {
-                $this->network->deleteAllocation($server->identifier, (int) $id);
-            } catch (\Throwable) {
-                // Best-effort cleanup — a leftover allocation isn't fatal.
-            }
-        }
-    }
-
-    /**
-     * @param  array<string, string>  $vars
-     * @param  list<string>  $candidates
-     */
-    private function firstPresent(array $vars, array $candidates): ?string
-    {
-        foreach ($candidates as $name) {
-            if (array_key_exists((string) $name, $vars)) {
-                return (string) $name;
-            }
-        }
-
-        return null;
     }
 }

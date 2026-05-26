@@ -101,15 +101,10 @@ return [
     // the relevant startup variable at it, or moves the game port for
     // adjacent-port games (Valheim & co).
     'auto_resolve' => [
-        // Startup-variable name candidates the resolver points at the new port,
-        // by strategy. RCON reuses the rcon.port_vars list above.
+        // Startup-variable name candidates the 'var' resolver points at the new
+        // port (SoF QUERY_PORT…). RCON reuses the rcon.port_vars list above. The
+        // 'adjacent' strategy (Valheim & co) needs no variable — it assigns the
+        // node's allocation at game_port+offset directly via the Application API.
         'query_port_vars' => ['QUERY_PORT', 'QUERYPORT', 'SERVER_QUERY_PORT', 'A2S_PORT'],
-        // Game/server-port variable candidates, repointed for the 'adjacent'
-        // strategy (Valheim & co — query port is hard-wired to game_port + N, so
-        // the game port itself is moved onto the lower of an allocated pair).
-        'game_port_vars' => ['SERVER_PORT', 'GAME_PORT', 'PORT', 'SERVERPORT'],
-        // Safety cap on how many allocations the resolver may add while hunting
-        // for an adjacent pair before giving up (and releasing the surplus).
-        'max_alloc_attempts' => (int) env('GAME_QUERY_MAX_ALLOC_ATTEMPTS', 12),
     ],
 ];
