@@ -259,16 +259,30 @@ class ServerController extends Controller
 
         foreach ($servers as $server) {
             try {
-                $resources = $this->clientService->getServerResources($server->identifier);
-                $stats[$server->id] = [
-                    'state' => $resources->state,
-                    'cpu' => $resources->cpuAbsolute,
-                    'memory_bytes' => $resources->memoryBytes,
-                    'disk_bytes' => $resources->diskBytes,
-                    'network_rx' => $resources->networkRxBytes,
-                    'network_tx' => $resources->networkTxBytes,
-                    'uptime' => $resources->uptime,
-                ];
+                // 2s per-server micro-cache: the dashboard polls this every 10s
+                // for every accessible server, one Pelican Client-API call each.
+                // The cache collapses concurrent dashboards watching the SAME
+                // server (popular servers, admin + owner, many tabs) into a
+                // single Pelican fetch, shielding Pelican's per-server throttle.
+                // 2s ≪ the 10s poll, so no added staleness for a lone viewer.
+                // Errors are NOT cached (the closure throws → caught below).
+                $stats[$server->id] = Cache::remember(
+                    "server_resources:{$server->identifier}",
+                    2,
+                    function () use ($server) {
+                        $r = $this->clientService->getServerResources($server->identifier);
+
+                        return [
+                            'state' => $r->state,
+                            'cpu' => $r->cpuAbsolute,
+                            'memory_bytes' => $r->memoryBytes,
+                            'disk_bytes' => $r->diskBytes,
+                            'network_rx' => $r->networkRxBytes,
+                            'network_tx' => $r->networkTxBytes,
+                            'uptime' => $r->uptime,
+                        ];
+                    },
+                );
             } catch (\Throwable) {
                 $stats[$server->id] = ['state' => 'offline', 'cpu' => 0, 'memory_bytes' => 0, 'disk_bytes' => 0, 'network_rx' => 0, 'network_tx' => 0, 'uptime' => 0];
             }

@@ -166,7 +166,6 @@ Route::middleware('auth')->group(function () {
     // so the operator can tell the two sources apart.
     Route::middleware('throttle:pelican-proxy')->group(function () {
         Route::get('servers/{server}/websocket', [ServerConsoleController::class, 'websocket']);
-        Route::get('servers/{server}/resources', [ServerConsoleController::class, 'resources']);
     });
 
     // Server files
