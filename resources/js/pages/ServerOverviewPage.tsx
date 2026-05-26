@@ -260,7 +260,13 @@ export function ServerOverviewPage() {
 
             {/* Stats — visible if overview.stats permission */}
             {canViewStats && (
-                <section><ServerResourceCards resources={resources} plan={server.plan ?? (server.limits ? { ram: server.limits.memory, cpu: server.limits.cpu, disk: server.limits.disk } : null)} isLoading={!resources} live={isRunningState} /></section>
+                <section><ServerResourceCards resources={resources} plan={{
+                    // Prefer Pelican's runtime limit; fall back to the catalog quota
+                    // when it's 0 (uncapped). All-zero → the gauges render "∞".
+                    ram: server.plan?.ram || server.limits?.memory || server.configuration?.ram || 0,
+                    cpu: server.plan?.cpu || server.limits?.cpu || server.configuration?.cpu || 0,
+                    disk: server.plan?.disk || server.limits?.disk || server.configuration?.disk || 0,
+                }} isLoading={!resources} live={isRunningState} /></section>
             )}
 
             {/* Variables — only if user has startup.read permission */}

@@ -62,6 +62,9 @@ export function useWingsWebSocket(
     const keepaliveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
     const msgId = useRef(0);
     const alive = useRef(false);
+    // Previous network sample (cumulative bytes + receipt time), used to derive
+    // the live throughput rate from the delta against the next sample.
+    const netSampleRef = useRef<{ rx: number; tx: number; t: number } | null>(null);
     // True while the server is offline/stopped — freezes the live `messages`
     // buffer (so a reconnect's re-sent logs don't repopulate a console the user
     // expects to be cleared) while `history` keeps accumulating.
@@ -265,13 +268,33 @@ export function useWingsWebSocket(
                         try {
                             const s = JSON.parse(data.args[0]) as Record<string, unknown>;
                             const net = s.network as Record<string, number> | undefined;
+                            const rx = net?.rx_bytes ?? 0;
+                            const tx = net?.tx_bytes ?? 0;
+                            // Derive the live up/down speed from the delta since the
+                            // previous sample. Wings reports cumulative totals, so a
+                            // rate needs two points. Clamp negatives (a counter reset
+                            // on restart) to 0 to avoid a bogus spike.
+                            const now = performance.now();
+                            const prev = netSampleRef.current;
+                            let rxRate = 0;
+                            let txRate = 0;
+                            if (prev) {
+                                const dt = (now - prev.t) / 1000;
+                                if (dt > 0) {
+                                    rxRate = Math.max(0, (rx - prev.rx) / dt);
+                                    txRate = Math.max(0, (tx - prev.tx) / dt);
+                                }
+                            }
+                            netSampleRef.current = { rx, tx, t: now };
                             setResources({
                                 state: (s.state as string) ?? 'offline',
                                 cpu: (s.cpu_absolute as number) ?? 0,
                                 memory_bytes: (s.memory_bytes as number) ?? 0,
                                 disk_bytes: (s.disk_bytes as number) ?? 0,
-                                network_rx: net?.rx_bytes ?? 0,
-                                network_tx: net?.tx_bytes ?? 0,
+                                network_rx: rx,
+                                network_tx: tx,
+                                network_rx_rate: rxRate,
+                                network_tx_rate: txRate,
                                 uptime: (s.uptime as number) ?? 0,
                             });
                             if (s.state) {

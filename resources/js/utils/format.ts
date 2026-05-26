@@ -6,6 +6,19 @@ export function formatBytes(bytes: number): string {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
+/**
+ * Network/IO throughput — a per-second rate (not a cumulative total).
+ * Renders as B/s · KB/s · MB/s · GB/s, the convention used by game-server
+ * panels. Feed it a bytes-per-second delta, not the running counter.
+ */
+export function formatRate(bytesPerSec: number): string {
+    if (!bytesPerSec || bytesPerSec < 1) return '0 B/s';
+    const k = 1024;
+    const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+    const i = Math.min(sizes.length - 1, Math.floor(Math.log(bytesPerSec) / Math.log(k)));
+    return `${parseFloat((bytesPerSec / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
+
 export function formatCpu(percent: number): string {
     return `${percent.toFixed(1)}%`;
 }

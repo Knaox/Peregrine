@@ -35,8 +35,12 @@ function BiomeMetricBarImpl({ label, bytes, limitMb, loading, live }: BiomeMetri
                 ) : (
                     // Show the real usage directly (no count-up indirection) so the
                     // value always tracks live consumption; the bar fill animates.
+                    // With no quota, append "∞" so the value reads as uncapped.
                     <span className="font-mono text-[11px] font-semibold tabular-nums text-[var(--color-text-secondary)]">
                         {bytes === undefined ? '—' : formatBytes(bytes)}
+                        {bytes !== undefined && !hasLimit && (
+                            <span className="ml-1 text-[var(--color-text-muted)]">· ∞</span>
+                        )}
                     </span>
                 )}
             </div>
@@ -54,7 +58,14 @@ function BiomeMetricBarImpl({ label, bytes, limitMb, loading, live }: BiomeMetri
                         }}
                     />
                 ) : (
-                    <div className="h-full w-full rounded-[var(--radius-full)] bg-[var(--color-border)]/40" />
+                    // No quota — a faint striped track reads as "uncapped" rather
+                    // than an empty (broken-looking) bar.
+                    <div
+                        className="h-full w-full rounded-[var(--radius-full)]"
+                        style={{
+                            background: 'repeating-linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 24%, transparent) 0 5px, transparent 5px 11px)',
+                        }}
+                    />
                 )}
             </div>
         </div>

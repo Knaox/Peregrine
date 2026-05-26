@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
-import { formatBytes, formatCpu } from '@/utils/format';
+import { formatBytes, formatCpu, formatRate } from '@/utils/format';
 import { useCountUp } from '@/hooks/useCountUp';
 import type { ServerResourceCardsProps } from '@/components/server/ServerResourceCards.props';
 import { CircularGauge } from '@/components/server/CircularGauge';
@@ -33,9 +33,14 @@ export function ServerResourceCards({ resources, plan, isLoading, live = false }
     const cpu = resources?.cpu ?? 0;
     const memBytes = resources?.memory_bytes ?? 0;
     const diskBytes = resources?.disk_bytes ?? 0;
-    const netRx = resources?.network_rx ?? 0;
-    const netTx = resources?.network_tx ?? 0;
-    const cpuMax = plan?.cpu ?? 100; // Pelican: 100 = 1 core, 500 = 5 cores
+    // Live throughput (bytes/sec) — falls back to 0, never the cumulative total.
+    const netRxRate = resources?.network_rx_rate ?? 0;
+    const netTxRate = resources?.network_tx_rate ?? 0;
+    // A Pelican limit of 0 means "uncapped". CPU is already a percentage, so an
+    // uncapped CPU dial still fills against a 1-core (100%) baseline; RAM/Disk
+    // have no denominator, so they switch to the dashed "∞" treatment.
+    const cpuLimited = (plan?.cpu ?? 0) > 0;
+    const cpuMax = cpuLimited ? plan!.cpu! : 100; // Pelican: 100 = 1 core, 500 = 5 cores
     const ramMax = plan?.ram ? plan.ram * 1024 * 1024 : undefined;
     const diskMax = plan?.disk ? plan.disk * 1024 * 1024 : undefined;
     const memPercent = ramMax ? (memBytes / ramMax) * 100 : 0;
@@ -66,7 +71,7 @@ export function ServerResourceCards({ resources, plan, isLoading, live = false }
                     <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.cpu')}</span>
                 </div>
                 <div className="flex items-center justify-center py-2">
-                    <CircularGauge value={cpu} max={cpuMax} color="var(--color-primary)" label={formatCpu(cpuAnim)} sublabel={`/ ${cpuMax}%`} />
+                    <CircularGauge value={cpu} max={cpuMax} color="var(--color-primary)" label={formatCpu(cpuAnim)} sublabel={cpuLimited ? `/ ${plan!.cpu}%` : '∞'} />
                 </div>
             </m.div>
 
@@ -81,7 +86,7 @@ export function ServerResourceCards({ resources, plan, isLoading, live = false }
                     <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.memory')}</span>
                 </div>
                 <div className="flex items-center justify-center py-2">
-                    <CircularGauge value={memPercent} max={100} color="var(--color-info)" label={formatBytes(memAnim)} sublabel={ramMax ? `/ ${formatBytes(ramMax)}` : undefined} />
+                    <CircularGauge value={memPercent} max={100} unlimited={!ramMax} color="var(--color-info)" label={formatBytes(memAnim)} sublabel={ramMax ? `/ ${formatBytes(ramMax)}` : '∞'} />
                 </div>
             </m.div>
 
@@ -96,7 +101,7 @@ export function ServerResourceCards({ resources, plan, isLoading, live = false }
                     <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.disk')}</span>
                 </div>
                 <div className="flex items-center justify-center py-2">
-                    <CircularGauge value={diskPercent} max={100} color="var(--color-accent)" label={formatBytes(diskAnim)} sublabel={diskMax ? `/ ${formatBytes(diskMax)}` : undefined} />
+                    <CircularGauge value={diskPercent} max={100} unlimited={!diskMax} color="var(--color-accent)" label={formatBytes(diskAnim)} sublabel={diskMax ? `/ ${formatBytes(diskMax)}` : '∞'} />
                 </div>
             </m.div>
 
@@ -111,8 +116,8 @@ export function ServerResourceCards({ resources, plan, isLoading, live = false }
                     <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{t('server-shell:resources.network')}</span>
                 </div>
                 <div className="space-y-3 pt-2">
-                    <NetworkRow direction="down" label={t('server-shell:resources.download')} value={netRx} live={live} />
-                    <NetworkRow direction="up" label={t('server-shell:resources.upload')} value={netTx} live={live} />
+                    <NetworkRow direction="down" label={t('server-shell:resources.download')} value={netRxRate} live={live} />
+                    <NetworkRow direction="up" label={t('server-shell:resources.upload')} value={netTxRate} live={live} />
                 </div>
             </m.div>
         </m.div>
@@ -128,6 +133,7 @@ function IconCircle({ children, color }: { children: React.ReactNode; color: str
 }
 
 function NetworkRow({ direction, label, value, live }: { direction: 'up' | 'down'; label: string; value: number; live: boolean }) {
+    // `value` is a bytes/sec rate; smooth it so it doesn't flicker between polls.
     const animated = useCountUp(value, { enabled: live });
     return (
         <div className="flex items-center justify-between">
@@ -139,7 +145,7 @@ function NetworkRow({ direction, label, value, live }: { direction: 'up' | 'down
                 )}
                 {label}
             </span>
-            <span className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>{formatBytes(animated)}</span>
+            <span className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>{formatRate(animated)}</span>
         </div>
     );
 }
