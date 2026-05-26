@@ -168,8 +168,12 @@ Route::middleware('auth')->group(function () {
         Route::get('servers/{server}/websocket', [ServerConsoleController::class, 'websocket']);
     });
 
-    // Server files
-    Route::prefix('servers/{server}/files')->group(function () {
+    // Server files — proxied to Pelican Client API. Capped by the
+    // operator-tunable `pelican-proxy` bucket (like /websocket & /resources)
+    // so a runaway client browsing/looping can't saturate Pelican's upstream
+    // throttle. Large transfers (download/upload) use signed Wings URLs and
+    // bypass this path entirely.
+    Route::middleware('throttle:pelican-proxy')->prefix('servers/{server}/files')->group(function () {
         Route::get('/', [ServerFileController::class, 'list']);
         Route::get('content', [ServerFileController::class, 'content']);
         Route::get('download', [ServerFileController::class, 'download']);
