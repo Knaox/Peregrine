@@ -1,0 +1,28 @@
+{
+    "id": "peregrine-player-counter",
+    "name": "Player Counter",
+    "version": "1.0.0",
+    "description": "Shows the live number of connected players (and up to 5 names) on each server's overview for six supported games — Minecraft (Java + Bedrock), Valheim, 7 Days to Die, ARK: Survival Ascended & Evolved, and Palworld — via a self-hosted GameDig sidecar (ARK & Palworld counted over RCON). Includes an egg whitelist and a bilingual Docker setup guide.",
+    "author": "Peregrine",
+    "vendor": "peregrine",
+    "official": true,
+    "license": "MIT",
+    "min_peregrine_version": "1.0.0",
+    "bundled": true,
+    "auto_activate_on_setup": false,
+    "service_provider": "PlayerCounterServiceProvider",
+    "manage_url": "/admin/player-counter-settings",
+    "frontend": {
+        "bundle": "frontend/dist/bundle.js",
+        "server_home_sections": [
+            {
+                "id": "player-counter",
+                "order": 15,
+                "placement": "before_stats",
+                "required_permission": "overview.stats",
+                "requires_egg_ids": []
+            }
+        ]
+    },
+    "settings_schema": []
+}

@@ -1,0 +1,17 @@
+{
+    "name": "peregrine-game-query",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "description": "GameDig sidecar for the Peregrine Player Counter plugin.",
+    "main": "index.mjs",
+    "scripts": {
+        "start": "node index.mjs"
+    },
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "gamedig": "^5.3.2"
+    }
+}
