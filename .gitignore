@@ -62,6 +62,7 @@ public/fonts/filament/
 !/plugins/peregrine-player-counter/**
 /plugins/peregrine-player-counter/sidecar/node_modules
 /plugins/peregrine-player-counter/frontend/node_modules
+/plugins/peregrine-player-counter/tests/.phpunit.cache
 
 # Plugin asset symlinks — created at activation time by PluginManager,
 # never committed (point to absolute host paths).

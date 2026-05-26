@@ -9,6 +9,8 @@ use Illuminate\Support\ServiceProvider;
 use Plugins\PeregrinePlayerCounter\Services\EggGameTypeResolver;
 use Plugins\PeregrinePlayerCounter\Services\GameQueryClient;
 use Plugins\PeregrinePlayerCounter\Services\PlayerCounterDocRenderer;
+use Plugins\PeregrinePlayerCounter\Services\QueryAccessResolver;
+use Plugins\PeregrinePlayerCounter\Services\QueryPortStrategy;
 use Plugins\PeregrinePlayerCounter\Services\RconClient;
 use Plugins\PeregrinePlayerCounter\Services\RconPlayerQuery;
 use Plugins\PeregrinePlayerCounter\Services\ServerPlayerCountService;
@@ -34,10 +36,11 @@ class PlayerCounterServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/game-query.php', self::PLUGIN_ID);
 
         $this->app->singleton(EggGameTypeResolver::class);
+        $this->app->singleton(QueryPortStrategy::class);
         $this->app->singleton(GameQueryClient::class);
         $this->app->singleton(RconClient::class);
         $this->app->singleton(RconPlayerQuery::class);
-        $this->app->singleton(RconResolver::class);
+        $this->app->singleton(QueryAccessResolver::class);
         $this->app->singleton(ServerPlayerCountService::class);
         $this->app->singleton(PlayerCounterDocRenderer::class);
     }

@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Server;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Plugins\PeregrinePlayerCounter\Services\RconResolver;
+use Plugins\PeregrinePlayerCounter\Services\QueryAccessResolver;
 use Plugins\PeregrinePlayerCounter\Services\ServerPlayerCountService;
 
 /**
@@ -33,11 +33,13 @@ class PlayerCountController extends Controller
     }
 
     /**
-     * Auto-configure RCON: allocate a port, point the RCON startup variable at
-     * it and restart the server. Destructive (restarts the server) — gated by
-     * the `createAllocation` ability + a strict throttle; the SPA confirms first.
+     * Manually trigger query-port resolution: allocate a port and point the
+     * relevant startup variable at it (RCON, query, or the game port for
+     * adjacent-port games), then restart. Destructive (restarts the server) —
+     * gated by the `createAllocation` ability + a strict throttle; the SPA
+     * confirms first. The same flow runs automatically on a failed query.
      */
-    public function resolveRcon(Request $request, Server $server, RconResolver $resolver): JsonResponse
+    public function resolveRcon(Request $request, Server $server, QueryAccessResolver $resolver): JsonResponse
     {
         $this->authorize('createAllocation', $server);
 

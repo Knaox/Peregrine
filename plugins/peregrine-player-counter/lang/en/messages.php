@@ -19,9 +19,9 @@ return [
         'regenerate' => 'Generate a token',
         'regenerated' => 'Token generated — save, then set the same value on the sidecar.',
 
-        'supported_title' => 'Officially supported games',
-        'supported_intro' => 'Games the counter reads reliably (tested):',
-        'supported_note' => 'Informational only. Other games still get a card and a best-effort A2S query — use the egg whitelist below to choose which servers show it.',
+        'supported_title' => 'Automatic game detection',
+        'supported_intro' => 'All :count games in the GameDig catalogue are detected automatically from the egg, with the right protocol. When a game needs a dedicated query port (Valheim, Sons of the Forest, ARK…) it is allocated and configured automatically — no admin or player action.',
+        'supported_note' => 'Games outside the catalogue still attempt a best-effort A2S query. Use the egg whitelist below to choose which servers show the counter.',
 
         'section_visibility' => 'Visibility',
         'egg_whitelist' => 'Allowed eggs (whitelist)',

@@ -9,10 +9,13 @@ use Plugins\PeregrinePlayerCounter\PlayerCounterServiceProvider;
 
 /**
  * Maps a Pelican Egg to a GameDig query target by matching configured
- * substrings against the egg's name, docker image and tags. Pure and
- * side-effect free, so it's trivially unit-testable.
+ * substrings against the egg's name, docker image and tags. Resolution order
+ * (first match wins): curated `overrides` → the generated GameDig `games`
+ * catalogue → the generic `fallback_type`. Pure and side-effect free, so it's
+ * trivially unit-testable.
  *
- * @phpstan-type QueryTarget array{type: ?string, family: string, queryable: bool, query_offset: int}
+ * @phpstan-type PortStrategy array{mode: string, value?: int, env?: string, applied_by_gamedig?: bool}
+ * @phpstan-type QueryTarget array{type: ?string, family: string, queryable: bool, query_port: PortStrategy}
  */
 class EggGameTypeResolver
 {
@@ -23,7 +26,7 @@ class EggGameTypeResolver
      */
     public function resolve(?Egg $egg): array
     {
-        $unknown = ['type' => null, 'family' => 'unknown', 'queryable' => false, 'query_offset' => 0];
+        $unknown = ['type' => null, 'family' => 'unknown', 'queryable' => false, 'query_port' => ['mode' => 'same']];
 
         if (! $egg) {
             return $unknown;
@@ -31,23 +34,26 @@ class EggGameTypeResolver
 
         $haystack = $this->haystack($egg);
 
-        foreach ((array) config(self::NS.'.rules', []) as $rule) {
-            foreach ((array) ($rule['match'] ?? []) as $needle) {
-                $needle = strtolower((string) $needle);
-                if ($needle !== '' && str_contains($haystack, $needle)) {
-                    return $this->normalize($rule);
+        // 1. Curated overrides, then 2. the generated catalogue. Both share the
+        // same rule shape and "first substring match wins" semantics.
+        foreach ([self::NS.'.overrides', self::NS.'.games'] as $bucket) {
+            foreach ((array) config($bucket, []) as $rule) {
+                foreach ((array) ($rule['match'] ?? []) as $needle) {
+                    $needle = strtolower((string) $needle);
+                    if ($needle !== '' && str_contains($haystack, $needle)) {
+                        return $this->normalize($rule);
+                    }
                 }
             }
         }
 
-        // No dedicated rule: fall back to a generic A2S probe so the card still
-        // shows and attempts a count (config `fallback_type`, default
-        // 'protocol-valve'). Whether it actually returns anything is up to the
-        // admin who whitelisted the egg. Set it to '' to mark unmapped games
-        // unqueryable instead.
+        // 3. No dedicated rule: fall back to a generic A2S probe so the card
+        // still shows and attempts a count on the game port (config
+        // `fallback_type`, default 'protocol-valve'). Set it to '' to mark
+        // unmatched eggs unqueryable instead.
         $fallback = config(self::NS.'.fallback_type');
         if (is_string($fallback) && $fallback !== '') {
-            return ['type' => $fallback, 'family' => 'other', 'queryable' => true, 'query_offset' => 0];
+            return ['type' => $fallback, 'family' => 'other', 'queryable' => true, 'query_port' => ['mode' => 'same']];
         }
 
         return $unknown;
@@ -70,11 +76,16 @@ class EggGameTypeResolver
         $type = is_string($type) && $type !== '' ? $type : null;
         $queryable = ($rule['queryable'] ?? true) === true && $type !== null;
 
+        $port = $rule['query_port'] ?? ['mode' => 'same'];
+        if (! is_array($port) || ! isset($port['mode'])) {
+            $port = ['mode' => 'same'];
+        }
+
         return [
             'type' => $type,
             'family' => (string) ($rule['family'] ?? 'other'),
             'queryable' => $queryable,
-            'query_offset' => (int) ($rule['query_offset'] ?? 0),
+            'query_port' => $port,
         ];
     }
 }

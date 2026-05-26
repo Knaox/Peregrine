@@ -41,57 +41,77 @@ return [
         'max_players_vars' => ['MAX_PLAYERS', 'ARK_MAX_PLAYERS', 'SERVER_MAX_PLAYERS', 'MAXPLAYERS', 'SERVER_PLAYER_MAX_NUM'],
     ],
 
-    // egg -> GameDig mapping. First rule whose any `match` substring is found
-    // (case-insensitive) in "<egg name> <docker_image> <tags>" wins.
-    //   type         : GameDig --type id (github.com/gamedig/node-gamedig)
-    //   family       : 'minecraft' | 'source' | 'eos' | 'hytale' | 'other'
-    //   queryable    : false => never call the sidecar
-    //   query_offset : int added to the primary port before querying, for
-    //                  games whose query port != game port (e.g. Hytale +3).
-    //                  Default 0. GameDig's own port_query_offset (Valheim +1,
-    //                  …) is applied by GameDig itself — don't double it here.
-    // Officially-supported games ONLY. The counter ships rules for the six
-    // titles below (shown in the in-panel "Supported games" notice); every
-    // other egg resolves to "unsupported" and shows no card. Minecraft is two
-    // rules (Java + Bedrock). ARK ASA must be matched before ASE (substring
-    // order). Keep this list in sync with `supported_games` further down.
-    'rules' => [
-        ['match' => ['bedrock', 'pocketmine', 'nukkit', 'geyser'], 'type' => 'mbe', 'family' => 'minecraft'],
-        ['match' => ['minecraft', 'paper', 'spigot', 'purpur', 'forge', 'fabric', 'vanilla', 'bukkit', 'sponge'], 'type' => 'minecraft', 'family' => 'minecraft'],
-
-        ['match' => ['valheim'], 'type' => 'valheim', 'family' => 'source'],
-        ['match' => ['7 days to die', '7dtd', '7d2d', 'sdtd'], 'type' => 'sdtd', 'family' => 'source'],
+    // ── egg -> GameDig resolution ────────────────────────────────────────────
+    // Resolution order (first match wins), see Services\EggGameTypeResolver:
+    //   1. `overrides` below  — curated rules that win over the generated
+    //      catalogue (RCON games, EOS routing, Hytale, richer keyword aliases).
+    //   2. `config('peregrine-player-counter.games')` (config/games.php) — the
+    //      full GameDig catalogue auto-generated from the bundled games list
+    //      (356 games), each carrying its precise type + query-port strategy.
+    //   3. `fallback_type` — generic A2S probe for anything still unmatched.
+    //
+    // Rule shape:
+    //   match        : substrings matched (case-insensitive) against the egg's
+    //                  "<name> <docker_image> <tags>".
+    //   type         : GameDig --type id (github.com/gamedig/node-gamedig).
+    //   family       : 'minecraft' | 'source' | 'eos' | 'hytale' | 'other'.
+    //                  Only 'eos'/'hytale' change runtime behaviour (alternate
+    //                  sidecar path + longer timeout); the rest is informational.
+    //   queryable    : false => never call the sidecar.
+    //   query_port   : ['mode' => 'same']                 query = game port
+    //                  ['mode' => 'offset', 'value' => N]  query = game + N
+    //                  ['mode' => 'fixed',  'value' => P]  absolute query port
+    //                  ['mode' => 'var', 'env' => 'NAME']  query port read from
+    //                                                      a startup variable
+    //                  Omit to inherit the catalogue's own strategy.
+    'overrides' => [
+        // Minecraft (Java + Bedrock): broad aliases, queried on the game port.
+        ['match' => ['bedrock', 'pocketmine', 'nukkit', 'geyser'], 'type' => 'mbe', 'family' => 'minecraft', 'query_port' => ['mode' => 'same']],
+        ['match' => ['paper', 'spigot', 'purpur', 'forge', 'fabric', 'vanilla', 'bukkit', 'sponge', 'minecraft'], 'type' => 'minecraft', 'family' => 'minecraft', 'query_port' => ['mode' => 'same']],
 
         // Both ARK games are counted via RCON `ListPlayers` (their types are in
         // rcon.types above), not over the wire: ASA's EOS query is 403'd by Epic,
-        // and ASE's A2S sits on a usually-unreachable query port. Prerequisite:
-        // RCON enabled + an admin password (ARK_ADMIN_PASSWORD).
-        ['match' => ['survival ascended', 'ascended', 'asa'], 'type' => 'asa', 'family' => 'eos'],
-        ['match' => ['survival evolved', 'arkse', 'ark:'], 'type' => 'ase', 'family' => 'source'],
+        // and ASE's A2S sits on a usually-unreachable query port. The RCON port
+        // is a startup variable, so it's auto-provisioned exactly like below.
+        ['match' => ['survival ascended', 'ascended', 'asa'], 'type' => 'asa', 'family' => 'eos', 'query_port' => ['mode' => 'var', 'env' => 'RCON_PORT']],
+        ['match' => ['survival evolved', 'arkse', 'ark:'], 'type' => 'ase', 'family' => 'source', 'query_port' => ['mode' => 'var', 'env' => 'RCON_PORT']],
 
-        // Palworld has no A2S query — counted via RCON (`ShowPlayers`). Needs
-        // RCONEnabled=True + an AdminPassword (see the rcon.* block above).
-        ['match' => ['palworld'], 'type' => 'palworld', 'family' => 'source'],
+        // Palworld has no A2S query — counted via RCON (`ShowPlayers`).
+        ['match' => ['palworld'], 'type' => 'palworld', 'family' => 'source', 'query_port' => ['mode' => 'var', 'env' => 'RCON_PORT']],
+
+        // 7 Days to Die: keep the extra legacy aliases the catalogue drops.
+        ['match' => ['7 days to die', '7dtd', '7d2d', 'sdtd'], 'type' => 'sdtd', 'family' => 'source'],
     ],
 
-    // Last-resort GameDig type for any egg WITHOUT a dedicated rule above:
-    // 'protocol-valve' (generic A2S). Every whitelisted server then still shows a
-    // card and attempts a count — whether it returns anything is the admin's
-    // call (they chose to whitelist that egg). The games listed in `rules` are
-    // queried with their precise type; everything else uses this best-effort
-    // probe. Set the env to an empty string (GAME_QUERY_FALLBACK_TYPE=) to mark
-    // unmapped games unqueryable instead.
+    // Full GameDig catalogue (auto-generated — see config/games.php). Scanned
+    // after `overrides`, before `fallback_type`. Regenerate after a GameDig bump
+    // with: node sidecar/scripts/generate-catalog.mjs
+    'games' => require __DIR__.'/games.php',
+
+    // Last-resort GameDig type for any egg matched by neither the overrides nor
+    // the generated catalogue: 'protocol-valve' (generic A2S). Set the env to an
+    // empty string (GAME_QUERY_FALLBACK_TYPE=) to mark unmatched eggs unqueryable
+    // instead of showing a best-effort card.
     'fallback_type' => env('GAME_QUERY_FALLBACK_TYPE', 'protocol-valve'),
 
-    // Display-only list for the settings "Supported games" notice
-    // (resources/views/partials/supported-games.blade.php). Keep in sync with
-    // the `rules` above.
-    'supported_games' => [
-        'Minecraft (Java & Bedrock)',
-        'Valheim',
-        '7 Days to Die',
-        'ARK: Survival Ascended',
-        'ARK: Survival Evolved',
-        'Palworld',
+    // Auto-provisioning of the query/RCON port (see Services\QueryAccessResolver).
+    // When a game's query port isn't reachable on a fresh allocation, the
+    // resolver allocates one, points the relevant startup variable at it and
+    // restarts — the same one-click flow ARK already uses, run automatically.
+    // `enabled` master switch; `restart` controls whether the resolver may
+    // restart a running server to apply the change (mirrors the ARK behaviour).
+    'auto_resolve' => [
+        'enabled' => (bool) env('GAME_QUERY_AUTO_RESOLVE', true),
+        'restart' => (bool) env('GAME_QUERY_AUTO_RESOLVE_RESTART', true),
+        // Startup-variable name candidates the resolver points at the new port,
+        // by strategy. RCON reuses the rcon.port_vars list above.
+        'query_port_vars' => ['QUERY_PORT', 'QUERYPORT', 'SERVER_QUERY_PORT', 'A2S_PORT'],
+        // Game/server-port variable candidates, repointed for the 'adjacent'
+        // strategy (Valheim & co — query port is hard-wired to game_port + N, so
+        // the game port itself is moved onto the lower of an allocated pair).
+        'game_port_vars' => ['SERVER_PORT', 'GAME_PORT', 'PORT', 'SERVERPORT'],
+        // Safety cap on how many allocations the resolver may add while hunting
+        // for an adjacent pair before giving up (and releasing the surplus).
+        'max_alloc_attempts' => (int) env('GAME_QUERY_MAX_ALLOC_ATTEMPTS', 12),
     ],
 ];
