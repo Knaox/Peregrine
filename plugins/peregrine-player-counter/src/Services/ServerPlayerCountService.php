@@ -17,7 +17,7 @@ use Plugins\PeregrinePlayerCounter\Settings\PlayerCounterSettings;
  * `cache_ttl`) controls freshness and shields the upstream (the Epic API for
  * EOS games) from rate-limiting.
  *
- * @phpstan-type PlayerPayload array{online: ?int, max: ?int, state: string, family: string, queryable: bool, name: ?string, players: list<string>, detail: ?string, queried_at: string}
+ * @phpstan-type PlayerPayload array{online: ?int, max: ?int, state: string, family: string, queryable: bool, rcon: bool, name: ?string, players: list<string>, detail: ?string, queried_at: string}
  */
 class ServerPlayerCountService
 {
@@ -33,10 +33,28 @@ class ServerPlayerCountService
     /**
      * @return PlayerPayload
      */
-    public function get(Server $server, bool $forceRefresh = false): array
+    public function get(Server $server, bool $forceRefresh = false, bool $running = true): array
     {
-        if (! PlayerCounterSettings::make()->enabled) {
+        $settings = PlayerCounterSettings::make();
+
+        // Disabled, or this server's egg isn't on the whitelist → hide the card.
+        if (! $settings->enabled || ! $settings->allowsEgg($server->egg_id)) {
             return $this->payload(null, null, 'unavailable');
+        }
+
+        $target = $this->resolver->resolve($server->egg);
+
+        // Not an officially-supported game → no card, whatever the power state.
+        // Resolved without touching the network, so it's correct even when the
+        // server is stopped (the front-end relies on this to hide the card).
+        if (! $target['queryable'] || ! is_string($target['type'])) {
+            return $this->payload(null, null, 'unsupported', $target);
+        }
+
+        // Supported + whitelisted but the server isn't running → report offline
+        // without firing the (slow) network/RCON query.
+        if (! $running) {
+            return $this->payload(null, null, 'offline', $target);
         }
 
         $cached = Cache::get($this->cacheKey($server));
@@ -45,7 +63,7 @@ class ServerPlayerCountService
             return $cached;
         }
 
-        return $this->refresh($server);
+        return $this->refresh($server, $target);
     }
 
     public function invalidate(Server $server): void
@@ -77,25 +95,25 @@ class ServerPlayerCountService
     }
 
     /**
+     * @param  array{type: ?string, family: string, queryable: bool, query_offset: int}  $target
      * @return PlayerPayload
      */
-    private function refresh(Server $server): array
+    private function refresh(Server $server, array $target): array
     {
-        $target = $this->resolver->resolve($server->egg);
-
-        if (! $target['queryable'] || ! is_string($target['type'])) {
-            return $this->store($server, $this->payload(null, null, 'unsupported', $target));
-        }
-
         $allocation = $this->primaryAllocation($server);
         if (! $allocation) {
             // Transient (Pelican unreachable): don't poison the cache.
             return $this->payload(null, null, 'unknown', $target);
         }
 
+        // Some games answer their query on a different port than the game port
+        // (Hytale's Nitrado WebServer is game + 3). RCON reads its own port from
+        // the startup variables, so the offset only applies to the sidecar path.
+        $queryPort = (int) $allocation['port'] + (int) ($target['query_offset'] ?? 0);
+
         $result = in_array($target['type'], (array) config(self::NS.'.rcon.types', []), true)
-            ? $this->rcon->query($server, $allocation)
-            : $this->client->query($target['type'], $allocation['ip'], $allocation['port'], $target['family']);
+            ? $this->rcon->query($server, $allocation, $target['type'])
+            : $this->client->query($target['type'], $allocation['ip'], $queryPort, $target['family']);
 
         $payload = ($result['ok'] ?? false) === true
             ? $this->payload($result['online'] ?? 0, $result['max'] ?? null, 'online', $target, $result['name'] ?? null, $result['players'] ?? [])
@@ -119,6 +137,8 @@ class ServerPlayerCountService
             'state' => $state,
             'family' => $target['family'],
             'queryable' => (bool) $target['queryable'],
+            'rcon' => is_string($target['type'] ?? null)
+                && in_array($target['type'], (array) config(self::NS.'.rcon.types', []), true),
             'name' => $name,
             'players' => $players,
             'detail' => $detail,

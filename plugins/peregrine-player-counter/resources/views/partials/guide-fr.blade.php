@@ -5,7 +5,7 @@
     $code = 'font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:rgba(148,163,184,0.18);padding:0.05rem 0.3rem;border-radius:0.3rem;font-size:0.8rem;';
 @endphp
 
-<p style="{{ $p }}">Le compteur de joueurs a besoin d'un petit service compagnon — le <strong>sidecar GameDig</strong> — qui parle le protocole de requête de chaque jeu (A2S Steam/Source, Minecraft, Epic/EOS pour ARK : Survival Ascended, Hytale). Peregrine le contacte en HTTP et met le résultat en cache ; le sidecar, lui, joint vos serveurs de jeu (et, pour les jeux EOS, l'API d'Epic). Il est livré dans ce plugin sous <code style="{{ $code }}">plugins/peregrine-player-counter/sidecar</code>.</p>
+<p style="{{ $p }}">Le compteur de joueurs a besoin d'un petit service compagnon — le <strong>sidecar GameDig</strong> — qui parle le protocole de requête de chaque jeu (A2S pour Minecraft, Valheim et 7 Days to Die ; ARK et Palworld sont lus via RCON). Peregrine le contacte en HTTP et met le résultat en cache ; le sidecar, lui, joint vos serveurs de jeu. Il est livré dans ce plugin sous <code style="{{ $code }}">plugins/peregrine-player-counter/sidecar</code>.</p>
 
 <h3 style="{{ $h }}">1 — Ajoutez le sidecar à votre <code style="{{ $code }}">docker-compose.yml</code></h3>
 <p style="{{ $p }}">Collez ce service sous <code style="{{ $code }}">services:</code>, à côté du service <code style="{{ $code }}">peregrine</code>, puis lancez <code style="{{ $code }}">docker compose up -d --build game-query</code>.</p>
@@ -26,4 +26,4 @@
 <h3 style="{{ $h }}">Optionnel — verrouillez le sidecar avec un jeton</h3>
 <p style="{{ $p }}">Sur un hôte partagé, définissez un <strong>Jeton partagé</strong> ci-dessus (bouton de génération), Enregistrez, et ajoutez la MÊME valeur en <code style="{{ $code }}">GAME_QUERY_TOKEN</code> sur le service sidecar. Le bloc compose ci-dessus l'inclut déjà quand un jeton est défini.</p>
 
-<div style="{{ $note }}">Une fois activé, le widget apparaît sur l'aperçu de chaque serveur : Steam/Source et Minecraft sont instantanés ; EOS (ARK) et Hytale se rafraîchissent par un court polling. Hytale requiert le mod <code style="{{ $code }}">hytale-plugin-query</code> sur le serveur. Si le sidecar est arrêté, le widget affiche simplement « hors ligne » — rien ne casse.</div>
+<div style="{{ $note }}">Une fois activé, la carte n'apparaît que sur les <strong>jeux supportés</strong> (Minecraft, Valheim, 7 Days to Die, ARK : Survival Ascended &amp; Evolved, Palworld) — tout autre jeu n'affiche rien. Minecraft, Valheim et 7DtD passent par ce sidecar ; <strong>ARK et Palworld sont lus via RCON</strong> (activez le RCON + définissez un mot de passe admin ; utilisez le bouton <strong>Resolve RCON</strong> de la carte si le port n'est pas joignable). Si le sidecar est arrêté, les jeux supportés affichent simplement « hors ligne » — rien ne casse.</div>

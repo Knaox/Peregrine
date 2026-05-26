@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Plugins\PeregrinePlayerCounter\Filament\Pages\PlayerCounterSettingsPage;
 
+use App\Models\Egg;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
@@ -24,7 +26,22 @@ final class PlayerCounterFormSchema
     /** @return array<int, mixed> */
     public static function sections(): array
     {
-        return [self::connectionSection()];
+        return [self::connectionSection(), self::visibilitySection()];
+    }
+
+    private static function visibilitySection(): Section
+    {
+        return Section::make(__(self::NS.'section_visibility'))
+            ->schema([
+                Select::make('egg_whitelist')
+                    ->label(__(self::NS.'egg_whitelist'))
+                    ->helperText(__(self::NS.'egg_whitelist_help'))
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->options(fn (): array => Egg::query()->orderBy('name')->pluck('name', 'id')->all()),
+            ])
+            ->columns(1);
     }
 
     private static function connectionSection(): Section

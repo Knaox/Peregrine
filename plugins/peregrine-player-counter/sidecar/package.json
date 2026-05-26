@@ -1,6 +1,6 @@
 {
     "name": "peregrine-game-query",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "private": true,
     "type": "module",
     "description": "GameDig sidecar for the Peregrine Player Counter plugin.",

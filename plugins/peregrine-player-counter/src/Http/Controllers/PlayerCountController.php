@@ -24,7 +24,11 @@ class PlayerCountController extends Controller
         $this->authorize('view', $server);
 
         return response()->json([
-            'data' => $this->players->get($server, $request->boolean('refresh')),
+            'data' => $this->players->get(
+                $server,
+                $request->boolean('refresh'),
+                $request->boolean('running', true),
+            ),
         ]);
     }
 

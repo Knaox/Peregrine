@@ -2,8 +2,9 @@
 
 A small Node service that wraps [GameDig](https://github.com/gamedig/node-gamedig)
 so the **Player Counter** plugin can read live connected-player counts: Steam/
-Source (A2S), Minecraft (Java + Bedrock), EOS games (ARK: Survival Ascended via
-the Epic API), Hytale (via the `hytale-plugin-query` server mod), and more.
+Source (A2S — including a generic probe for *any* Steam game), Minecraft (Java +
+Bedrock), EOS games (ARK: Survival Ascended via the Epic API), Hytale (via the
+`hytale-plugin-query` server mod), and more.
 
 The panel talks to it over HTTP and caches each answer; the sidecar reaches the
 game servers (and, for EOS, `api.epicgames.dev`). The full bilingual setup guide
@@ -30,6 +31,12 @@ under Docker, `http://127.0.0.1:9899` bare-metal) and enable the plugin.
 | ------ | ---------- | ------------- |
 | `GET`  | `/healthz` | `{ "ok": true }` |
 | `POST` | `/query`   | in: `{ "type": "minecraft", "host": "1.2.3.4", "port": 25565, "family": "minecraft" }` → out: `{ "ok": true, "online": 7, "max": 20, "name": "...", "players": ["..."] }` |
+
+The `family` field routes the query: `eos` → Epic API (with a public-IP
+rewrite), `hytale` → the Nitrado mod's HTTP endpoint (implemented natively here,
+since Hytale isn't in the pinned GameDig release), anything else → GameDig with
+the given `type` — including `protocol-valve`, the generic A2S probe used for any
+Steam game that has no dedicated rule.
 
 ## Environment
 

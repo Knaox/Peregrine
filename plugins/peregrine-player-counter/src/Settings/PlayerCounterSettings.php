@@ -17,10 +17,14 @@ use Throwable;
  */
 class PlayerCounterSettings
 {
+    /**
+     * @param  list<int>  $eggWhitelist  Egg ids the card is limited to ([] = all eggs).
+     */
     public function __construct(
         public bool $enabled,
         public string $sidecarUrl,
         public string $sidecarToken,
+        public array $eggWhitelist = [],
     ) {}
 
     public static function make(): self
@@ -32,7 +36,37 @@ class PlayerCounterSettings
             enabled: (bool) $store->getSetting($id, 'enabled', false),
             sidecarUrl: rtrim((string) $store->getSetting($id, 'sidecar_url', 'http://127.0.0.1:9899'), '/'),
             sidecarToken: self::decrypt((string) $store->getSetting($id, 'sidecar_token', '')),
+            eggWhitelist: self::normalizeEggIds($store->getSetting($id, 'egg_whitelist', [])),
         );
+    }
+
+    /**
+     * Whether the player-count card should be shown for a server on this egg.
+     * An empty whitelist means "every egg" (the default); otherwise only the
+     * explicitly-listed egg ids are allowed and all others are hidden.
+     */
+    public function allowsEgg(?int $eggId): bool
+    {
+        if ($this->eggWhitelist === []) {
+            return true;
+        }
+
+        return $eggId !== null && in_array($eggId, $this->eggWhitelist, true);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public static function normalizeEggIds(mixed $value): array
+    {
+        $ids = [];
+        foreach ((array) $value as $id) {
+            if (is_numeric($id) && (int) $id > 0) {
+                $ids[(int) $id] = true; // dedupe
+            }
+        }
+
+        return array_keys($ids);
     }
 
     public static function generateToken(): string

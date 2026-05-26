@@ -12,6 +12,8 @@ export interface ServerPlayers {
     state: PlayerQueryState;
     family: string;
     queryable: boolean;
+    /** True when this game is counted over RCON (ARK, Palworld) — enables the Resolve RCON helper. */
+    rcon: boolean;
     name: string | null;
     players: string[];
     queried_at: string;

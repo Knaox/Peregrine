@@ -19,6 +19,14 @@ return [
         'regenerate' => 'Générer un jeton',
         'regenerated' => 'Jeton généré — enregistrez, puis mettez la même valeur sur le sidecar.',
 
+        'supported_title' => 'Jeux officiellement supportés',
+        'supported_intro' => 'Ce sont les jeux que le compteur sait lire :',
+        'supported_note' => 'Purement informatif — utilisez la liste blanche d\'eggs ci-dessous pour choisir les serveurs où la carte s\'affiche réellement.',
+
+        'section_visibility' => 'Visibilité',
+        'egg_whitelist' => 'Eggs autorisés (liste blanche)',
+        'egg_whitelist_help' => 'Parmi les jeux supportés ci-dessus, n\'affiche le compteur que sur les serveurs utilisant ces eggs. Laissez vide pour autoriser tous les eggs supportés.',
+
         'guide' => 'Guide d\'installation Docker',
         'copy' => 'Copier',
         'copied' => 'Copié !',

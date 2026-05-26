@@ -1,4 +1,6 @@
 <x-filament-panels::page>
+    @include('peregrine-player-counter::partials.supported-games')
+
     <form wire:submit="save" class="space-y-6">
         {{ $this->form }}
 

@@ -46,6 +46,9 @@ class PlayerCounterSettingsPage extends Page implements HasForms
 
     public ?string $sidecar_token = '';
 
+    /** @var list<int> */
+    public array $egg_whitelist = [];
+
     public static function shouldRegisterNavigation(): bool
     {
         return false;
@@ -63,11 +66,13 @@ class PlayerCounterSettingsPage extends Page implements HasForms
         $this->enabled = $settings->enabled;
         $this->sidecar_url = $settings->sidecarUrl !== '' ? $settings->sidecarUrl : 'http://127.0.0.1:9899';
         $this->sidecar_token = $settings->sidecarToken;
+        $this->egg_whitelist = $settings->eggWhitelist;
 
         $this->form->fill([
             'enabled' => $this->enabled,
             'sidecar_url' => $this->sidecar_url,
             'sidecar_token' => $this->sidecar_token,
+            'egg_whitelist' => $this->egg_whitelist,
         ]);
     }
 
@@ -84,6 +89,7 @@ class PlayerCounterSettingsPage extends Page implements HasForms
 
         $store->setSetting($id, 'enabled', (bool) ($data['enabled'] ?? false));
         $store->setSetting($id, 'sidecar_url', rtrim((string) ($data['sidecar_url'] ?? ''), '/'));
+        $store->setSetting($id, 'egg_whitelist', PlayerCounterSettings::normalizeEggIds($data['egg_whitelist'] ?? []));
         PlayerCounterSettings::storeToken((string) ($data['sidecar_token'] ?? ''));
 
         Notification::make()->title(__(self::NS.'saved'))->success()->send();

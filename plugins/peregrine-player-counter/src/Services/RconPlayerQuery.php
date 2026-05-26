@@ -9,10 +9,12 @@ use App\Services\Pelican\PelicanClientService;
 use Plugins\PeregrinePlayerCounter\PlayerCounterServiceProvider;
 
 /**
- * Player count for RCON-queryable games (ARK), used when the EOS/Epic public
- * query is unavailable (Epic returns 403). Reads the RCON port + admin password
- * from the server's Pelican startup variables (server-side; never logged), runs
- * `ListPlayers`, and parses the connected players (up to 5 names).
+ * Player count for RCON-queryable games (ARK, Palworld, …), used when the game
+ * has no usable wire query (ARK's EOS query returns a 403; Palworld has no A2S).
+ * Reads the RCON port + admin password from the server's Pelican startup
+ * variables (server-side; never logged), runs the per-type command (ARK
+ * `ListPlayers`, Palworld `ShowPlayers`) and parses the connected players (up to
+ * 5 names) according to that game's response format.
  *
  * @phpstan-type RconResult array{ok: bool, online?: int, max?: ?int, players?: list<string>, error?: string}
  */
@@ -29,13 +31,16 @@ class RconPlayerQuery
      * @param  array{ip: string, port: int}  $allocation
      * @return RconResult
      */
-    public function query(Server $server, array $allocation): array
+    public function query(Server $server, array $allocation, string $type = ''): array
     {
         if (! $server->identifier) {
             return ['ok' => false, 'error' => 'rcon: no server identifier'];
         }
 
         $cfg = (array) config(self::NS.'.rcon', []);
+        $perType = (array) ($cfg['commands'][$type] ?? []);
+        $command = (string) ($perType['command'] ?? $cfg['command'] ?? 'ListPlayers');
+        $format = (string) ($perType['format'] ?? $cfg['format'] ?? 'ark');
 
         try {
             $vars = $this->pelican->getStartupVariables($server->identifier);
@@ -70,14 +75,14 @@ class RconPlayerQuery
                 $allocation['ip'],
                 $port,
                 $password,
-                (string) ($cfg['command'] ?? 'ListPlayers'),
+                $command,
                 (float) ($cfg['timeout'] ?? 4),
             );
         } catch (\Throwable $e) {
             return ['ok' => false, 'error' => 'rcon: '.$e->getMessage()];
         }
 
-        [$online, $players] = $this->parseListPlayers($response);
+        [$online, $players] = $this->parse($format, $response);
 
         return ['ok' => true, 'online' => $online, 'max' => $max, 'players' => $players];
     }
@@ -98,6 +103,19 @@ class RconPlayerQuery
     }
 
     /**
+     * Route the RCON response to the matching parser. Returns [count, names].
+     *
+     * @return array{0: int, 1: list<string>}
+     */
+    private function parse(string $format, string $response): array
+    {
+        return match ($format) {
+            'palworld' => $this->parseShowPlayers($response),
+            default => $this->parseListPlayers($response),
+        };
+    }
+
+    /**
      * Parse ARK's `ListPlayers`: "No Players Connected", or numbered lines like
      * "0. PlayerName, 0002a8…". Returns [count, up-to-5 names].
      *
@@ -113,6 +131,34 @@ class RconPlayerQuery
         foreach (preg_split('/\r\n|\r|\n/', $response) ?: [] as $line) {
             if (preg_match('/^\s*\d+\.\s*(.+?)\s*,/', $line, $m) === 1) {
                 $names[] = trim($m[1]);
+            }
+        }
+
+        return [count($names), array_slice($names, 0, 5)];
+    }
+
+    /**
+     * Parse Palworld's `ShowPlayers`: a CSV with a "name,playeruid,steamid"
+     * header line, then one row per connected player. The display name is
+     * everything before the first comma. Returns [count, up-to-5 names].
+     *
+     * @return array{0: int, 1: list<string>}
+     */
+    private function parseShowPlayers(string $response): array
+    {
+        $names = [];
+        foreach (preg_split('/\r\n|\r|\n/', $response) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            // Skip the CSV header row.
+            if (stripos($line, 'name,') === 0 && stripos($line, 'playeruid') !== false) {
+                continue;
+            }
+            $name = trim(explode(',', $line)[0]);
+            if ($name !== '') {
+                $names[] = $name;
             }
         }
 

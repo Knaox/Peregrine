@@ -19,6 +19,14 @@ return [
         'regenerate' => 'Generate a token',
         'regenerated' => 'Token generated — save, then set the same value on the sidecar.',
 
+        'supported_title' => 'Officially supported games',
+        'supported_intro' => 'These are the games the player counter can read:',
+        'supported_note' => 'Informational only — use the egg whitelist below to choose which servers actually show the card.',
+
+        'section_visibility' => 'Visibility',
+        'egg_whitelist' => 'Allowed eggs (whitelist)',
+        'egg_whitelist_help' => 'Among the supported games above, show the counter only on servers using these eggs. Leave empty to allow every supported egg.',
+
         'guide' => 'Docker setup guide',
         'copy' => 'Copy',
         'copied' => 'Copied!',

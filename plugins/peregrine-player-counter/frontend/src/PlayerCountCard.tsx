@@ -73,24 +73,29 @@ function StatusPill({ state, t }: { state: string; t: T }) {
 export function PlayerCountCard({ serverId, serverState }: { serverId: number; serverState?: string }) {
     const t = useT();
 
-    // The host passes the server's live WS power state. We only query (and poll)
-    // a truly-running server — so an offline/starting server reads "offline"
-    // instantly without firing the slow query or competing with the WS handshake.
+    // The host passes the server's live WS power state. We forward it to the
+    // backend (which reports "offline" without the slow query when stopped) but
+    // still fetch once so the card can hide itself for unsupported / non-allowed
+    // eggs even while the server is off.
     const isRunning = serverState == null || serverState === 'running';
     const { data, isLoading } = useServerPlayers(serverId, isRunning);
 
-    const effState = isRunning ? (data?.state ?? 'unknown') : 'offline';
+    const effState = data?.state ?? 'unknown';
     const online = effState === 'online' ? (data?.online ?? null) : null;
     const max = data?.max ?? null;
     const names = effState === 'online' ? (data?.players ?? []) : [];
     const isOnline = effState === 'online' && online !== null;
     const isUnsupported = effState === 'unsupported';
-    // RCON-counted game (ARK/EOS) that's running but unreachable → offer the fix.
-    const canResolveRcon = isRunning && effState === 'offline' && data?.family === 'eos';
-    const showSkeleton = isRunning && isLoading && !data;
+    // Only when the server is actually RUNNING but its RCON query returned
+    // nothing (port unreachable) — never on a normally-stopped server.
+    const canResolveRcon = isRunning && effState === 'offline' && data?.rcon === true;
+    const showSkeleton = isLoading && !data;
     const animated = useCountUp(online ?? 0, !reduced() && isOnline);
 
-    if (data?.state === 'unavailable') return null; // plugin disabled — show nothing
+    // Hidden only when the plugin is off or the egg isn't whitelisted. The card
+    // still appears for whitelisted eggs whose game isn't supported (it shows a
+    // short "not available for this game" note instead of a count).
+    if (data?.state === 'unavailable') return null;
 
     const pct = isOnline && max && max > 0 ? Math.min(100, (online! / max) * 100) : 0;
 

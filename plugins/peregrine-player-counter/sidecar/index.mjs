@@ -10,6 +10,10 @@
 //     -> 200      { "ok": false, "error": "..." }   (server down / bad type)
 //   GET  /healthz -> 200 { "ok": true }
 //
+// `family` routes the query: "eos" -> Epic API (with public-IP rewrite),
+// "hytale" -> Nitrado query-mod HTTP endpoint, anything else -> GameDig with
+// the given `type` (incl. "protocol-valve" for the generic A2S/Steam probe).
+//
 // Run:  cd plugins/peregrine-player-counter/sidecar && npm install && node index.mjs
 // Env:  GAME_QUERY_PORT (9899), GAME_QUERY_HOST (127.0.0.1), GAME_QUERY_TOKEN,
 //       GAME_QUERY_TIMEOUT_MS (5000), GAME_QUERY_EOS_TIMEOUT_MS (6000),
@@ -108,6 +112,34 @@ async function runQuery(type, host, port, timeoutMs) {
     return { online: Math.max(0, online), max, name: state.name ?? null, players };
 }
 
+// Hytale isn't a GameDig type in our pinned gamedig (5.3.2), so we speak its
+// query protocol directly: the nitrado/hytale-plugin-query mod exposes a plain
+// HTTP+JSON endpoint at /Nitrado/Query. Same shape GameDig's own hytale handler
+// reads, and unlike A2S/EOS it returns real in-game player names.
+async function queryHytale(host, port, timeoutMs) {
+    const res = await fetch(`http://${host}:${port}/Nitrado/Query`, {
+        headers: { accept: 'application/json' },
+        signal: AbortSignal.timeout(timeoutMs),
+    });
+
+    if (!res.ok) throw new Error(`hytale query HTTP ${res.status}`);
+
+    const data = await res.json();
+    const server = data?.Server ?? {};
+    const universe = data?.Universe ?? {};
+
+    const online = Number.isFinite(universe.CurrentPlayers) ? universe.CurrentPlayers : 0;
+    const max = Number.isFinite(server.MaxPlayers) ? server.MaxPlayers : null;
+    const players = Array.isArray(data?.Players)
+        ? data.Players
+            .map((p) => (typeof p?.Name === 'string' ? p.Name.trim() : ''))
+            .filter((n) => n.length > 0)
+            .slice(0, MAX_NAMES)
+        : [];
+
+    return { online: Math.max(0, online), max, name: server.Name ?? null, players };
+}
+
 async function handleQuery(req, res) {
     if (!authorized(req)) return send(res, 401, { ok: false, error: 'unauthorized' });
 
@@ -127,9 +159,17 @@ async function handleQuery(req, res) {
 
     // EOS talks to the Epic API (a couple of HTTPS round-trips) — give it more time.
     const isEos = family === 'eos';
+    const isHytale = family === 'hytale' || type === 'hytale';
     const timeoutMs = isEos ? Math.max(TIMEOUT_MS, EOS_TIMEOUT_MS) : TIMEOUT_MS;
 
     try {
+        // Hytale: query the Nitrado mod's HTTP endpoint directly (not a GameDig
+        // type here). It's a local request like A2S, so no public-IP rewrite.
+        if (isHytale) {
+            const result = await queryHytale(host, port, timeoutMs);
+            return send(res, 200, { ok: true, online: result.online, max: result.max, name: result.name, players: result.players });
+        }
+
         // EOS is matched by the server's PUBLIC IP — resolve internal aliases to
         // the public (Cloudflare-published) IP first; other families query as-is.
         const queryHost = isEos ? await toPublicIp(host) : host;

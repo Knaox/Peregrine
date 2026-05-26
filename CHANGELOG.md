@@ -8,6 +8,14 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Changed
+
+- **Player Counter 1.1.0 — supported-games notice + egg whitelist.** The counter can read six games — **Minecraft** (Java + Bedrock), **Valheim**, **7 Days to Die**, **ARK: Survival Ascended**, **ARK: Survival Evolved** and **Palworld** — shown as an **informational notice** on the settings page (`/admin/player-counter-settings`). Which servers display the card is controlled by an **egg whitelist** (settings → *Visibility*): **empty = every egg**, otherwise only the listed eggs. A whitelisted egg whose game isn't one of the six shows a short "not available for this game" note instead of a count.
+  - **ARK (ASA + ASE) and Palworld are counted over RCON** (ARK `ListPlayers`, Palworld `ShowPlayers` parsed from its CSV) — none exposes a usable wire query (ASA's EOS query is 403'd by Epic; Palworld has no A2S). Needs RCON enabled + an admin password on the server. Minecraft, Valheim and 7 Days to Die are queried through the GameDig sidecar.
+  - **The "RCON port not reachable" notice + one-click Resolve RCON only appear when the server is running** but its RCON query returned nothing (ARK, Palworld) — never on a normally-stopped server. Driven by an `rcon` payload flag, so it covers every RCON game.
+  - **Fixed: card visibility now respects the whitelist even on stopped servers.** The front-end always asks the backend for the verdict (resolved without a network query) and forwards the live power state, so a non-whitelisted egg hides the card even while the server is off, while a supported-but-stopped server reads "offline" instantly (no slow query). The settings notice uses inline styles (Tailwind doesn't scan plugin Blade), fixing its broken rendering.
+  - Advanced/opt-in: a best-effort generic Steam probe (`GAME_QUERY_STEAM_FALLBACK=true`, off by default) can count other A2S games, and a per-rule `query_offset` handles games whose query port differs from the game port.
+
 ## [1.0.0-alpha.16] — 2026-05-25
 
 ### Added

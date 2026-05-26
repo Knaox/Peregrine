@@ -3,18 +3,28 @@
 Official Peregrine plugin that shows the **live number of connected players**
 (and up to 5 player names) on each server's overview page.
 
-Supported via a small self-hosted **GameDig sidecar** (shipped under
-[`sidecar/`](sidecar/)):
+It officially supports **six games** (the card appears only on these; every
+other egg shows nothing). Counts come from a small self-hosted **GameDig
+sidecar** (shipped under [`sidecar/`](sidecar/)), except the RCON games:
 
-- **Steam / Source (A2S)** and **Minecraft** (Java + Bedrock) — instant.
-- **EOS games** — ARK: Survival Ascended (`asa`), Renown, The Isle Evrima,
-  Squad — via the Epic API (works even if the game's query port is firewalled).
-- **Hytale** — via the [`hytale-plugin-query`](https://github.com/nitrado/hytale-plugin-query)
-  server mod.
+- **Minecraft** (Java + Bedrock) — via the sidecar, instant.
+- **Valheim** — via the sidecar (A2S).
+- **7 Days to Die** — via the sidecar (A2S).
+- **ARK: Survival Ascended** and **ARK: Survival Evolved** — via **RCON**
+  (`ListPlayers`): ASA's EOS query is 403'd by Epic and ASE's A2S sits on an
+  unreachable query port, so RCON is reliable. Needs RCON + an admin password.
+- **Palworld** — via **RCON** (`ShowPlayers`); it exposes no A2S. Needs
+  `RCONEnabled=True` + an `AdminPassword`.
 
-The egg → game mapping lives in [`config/game-query.php`](config/game-query.php);
-counts are cached server-side (Redis) so polling stays cheap and never hammers
-the Epic API.
+For the RCON games, a one-click **Resolve RCON** button allocates the RCON port
+when it isn't reachable. The supported list is shown as a notice on the settings
+page, and an **egg whitelist** (settings → *Visibility*) can narrow the card to
+specific eggs among the supported games.
+
+The mapping lives in [`config/game-query.php`](config/game-query.php); counts are
+cached server-side (Redis) so polling stays cheap. An opt-in, best-effort generic
+Steam probe (`GAME_QUERY_STEAM_FALLBACK=true`) can count other A2S games but is
+**off by default** and unsupported.
 
 ## Setup
 
