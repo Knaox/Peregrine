@@ -338,6 +338,20 @@ systemctl restart wings
 
 ---
 
+## 🚦 Limites d'API Pelican à grande échelle
+
+Peregrine parle à votre panel Pelican via **une seule clé API** : tout le trafic des joueurs partage donc un seul bucket de rate-limit. Pelican plafonne le Client API à **120 req/min** et l'Application API à **240 req/min** par clé — largement suffisant pour quelques utilisateurs, mais un panel chargé peut se prendre des `429` alors même que Peregrine limite déjà chaque utilisateur individuellement.
+
+On fournit un petit **plugin Pelican** qui règle ça proprement : il exempte vos **IP/domaines Peregrine de confiance** de ces deux limites, tandis que tous les autres gardent les plafonds normaux. **Recommandé dès que vous dépassez une poignée d'utilisateurs actifs.**
+
+- 📦 **Téléchargement :** [plugin Peregrine API Whitelist](https://github.com/Knaox/Peregrine/releases/tag/pelican-whitelist-v1.0.0) (`peregrine-whitelist.zip`)
+- 📖 **Docs & source :** [`pelican-plugin/`](pelican-plugin/)
+- **Installation :** admin Pelican → *Plugins → Upload* du zip → activer → définir `PEREGRINE_WHITELIST_IPS` → `php artisan config:clear`.
+
+> Petite install (≲ quelques dizaines d'utilisateurs) ? Inutile — les défauts Pelican suffisent. C'est là pour quand vous grandissez.
+
+---
+
 ## 🔄 Mises à jour
 
 Admin → **About & Updates** affiche la version installée, vérifie GitHub pour la dernière release du panel (les releases plugins sont filtrées), et donne la commande exacte avec un bouton clipboard.
