@@ -1,0 +1,16 @@
+{
+    "id": "peregrine-whitelist",
+    "name": "Peregrine API Whitelist",
+    "author": "Peregrine",
+    "version": "1.0.0",
+    "description": "Exempts trusted Peregrine proxy IPs/hostnames from the Client & Application API rate limits. Peregrine fronts many users behind a single API key and already enforces its own per-user limits, so its aggregate traffic must not share Pelican's per-key bucket.",
+    "category": "plugin",
+    "namespace": "Pelican\\PeregrineWhitelist",
+    "class": "PeregrineWhitelistPlugin",
+    "panels": ["admin"],
+    "meta": {
+        "status": "enabled",
+        "status_message": null,
+        "load_order": 0
+    }
+}
