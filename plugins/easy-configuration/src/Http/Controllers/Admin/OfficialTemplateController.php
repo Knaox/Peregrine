@@ -19,6 +19,7 @@ final class OfficialTemplateController
 {
     /** The exact catalog the button ships — nothing else from the plugin is imported. */
     private const OFFICIAL_IDS = [
+        '7-days-to-die',
         'ark-survival-ascended',
         'ark-survival-evolved',
         'astroneer',

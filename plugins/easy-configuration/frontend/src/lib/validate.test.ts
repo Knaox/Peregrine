@@ -47,6 +47,22 @@ describe('validateValue — select / multiselect / boolean', () => {
         expect(validateValue(mk('boolean', { true_value: 'On', false_value: 'Off' }), 'On')).toBeNull();
         expect(validateValue(mk('boolean', { true_value: 'On', false_value: 'Off' }), 'maybe')).toBe('boolean');
     });
+
+    // Template JSON commonly declares NUMERIC option values (0/1/2 enums,
+    // 6144/8192 world sizes…) while the compared value is always the string
+    // read from the file / the <select>. A strict-typed includes() flagged
+    // every such field invalid, which blocked the whole save (7DTD bug).
+    it('accepts numeric select options against their string value', () => {
+        const numeric = [{ value: 0 }, { value: 1 }, { value: 2 }];
+        expect(validateValue(mk('select', { options: numeric }), '2')).toBeNull();
+        expect(validateValue(mk('select', { options: numeric }), '5')).toBe('option');
+    });
+
+    it('accepts numeric multiselect options against their string items', () => {
+        const numeric = [{ value: 0 }, { value: 50 }, { value: 100 }];
+        expect(validateValue(mk('multiselect', { options: numeric }), '0,100')).toBeNull();
+        expect(validateValue(mk('multiselect', { options: numeric }), '0,7')).toBe('option');
+    });
 });
 
 describe('validateValue — text / color', () => {

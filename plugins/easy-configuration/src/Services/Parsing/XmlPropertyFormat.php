@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Plugins\EasyConfiguration\Services\Parsing;
 
+use Plugins\EasyConfiguration\Services\Parsing\Concerns\AppendsXmlProperties;
 use Plugins\EasyConfiguration\Services\Parsing\Concerns\ScansXml;
 use Plugins\EasyConfiguration\Support\ConfigParameter;
 use Plugins\EasyConfiguration\Support\ParsedConfig;
@@ -25,10 +26,14 @@ use Plugins\EasyConfiguration\Support\ParsedConfig;
  *
  * `apply()` is lossless: it rewrites only the matched `value="…"` span, keeping
  * the row's `name`, attribute order, quote style, comments and layout intact.
- * A key absent from the file is skipped.
+ * A key absent from the file but whose SECTION exists is appended to that
+ * section as a new `<property name="…" value="…"/>` row (games add settings
+ * over time — e.g. 7DTD's SandboxCode — and older files must still accept
+ * them). Only a change whose section cannot be located at all is skipped.
  */
 final class XmlPropertyFormat implements ConfigFormat
 {
+    use AppendsXmlProperties;
     use ScansXml;
 
     private const TAG = 'property';
@@ -66,9 +71,12 @@ final class XmlPropertyFormat implements ConfigFormat
         }
 
         $edits = [];
+        $missing = [];
         foreach ($changes as $change) {
             $index = $byId[($change->section ?? '')."\x1f".$change->key][$change->occurrence] ?? null;
             if ($index === null) {
+                $missing[] = $change;
+
                 continue;
             }
             $slot = $slots[$index];
@@ -77,6 +85,10 @@ final class XmlPropertyFormat implements ConfigFormat
                 'len' => $slot['len'],
                 'replacement' => $this->escapeAttr($change->value, $slot['quote']),
             ];
+        }
+
+        foreach ($this->insertionEdits($raw, $slots, $missing) as $edit) {
+            $edits[] = $edit;
         }
 
         usort($edits, static fn (array $a, array $b): int => $b['start'] <=> $a['start']);

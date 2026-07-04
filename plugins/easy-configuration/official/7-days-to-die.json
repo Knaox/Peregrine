@@ -1,0 +1,2407 @@
+{
+  "id": "7-days-to-die",
+  "version": "1.0.0",
+  "name": {
+    "en": "7 Days to Die",
+    "fr": "7 Days to Die"
+  },
+  "description": {
+    "en": "Complete server settings for 7 Days to Die — identity, network, slots, world generation, difficulty, zombies, blood moons, land claims, loot, plus the SandboxCode difficulty preset, with clear bilingual labels (serverconfig.xml).",
+    "fr": "Paramètres serveur complets pour 7 Days to Die — identité, réseau, slots, génération du monde, difficulté, zombies, lunes de sang, claims, butin, plus le code Sandbox de difficulté, avec des libellés bilingues clairs (serverconfig.xml)."
+  },
+  "author": "Peregrine",
+  "target_eggs": [],
+  "columns": 2,
+  "require_shutdown": false,
+  "boost": {
+    "enabled": true,
+    "parameter_blacklist": [
+      "ServerPort",
+      "WebDashboardPort",
+      "TelnetPort"
+    ]
+  },
+  "files": [
+    {
+      "id": "serverconfig-xml",
+      "path": "/serverconfig.xml",
+      "format": "xml-property",
+      "label": {
+        "fr": "Paramètres du serveur",
+        "en": "Server settings"
+      },
+      "expanded_by_default": true,
+      "section_labels": {
+        "ServerSettings": {
+          "en": "Server Settings",
+          "fr": "Paramètres du serveur"
+        }
+      },
+      "parameters": {
+        "ServerSettings": {
+          "ServerName": {
+            "display_type": "text",
+            "config": {
+              "default": "My Game Host",
+              "max_length": 100
+            },
+            "label": {
+              "en": "Server Name",
+              "fr": "Nom du serveur"
+            },
+            "description": {
+              "en": "Public name shown in the server browser.",
+              "fr": "Nom public affiché dans le navigateur de serveurs."
+            },
+            "env_var": "SERVER_NAME"
+          },
+          "ServerDescription": {
+            "display_type": "textarea",
+            "config": {
+              "default": "A 7 Days to Die server",
+              "max_length": 500
+            },
+            "label": {
+              "en": "Server Description",
+              "fr": "Description du serveur"
+            },
+            "description": {
+              "en": "Description shown alongside the server in the browser.",
+              "fr": "Description affichée à côté du serveur dans le navigateur."
+            }
+          },
+          "ServerWebsiteURL": {
+            "display_type": "text",
+            "config": {
+              "default": null,
+              "max_length": 255
+            },
+            "label": {
+              "en": "Server Website URL",
+              "fr": "URL du site du serveur"
+            },
+            "description": {
+              "en": "Clickable website URL displayed in the server browser.",
+              "fr": "URL cliquable affichée dans le navigateur de serveurs."
+            }
+          },
+          "ServerPassword": {
+            "display_type": "text",
+            "config": {
+              "default": null,
+              "max_length": 100
+            },
+            "label": {
+              "en": "Server Password",
+              "fr": "Mot de passe du serveur"
+            },
+            "description": {
+              "en": "Password required to join the server. Leave empty for no password.",
+              "fr": "Mot de passe requis pour rejoindre le serveur. Laisser vide pour aucun mot de passe."
+            },
+            "env_var": "PASSWORD"
+          },
+          "ServerLoginConfirmationText": {
+            "display_type": "textarea",
+            "config": {
+              "default": null,
+              "max_length": 1000
+            },
+            "label": {
+              "en": "Login Confirmation Text",
+              "fr": "Texte de confirmation de connexion"
+            },
+            "description": {
+              "en": "Message shown to players when joining; they must accept it to continue.",
+              "fr": "Message affiché aux joueurs lors de la connexion ; ils doivent l'accepter pour continuer."
+            }
+          },
+          "Region": {
+            "display_type": "select",
+            "config": {
+              "default": "NorthAmericaEast",
+              "options": [
+                {
+                  "value": "NorthAmericaEast",
+                  "label": {
+                    "en": "North America East",
+                    "fr": "Amérique du Nord Est"
+                  }
+                },
+                {
+                  "value": "NorthAmericaWest",
+                  "label": {
+                    "en": "North America West",
+                    "fr": "Amérique du Nord Ouest"
+                  }
+                },
+                {
+                  "value": "CentralAmerica",
+                  "label": {
+                    "en": "Central America",
+                    "fr": "Amérique centrale"
+                  }
+                },
+                {
+                  "value": "SouthAmerica",
+                  "label": {
+                    "en": "South America",
+                    "fr": "Amérique du Sud"
+                  }
+                },
+                {
+                  "value": "Europe",
+                  "label": {
+                    "en": "Europe",
+                    "fr": "Europe"
+                  }
+                },
+                {
+                  "value": "Russia",
+                  "label": {
+                    "en": "Russia",
+                    "fr": "Russie"
+                  }
+                },
+                {
+                  "value": "Asia",
+                  "label": {
+                    "en": "Asia",
+                    "fr": "Asie"
+                  }
+                },
+                {
+                  "value": "MiddleEast",
+                  "label": {
+                    "en": "Middle East",
+                    "fr": "Moyen-Orient"
+                  }
+                },
+                {
+                  "value": "Africa",
+                  "label": {
+                    "en": "Africa",
+                    "fr": "Afrique"
+                  }
+                },
+                {
+                  "value": "Oceania",
+                  "label": {
+                    "en": "Oceania",
+                    "fr": "Océanie"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Region",
+              "fr": "Région"
+            },
+            "description": {
+              "en": "Geographic region of the server, used for matchmaking.",
+              "fr": "Région géographique du serveur, utilisée pour le matchmaking."
+            }
+          },
+          "Language": {
+            "display_type": "text",
+            "config": {
+              "default": "English",
+              "max_length": 50
+            },
+            "label": {
+              "en": "Language",
+              "fr": "Langue"
+            },
+            "description": {
+              "en": "Primary language displayed to players searching for the server.",
+              "fr": "Langue principale affichée aux joueurs cherchant le serveur."
+            }
+          },
+          "ServerPort": {
+            "display_type": "number",
+            "config": {
+              "min": 1024,
+              "max": 65535,
+              "step": 1,
+              "default": 26900
+            },
+            "label": {
+              "en": "Server Port",
+              "fr": "Port du serveur"
+            },
+            "description": {
+              "en": "Network port the server listens on. Keep within 26900–26905 or 27015–27020 for LAN discovery.",
+              "fr": "Port réseau d'écoute du serveur. Restez entre 26900–26905 ou 27015–27020 pour la découverte LAN."
+            }
+          },
+          "ServerVisibility": {
+            "display_type": "select",
+            "config": {
+              "default": 2,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Not listed",
+                    "fr": "Non listé"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Friends only",
+                    "fr": "Amis uniquement"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Public",
+                    "fr": "Public"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Server Visibility",
+              "fr": "Visibilité du serveur"
+            },
+            "description": {
+              "en": "Who can see the server in the public browser.",
+              "fr": "Qui peut voir le serveur dans le navigateur public."
+            }
+          },
+          "ServerDisabledNetworkProtocols": {
+            "display_type": "multiselect",
+            "config": {
+              "default": "SteamNetworking",
+              "separator": ",",
+              "options": [
+                {
+                  "value": "SteamNetworking",
+                  "label": {
+                    "en": "Steam Networking",
+                    "fr": "Réseau Steam"
+                  }
+                },
+                {
+                  "value": "LiteNetLib",
+                  "label": {
+                    "en": "LiteNetLib",
+                    "fr": "LiteNetLib"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Disabled Network Protocols",
+              "fr": "Protocoles réseau désactivés"
+            },
+            "description": {
+              "en": "Networking protocols that should NOT be used. Disable SteamNetworking on dedicated servers with proper port-forwarding.",
+              "fr": "Protocoles réseau qui ne doivent PAS être utilisés. Désactivez SteamNetworking sur les serveurs dédiés avec une bonne redirection de ports."
+            },
+            "env_var": "SERVER_DISABLED_NETWORK_PROTOCOLS"
+          },
+          "ServerMaxWorldTransferSpeedKiBs": {
+            "display_type": "slider",
+            "config": {
+              "min": 64,
+              "max": 1300,
+              "step": 64,
+              "default": 512
+            },
+            "label": {
+              "en": "World Transfer Speed (KiB/s)",
+              "fr": "Vitesse de transfert du monde (Kio/s)"
+            },
+            "description": {
+              "en": "Maximum world transfer speed when a client connects for the first time. Hard cap is ~1300 KiB/s.",
+              "fr": "Vitesse maximale de transfert du monde lors de la première connexion d'un client. Plafond ~1300 Kio/s."
+            }
+          },
+          "ServerMaxPlayerCount": {
+            "display_type": "slider",
+            "config": {
+              "min": 1,
+              "max": 64,
+              "step": 1,
+              "default": 8
+            },
+            "label": {
+              "en": "Max Players",
+              "fr": "Joueurs max"
+            },
+            "description": {
+              "en": "Maximum concurrent players allowed on the server.",
+              "fr": "Nombre maximal de joueurs simultanés autorisés sur le serveur."
+            },
+            "env_var": "MAX_PLAYERS"
+          },
+          "ServerReservedSlots": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 64,
+              "step": 1,
+              "default": 0
+            },
+            "label": {
+              "en": "Reserved Slots",
+              "fr": "Slots réservés"
+            },
+            "description": {
+              "en": "Slots usable only by players above a specific permission level.",
+              "fr": "Slots utilisables uniquement par les joueurs au-dessus d'un niveau de permission donné."
+            }
+          },
+          "ServerReservedSlotsPermission": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 1000,
+              "step": 1,
+              "default": 100
+            },
+            "label": {
+              "en": "Reserved Slots Permission Level",
+              "fr": "Niveau de permission slots réservés"
+            },
+            "description": {
+              "en": "Required permission level to use reserved slots.",
+              "fr": "Niveau de permission requis pour utiliser les slots réservés."
+            }
+          },
+          "ServerAdminSlots": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 16,
+              "step": 1,
+              "default": 0
+            },
+            "label": {
+              "en": "Admin Slots",
+              "fr": "Slots admin"
+            },
+            "description": {
+              "en": "Extra slots reserved for admins even when MaxPlayerCount is reached.",
+              "fr": "Slots supplémentaires réservés aux admins même quand MaxPlayerCount est atteint."
+            }
+          },
+          "ServerAdminSlotsPermission": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 1000,
+              "step": 1,
+              "default": 0
+            },
+            "label": {
+              "en": "Admin Slots Permission Level",
+              "fr": "Niveau de permission slots admin"
+            },
+            "description": {
+              "en": "Required permission level to use admin slots.",
+              "fr": "Niveau de permission requis pour utiliser les slots admin."
+            }
+          },
+          "WebDashboardEnabled": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "false"
+            },
+            "label": {
+              "en": "Enable Web Dashboard",
+              "fr": "Activer le tableau de bord web"
+            },
+            "description": {
+              "en": "Enables the built-in web administration dashboard.",
+              "fr": "Active le tableau de bord d'administration web intégré."
+            }
+          },
+          "WebDashboardPort": {
+            "display_type": "number",
+            "config": {
+              "min": 1024,
+              "max": 65535,
+              "step": 1,
+              "default": 8080
+            },
+            "label": {
+              "en": "Web Dashboard Port",
+              "fr": "Port du tableau de bord web"
+            },
+            "description": {
+              "en": "Network port used by the web dashboard.",
+              "fr": "Port réseau utilisé par le tableau de bord web."
+            }
+          },
+          "WebDashboardUrl": {
+            "display_type": "text",
+            "config": {
+              "default": null,
+              "max_length": 255
+            },
+            "label": {
+              "en": "Web Dashboard External URL",
+              "fr": "URL externe du tableau de bord"
+            },
+            "description": {
+              "en": "External URL of the dashboard, e.g. behind a reverse proxy.",
+              "fr": "URL externe du tableau de bord, par exemple derrière un reverse proxy."
+            }
+          },
+          "EnableMapRendering": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "false"
+            },
+            "label": {
+              "en": "Enable Map Rendering",
+              "fr": "Activer le rendu de la carte"
+            },
+            "description": {
+              "en": "Renders the map to tile images as players explore (used by the web dashboard).",
+              "fr": "Génère le rendu de la carte en tuiles au fil de l'exploration (utilisé par le tableau de bord web)."
+            }
+          },
+          "TelnetEnabled": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "true"
+            },
+            "label": {
+              "en": "Enable Telnet",
+              "fr": "Activer Telnet"
+            },
+            "description": {
+              "en": "Enables the Telnet administration interface.",
+              "fr": "Active l'interface d'administration Telnet."
+            }
+          },
+          "TelnetPort": {
+            "display_type": "number",
+            "config": {
+              "min": 1024,
+              "max": 65535,
+              "step": 1,
+              "default": 8081
+            },
+            "label": {
+              "en": "Telnet Port",
+              "fr": "Port Telnet"
+            },
+            "description": {
+              "en": "Network port used by the Telnet server.",
+              "fr": "Port réseau utilisé par le serveur Telnet."
+            },
+            "env_var": "TELNET_PORT"
+          },
+          "TelnetPassword": {
+            "display_type": "text",
+            "config": {
+              "default": null,
+              "max_length": 100
+            },
+            "label": {
+              "en": "Telnet Password",
+              "fr": "Mot de passe Telnet"
+            },
+            "description": {
+              "en": "Password for Telnet access. If empty, Telnet listens only on localhost.",
+              "fr": "Mot de passe pour l'accès Telnet. Si vide, Telnet n'écoute que sur localhost."
+            }
+          },
+          "TelnetFailedLoginLimit": {
+            "display_type": "slider",
+            "config": {
+              "min": 1,
+              "max": 50,
+              "step": 1,
+              "default": 10
+            },
+            "label": {
+              "en": "Telnet Failed Login Limit",
+              "fr": "Limite d'échecs de connexion Telnet"
+            },
+            "description": {
+              "en": "Number of failed password attempts before a client is blocked.",
+              "fr": "Nombre de tentatives de mot de passe échouées avant blocage du client."
+            }
+          },
+          "TelnetFailedLoginsBlocktime": {
+            "display_type": "slider",
+            "config": {
+              "min": 1,
+              "max": 3600,
+              "step": 1,
+              "default": 10
+            },
+            "label": {
+              "en": "Telnet Block Duration (s)",
+              "fr": "Durée de blocage Telnet (s)"
+            },
+            "description": {
+              "en": "How long, in seconds, a blocked client remains banned from Telnet.",
+              "fr": "Durée, en secondes, pendant laquelle un client bloqué reste banni de Telnet."
+            }
+          },
+          "TerminalWindowEnabled": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "true"
+            },
+            "label": {
+              "en": "Show Terminal Window",
+              "fr": "Afficher la fenêtre terminal"
+            },
+            "description": {
+              "en": "Shows a terminal window for log output and input on Windows.",
+              "fr": "Affiche une fenêtre terminal pour les logs et la saisie sur Windows."
+            }
+          },
+          "AdminFileName": {
+            "display_type": "text",
+            "config": {
+              "default": "serveradmin.xml",
+              "max_length": 100
+            },
+            "label": {
+              "en": "Admin File Name",
+              "fr": "Nom du fichier admin"
+            },
+            "description": {
+              "en": "Name of the server admin file, relative to UserDataFolder/Saves.",
+              "fr": "Nom du fichier admin du serveur, relatif à UserDataFolder/Saves."
+            }
+          },
+          "ServerAllowCrossplay": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "false"
+            },
+            "label": {
+              "en": "Allow Crossplay",
+              "fr": "Autoriser le crossplay"
+            },
+            "description": {
+              "en": "Allows crossplay between platforms. Requires sanctions enabled and default slot count.",
+              "fr": "Autorise le crossplay entre plateformes. Nécessite les sanctions activées et un nombre de slots par défaut."
+            }
+          },
+          "EACEnabled": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "true"
+            },
+            "label": {
+              "en": "EasyAntiCheat Enabled",
+              "fr": "EasyAntiCheat activé"
+            },
+            "description": {
+              "en": "Enables EasyAntiCheat protection.",
+              "fr": "Active la protection EasyAntiCheat."
+            }
+          },
+          "IgnoreEOSSanctions": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "false"
+            },
+            "label": {
+              "en": "Ignore EOS Sanctions",
+              "fr": "Ignorer les sanctions EOS"
+            },
+            "description": {
+              "en": "Ignore EOS sanctions when allowing players to join.",
+              "fr": "Ignore les sanctions EOS lors de l'acceptation des joueurs."
+            }
+          },
+          "HideCommandExecutionLog": {
+            "display_type": "select",
+            "config": {
+              "default": 0,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Show everything",
+                    "fr": "Tout afficher"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Hide from Telnet/Control Panel",
+                    "fr": "Masquer de Telnet/Panneau de contrôle"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Also hide from remote clients",
+                    "fr": "Masquer aussi des clients distants"
+                  }
+                },
+                {
+                  "value": 3,
+                  "label": {
+                    "en": "Hide everything",
+                    "fr": "Tout masquer"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Hide Command Execution Log",
+              "fr": "Masquer les logs d'exécution de commandes"
+            },
+            "description": {
+              "en": "Controls where command execution is logged.",
+              "fr": "Contrôle où les exécutions de commandes sont enregistrées."
+            }
+          },
+          "MaxUncoveredMapChunksPerPlayer": {
+            "display_type": "number",
+            "config": {
+              "min": 1024,
+              "max": 1048576,
+              "step": 1024,
+              "default": 131072
+            },
+            "label": {
+              "en": "Max Uncovered Map Chunks / Player",
+              "fr": "Chunks de carte découverts max / joueur"
+            },
+            "description": {
+              "en": "Maximum chunks each player can uncover on the in-game map.",
+              "fr": "Nombre maximal de chunks que chaque joueur peut découvrir sur la carte."
+            }
+          },
+          "PersistentPlayerProfiles": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "false"
+            },
+            "label": {
+              "en": "Persistent Player Profiles",
+              "fr": "Profils de joueurs persistants"
+            },
+            "description": {
+              "en": "If true, players always rejoin with the last profile they used.",
+              "fr": "Si activé, les joueurs reviennent toujours avec le dernier profil utilisé."
+            }
+          },
+          "MaxChunkAge": {
+            "display_type": "number",
+            "config": {
+              "min": -1,
+              "max": 365,
+              "step": 1,
+              "default": -1
+            },
+            "label": {
+              "en": "Max Chunk Age (days)",
+              "fr": "Âge max d'un chunk (jours)"
+            },
+            "description": {
+              "en": "In-game days before an unvisited chunk resets to its original state. -1 disables reset.",
+              "fr": "Jours en jeu avant qu'un chunk non visité ne se réinitialise. -1 désactive la réinitialisation."
+            }
+          },
+          "SaveDataLimit": {
+            "display_type": "number",
+            "config": {
+              "min": -1,
+              "max": 1048576,
+              "step": 1,
+              "default": -1
+            },
+            "label": {
+              "en": "Save Data Limit (MB)",
+              "fr": "Limite des données sauvegardées (Mo)"
+            },
+            "description": {
+              "en": "Maximum disk space per save in MB. Negative values disable the limit.",
+              "fr": "Espace disque maximum par sauvegarde en Mo. Une valeur négative désactive la limite."
+            }
+          },
+          "GameWorld": {
+            "display_type": "select",
+            "config": {
+              "default": "Navezgane",
+              "options": [
+                {
+                  "value": "Navezgane",
+                  "label": {
+                    "en": "Navezgane",
+                    "fr": "Navezgane"
+                  }
+                },
+                {
+                  "value": "RWG",
+                  "label": {
+                    "en": "Random World Gen",
+                    "fr": "Génération aléatoire"
+                  }
+                },
+                {
+                  "value": "Pregen06k01",
+                  "label": {
+                    "en": "Pregen 6K #1",
+                    "fr": "Pré-généré 6K n°1"
+                  }
+                },
+                {
+                  "value": "Pregen06k02",
+                  "label": {
+                    "en": "Pregen 6K #2",
+                    "fr": "Pré-généré 6K n°2"
+                  }
+                },
+                {
+                  "value": "Pregen08k01",
+                  "label": {
+                    "en": "Pregen 8K #1",
+                    "fr": "Pré-généré 8K n°1"
+                  }
+                },
+                {
+                  "value": "Pregen08k02",
+                  "label": {
+                    "en": "Pregen 8K #2",
+                    "fr": "Pré-généré 8K n°2"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Game World",
+              "fr": "Monde de jeu"
+            },
+            "description": {
+              "en": "World loaded by the server. Use RWG to generate a random world.",
+              "fr": "Monde chargé par le serveur. Utilisez RWG pour générer un monde aléatoire."
+            }
+          },
+          "WorldGenSeed": {
+            "display_type": "text",
+            "config": {
+              "default": "MyGame",
+              "max_length": 100
+            },
+            "label": {
+              "en": "World Gen Seed",
+              "fr": "Seed de génération"
+            },
+            "description": {
+              "en": "Seed used to generate the world when GameWorld is set to RWG.",
+              "fr": "Seed utilisée pour générer le monde quand GameWorld vaut RWG."
+            }
+          },
+          "WorldGenSize": {
+            "display_type": "select",
+            "config": {
+              "default": 6144,
+              "options": [
+                {
+                  "value": 6144,
+                  "label": {
+                    "en": "6144 (6K)",
+                    "fr": "6144 (6K)"
+                  }
+                },
+                {
+                  "value": 8192,
+                  "label": {
+                    "en": "8192 (8K)",
+                    "fr": "8192 (8K)"
+                  }
+                },
+                {
+                  "value": 10240,
+                  "label": {
+                    "en": "10240 (10K)",
+                    "fr": "10240 (10K)"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "World Gen Size",
+              "fr": "Taille du monde généré"
+            },
+            "description": {
+              "en": "Size (in blocks) of an RWG world.",
+              "fr": "Taille (en blocs) d'un monde RWG."
+            }
+          },
+          "GameName": {
+            "display_type": "text",
+            "config": {
+              "default": "MyGame",
+              "max_length": 100,
+              "regex": "^[A-Za-z0-9_\\-. ]+$"
+            },
+            "label": {
+              "en": "Game Name",
+              "fr": "Nom de la partie"
+            },
+            "description": {
+              "en": "Save name and decoration placement seed. Allowed: A–Z, a–z, 0–9, _ - . space.",
+              "fr": "Nom de la sauvegarde et seed de décoration. Autorisé : A–Z, a–z, 0–9, _ - . espace."
+            }
+          },
+          "GameMode": {
+            "display_type": "select",
+            "config": {
+              "default": "GameModeSurvival",
+              "options": [
+                {
+                  "value": "GameModeSurvival",
+                  "label": {
+                    "en": "Survival",
+                    "fr": "Survie"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Game Mode",
+              "fr": "Mode de jeu"
+            },
+            "description": {
+              "en": "Gameplay mode. Currently only Survival is supported.",
+              "fr": "Mode de jeu. Seul Survie est actuellement supporté."
+            }
+          },
+          "GameDifficulty": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 5,
+              "step": 1,
+              "default": 1
+            },
+            "label": {
+              "en": "Game Difficulty",
+              "fr": "Difficulté"
+            },
+            "description": {
+              "en": "Overall difficulty: 0 = easiest, 5 = hardest.",
+              "fr": "Difficulté globale : 0 = très facile, 5 = très difficile."
+            },
+            "env_var": "GAME_DIFFICULTY"
+          },
+          "BlockDamagePlayer": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 500,
+              "step": 5,
+              "default": 100
+            },
+            "label": {
+              "en": "Player Block Damage (%)",
+              "fr": "Dégâts joueur aux blocs (%)"
+            },
+            "description": {
+              "en": "Percentage of damage players deal to blocks.",
+              "fr": "Pourcentage de dégâts infligés par les joueurs aux blocs."
+            }
+          },
+          "BlockDamageAI": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 500,
+              "step": 5,
+              "default": 100
+            },
+            "label": {
+              "en": "AI Block Damage (%)",
+              "fr": "Dégâts IA aux blocs (%)"
+            },
+            "description": {
+              "en": "Percentage of damage AIs deal to blocks.",
+              "fr": "Pourcentage de dégâts infligés par les IA aux blocs."
+            }
+          },
+          "BlockDamageAIBM": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 500,
+              "step": 5,
+              "default": 100
+            },
+            "label": {
+              "en": "Blood Moon AI Block Damage (%)",
+              "fr": "Dégâts IA Lune de sang aux blocs (%)"
+            },
+            "description": {
+              "en": "Percentage of damage AIs deal to blocks during a blood moon.",
+              "fr": "Pourcentage de dégâts infligés par les IA aux blocs pendant une lune de sang."
+            }
+          },
+          "XPMultiplier": {
+            "display_type": "slider",
+            "config": {
+              "min": 25,
+              "max": 500,
+              "step": 5,
+              "default": 100
+            },
+            "label": {
+              "en": "XP Multiplier (%)",
+              "fr": "Multiplicateur d'XP (%)"
+            },
+            "description": {
+              "en": "XP gain multiplier as a percentage.",
+              "fr": "Multiplicateur du gain d'XP en pourcentage."
+            }
+          },
+          "PlayerSafeZoneLevel": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 50,
+              "step": 1,
+              "default": 5
+            },
+            "label": {
+              "en": "Safe Zone Player Level",
+              "fr": "Niveau zone de sécurité"
+            },
+            "description": {
+              "en": "Players at or below this level create a no-enemy safe zone when spawned.",
+              "fr": "Les joueurs de ce niveau ou en dessous créent une zone sans ennemis à l'apparition."
+            }
+          },
+          "PlayerSafeZoneHours": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 48,
+              "step": 1,
+              "default": 5
+            },
+            "label": {
+              "en": "Safe Zone Duration (in-game hours)",
+              "fr": "Durée zone de sécurité (heures en jeu)"
+            },
+            "description": {
+              "en": "How many in-game hours the safe zone persists.",
+              "fr": "Combien d'heures en jeu la zone de sécurité persiste."
+            }
+          },
+          "BuildCreate": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "false"
+            },
+            "label": {
+              "en": "Creative / Cheat Mode",
+              "fr": "Mode créatif / triche"
+            },
+            "description": {
+              "en": "Enables creative cheat mode.",
+              "fr": "Active le mode créatif/triche."
+            }
+          },
+          "DayNightLength": {
+            "display_type": "slider",
+            "config": {
+              "min": 10,
+              "max": 180,
+              "step": 5,
+              "default": 60
+            },
+            "label": {
+              "en": "Day Length (real minutes)",
+              "fr": "Durée d'un jour (minutes réelles)"
+            },
+            "description": {
+              "en": "Real-time minutes per in-game day.",
+              "fr": "Minutes réelles correspondant à un jour en jeu."
+            }
+          },
+          "DayLightLength": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 24,
+              "step": 1,
+              "default": 18
+            },
+            "label": {
+              "en": "Daylight Hours",
+              "fr": "Heures de jour"
+            },
+            "description": {
+              "en": "Number of in-game hours of daylight per day.",
+              "fr": "Nombre d'heures en jeu d'ensoleillement par jour."
+            }
+          },
+          "BiomeProgression": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "true"
+            },
+            "label": {
+              "en": "Biome Progression",
+              "fr": "Progression de biome"
+            },
+            "description": {
+              "en": "Enables biome hazards (weather and storms are unaffected).",
+              "fr": "Active les dangers liés aux biomes (météo et tempêtes non concernées)."
+            }
+          },
+          "StormFreq": {
+            "display_type": "select",
+            "config": {
+              "default": 100,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Off",
+                    "fr": "Désactivé"
+                  }
+                },
+                {
+                  "value": 50,
+                  "label": {
+                    "en": "50%",
+                    "fr": "50 %"
+                  }
+                },
+                {
+                  "value": 100,
+                  "label": {
+                    "en": "100% (default)",
+                    "fr": "100 % (défaut)"
+                  }
+                },
+                {
+                  "value": 150,
+                  "label": {
+                    "en": "150%",
+                    "fr": "150 %"
+                  }
+                },
+                {
+                  "value": 200,
+                  "label": {
+                    "en": "200%",
+                    "fr": "200 %"
+                  }
+                },
+                {
+                  "value": 300,
+                  "label": {
+                    "en": "300%",
+                    "fr": "300 %"
+                  }
+                },
+                {
+                  "value": 400,
+                  "label": {
+                    "en": "400%",
+                    "fr": "400 %"
+                  }
+                },
+                {
+                  "value": 500,
+                  "label": {
+                    "en": "500%",
+                    "fr": "500 %"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Storm Frequency",
+              "fr": "Fréquence des tempêtes"
+            },
+            "description": {
+              "en": "Adjusts how often storms occur. 0 turns them off.",
+              "fr": "Ajuste la fréquence des tempêtes. 0 les désactive."
+            }
+          },
+          "DeathPenalty": {
+            "display_type": "select",
+            "config": {
+              "default": 1,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Nothing",
+                    "fr": "Aucune"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Classic XP penalty",
+                    "fr": "Pénalité XP classique"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Injured (debuffs, 50% food/water)",
+                    "fr": "Blessé (debuffs, 50 % nourriture/eau)"
+                  }
+                },
+                {
+                  "value": 3,
+                  "label": {
+                    "en": "Permanent death",
+                    "fr": "Mort permanente"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Death Penalty",
+              "fr": "Pénalité de mort"
+            },
+            "description": {
+              "en": "Penalty applied to a player after dying.",
+              "fr": "Pénalité appliquée à un joueur après sa mort."
+            }
+          },
+          "DropOnDeath": {
+            "display_type": "select",
+            "config": {
+              "default": 1,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Nothing",
+                    "fr": "Rien"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Everything",
+                    "fr": "Tout"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Toolbelt only",
+                    "fr": "Barre d'outils uniquement"
+                  }
+                },
+                {
+                  "value": 3,
+                  "label": {
+                    "en": "Backpack only",
+                    "fr": "Sac à dos uniquement"
+                  }
+                },
+                {
+                  "value": 4,
+                  "label": {
+                    "en": "Delete all",
+                    "fr": "Tout supprimer"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Drop on Death",
+              "fr": "Objets lâchés à la mort"
+            },
+            "description": {
+              "en": "What items are dropped when a player dies.",
+              "fr": "Quels objets sont lâchés à la mort d'un joueur."
+            }
+          },
+          "DropOnQuit": {
+            "display_type": "select",
+            "config": {
+              "default": 0,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Nothing",
+                    "fr": "Rien"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Everything",
+                    "fr": "Tout"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Toolbelt only",
+                    "fr": "Barre d'outils uniquement"
+                  }
+                },
+                {
+                  "value": 3,
+                  "label": {
+                    "en": "Backpack only",
+                    "fr": "Sac à dos uniquement"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Drop on Quit",
+              "fr": "Objets lâchés à la déconnexion"
+            },
+            "description": {
+              "en": "What items are dropped when a player quits.",
+              "fr": "Quels objets sont lâchés quand un joueur quitte la partie."
+            }
+          },
+          "BedrollDeadZoneSize": {
+            "display_type": "slider",
+            "config": {
+              "min": 5,
+              "max": 60,
+              "step": 1,
+              "default": 15
+            },
+            "label": {
+              "en": "Bedroll Dead Zone Size",
+              "fr": "Taille zone morte du sac de couchage"
+            },
+            "description": {
+              "en": "Box radius around a bedroll where zombies cannot spawn.",
+              "fr": "Rayon autour d'un sac de couchage où les zombies ne peuvent pas apparaître."
+            }
+          },
+          "BedrollExpiryTime": {
+            "display_type": "slider",
+            "config": {
+              "min": 1,
+              "max": 365,
+              "step": 1,
+              "default": 45
+            },
+            "label": {
+              "en": "Bedroll Expiry (real days)",
+              "fr": "Expiration sac de couchage (jours réels)"
+            },
+            "description": {
+              "en": "Real-world days a bedroll stays active after the owner is offline.",
+              "fr": "Jours réels où un sac de couchage reste actif après la déconnexion du propriétaire."
+            }
+          },
+          "AllowSpawnNearFriend": {
+            "display_type": "select",
+            "config": {
+              "default": 2,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Disabled",
+                    "fr": "Désactivé"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Always",
+                    "fr": "Toujours"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Only in forest biome",
+                    "fr": "Uniquement biome forêt"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Spawn Near Friend",
+              "fr": "Apparaître près d'un ami"
+            },
+            "description": {
+              "en": "Whether new players can choose to spawn near a friend.",
+              "fr": "Si les nouveaux joueurs peuvent choisir d'apparaître près d'un ami."
+            }
+          },
+          "CameraRestrictionMode": {
+            "display_type": "select",
+            "config": {
+              "default": 0,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Free (1st & 3rd person)",
+                    "fr": "Libre (1ère & 3ème pers.)"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "First person only",
+                    "fr": "Première personne uniquement"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Third person only",
+                    "fr": "Troisième personne uniquement"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Camera Restriction",
+              "fr": "Restriction caméra"
+            },
+            "description": {
+              "en": "Forces a specific camera perspective.",
+              "fr": "Force une perspective de caméra spécifique."
+            }
+          },
+          "JarRefund": {
+            "display_type": "select",
+            "config": {
+              "default": 60,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "0%",
+                    "fr": "0 %"
+                  }
+                },
+                {
+                  "value": 5,
+                  "label": {
+                    "en": "5%",
+                    "fr": "5 %"
+                  }
+                },
+                {
+                  "value": 10,
+                  "label": {
+                    "en": "10%",
+                    "fr": "10 %"
+                  }
+                },
+                {
+                  "value": 20,
+                  "label": {
+                    "en": "20%",
+                    "fr": "20 %"
+                  }
+                },
+                {
+                  "value": 30,
+                  "label": {
+                    "en": "30%",
+                    "fr": "30 %"
+                  }
+                },
+                {
+                  "value": 40,
+                  "label": {
+                    "en": "40%",
+                    "fr": "40 %"
+                  }
+                },
+                {
+                  "value": 50,
+                  "label": {
+                    "en": "50%",
+                    "fr": "50 %"
+                  }
+                },
+                {
+                  "value": 60,
+                  "label": {
+                    "en": "60% (default)",
+                    "fr": "60 % (défaut)"
+                  }
+                },
+                {
+                  "value": 70,
+                  "label": {
+                    "en": "70%",
+                    "fr": "70 %"
+                  }
+                },
+                {
+                  "value": 80,
+                  "label": {
+                    "en": "80%",
+                    "fr": "80 %"
+                  }
+                },
+                {
+                  "value": 90,
+                  "label": {
+                    "en": "90%",
+                    "fr": "90 %"
+                  }
+                },
+                {
+                  "value": 100,
+                  "label": {
+                    "en": "100%",
+                    "fr": "100 %"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Jar Refund (%)",
+              "fr": "Remboursement bocaux (%)"
+            },
+            "description": {
+              "en": "Empty jar refund percentage after consuming an item.",
+              "fr": "Pourcentage de remboursement de bocaux vides après consommation."
+            }
+          },
+          "MaxSpawnedZombies": {
+            "display_type": "slider",
+            "config": {
+              "min": 8,
+              "max": 128,
+              "step": 1,
+              "default": 64
+            },
+            "label": {
+              "en": "Max Spawned Zombies",
+              "fr": "Zombies max simultanés"
+            },
+            "description": {
+              "en": "Maximum total zombies alive at once across the map. High performance impact.",
+              "fr": "Nombre total maximum de zombies vivants sur la carte. Impact performance élevé."
+            }
+          },
+          "MaxSpawnedAnimals": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 200,
+              "step": 1,
+              "default": 50
+            },
+            "label": {
+              "en": "Max Spawned Animals",
+              "fr": "Animaux max simultanés"
+            },
+            "description": {
+              "en": "Maximum total wildlife alive across the map.",
+              "fr": "Nombre total maximum d'animaux vivants sur la carte."
+            }
+          },
+          "ServerMaxAllowedViewDistance": {
+            "display_type": "slider",
+            "config": {
+              "min": 6,
+              "max": 12,
+              "step": 1,
+              "default": 12
+            },
+            "label": {
+              "en": "Max View Distance",
+              "fr": "Distance d'affichage max"
+            },
+            "description": {
+              "en": "Maximum view distance clients may request. High memory/CPU impact.",
+              "fr": "Distance d'affichage maximale que les clients peuvent demander. Impact mémoire/CPU élevé."
+            }
+          },
+          "MaxQueuedMeshLayers": {
+            "display_type": "number",
+            "config": {
+              "min": 100,
+              "max": 10000,
+              "step": 100,
+              "default": 1000
+            },
+            "label": {
+              "en": "Max Queued Mesh Layers",
+              "fr": "Couches de mesh en file max"
+            },
+            "description": {
+              "en": "Maximum chunk mesh layers queued for generation. Lower = less memory but slower chunks.",
+              "fr": "Couches de mesh de chunk en file maximum. Plus bas = moins de mémoire mais chunks plus lents."
+            }
+          },
+          "EnemySpawnMode": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "true"
+            },
+            "label": {
+              "en": "Enemy Spawning",
+              "fr": "Apparition d'ennemis"
+            },
+            "description": {
+              "en": "Enables or disables enemy spawning entirely.",
+              "fr": "Active ou désactive complètement l'apparition d'ennemis."
+            }
+          },
+          "EnemyDifficulty": {
+            "display_type": "select",
+            "config": {
+              "default": 0,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Normal",
+                    "fr": "Normal"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Feral",
+                    "fr": "Féroce"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Enemy Difficulty",
+              "fr": "Difficulté des ennemis"
+            },
+            "description": {
+              "en": "Default difficulty tier for enemies.",
+              "fr": "Niveau de difficulté par défaut des ennemis."
+            }
+          },
+          "ZombieFeralSense": {
+            "display_type": "select",
+            "config": {
+              "default": 0,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Off",
+                    "fr": "Désactivé"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Day",
+                    "fr": "Jour"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Night",
+                    "fr": "Nuit"
+                  }
+                },
+                {
+                  "value": 3,
+                  "label": {
+                    "en": "All",
+                    "fr": "Tout le temps"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Zombie Feral Sense",
+              "fr": "Sens féroce des zombies"
+            },
+            "description": {
+              "en": "When zombies use their feral sense to detect players.",
+              "fr": "Quand les zombies utilisent leur sens féroce pour détecter les joueurs."
+            }
+          },
+          "ZombieMove": {
+            "display_type": "select",
+            "config": {
+              "default": 0,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Walk",
+                    "fr": "Marche"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Jog",
+                    "fr": "Trot"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Run",
+                    "fr": "Course"
+                  }
+                },
+                {
+                  "value": 3,
+                  "label": {
+                    "en": "Sprint",
+                    "fr": "Sprint"
+                  }
+                },
+                {
+                  "value": 4,
+                  "label": {
+                    "en": "Nightmare",
+                    "fr": "Cauchemar"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Zombie Day Speed",
+              "fr": "Vitesse des zombies (jour)"
+            },
+            "description": {
+              "en": "Movement speed of zombies during the day.",
+              "fr": "Vitesse de déplacement des zombies pendant la journée."
+            }
+          },
+          "ZombieMoveNight": {
+            "display_type": "select",
+            "config": {
+              "default": 3,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Walk",
+                    "fr": "Marche"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Jog",
+                    "fr": "Trot"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Run",
+                    "fr": "Course"
+                  }
+                },
+                {
+                  "value": 3,
+                  "label": {
+                    "en": "Sprint",
+                    "fr": "Sprint"
+                  }
+                },
+                {
+                  "value": 4,
+                  "label": {
+                    "en": "Nightmare",
+                    "fr": "Cauchemar"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Zombie Night Speed",
+              "fr": "Vitesse des zombies (nuit)"
+            },
+            "description": {
+              "en": "Movement speed of zombies during the night.",
+              "fr": "Vitesse de déplacement des zombies pendant la nuit."
+            }
+          },
+          "ZombieFeralMove": {
+            "display_type": "select",
+            "config": {
+              "default": 3,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Walk",
+                    "fr": "Marche"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Jog",
+                    "fr": "Trot"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Run",
+                    "fr": "Course"
+                  }
+                },
+                {
+                  "value": 3,
+                  "label": {
+                    "en": "Sprint",
+                    "fr": "Sprint"
+                  }
+                },
+                {
+                  "value": 4,
+                  "label": {
+                    "en": "Nightmare",
+                    "fr": "Cauchemar"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Feral Zombie Speed",
+              "fr": "Vitesse zombies féroces"
+            },
+            "description": {
+              "en": "Movement speed of feral zombies.",
+              "fr": "Vitesse de déplacement des zombies féroces."
+            }
+          },
+          "ZombieBMMove": {
+            "display_type": "select",
+            "config": {
+              "default": 3,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Walk",
+                    "fr": "Marche"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Jog",
+                    "fr": "Trot"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Run",
+                    "fr": "Course"
+                  }
+                },
+                {
+                  "value": 3,
+                  "label": {
+                    "en": "Sprint",
+                    "fr": "Sprint"
+                  }
+                },
+                {
+                  "value": 4,
+                  "label": {
+                    "en": "Nightmare",
+                    "fr": "Cauchemar"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Blood Moon Zombie Speed",
+              "fr": "Vitesse zombies Lune de sang"
+            },
+            "description": {
+              "en": "Movement speed of zombies during a blood moon.",
+              "fr": "Vitesse des zombies pendant une lune de sang."
+            }
+          },
+          "AISmellMode": {
+            "display_type": "select",
+            "config": {
+              "default": 3,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Off",
+                    "fr": "Désactivé"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Walk",
+                    "fr": "Marche"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Jog",
+                    "fr": "Trot"
+                  }
+                },
+                {
+                  "value": 3,
+                  "label": {
+                    "en": "Run",
+                    "fr": "Course"
+                  }
+                },
+                {
+                  "value": 4,
+                  "label": {
+                    "en": "Sprint",
+                    "fr": "Sprint"
+                  }
+                },
+                {
+                  "value": 5,
+                  "label": {
+                    "en": "Nightmare",
+                    "fr": "Cauchemar"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "AI Smell Mode",
+              "fr": "Mode olfactif des IA"
+            },
+            "description": {
+              "en": "Speed of AI when reacting to smell.",
+              "fr": "Vitesse de l'IA lorsqu'elle réagit aux odeurs."
+            }
+          },
+          "BloodMoonFrequency": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 30,
+              "step": 1,
+              "default": 7
+            },
+            "label": {
+              "en": "Blood Moon Frequency (days)",
+              "fr": "Fréquence Lune de sang (jours)"
+            },
+            "description": {
+              "en": "Days between blood moons. 0 disables them.",
+              "fr": "Jours entre deux lunes de sang. 0 les désactive."
+            }
+          },
+          "BloodMoonRange": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 7,
+              "step": 1,
+              "default": 0
+            },
+            "label": {
+              "en": "Blood Moon Random Range",
+              "fr": "Variabilité Lune de sang"
+            },
+            "description": {
+              "en": "Maximum random deviation in days for blood moons. 0 = exact.",
+              "fr": "Écart aléatoire maximal en jours pour les lunes de sang. 0 = exact."
+            }
+          },
+          "BloodMoonWarning": {
+            "display_type": "slider",
+            "config": {
+              "min": -1,
+              "max": 24,
+              "step": 1,
+              "default": 8
+            },
+            "label": {
+              "en": "Blood Moon Warning Hour",
+              "fr": "Heure d'avertissement Lune de sang"
+            },
+            "description": {
+              "en": "Hour the day counter turns red on a blood moon day. -1 disables the warning.",
+              "fr": "Heure à laquelle le compteur de jour devient rouge un jour de lune de sang. -1 désactive l'avertissement."
+            }
+          },
+          "BloodMoonEnemyCount": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 32,
+              "step": 1,
+              "default": 8
+            },
+            "label": {
+              "en": "Blood Moon Enemies / Player",
+              "fr": "Ennemis Lune de sang / joueur"
+            },
+            "description": {
+              "en": "Zombies alive per player during a blood moon (capped by MaxSpawnedZombies).",
+              "fr": "Zombies vivants par joueur pendant une lune de sang (limité par MaxSpawnedZombies)."
+            }
+          },
+          "LootAbundance": {
+            "display_type": "slider",
+            "config": {
+              "min": 25,
+              "max": 300,
+              "step": 5,
+              "default": 100
+            },
+            "label": {
+              "en": "Loot Abundance (%)",
+              "fr": "Abondance du butin (%)"
+            },
+            "description": {
+              "en": "Percentage of loot obtained from containers.",
+              "fr": "Pourcentage de butin obtenu dans les conteneurs."
+            }
+          },
+          "LootRespawnDays": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 90,
+              "step": 1,
+              "default": 7
+            },
+            "label": {
+              "en": "Loot Respawn (days)",
+              "fr": "Réapparition du butin (jours)"
+            },
+            "description": {
+              "en": "In-game days before loot respawns in containers.",
+              "fr": "Jours en jeu avant la réapparition du butin dans les conteneurs."
+            }
+          },
+          "AirDropFrequency": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 240,
+              "step": 1,
+              "default": 72
+            },
+            "label": {
+              "en": "Air Drop Frequency (in-game hours)",
+              "fr": "Fréquence largage aérien (heures en jeu)"
+            },
+            "description": {
+              "en": "In-game hours between air drops. 0 disables them.",
+              "fr": "Heures en jeu entre deux largages aériens. 0 les désactive."
+            }
+          },
+          "AirDropMarker": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "true"
+            },
+            "label": {
+              "en": "Air Drop Marker",
+              "fr": "Marqueur largage aérien"
+            },
+            "description": {
+              "en": "Shows a marker on the map/compass for air drops.",
+              "fr": "Affiche un marqueur sur la carte/boussole pour les largages aériens."
+            }
+          },
+          "PartySharedKillRange": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 500,
+              "step": 5,
+              "default": 100
+            },
+            "label": {
+              "en": "Party Shared Kill Range",
+              "fr": "Portée de partage de kill (groupe)"
+            },
+            "description": {
+              "en": "Maximum distance to receive shared XP and quest credit from party kills.",
+              "fr": "Distance maximale pour recevoir l'XP partagée et le crédit de quête des kills de groupe."
+            }
+          },
+          "PlayerKillingMode": {
+            "display_type": "select",
+            "config": {
+              "default": 3,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "No killing",
+                    "fr": "Aucun meurtre"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Kill allies only",
+                    "fr": "Tuer alliés uniquement"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "Kill strangers only",
+                    "fr": "Tuer inconnus uniquement"
+                  }
+                },
+                {
+                  "value": 3,
+                  "label": {
+                    "en": "Kill everyone",
+                    "fr": "Tuer tout le monde"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Player Killing Mode",
+              "fr": "Mode PvP"
+            },
+            "description": {
+              "en": "Controls which players can be killed by others.",
+              "fr": "Contrôle quels joueurs peuvent être tués par les autres."
+            }
+          },
+          "LandClaimCount": {
+            "display_type": "slider",
+            "config": {
+              "min": 1,
+              "max": 20,
+              "step": 1,
+              "default": 5
+            },
+            "label": {
+              "en": "Max Land Claims / Player",
+              "fr": "Claims max / joueur"
+            },
+            "description": {
+              "en": "Maximum land claim blocks per player.",
+              "fr": "Nombre maximum de claims (zones protégées) par joueur."
+            }
+          },
+          "LandClaimSize": {
+            "display_type": "slider",
+            "config": {
+              "min": 5,
+              "max": 101,
+              "step": 2,
+              "default": 41
+            },
+            "label": {
+              "en": "Land Claim Size (blocks)",
+              "fr": "Taille du claim (blocs)"
+            },
+            "description": {
+              "en": "Block radius protected by a single land claim keystone.",
+              "fr": "Rayon en blocs protégé par une pierre angulaire de claim."
+            }
+          },
+          "LandClaimDeadZone": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 200,
+              "step": 1,
+              "default": 30
+            },
+            "label": {
+              "en": "Land Claim Dead Zone",
+              "fr": "Zone tampon entre claims"
+            },
+            "description": {
+              "en": "Minimum distance in blocks between keystones of non-friends.",
+              "fr": "Distance minimale en blocs entre les claims de non-amis."
+            }
+          },
+          "LandClaimExpiryTime": {
+            "display_type": "slider",
+            "config": {
+              "min": 1,
+              "max": 365,
+              "step": 1,
+              "default": 7
+            },
+            "label": {
+              "en": "Land Claim Expiry (real days)",
+              "fr": "Expiration claim (jours réels)"
+            },
+            "description": {
+              "en": "Real-world days a player can be offline before their claims expire.",
+              "fr": "Jours réels où un joueur peut être hors ligne avant l'expiration de ses claims."
+            }
+          },
+          "LandClaimDecayMode": {
+            "display_type": "select",
+            "config": {
+              "default": 0,
+              "options": [
+                {
+                  "value": 0,
+                  "label": {
+                    "en": "Slow (linear)",
+                    "fr": "Lent (linéaire)"
+                  }
+                },
+                {
+                  "value": 1,
+                  "label": {
+                    "en": "Fast (exponential)",
+                    "fr": "Rapide (exponentiel)"
+                  }
+                },
+                {
+                  "value": 2,
+                  "label": {
+                    "en": "None (full protection)",
+                    "fr": "Aucune (protection totale)"
+                  }
+                }
+              ]
+            },
+            "label": {
+              "en": "Land Claim Decay Mode",
+              "fr": "Mode de décroissance des claims"
+            },
+            "description": {
+              "en": "Controls how offline players' claims decay over time.",
+              "fr": "Contrôle comment les claims des joueurs hors ligne se dégradent dans le temps."
+            }
+          },
+          "LandClaimOnlineDurabilityModifier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 64,
+              "step": 1,
+              "default": 4
+            },
+            "label": {
+              "en": "Land Claim Online Durability",
+              "fr": "Durabilité claim (en ligne)"
+            },
+            "description": {
+              "en": "Multiplier for block hardness inside claims when the owner is online. 0 = invincible.",
+              "fr": "Multiplicateur de dureté des blocs dans le claim quand le propriétaire est connecté. 0 = invincible."
+            }
+          },
+          "LandClaimOfflineDurabilityModifier": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 64,
+              "step": 1,
+              "default": 4
+            },
+            "label": {
+              "en": "Land Claim Offline Durability",
+              "fr": "Durabilité claim (hors ligne)"
+            },
+            "description": {
+              "en": "Multiplier for block hardness inside claims when the owner is offline. 0 = invincible.",
+              "fr": "Multiplicateur de dureté des blocs dans le claim quand le propriétaire est hors ligne. 0 = invincible."
+            }
+          },
+          "LandClaimOfflineDelay": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 1440,
+              "step": 1,
+              "default": 0
+            },
+            "label": {
+              "en": "Land Claim Offline Delay (min)",
+              "fr": "Délai hors ligne du claim (min)"
+            },
+            "description": {
+              "en": "Minutes after logout before the claim switches from online to offline protection.",
+              "fr": "Minutes après déconnexion avant que la protection du claim ne passe d'en ligne à hors ligne."
+            }
+          },
+          "DynamicMeshEnabled": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "true"
+            },
+            "label": {
+              "en": "Dynamic Mesh",
+              "fr": "Mesh dynamique"
+            },
+            "description": {
+              "en": "Enables the dynamic mesh system.",
+              "fr": "Active le système de mesh dynamique."
+            }
+          },
+          "DynamicMeshLandClaimOnly": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "true"
+            },
+            "label": {
+              "en": "Dynamic Mesh (Claims Only)",
+              "fr": "Mesh dynamique (claims uniquement)"
+            },
+            "description": {
+              "en": "Restricts dynamic mesh activity to player land claim areas.",
+              "fr": "Restreint l'activité du mesh dynamique aux zones de claim des joueurs."
+            }
+          },
+          "DynamicMeshLandClaimBuffer": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 10,
+              "step": 1,
+              "default": 3
+            },
+            "label": {
+              "en": "Dynamic Mesh Claim Buffer (chunks)",
+              "fr": "Tampon mesh dynamique (chunks)"
+            },
+            "description": {
+              "en": "Chunk radius around a land claim for dynamic mesh coverage.",
+              "fr": "Rayon en chunks autour d'un claim pour la couverture du mesh dynamique."
+            }
+          },
+          "DynamicMeshMaxItemCache": {
+            "display_type": "slider",
+            "config": {
+              "min": 1,
+              "max": 16,
+              "step": 1,
+              "default": 3
+            },
+            "label": {
+              "en": "Dynamic Mesh Max Item Cache",
+              "fr": "Cache max mesh dynamique"
+            },
+            "description": {
+              "en": "Max items processed concurrently by the dynamic mesh system. Higher = more RAM.",
+              "fr": "Items traités simultanément max par le mesh dynamique. Plus élevé = plus de RAM."
+            }
+          },
+          "TwitchServerPermission": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 1000,
+              "step": 1,
+              "default": 90
+            },
+            "label": {
+              "en": "Twitch Integration Permission Level",
+              "fr": "Niveau de permission intégration Twitch"
+            },
+            "description": {
+              "en": "Required permission level to use Twitch integration on the server.",
+              "fr": "Niveau de permission requis pour utiliser l'intégration Twitch sur le serveur."
+            }
+          },
+          "TwitchBloodMoonAllowed": {
+            "display_type": "boolean",
+            "config": {
+              "true_value": "true",
+              "false_value": "false",
+              "default": "false"
+            },
+            "label": {
+              "en": "Twitch Allowed on Blood Moon",
+              "fr": "Twitch autorisé Lune de sang"
+            },
+            "description": {
+              "en": "Allow Twitch actions during blood moons (may cause lag with extra spawns).",
+              "fr": "Autorise les actions Twitch pendant les lunes de sang (peut causer du lag avec les spawns supplémentaires)."
+            }
+          },
+          "SandboxCode": {
+            "display_type": "text",
+            "config": {
+              "default": "AAAGABGACGADGARJBAABBAAMLBMCBPFBZFCABCOHCXBDMNDBJDCIDDIDEIDJIFEDFIDFFGETKERG",
+              "max_length": 512
+            },
+            "label": {
+              "en": "Sandbox Code",
+              "fr": "Code Sandbox"
+            },
+            "description": {
+              "en": "Encodes the sandbox difficulty options (default code: Adventurer). Generate a new one in-game: new game screen → Sandbox Options → adjust → Copy Code, then paste it here.",
+              "fr": "Encode les options de difficulté sandbox (code par défaut : Aventurier). Générez-en un nouveau en jeu : écran nouvelle partie → Options sandbox → ajustez → Copier le code, puis collez-le ici."
+            }
+          },
+          "QuestProgressionDailyLimit": {
+            "display_type": "slider",
+            "config": {
+              "min": 0,
+              "max": 20,
+              "step": 1,
+              "default": 4
+            },
+            "label": {
+              "en": "Daily Quest Progression Limit",
+              "fr": "Limite quotidienne de progression de quêtes"
+            },
+            "description": {
+              "en": "Number of quests per day that contribute to tier progression. Extra quests still pay rewards.",
+              "fr": "Nombre de quêtes par jour contribuant à la progression de niveau. Les quêtes supplémentaires donnent toujours les récompenses."
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -50,13 +50,16 @@ export function validateValue(param: ConfigParam, value: string): string | null 
             return null;
         }
         case 'select': {
-            const values = (config.options ?? []).map((option) => option.value);
+            // Option values may be numbers in the template JSON (e.g. 0/1/2
+            // enums) while the compared value is always the string read from
+            // the file / the <select> — compare as strings, like the backend.
+            const values = (config.options ?? []).map((option) => String(option.value));
 
             return values.length === 0 || values.includes(value) ? null : 'option';
         }
         case 'multiselect': {
             const separator = config.separator && config.separator !== '' ? config.separator : ',';
-            const allowed = (config.options ?? []).map((option) => option.value);
+            const allowed = (config.options ?? []).map((option) => String(option.value));
             if (allowed.length === 0) {
                 return null;
             }
@@ -69,8 +72,8 @@ export function validateValue(param: ConfigParam, value: string): string | null 
             return null;
         }
         case 'boolean': {
-            const trueValue = config.true_value ?? 'true';
-            const falseValue = config.false_value ?? 'false';
+            const trueValue = String(config.true_value ?? 'true');
+            const falseValue = String(config.false_value ?? 'false');
 
             return value === trueValue || value === falseValue ? null : 'boolean';
         }

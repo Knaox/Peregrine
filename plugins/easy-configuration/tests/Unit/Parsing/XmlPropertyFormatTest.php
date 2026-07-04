@@ -81,11 +81,65 @@ final class XmlPropertyFormatTest extends TestCase
         self::assertSame('Bob & "Friends"', (new XmlPropertyFormat)->parse($result)->get('ServerName', 'ServerSettings')?->value);
     }
 
-    public function test_an_unknown_key_is_skipped_losslessly(): void
+    public function test_a_missing_key_is_appended_to_its_section(): void
+    {
+        $result = (new XmlPropertyFormat)->apply($this->sample(), [
+            new ConfigChange('SandboxCode', 'AAAJABJACJADJARFBNC', 'ServerSettings'),
+        ]);
+
+        // Appended on its own line after the section's last property, with the
+        // same indentation, and round-trips through the parser.
+        self::assertStringContainsString("\n\t<property name=\"SandboxCode\" value=\"AAAJABJACJADJARFBNC\"/>\n", $result);
+        self::assertSame('AAAJABJACJADJARFBNC', (new XmlPropertyFormat)->parse($result)->get('SandboxCode', 'ServerSettings')?->value);
+        self::assertStringContainsString('<property name="ServerPassword" value="" />', $result);
+        self::assertLessThan(
+            strpos($result, '<property name="SandboxCode"'),
+            strpos($result, '<property name="ServerPassword"'),
+        );
+    }
+
+    public function test_missing_keys_append_in_submitted_order_alongside_rewrites(): void
+    {
+        $result = (new XmlPropertyFormat)->apply($this->sample(), [
+            new ConfigChange('ServerMaxPlayerCount', '16', 'ServerSettings'),
+            new ConfigChange('SandboxCode', 'AAA', 'ServerSettings'),
+            new ConfigChange('TelnetEnabled', 'true', 'ServerSettings'),
+        ]);
+
+        $parsed = (new XmlPropertyFormat)->parse($result);
+        self::assertSame('16', $parsed->get('ServerMaxPlayerCount', 'ServerSettings')?->value);
+        self::assertSame('AAA', $parsed->get('SandboxCode', 'ServerSettings')?->value);
+        self::assertSame('true', $parsed->get('TelnetEnabled', 'ServerSettings')?->value);
+        self::assertLessThan(
+            strpos($result, '<property name="TelnetEnabled"'),
+            strpos($result, '<property name="SandboxCode"'),
+        );
+    }
+
+    public function test_a_missing_key_is_appended_into_an_empty_section(): void
+    {
+        $raw = "<ServerSettings>\n</ServerSettings>\n";
+
+        $result = (new XmlPropertyFormat)->apply($raw, [new ConfigChange('ServerName', 'Hi', 'ServerSettings')]);
+
+        self::assertSame("<ServerSettings>\n\t<property name=\"ServerName\" value=\"Hi\"/>\n</ServerSettings>\n", $result);
+    }
+
+    public function test_a_missing_key_value_is_escaped_on_insertion(): void
+    {
+        $result = (new XmlPropertyFormat)->apply($this->sample(), [
+            new ConfigChange('Motd', 'Bob & "Friends"', 'ServerSettings'),
+        ]);
+
+        self::assertStringContainsString('value="Bob &amp; &quot;Friends&quot;"', $result);
+        self::assertSame('Bob & "Friends"', (new XmlPropertyFormat)->parse($result)->get('Motd', 'ServerSettings')?->value);
+    }
+
+    public function test_a_change_for_an_unknown_section_is_skipped_losslessly(): void
     {
         $sample = $this->sample();
 
-        $result = (new XmlPropertyFormat)->apply($sample, [new ConfigChange('Nope', 'x', 'ServerSettings')]);
+        $result = (new XmlPropertyFormat)->apply($sample, [new ConfigChange('Nope', 'x', 'Nowhere')]);
 
         self::assertSame($sample, $result);
     }

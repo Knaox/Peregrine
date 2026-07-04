@@ -14,6 +14,7 @@ final class OfficialTemplatesTest extends TestCase
 {
     /** The official catalog the "Import official templates" button ships. */
     private const EXPECTED_IDS = [
+        '7-days-to-die',
         'ark-survival-ascended',
         'ark-survival-evolved',
         'astroneer',
@@ -34,7 +35,7 @@ final class OfficialTemplatesTest extends TestCase
         $ids = array_map(static fn ($t): string => $t->id, $loaded);
         sort($ids);
 
-        self::assertSame(self::EXPECTED_IDS, $ids, 'The official catalog must hold exactly the nine shipped templates.');
+        self::assertSame(self::EXPECTED_IDS, $ids, 'The official catalog must hold exactly the ten shipped templates.');
 
         foreach ($loaded as $template) {
             self::assertTrue($template->valid, "Official template {$template->id} is invalid: {$template->error}");
