@@ -84,3 +84,4 @@ CLAUDE.md
 # Internal feature spec drafts — kept locally as working notes, never
 # shipped (the user-facing docs live under resources/views/docs/).
 MODPACK_FEATURE_SPEC.md
+/docs/mobile-desktop-plan.md
