@@ -1,0 +1,3655 @@
+{
+ "formatVersionChar": "A",
+ "valueSets": {
+  "DamageValues": [
+   0,
+   0.25,
+   0.35,
+   0.5,
+   0.65,
+   0.75,
+   0.85,
+   1,
+   1.25,
+   1.5,
+   2,
+   2.5,
+   3
+  ],
+  "DamageValuesNoNone": [
+   0.25,
+   0.35,
+   0.5,
+   0.65,
+   0.75,
+   0.85,
+   1,
+   1.25,
+   1.5,
+   2,
+   2.5,
+   3
+  ],
+  "PlayerSpeedValues": [
+   0,
+   0.25,
+   0.5,
+   0.6,
+   0.7,
+   0.8,
+   0.9,
+   1,
+   1.1,
+   1.2,
+   1.3,
+   1.4,
+   1.5,
+   2,
+   3
+  ],
+  "PlayerSpeedValuesWithNone": [
+   0.25,
+   0.5,
+   0.6,
+   0.7,
+   0.8,
+   0.9,
+   1,
+   1.1,
+   1.2,
+   1.3,
+   1.4,
+   1.5,
+   2,
+   3
+  ],
+  "SpeedValues": [
+   0,
+   0.25,
+   0.5,
+   0.75,
+   1,
+   1.25,
+   1.5,
+   2,
+   3
+  ],
+  "StaminaUsage": [
+   0,
+   0.25,
+   0.5,
+   0.75,
+   1,
+   1.25,
+   1.5,
+   1.75,
+   2
+  ],
+  "LootAbundanceValues": [
+   0,
+   0.25,
+   0.35,
+   0.5,
+   0.65,
+   0.75,
+   0.85,
+   1,
+   1.25,
+   1.5,
+   2,
+   3,
+   4,
+   5
+  ],
+  "ZombieRageChance": [
+   0,
+   0.15,
+   0.3,
+   0.35,
+   0.4,
+   0.5,
+   0.6,
+   0.75,
+   0.9,
+   1
+  ],
+  "ZombieSpeeds": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "AISmellMode": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "JumpStrength": [
+   0,
+   0.5,
+   1,
+   1.25,
+   1.5,
+   2,
+   3
+  ],
+  "StaminaRegen": [
+   0.25,
+   0.5,
+   0.75,
+   1,
+   1.25,
+   1.5,
+   2,
+   3
+  ],
+  "XPGain": [
+   0,
+   0.25,
+   0.5,
+   0.75,
+   1,
+   1.25,
+   1.5,
+   1.75,
+   2,
+   3,
+   5
+  ],
+  "JarRefund": [
+   0,
+   0.05,
+   0.1,
+   0.2,
+   0.3,
+   0.4,
+   0.5,
+   0.6,
+   0.7,
+   0.8,
+   0.9,
+   1
+  ],
+  "BarterValues": [
+   0,
+   0.25,
+   0.5,
+   0.75,
+   1,
+   1.25,
+   1.5,
+   1.75,
+   2,
+   3,
+   4
+  ],
+  "DisabledLowDefaultHigh": [
+   0,
+   0.25,
+   0.5,
+   1,
+   1.5,
+   2
+  ],
+  "LowDefaultHigh": [
+   0.25,
+   0.5,
+   1,
+   1.5,
+   2
+  ],
+  "Encumbrance": [
+   10,
+   1.35,
+   1,
+   0.7,
+   0.35,
+   0
+  ],
+  "SkillGainRate": [
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "PointsPer": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7
+  ],
+  "StarterSkillPoints": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10
+  ],
+  "BloodMoonFrequency": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   14,
+   20,
+   30
+  ],
+  "BloodMoonRange": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   7,
+   10,
+   14,
+   20
+  ],
+  "BloodMoonWarning": [
+   0,
+   1,
+   2
+  ],
+  "BloodMoonCount": [
+   4,
+   6,
+   8,
+   10,
+   12,
+   16,
+   24,
+   32,
+   64
+  ],
+  "AirDrops": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6
+  ],
+  "AirDropRandomTime": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6
+  ],
+  "StormFrequency": [
+   0,
+   0.5,
+   1,
+   1.5,
+   2,
+   3,
+   4,
+   5
+  ],
+  "QuestPerTier": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "QuestPerDay": [
+   -1,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10
+  ],
+  "TraderArea": [
+   0,
+   1,
+   2
+  ],
+  "TraderResetInterval": [
+   -1,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   14
+  ],
+  "ItemTierOptions": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6
+  ],
+  "DewCollectorInput": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "ApiaryInput": [
+   0,
+   0.2,
+   0.4,
+   0.6,
+   0.8,
+   1,
+   1.5,
+   2,
+   3
+  ],
+  "CollectorOutput": [
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "BackpackCrafting": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "DeathPenalty": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "DropOnDeath": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "DropOnQuit": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "LoseItemsOnDeathType": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "DegradeItemsOnDeath": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "TraderHourPresets": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6
+  ],
+  "YesNo": [
+   false,
+   true
+  ],
+  "Celebrate": [
+   0,
+   1,
+   2
+  ],
+  "ShowXP": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "HeadshotMode": [
+   0,
+   1,
+   2
+  ],
+  "MaxEnemyType": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "MaxTechType": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "LoseItemCount": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10
+  ],
+  "DayNightLength": [
+   10,
+   20,
+   30,
+   40,
+   50,
+   60,
+   90,
+   120
+  ],
+  "DayLightLength": [
+   0,
+   4,
+   6,
+   8,
+   10,
+   12,
+   14,
+   16,
+   18,
+   20,
+   24
+  ],
+  "LootRespawnDays": [
+   -1,
+   5,
+   7,
+   10,
+   15,
+   20,
+   30,
+   40,
+   50
+  ],
+  "MaxChunkAge": [
+   -1,
+   1,
+   3,
+   5,
+   7,
+   10,
+   20,
+   30,
+   40,
+   50,
+   75,
+   100
+  ],
+  "Gravity": [
+   0.5,
+   0.6,
+   0.7,
+   0.8,
+   0.9,
+   1
+  ],
+  "SlowToFast": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "BiomeEnemyDensity": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "SmeltingType": [
+   false,
+   true
+  ],
+  "RepairTypes": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "MaxDegradationAmounts": [
+   0,
+   0.05,
+   0.1,
+   0.15,
+   0.2,
+   0.25
+  ],
+  "CropGrowthSpeed": [
+   1000,
+   0,
+   0.2,
+   0.5,
+   0.75,
+   1,
+   1.5,
+   2,
+   3
+  ],
+  "ZombieFeralSense": [
+   0,
+   1,
+   2,
+   3
+  ]
+ },
+ "options": [
+  {
+   "option": "RangedDamage",
+   "enumIndex": 0,
+   "kind": "float",
+   "label": "Ranged Damage",
+   "category": "General",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "Damage dealt by the player with bows, firearms, and other ranged weapons."
+  },
+  {
+   "option": "MeleeDamage",
+   "enumIndex": 1,
+   "kind": "float",
+   "label": "Melee Damage",
+   "category": "General",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "Damage dealt by the player with melee weapons and tools."
+  },
+  {
+   "option": "BlockDamage",
+   "enumIndex": 2,
+   "kind": "float",
+   "label": "Block Damage",
+   "category": "General",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ]
+  },
+  {
+   "option": "TerrainDamage",
+   "enumIndex": 3,
+   "kind": "float",
+   "label": "Terrain Damage",
+   "category": "General",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "How much damage players deal to terrain."
+  },
+  {
+   "option": "HeadshotMultiplier",
+   "enumIndex": 4,
+   "kind": "float",
+   "label": "Headshot Multiplier",
+   "category": "General",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "Multiplier applied to headshot damage players deal to entities."
+  },
+  {
+   "option": "IncomingDamage",
+   "enumIndex": 17,
+   "kind": "float",
+   "label": "Player Damage In",
+   "category": "General",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "How much damage the player receives from all sources."
+  },
+  {
+   "option": "WalkSpeed",
+   "enumIndex": 6,
+   "kind": "float",
+   "label": "Walk Speed",
+   "category": "General",
+   "valueSet": "PlayerSpeedValuesWithNone",
+   "defaultIndex": 6,
+   "valueLabels": [
+    "25%",
+    "50%",
+    "60%",
+    "70%",
+    "80%",
+    "90%",
+    "100%",
+    "110%",
+    "120%",
+    "130%",
+    "140%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Adjusts player movement speed while walking."
+  },
+  {
+   "option": "RunSpeed",
+   "enumIndex": 7,
+   "kind": "float",
+   "label": "Run Speed",
+   "category": "General",
+   "valueSet": "PlayerSpeedValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "60%",
+    "70%",
+    "80%",
+    "90%",
+    "100%",
+    "110%",
+    "120%",
+    "130%",
+    "140%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Adjusts player movement speed while running."
+  },
+  {
+   "option": "CrouchSpeed",
+   "enumIndex": 5,
+   "kind": "float",
+   "label": "Crouch Speed",
+   "category": "General",
+   "valueSet": "PlayerSpeedValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "60%",
+    "70%",
+    "80%",
+    "90%",
+    "100%",
+    "110%",
+    "120%",
+    "130%",
+    "140%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Adjusts player movement speed while crouching."
+  },
+  {
+   "option": "JumpStrength",
+   "enumIndex": 8,
+   "kind": "float",
+   "label": "Jump Strength",
+   "category": "General",
+   "valueSet": "JumpStrength",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "None",
+    "50%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Modifies player jump height."
+  },
+  {
+   "option": "StaminaRegen",
+   "enumIndex": 10,
+   "kind": "float",
+   "label": "Stamina Regen",
+   "category": "General",
+   "valueSet": "StaminaRegen",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Controls the rate stamina regenerates. Values are approximate."
+  },
+  {
+   "option": "StaminaUsage",
+   "enumIndex": 9,
+   "kind": "float",
+   "label": "Stamina Usage",
+   "category": "General",
+   "valueSet": "StaminaUsage",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "175%",
+    "200%"
+   ],
+   "description": "Stamina cost for actions like running, jumping, and attacking. Values are approximate.",
+   "disables": {
+    "whenValue": 0,
+    "inverted": false,
+    "options": [
+     "StaminaRegen"
+    ]
+   }
+  },
+  {
+   "option": "XPMultiplier",
+   "enumIndex": 18,
+   "kind": "float",
+   "label": "XP Multiplier",
+   "category": "General",
+   "valueSet": "XPGain",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "175%",
+    "200%",
+    "300%",
+    "500%"
+   ],
+   "description": "Multiplier applied to all experience gained."
+  },
+  {
+   "option": "ShowXP",
+   "enumIndex": 19,
+   "kind": "int",
+   "label": "Show XP",
+   "category": "General",
+   "valueSet": "ShowXP",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "All",
+    "Bar Only",
+    "Notifications Only",
+    "None"
+   ],
+   "description": "Hide or show the XP bar and XP pop-up on screen."
+  },
+  {
+   "option": "PlayerLevelBonusApplied",
+   "enumIndex": 11,
+   "kind": "bool",
+   "label": "Level Stat Bonus",
+   "category": "General",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Determines whether health and stamina increase per level."
+  },
+  {
+   "option": "SkillGainRate",
+   "enumIndex": 116,
+   "kind": "int",
+   "label": "Skill Gain Rate",
+   "category": "General",
+   "valueSet": "SkillGainRate",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
+   ],
+   "description": "Adjusts how many levels are required to earn skill points.",
+   "disables": {
+    "whenValue": 0,
+    "inverted": false,
+    "options": [
+     "SkillPointsPerLevel"
+    ]
+   }
+  },
+  {
+   "option": "SkillPointsPerLevel",
+   "enumIndex": 117,
+   "kind": "int",
+   "label": "Skill Gain Amount",
+   "category": "General",
+   "valueSet": "PointsPer",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "None",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7"
+   ],
+   "description": "Controls how many skill points are gained when skill points are awarded."
+  },
+  {
+   "option": "DeathPenalty",
+   "enumIndex": 26,
+   "kind": "int",
+   "label": "Death Penalty",
+   "category": "General",
+   "valueSet": "DeathPenalty",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "None",
+    "XP Only",
+    "Injured",
+    "Permanent Death"
+   ],
+   "description": "Determines the death penalty applied after death.\\n\\nNone = No penalty.\\nXP Only = Classic XP loss.\\nInjured = Some debuffs persist and food/water is reset to 50% on respawn.\\nPermanent Death = Character reset."
+  },
+  {
+   "option": "LoseItemsOnDeathType",
+   "enumIndex": 22,
+   "kind": "int",
+   "label": "Lose On Death",
+   "category": "General",
+   "valueSet": "LoseItemsOnDeathType",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "None",
+    "All",
+    "Toolbelt Only",
+    "Backpack Only",
+    "Equipment",
+    "Carried Only"
+   ],
+   "description": "Sets which items are considered for loss on death.\\n\\nAll = All items.\\nToolbelt = Only toolbelt items.\\nBackpack = Only backpack items.\\nEquipment = Worn armor and clothing.\\nCarried Only = Items from toolbelt and backpack."
+  },
+  {
+   "option": "LoseItemsOnDeathCount",
+   "enumIndex": 23,
+   "kind": "int",
+   "label": "Death Loss Count",
+   "category": "General",
+   "valueSet": "LoseItemCount",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "1-3",
+    "1-5",
+    "1-10",
+    "1-20",
+    "3-5",
+    "5-7",
+    "5-10",
+    "7-10",
+    "10-15",
+    "15-20"
+   ],
+   "description": "Sets the number of random items lost on death."
+  },
+  {
+   "option": "DegradeItemsOnDeath",
+   "enumIndex": 24,
+   "kind": "int",
+   "label": "Death Degradation",
+   "category": "General",
+   "valueSet": "DegradeItemsOnDeath",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "None",
+    "Durability",
+    "Max Durability",
+    "Both"
+   ],
+   "description": "Sets whether items degrade on death.\\n\\nNone = no loss.\\nDurability = Reduces an amount of current durability, which can be repaired.\\nMax Durability = Reduces maximum durability, lowering the repair cap.\\nBoth = Items lose both current and maximum durability."
+  },
+  {
+   "option": "DegradeAmountOnDeath",
+   "enumIndex": 25,
+   "kind": "float",
+   "label": "Death Degradation Amount",
+   "category": "General",
+   "valueSet": "MaxDegradationAmounts",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "None",
+    "5%",
+    "10%",
+    "15%",
+    "20%",
+    "25%"
+   ],
+   "description": "When Death Degradation is enabled, this setting determines the percentage of durability lost on death."
+  },
+  {
+   "option": "DropOnDeath",
+   "enumIndex": 27,
+   "kind": "int",
+   "label": "Drop On Death",
+   "category": "General",
+   "valueSet": "DropOnDeath",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "None",
+    "All",
+    "Toolbelt Only",
+    "Backpack Only",
+    "Delete All"
+   ],
+   "description": "Which items are dropped on death.\\n\\nNothing = Drop nothing.\\nEverything = Drop both backpack and toolbelt.\\nToolbelt = Drop items on toolbelt.\\nBackpack = Drop items in the backpack.\\nDelete All = Delete all items."
+  },
+  {
+   "option": "DropOnQuit",
+   "enumIndex": 28,
+   "kind": "int",
+   "label": "Drop On Quit",
+   "category": "General",
+   "valueSet": "DropOnQuit",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "None",
+    "All",
+    "Toolbelt Only",
+    "Backpack Only"
+   ],
+   "description": "Which items are dropped on quit.\\n\\nNothing = Drop nothing.\\nEverything = Drop both backpack and toolbelt.\\nToolbelt = Drop items on toolbelt.\\nBackpack = Drop items in the backpack."
+  },
+  {
+   "option": "InfectionRate",
+   "enumIndex": 29,
+   "kind": "float",
+   "label": "Infection Rate",
+   "category": "General",
+   "valueSet": "SpeedValues",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Adjusts how quickly infections progress."
+  },
+  {
+   "option": "NewbieCoat",
+   "enumIndex": 15,
+   "kind": "bool",
+   "label": "New Player Buff",
+   "category": "General",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "If enabled, new players spawn with the beginner protection buff."
+  },
+  {
+   "option": "EncumbranceModifier",
+   "enumIndex": 20,
+   "kind": "float",
+   "label": "Encumbrance Slots",
+   "category": "General",
+   "valueSet": "Encumbrance",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "Disabled",
+    "Low",
+    "Default",
+    "High",
+    "Very High",
+    "Full"
+   ],
+   "description": "Controls the number of encumbered backpack slots. Values are Disabled (no encumbrance) to Full (maximum encumbrance). Default uses XML config values."
+  },
+  {
+   "option": "JarRefund",
+   "enumIndex": 12,
+   "kind": "float",
+   "label": "Jar Refund",
+   "category": "General",
+   "valueSet": "JarRefund",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "5%",
+    "10%",
+    "20%",
+    "30%",
+    "40%",
+    "50%",
+    "60%",
+    "70%",
+    "80%",
+    "90%",
+    "100%"
+   ],
+   "description": "Chance of jars returned from consuming items."
+  },
+  {
+   "option": "EnemySpawnMode",
+   "enumIndex": 30,
+   "kind": "bool",
+   "label": "Enemy Spawning",
+   "category": "Entities",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable or disable enemy spawning. ",
+   "disables": {
+    "whenValue": false,
+    "inverted": false,
+    "options": [
+     "MaxEnemyTier",
+     "BiomeEnemyDensity",
+     "BiomeZombieRespawn",
+     "BiomeAnimalRespawn",
+     "EntityDamage",
+     "EntityIncomingDamage",
+     "BlockDamageAI",
+     "BlockDamageAIBM",
+     "ZombieMove",
+     "ZombieMoveNight",
+     "ZombieFeralMove",
+     "ZombieBMMove",
+     "ZombieFeralSense",
+     "AISmellMode",
+     "ZombieRageChance",
+     "AllowZombieDigging",
+     "ZombiesEatAnimals",
+     "HeadshotMode"
+    ]
+   }
+  },
+  {
+   "option": "MaxEnemyTier",
+   "enumIndex": 43,
+   "kind": "int",
+   "label": "Max Enemy Tier",
+   "category": "Entities",
+   "valueSet": "MaxEnemyType",
+   "defaultIndex": 5,
+   "valueLabels": [
+    "Normals",
+    "Strongs",
+    "Specials",
+    "Ferals",
+    "Radiated",
+    "Elites"
+   ],
+   "description": "Highest tier of zombie types that can spawn."
+  },
+  {
+   "option": "BiomeEnemyDensity",
+   "enumIndex": 46,
+   "kind": "int",
+   "label": "Enemy Density",
+   "category": "Entities",
+   "valueSet": "BiomeEnemyDensity",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "Default",
+    "Very Low",
+    "Low",
+    "Medium",
+    "High",
+    "Very High"
+   ],
+   "description": "Overrides biome enemy density and sets how many enemies spawn in each biome. Default uses XML config values."
+  },
+  {
+   "option": "BiomeZombieRespawn",
+   "enumIndex": 44,
+   "kind": "int",
+   "label": "Enemy Respawn",
+   "category": "Entities",
+   "valueSet": "SlowToFast",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "Default",
+    "Very Slow",
+    "Slow",
+    "Normal",
+    "Fast",
+    "Very Fast"
+   ],
+   "description": "Increases the respawn rate of enemies in active biomes. Default uses XML config values."
+  },
+  {
+   "option": "BiomeAnimalRespawn",
+   "enumIndex": 45,
+   "kind": "int",
+   "label": "Biome Animal Respawn",
+   "category": "Entities",
+   "valueSet": "SlowToFast",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "Default",
+    "Very Slow",
+    "Slow",
+    "Normal",
+    "Fast",
+    "Very Fast"
+   ],
+   "description": "Increases the respawn rate of animals in active biomes. Affects non-zombie passive and aggressive food sources. Default uses XML config values."
+  },
+  {
+   "option": "EntityDamage",
+   "enumIndex": 31,
+   "kind": "float",
+   "label": "Enemy Damage Dealt",
+   "category": "Entities",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "Controls how much damage enemies do to players. This stacks with other incoming damage players receive."
+  },
+  {
+   "option": "EntityIncomingDamage",
+   "enumIndex": 42,
+   "kind": "float",
+   "label": "Entity Damage In",
+   "category": "Entities",
+   "valueSet": "DamageValuesNoNone",
+   "defaultIndex": 6,
+   "valueLabels": [
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "Damage entities, such as enemies and animals, receive from players."
+  },
+  {
+   "option": "BlockDamageAI",
+   "enumIndex": 32,
+   "kind": "float",
+   "label": "Enemy Block Damage",
+   "category": "Entities",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "How much damage enemies deal to blocks."
+  },
+  {
+   "option": "BlockDamageAIBM",
+   "enumIndex": 33,
+   "kind": "float",
+   "label": "BM Block Damage",
+   "category": "Entities",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "Damage enemies do to blocks during Blood Moons."
+  },
+  {
+   "option": "HeadshotMode",
+   "enumIndex": 16,
+   "kind": "int",
+   "label": "Headshot Mode",
+   "category": "Entities",
+   "valueSet": "HeadshotMode",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "None",
+    "Headshot Only",
+    "Headshot Finisher"
+   ],
+   "description": "Determines how headshot damage is handled.\\n\\nHeadshot Only = enemies can only be damaged by headshots.\\nHeadshot Finisher = body shots deal damage, but only a headshot can finish them.\\n\\nDoes not apply to passive animals."
+  },
+  {
+   "option": "ShowHealthBars",
+   "enumIndex": 13,
+   "kind": "bool",
+   "label": "Entity Health Bars",
+   "category": "Entities",
+   "valueSet": "YesNo",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Show or hide entity health bars."
+  },
+  {
+   "option": "ShowEnemyDamage",
+   "enumIndex": 14,
+   "kind": "bool",
+   "label": "Show Entity Damage",
+   "category": "Entities",
+   "valueSet": "YesNo",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Display floating damage numbers when entities are hit."
+  },
+  {
+   "option": "ZombieMove",
+   "enumIndex": 34,
+   "kind": "int",
+   "label": "Zombie Day Speed",
+   "category": "Entities",
+   "valueSet": "ZombieSpeeds",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "Walk",
+    "Jog",
+    "Run",
+    "Sprint",
+    "Nightmare"
+   ],
+   "description": "Sets zombie movement speed during daytime for normal zombies. Does not affect ferals and specials."
+  },
+  {
+   "option": "ZombieMoveNight",
+   "enumIndex": 35,
+   "kind": "int",
+   "label": "Zombie Night Speed",
+   "category": "Entities",
+   "valueSet": "ZombieSpeeds",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "Walk",
+    "Jog",
+    "Run",
+    "Sprint",
+    "Nightmare"
+   ],
+   "description": "Sets zombie movement speed at night for normal zombies. Does not affect ferals and specials."
+  },
+  {
+   "option": "ZombieFeralMove",
+   "enumIndex": 36,
+   "kind": "int",
+   "label": "Zombie Feral Speed",
+   "category": "Entities",
+   "valueSet": "ZombieSpeeds",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "Walk",
+    "Jog",
+    "Run",
+    "Sprint",
+    "Nightmare"
+   ],
+   "description": "Sets movement speed of feral zombies."
+  },
+  {
+   "option": "ZombieBMMove",
+   "enumIndex": 37,
+   "kind": "int",
+   "label": "Zombie BM Speed",
+   "category": "Entities",
+   "valueSet": "ZombieSpeeds",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "Walk",
+    "Jog",
+    "Run",
+    "Sprint",
+    "Nightmare"
+   ],
+   "description": "Controls zombie movement speed during Blood Moon hordes and storms."
+  },
+  {
+   "option": "ZombieFeralSense",
+   "enumIndex": 38,
+   "kind": "int",
+   "label": "Zombie Feral Sense",
+   "category": "Entities",
+   "valueSet": "ZombieFeralSense",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "Disabled",
+    "Day",
+    "Night",
+    "All"
+   ],
+   "description": "How easily zombies detect players through sight and sound."
+  },
+  {
+   "option": "AISmellMode",
+   "enumIndex": 39,
+   "kind": "int",
+   "label": "AI Smell Mode",
+   "category": "Entities",
+   "valueSet": "AISmellMode",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "None",
+    "Walk",
+    "Jog",
+    "Run",
+    "Sprint",
+    "Nightmare"
+   ],
+   "description": "Enable or disable zombie scent tracking, and sets how fast they move when they detect a smell."
+  },
+  {
+   "option": "ZombieRageChance",
+   "enumIndex": 41,
+   "kind": "float",
+   "label": "Zombie Rage",
+   "category": "Entities",
+   "valueSet": "ZombieRageChance",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "None",
+    "15%",
+    "30%",
+    "35%",
+    "40%",
+    "50%",
+    "60%",
+    "75%",
+    "90%",
+    "100%"
+   ],
+   "description": "Chance for zombies to enter rage mode when damaged."
+  },
+  {
+   "option": "AllowZombieDigging",
+   "enumIndex": 40,
+   "kind": "bool",
+   "label": "Zombie Digging",
+   "category": "Entities",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Allow zombies to dig down through terrain. Can still dig sideways."
+  },
+  {
+   "option": "ZombiesEatAnimals",
+   "enumIndex": 47,
+   "kind": "bool",
+   "label": "Zombies Eat Animals",
+   "category": "Entities",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Determines whether zombies eat animal corpses."
+  },
+  {
+   "option": "GlobalGSModifier",
+   "enumIndex": 60,
+   "kind": "float",
+   "label": "Global Game Stage",
+   "category": "World",
+   "valueSet": "LowDefaultHigh",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "Very Low",
+    "Low",
+    "Default",
+    "High",
+    "Very High"
+   ],
+   "description": "Determines enemy types, difficulty scaling, loot quality, and Blood Moon intensity based on your level and days survived. A higher value increases difficulty. Default uses XML config values."
+  },
+  {
+   "option": "BiomeGSModifier",
+   "enumIndex": 61,
+   "kind": "float",
+   "label": "Biome Game Stage",
+   "category": "World",
+   "valueSet": "LowDefaultHigh",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "Very Low",
+    "Low",
+    "Default",
+    "High",
+    "Very High"
+   ],
+   "description": "Biome based difficulty modifier. Harder biomes raise enemy strength and loot stage beyond your base progression. Default uses XML config values."
+  },
+  {
+   "option": "BiomeProgression",
+   "enumIndex": 55,
+   "kind": "bool",
+   "label": "Biome Progression",
+   "category": "World",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable biome hazards. Weather and Storms are not affected by this setting."
+  },
+  {
+   "option": "TemperatureSurvival",
+   "enumIndex": 56,
+   "kind": "bool",
+   "label": "Temperature Survival",
+   "category": "World",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Controls whether environmental temperature (hot and cold) affect the player."
+  },
+  {
+   "option": "MaxTechType",
+   "enumIndex": 74,
+   "kind": "int",
+   "label": "Max Tech Type",
+   "category": "World",
+   "valueSet": "MaxTechType",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "Tech 0",
+    "Tech 1",
+    "Tech 2",
+    "Tech 3"
+   ],
+   "description": "Globally sets the highest available tech type for weapons and items allowing control over progression and gameplay pacing. See examples below.\\n\\nTech 0 = Stone and pipe\\nTech 1 = Iron and AK\\nTech 2 = Steel and Tactical Assault\\nTech 3 = Auger and M60"
+  },
+  {
+   "option": "WorkstationsInTheWild",
+   "enumIndex": 73,
+   "kind": "float",
+   "label": "Workstations In The Wild",
+   "category": "World",
+   "valueSet": "JarRefund",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "None",
+    "5%",
+    "10%",
+    "20%",
+    "30%",
+    "40%",
+    "50%",
+    "60%",
+    "70%",
+    "80%",
+    "90%",
+    "100%"
+   ],
+   "description": "Allow functional workstations to spawn in world. Applied on new Navezgane or RWG map generation."
+  },
+  {
+   "option": "BloodMoonFrequency",
+   "enumIndex": 48,
+   "kind": "int",
+   "label": "Blood Moon Frequency",
+   "category": "World",
+   "valueSet": "BloodMoonFrequency",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "Disabled",
+    "1 Day",
+    "2 Days",
+    "3 Days",
+    "4 Days",
+    "5 Days",
+    "6 Days",
+    "7 Days",
+    "8 Days",
+    "9 Days",
+    "10 Days",
+    "14 Days",
+    "20 Days",
+    "30 Days"
+   ],
+   "description": "Number of in-game days between Blood Moons. Disabled = No Blood Moons.",
+   "disables": {
+    "whenValue": 0,
+    "inverted": false,
+    "options": [
+     "BloodMoonRange",
+     "BloodMoonEnemyCount",
+     "BloodMoonWarning"
+    ]
+   }
+  },
+  {
+   "option": "BloodMoonRange",
+   "enumIndex": 49,
+   "kind": "int",
+   "label": "Blood Moon Range",
+   "category": "World",
+   "valueSet": "BloodMoonRange",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "0 Days",
+    "1 Day",
+    "2 Days",
+    "3 Days",
+    "4 Days",
+    "7 Days",
+    "10 Days",
+    "14 Days",
+    "20 Days"
+   ],
+   "description": "Number of days after Blood Moon frequency the event can occur.\\n\\nFor example: A frequency of 7 + a range of 5 randomizes the Blood Moon between day 7 and day 12.\\n\\n0 Days = No randomness."
+  },
+  {
+   "option": "BloodMoonEnemyCount",
+   "enumIndex": 51,
+   "kind": "int",
+   "label": "Blood Moon Count",
+   "category": "World",
+   "valueSet": "BloodMoonCount",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "4 Enemies",
+    "6 Enemies",
+    "8 Enemies",
+    "10 Enemies",
+    "12 Enemies",
+    "16 Enemies",
+    "24 Enemies",
+    "32 Enemies",
+    "64 Enemies"
+   ],
+   "description": "Controls the maximum number of zombies alive Per Player during a Blood Moon.\\n\\nNearby players share a group cap of up to 30 zombies. If the cap would be exceeded, game stage scaling increases the difficulty instead. The world cap is about 1.9x the MaxSpawnedZombies. Lower game stages can reduce the number of spawns.\\n\\nIncreasing this setting can greatly impact performance."
+  },
+  {
+   "option": "BloodMoonWarning",
+   "enumIndex": 50,
+   "kind": "int",
+   "label": "Blood Moon Warning",
+   "category": "World",
+   "valueSet": "BloodMoonWarning",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "Disabled",
+    "Morning",
+    "Evening"
+   ],
+   "description": "Sets when the Blood Moon warning appears on the HUD and the day number changes to red."
+  },
+  {
+   "option": "AirDropFrequency",
+   "enumIndex": 52,
+   "kind": "int",
+   "label": "Air Drops",
+   "category": "World",
+   "valueSet": "AirDrops",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "Disabled",
+    "Every Day",
+    "1-3 Days",
+    "3 Days",
+    "3-7 Days",
+    "7 Days",
+    "1-7 Days"
+   ],
+   "description": "How often supply drops occur.",
+   "disables": {
+    "whenValue": 0,
+    "inverted": false,
+    "options": [
+     "AirDropRandomTime",
+     "AirDropMarker"
+    ]
+   }
+  },
+  {
+   "option": "AirDropRandomTime",
+   "enumIndex": 54,
+   "kind": "int",
+   "label": "Air Drop Variance",
+   "category": "World",
+   "valueSet": "AirDropRandomTime",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "None",
+    "Morning",
+    "Mid Day",
+    "Evening",
+    "Night",
+    "All Day",
+    "Any"
+   ],
+   "description": "Allows control over when the air drops appear. Pick a specific time for predictable air drops, or Any for total randomness. None = the default noon air drop."
+  },
+  {
+   "option": "StormFreq",
+   "enumIndex": 57,
+   "kind": "float",
+   "label": "Storm Frequency",
+   "category": "World",
+   "valueSet": "StormFrequency",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "None",
+    "50%",
+    "100%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Adjusts the frequency of storms. None disables storms.",
+   "disables": {
+    "whenValue": 0,
+    "inverted": false,
+    "options": [
+     "StormWarning"
+    ]
+   }
+  },
+  {
+   "option": "StormWarning",
+   "enumIndex": 58,
+   "kind": "bool",
+   "label": "Storm Warning",
+   "category": "World",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Controls whether the player hears the storm siren and sees an on-screen storm warning."
+  },
+  {
+   "option": "HeatMapSensitivity",
+   "enumIndex": 59,
+   "kind": "float",
+   "label": "Heat Map Sensitivity",
+   "category": "World",
+   "valueSet": "DisabledLowDefaultHigh",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "Disabled",
+    "Very Low",
+    "Low",
+    "Default",
+    "High",
+    "Very High"
+   ],
+   "description": "Controls heat buildup from player activity. Higher heat increases the chance for screamer spawns. Default uses XML config values."
+  },
+  {
+   "option": "DayNightLength",
+   "enumIndex": 66,
+   "kind": "int",
+   "label": "24 Hour Cycle",
+   "category": "World",
+   "valueSet": "DayNightLength",
+   "defaultIndex": 5,
+   "valueLabels": [
+    "10",
+    "20",
+    "30",
+    "40",
+    "50",
+    "60",
+    "90",
+    "120"
+   ],
+   "description": "How many real life minutes it takes for 24 hours to pass in the game."
+  },
+  {
+   "option": "DayLightLength",
+   "enumIndex": 67,
+   "kind": "int",
+   "label": "Daylight Length",
+   "category": "World",
+   "valueSet": "DayLightLength",
+   "defaultIndex": 8,
+   "valueLabels": [
+    "Always Night",
+    "4",
+    "6",
+    "8",
+    "10",
+    "12",
+    "14",
+    "16",
+    "18",
+    "20",
+    "Always Day"
+   ],
+   "description": "Sets the number of in-game daylight hours. Always Night and Always Day behave as expected. Daylight duration settings:\\n\\n 4 = 10:00 - 14:00\\n 6 = 09:00 - 15:00\\n 8 = 08:00 - 16:00\\n10 = 07:00 - 17:00\\n12 = 06:00 - 18:00\\n14 = 05:00 - 19:00\\n16 = 04:00 - 20:00\\n18 = 04:00 - 22:00\\n20 = 02:00 - 22:00"
+  },
+  {
+   "option": "AirDropMarker",
+   "enumIndex": 53,
+   "kind": "bool",
+   "label": "Mark Air Drops",
+   "category": "World",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ]
+  },
+  {
+   "option": "AllowMap",
+   "enumIndex": 68,
+   "kind": "bool",
+   "label": "Allow Map",
+   "category": "World",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable in-game map."
+  },
+  {
+   "option": "AllowCompass",
+   "enumIndex": 69,
+   "kind": "bool",
+   "label": "Allow Compass",
+   "category": "World",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Show player compass."
+  },
+  {
+   "option": "AllowScreenMarkers",
+   "enumIndex": 70,
+   "kind": "bool",
+   "label": "Allow Screen Markers",
+   "category": "World",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Show on-screen navigational markers. Map markers remain visible."
+  },
+  {
+   "option": "ShowLocationInfo",
+   "enumIndex": 71,
+   "kind": "bool",
+   "label": "Show Location Info",
+   "category": "World",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Show biome and POI name and difficulty."
+  },
+  {
+   "option": "ShowDayTime",
+   "enumIndex": 72,
+   "kind": "bool",
+   "label": "Show Day/Time",
+   "category": "World",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Show on-screen day and time information. If set to No, Bloodmoon Warning is also disabled.",
+   "disables": {
+    "whenValue": false,
+    "inverted": false,
+    "options": [
+     "BloodMoonWarning"
+    ]
+   }
+  },
+  {
+   "option": "LootMaxTier",
+   "enumIndex": 77,
+   "kind": "int",
+   "label": "Max Loot Tier",
+   "category": "Resources",
+   "valueSet": "ItemTierOptions",
+   "defaultIndex": 5,
+   "valueLabels": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6"
+   ],
+   "description": "Sets the highest quality tier of weapons and items that can appear in loot."
+  },
+  {
+   "option": "GlobalLSModifier",
+   "enumIndex": 62,
+   "kind": "float",
+   "label": "Global Loot Stage",
+   "category": "Resources",
+   "valueSet": "LowDefaultHigh",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "Very Low",
+    "Low",
+    "Default",
+    "High",
+    "Very High"
+   ],
+   "description": "Global multiplier applied to player loot stage. Default uses XML config values."
+  },
+  {
+   "option": "BiomeLSModifier",
+   "enumIndex": 63,
+   "kind": "float",
+   "label": "Biome Loot Stage",
+   "category": "Resources",
+   "valueSet": "LowDefaultHigh",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "Very Low",
+    "Low",
+    "Default",
+    "High",
+    "Very High"
+   ],
+   "description": "Loot stage multiplier applied per biome. Default uses XML config values."
+  },
+  {
+   "option": "POITierLSModifier",
+   "enumIndex": 64,
+   "kind": "float",
+   "label": "POI Loot Stage",
+   "category": "Resources",
+   "valueSet": "LowDefaultHigh",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "Very Low",
+    "Low",
+    "Default",
+    "High",
+    "Very High"
+   ],
+   "description": "Loot stage multiplier based on POI tier. Default uses XML config values."
+  },
+  {
+   "option": "LootRespawnDays",
+   "enumIndex": 75,
+   "kind": "int",
+   "label": "Loot Respawn Days",
+   "category": "Resources",
+   "valueSet": "LootRespawnDays",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "Disabled",
+    "5",
+    "7",
+    "10",
+    "15",
+    "20",
+    "30",
+    "40",
+    "50"
+   ],
+   "description": "The number of in-game days before loot containers in unvisited areas reset."
+  },
+  {
+   "option": "LootTimer",
+   "enumIndex": 76,
+   "kind": "float",
+   "label": "Loot Timer",
+   "category": "Resources",
+   "valueSet": "SpeedValues",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Time required to loot containers."
+  },
+  {
+   "option": "LootBagChance",
+   "enumIndex": 90,
+   "kind": "float",
+   "label": "Loot Bag Drop",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Multiplier applied to chance for enemies to drop loot bags on death."
+  },
+  {
+   "option": "GlobalLootCount",
+   "enumIndex": 78,
+   "kind": "float",
+   "label": "Global Loot Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "disables": {
+    "whenValue": 0,
+    "inverted": false,
+    "options": [
+     "FoodLootCount",
+     "DrinkLootCount",
+     "MedicalLootCount",
+     "AmmoLootCount",
+     "ResourceLootCount",
+     "ArmorLootCount",
+     "MeleeLootCount",
+     "RangedLootCount",
+     "DukesLootCount",
+     "CraftingMagazinesLootCount",
+     "BookLootCount",
+     "TreasureMapChance"
+    ]
+   }
+  },
+  {
+   "option": "FoodLootCount",
+   "enumIndex": 79,
+   "kind": "float",
+   "label": "Food Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Amount of food found in containers."
+  },
+  {
+   "option": "DrinkLootCount",
+   "enumIndex": 80,
+   "kind": "float",
+   "label": "Drink Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Amount of drinks found in containers."
+  },
+  {
+   "option": "MedicalLootCount",
+   "enumIndex": 81,
+   "kind": "float",
+   "label": "Medical Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Amount of medical supplies found in loot."
+  },
+  {
+   "option": "AmmoLootCount",
+   "enumIndex": 82,
+   "kind": "float",
+   "label": "Ammo Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Amount of ammo found in loot."
+  },
+  {
+   "option": "ResourceLootCount",
+   "enumIndex": 83,
+   "kind": "float",
+   "label": "Resource Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Amount of resource items found in loot."
+  },
+  {
+   "option": "ArmorLootCount",
+   "enumIndex": 84,
+   "kind": "float",
+   "label": "Armor Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Amount of armor and armor parts found in loot."
+  },
+  {
+   "option": "MeleeLootCount",
+   "enumIndex": 85,
+   "kind": "float",
+   "label": "Melee Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Amount of melee weapons and parts found in loot."
+  },
+  {
+   "option": "RangedLootCount",
+   "enumIndex": 86,
+   "kind": "float",
+   "label": "Ranged Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Amount of ranged weapons and parts found in loot."
+  },
+  {
+   "option": "DukesLootCount",
+   "enumIndex": 87,
+   "kind": "float",
+   "label": "Currency Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Amount of Duke coins and old cash found in loot."
+  },
+  {
+   "option": "CraftingMagazinesLootCount",
+   "enumIndex": 88,
+   "kind": "float",
+   "label": "Magazine Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Amount of crafting magazines found in loot."
+  },
+  {
+   "option": "BookLootCount",
+   "enumIndex": 111,
+   "kind": "float",
+   "label": "Book Abundance",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Amount of books and schematics found in loot."
+  },
+  {
+   "option": "TreasureMapChance",
+   "enumIndex": 89,
+   "kind": "float",
+   "label": "Treasure Map Chance",
+   "category": "Resources",
+   "valueSet": "PlayerSpeedValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "60%",
+    "70%",
+    "80%",
+    "90%",
+    "100%",
+    "110%",
+    "120%",
+    "130%",
+    "140%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Multiplier applied to chance for treasure maps to spawn in loot containers and enemy loot bags."
+  },
+  {
+   "option": "MiningOutput",
+   "enumIndex": 101,
+   "kind": "float",
+   "label": "Mining Yield",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Controls the amount of ore gained from mining. Can impact in-game challenges if disabled."
+  },
+  {
+   "option": "CropOutput",
+   "enumIndex": 91,
+   "kind": "float",
+   "label": "Crop Yield",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Controls the amount of resources harvested from wild and player planted crops. Can impact in-game challenges if disabled."
+  },
+  {
+   "option": "SeedDropOutput",
+   "enumIndex": 92,
+   "kind": "float",
+   "label": "Seed Drop",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "The amount of seeds gained from player planted crop harvest. Does not increase the chance for seeds dropping or seeds from trees."
+  },
+  {
+   "option": "HarvestingOutput",
+   "enumIndex": 102,
+   "kind": "float",
+   "label": "Resource Yield",
+   "category": "Resources",
+   "valueSet": "LootAbundanceValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "Controls the amount of resources gained from harvesting blocks and items. Does not affect ores, seeds, or crops. Can impact in-game challenges if disabled."
+  },
+  {
+   "option": "CropGrowthSpeed",
+   "enumIndex": 93,
+   "kind": "float",
+   "label": "Crop Growth",
+   "category": "Resources",
+   "valueSet": "CropGrowthSpeed",
+   "defaultIndex": 5,
+   "valueLabels": [
+    "None",
+    "Instant",
+    "20%",
+    "50%",
+    "75%",
+    "100%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Adjusts growth speed of player-planted crops and trees. A higher percent results in longer growth time. Note: Existing saves will require replanting crops for changes to take effect."
+  },
+  {
+   "option": "CraftingProgression",
+   "enumIndex": 96,
+   "kind": "bool",
+   "label": "Crafting Progression",
+   "category": "Crafting",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable or disable magazine and schematic based crafting progression."
+  },
+  {
+   "option": "CraftingMaxTier",
+   "enumIndex": 100,
+   "kind": "int",
+   "label": "Crafting Max Tier",
+   "category": "Crafting",
+   "valueSet": "ItemTierOptions",
+   "defaultIndex": 5,
+   "valueLabels": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6"
+   ],
+   "description": "Highest quality tier of crafted items."
+  },
+  {
+   "option": "PointsPerMagazine",
+   "enumIndex": 115,
+   "kind": "int",
+   "label": "Magazine Progress",
+   "category": "Crafting",
+   "valueSet": "PointsPer",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "None",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7"
+   ],
+   "description": "The progression gained from reading skill magazines."
+  },
+  {
+   "option": "BackpackCrafting",
+   "enumIndex": 94,
+   "kind": "int",
+   "label": "Backpack Crafting",
+   "category": "Crafting",
+   "valueSet": "BackpackCrafting",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes",
+    "Limited",
+    "Workbench Only"
+   ],
+   "description": "Controls what items the player can craft directly from their backpack.\\n\\nNo disables backpack crafting.\\nYes allows crafting in the backpack.\\nLimited allows crafting a limited list of recipes in the backpack.\\nWorkbench Only allows crafting of the workbench, but nothing else is crafted in the backpack."
+  },
+  {
+   "option": "WorkstationCrafting",
+   "enumIndex": 95,
+   "kind": "bool",
+   "label": "Workstation Crafting",
+   "category": "Crafting",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Yes allows crafting in workstations. No allows player backpack crafting only."
+  },
+  {
+   "option": "SmeltingType",
+   "enumIndex": 104,
+   "kind": "bool",
+   "label": "Smelter Type",
+   "category": "Crafting",
+   "valueSet": "SmeltingType",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "Smelter",
+    "Recipes"
+   ],
+   "description": "Controls how forge crafting works. Smelt items into the forge or craft directly using materials from your backpack."
+  },
+  {
+   "option": "CraftingTime",
+   "enumIndex": 97,
+   "kind": "float",
+   "label": "Crafting Timer",
+   "category": "Crafting",
+   "valueSet": "SpeedValues",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Time required to craft items."
+  },
+  {
+   "option": "CraftingInput",
+   "enumIndex": 98,
+   "kind": "float",
+   "label": "Crafting Cost",
+   "category": "Crafting",
+   "valueSet": "SpeedValues",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Amount of materials required for crafting (excludes resource bundles)."
+  },
+  {
+   "option": "CraftingOutput",
+   "enumIndex": 99,
+   "kind": "float",
+   "label": "Crafting Yield",
+   "category": "Crafting",
+   "valueSet": "StaminaRegen",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Number of items produced per craft (excludes resource bundles)."
+  },
+  {
+   "option": "ScrappingOutput",
+   "enumIndex": 103,
+   "kind": "float",
+   "label": "Scrapping Yield",
+   "category": "Crafting",
+   "valueSet": "SpeedValues",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Amount received when scrapping items."
+  },
+  {
+   "option": "DewCollectorTime",
+   "enumIndex": 105,
+   "kind": "float",
+   "label": "Dew Collector Time",
+   "category": "Crafting",
+   "valueSet": "SpeedValues",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Adjusts the time it takes for the dew collector to produce water."
+  },
+  {
+   "option": "DewCollectorOutput",
+   "enumIndex": 106,
+   "kind": "float",
+   "label": "Dew Collector Yield",
+   "category": "Crafting",
+   "valueSet": "CollectorOutput",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "100%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "The amount of water the dew collector generates per cycle."
+  },
+  {
+   "option": "DewCollectorInput",
+   "enumIndex": 107,
+   "kind": "float",
+   "label": "Dew Collector Input",
+   "category": "Crafting",
+   "valueSet": "DewCollectorInput",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "None",
+    "100%",
+    "200%",
+    "300%"
+   ],
+   "description": "Sets the number of jars required to begin dew collection."
+  },
+  {
+   "option": "ApiaryTime",
+   "enumIndex": 108,
+   "kind": "float",
+   "label": "Apiary Time",
+   "category": "Crafting",
+   "valueSet": "SpeedValues",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Adjusts the time it takes for the apiary to produce honey."
+  },
+  {
+   "option": "ApiaryOutput",
+   "enumIndex": 109,
+   "kind": "float",
+   "label": "Apiary Yield",
+   "category": "Crafting",
+   "valueSet": "CollectorOutput",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "100%",
+    "200%",
+    "300%",
+    "400%",
+    "500%"
+   ],
+   "description": "The amount of honey generated per production cycle."
+  },
+  {
+   "option": "ApiaryInput",
+   "enumIndex": 110,
+   "kind": "float",
+   "label": "Apiary Input",
+   "category": "Crafting",
+   "valueSet": "ApiaryInput",
+   "defaultIndex": 5,
+   "valueLabels": [
+    "None",
+    "20%",
+    "40%",
+    "60%",
+    "80%",
+    "100%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Sets the amount of flowers needed to begin honey production."
+  },
+  {
+   "option": "ItemDegradation",
+   "enumIndex": 21,
+   "kind": "float",
+   "label": "Item Degradation",
+   "category": "Crafting",
+   "valueSet": "DisabledLowDefaultHigh",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "Disabled",
+    "Very Low",
+    "Low",
+    "Default",
+    "High",
+    "Very High"
+   ],
+   "description": "How fast weapons and tools lose durability. Default uses XML config values."
+  },
+  {
+   "option": "RepairTypes",
+   "enumIndex": 113,
+   "kind": "int",
+   "label": "Repair Method",
+   "category": "Crafting",
+   "valueSet": "RepairTypes",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "None",
+    "Repair Only",
+    "Combine Only",
+    "Both"
+   ],
+   "description": "Determines how items are repaired:\\n\\nNone = No repair\\nRepair Only = Repair Kits Only\\nCombine Only = Repair on Combine Station\\nBoth = Repair Kits and Combine Station"
+  },
+  {
+   "option": "MaxDegradationAmount",
+   "enumIndex": 114,
+   "kind": "float",
+   "label": "Repair Degradation",
+   "category": "Crafting",
+   "valueSet": "MaxDegradationAmounts",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "None",
+    "5%",
+    "10%",
+    "15%",
+    "20%",
+    "25%"
+   ],
+   "description": "Determines how much an item degrades when repaired."
+  },
+  {
+   "option": "TradersEnabled",
+   "enumIndex": 128,
+   "kind": "bool",
+   "label": "Trading Enabled",
+   "category": "Traders",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable trading with NPC traders.",
+   "disables": {
+    "whenValue": false,
+    "inverted": false,
+    "options": [
+     "TraderMaxTier",
+     "TraderItemAbundance",
+     "TraderResetInterval",
+     "TraderSellPrices",
+     "TraderBuyPrices",
+     "TraderBuyLimit",
+     "GlobalTSModifier"
+    ]
+   }
+  },
+  {
+   "option": "VendingEnabled",
+   "enumIndex": 129,
+   "kind": "bool",
+   "label": "Vending Enabled",
+   "category": "Traders",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable or disable vending machine functionality.",
+   "disables": {
+    "whenValue": false,
+    "inverted": false,
+    "options": [
+     "VendingItemAbundance",
+     "VendingResetInterval"
+    ]
+   }
+  },
+  {
+   "option": "TraderHours",
+   "enumIndex": 127,
+   "kind": "int",
+   "label": "Trader Hours",
+   "category": "Traders",
+   "valueSet": "TraderHourPresets",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "Default",
+    "Morning",
+    "Mid Day",
+    "Evening",
+    "Night",
+    "BM Closed",
+    "Always Open"
+   ],
+   "description": "Controls trader opening and closing hours. 24 Hour Cycle and Daylight Length do not affect this setting. BM Closed means closed only during blood moon. Default uses XML values.\\n\\nXML Default = 04:00-22:00\\n       Morning = 04:00-12:00\\n       Mid Day = 10:00-18:00\\n       Evening = 16:00-22:00\\n           Night = 22:00-04:00"
+  },
+  {
+   "option": "TraderProtection",
+   "enumIndex": 132,
+   "kind": "int",
+   "label": "Trader Protection",
+   "category": "Traders",
+   "valueSet": "TraderArea",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "Yes",
+    "Claimable",
+    "Not Claimable"
+   ],
+   "description": "Sets damage protection for trader compounds, and whether players can claim the area."
+  },
+  {
+   "option": "TraderDialog",
+   "enumIndex": 126,
+   "kind": "bool",
+   "label": "Trading Dialog",
+   "category": "Traders",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Toggles the trader voice lines and on-screen dialogue."
+  },
+  {
+   "option": "GlobalTSModifier",
+   "enumIndex": 65,
+   "kind": "float",
+   "label": "Global Trader Stage",
+   "category": "Traders",
+   "valueSet": "LowDefaultHigh",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "Very Low",
+    "Low",
+    "Default",
+    "High",
+    "Very High"
+   ],
+   "description": "Global modifier for trader stage progression. Controls the quality and variety of items sold by traders. Default uses XML config values."
+  },
+  {
+   "option": "TraderMaxTier",
+   "enumIndex": 136,
+   "kind": "int",
+   "label": "Trader Max Tier",
+   "category": "Traders",
+   "valueSet": "ItemTierOptions",
+   "defaultIndex": 5,
+   "valueLabels": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6"
+   ],
+   "description": "Sets the highest quality tier available for purchase from the trader."
+  },
+  {
+   "option": "TraderItemAbundance",
+   "enumIndex": 134,
+   "kind": "float",
+   "label": "Trader Item Count",
+   "category": "Traders",
+   "valueSet": "LowDefaultHigh",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "Very Low",
+    "Low",
+    "Default",
+    "High",
+    "Very High"
+   ],
+   "description": "The quantity of items for sale at the trader. Lower values make supplies more limited and scarce. Default uses XML config values."
+  },
+  {
+   "option": "VendingItemAbundance",
+   "enumIndex": 138,
+   "kind": "float",
+   "label": "Vending Item Count",
+   "category": "Traders",
+   "valueSet": "LowDefaultHigh",
+   "defaultIndex": 2,
+   "valueLabels": [
+    "Very Low",
+    "Low",
+    "Default",
+    "High",
+    "Very High"
+   ],
+   "description": "The quantity of items for sale in trader vending machines. Lower values make supplies more limited and scarce. Default uses XML config values."
+  },
+  {
+   "option": "TraderResetInterval",
+   "enumIndex": 133,
+   "kind": "int",
+   "label": "Trader Reset",
+   "category": "Traders",
+   "valueSet": "TraderResetInterval",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "Default",
+    "1 Day",
+    "2 Days",
+    "3 Days",
+    "4 Days",
+    "5 Days",
+    "6 Days",
+    "7 Days",
+    "14 Days"
+   ],
+   "description": "Sets how often traders reset inventory. Default uses XML config values."
+  },
+  {
+   "option": "VendingResetInterval",
+   "enumIndex": 137,
+   "kind": "int",
+   "label": "Vending Reset",
+   "category": "Traders",
+   "valueSet": "TraderResetInterval",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "Default",
+    "1 Day",
+    "2 Days",
+    "3 Days",
+    "4 Days",
+    "5 Days",
+    "6 Days",
+    "7 Days",
+    "14 Days"
+   ],
+   "description": "Sets how often trader vending machines reset inventory. Default uses XML config values."
+  },
+  {
+   "option": "TraderSellPrices",
+   "enumIndex": 130,
+   "kind": "float",
+   "label": "Sell Price",
+   "category": "Traders",
+   "valueSet": "BarterValues",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "175%",
+    "200%",
+    "300%",
+    "400%"
+   ],
+   "description": "Adjusts the price for items players sell to traders."
+  },
+  {
+   "option": "TraderBuyPrices",
+   "enumIndex": 131,
+   "kind": "float",
+   "label": "Buy Price",
+   "category": "Traders",
+   "valueSet": "BarterValues",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "175%",
+    "200%",
+    "300%",
+    "400%"
+   ],
+   "description": "Adjusts the price for items players purchase from traders."
+  },
+  {
+   "option": "TraderBuyLimit",
+   "enumIndex": 135,
+   "kind": "int",
+   "label": "Trader Buy Limit",
+   "category": "Traders",
+   "valueSet": "StarterSkillPoints",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "None",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10"
+   ],
+   "description": "Maximum number of each item the trader will buy before refusing more. Lower values limit how much you can sell per restock cycle."
+  },
+  {
+   "option": "ChallengesEnabled",
+   "enumIndex": 139,
+   "kind": "bool",
+   "label": "Challenges",
+   "category": "Tasks",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable the in-game challenge system.",
+   "disables": {
+    "whenValue": false,
+    "inverted": false,
+    "options": [
+     "IntroChallengesEnabled"
+    ]
+   }
+  },
+  {
+   "option": "QuestsEnabled",
+   "enumIndex": 118,
+   "kind": "bool",
+   "label": "Quests",
+   "category": "Tasks",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable or disable quests in your game."
+  },
+  {
+   "option": "IntroChallengesEnabled",
+   "enumIndex": 140,
+   "kind": "bool",
+   "label": "Intro Challenges",
+   "category": "Tasks",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable the step-by-step introductory challenge for new players."
+  },
+  {
+   "option": "IntroQuestEnabled",
+   "enumIndex": 119,
+   "kind": "bool",
+   "label": "Intro Quest",
+   "category": "Tasks",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Bypass the opening buried supply quest to access full quest progression."
+  },
+  {
+   "option": "TraderToTraderQuestsEnabled",
+   "enumIndex": 120,
+   "kind": "bool",
+   "label": "Trade Routes",
+   "category": "Tasks",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable the option to receive quests to other traders."
+  },
+  {
+   "option": "BuriedQuestsEnabled",
+   "enumIndex": 124,
+   "kind": "bool",
+   "label": "Buried Quests",
+   "category": "Tasks",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Allow buried quests to appear in the trader quest lists. No = only POI quests."
+  },
+  {
+   "option": "POIQuestsEnabled",
+   "enumIndex": 125,
+   "kind": "bool",
+   "label": "POI Quests",
+   "category": "Tasks",
+   "valueSet": "YesNo",
+   "defaultIndex": 1,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Allow POI quests to appear in the trader quest lists. No = only buried quests."
+  },
+  {
+   "option": "QuestsPerTier",
+   "enumIndex": 122,
+   "kind": "int",
+   "label": "Quests Per Tier",
+   "category": "Tasks",
+   "valueSet": "QuestPerTier",
+   "defaultIndex": 10,
+   "valueLabels": [
+    "None",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15"
+   ],
+   "description": "Number of completed quests required to unlock the next tier. Higher values slow progression between tiers. None = no limit and allows access to all quest tiers."
+  },
+  {
+   "option": "QuestProgressionDailyLimit",
+   "enumIndex": 123,
+   "kind": "int",
+   "label": "Quests Per Day",
+   "category": "Tasks",
+   "valueSet": "QuestPerDay",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "Unlimited",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10"
+   ],
+   "description": "Number of daily quests that count towards trader progression. Additional quests still grant XP and rewards, but do not advance trader tier progresssion."
+  },
+  {
+   "option": "StarterSkillPoints",
+   "enumIndex": 121,
+   "kind": "int",
+   "label": "Base Skill Points",
+   "category": "Tasks",
+   "valueSet": "StarterSkillPoints",
+   "defaultIndex": 4,
+   "valueLabels": [
+    "None",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10"
+   ],
+   "description": "Number of skill points awarded after completing intro challenges, or at game start if the intro challenges are disabled."
+  },
+  {
+   "option": "VehicleFuelUsage",
+   "enumIndex": 141,
+   "kind": "float",
+   "label": "Vehicle Fuel Usage",
+   "category": "Misc",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "Adjusts the fuel consumption rate for vehicles."
+  },
+  {
+   "option": "VehicleEntityDamage",
+   "enumIndex": 142,
+   "kind": "float",
+   "label": "Vehicle Entity Damage",
+   "category": "Misc",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "How much damage vehicles do to entities."
+  },
+  {
+   "option": "VehicleBlockDamage",
+   "enumIndex": 143,
+   "kind": "float",
+   "label": "Vehicle Block Damage",
+   "category": "Misc",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "How much damage vehicles do to blocks."
+  },
+  {
+   "option": "VehicleSelfDamage",
+   "enumIndex": 144,
+   "kind": "float",
+   "label": "Vehicle Self Damage",
+   "category": "Misc",
+   "valueSet": "DamageValues",
+   "defaultIndex": 7,
+   "valueLabels": [
+    "None",
+    "25%",
+    "35%",
+    "50%",
+    "65%",
+    "75%",
+    "85%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "250%",
+    "300%"
+   ],
+   "description": "How much damage your vehicle receives from collisions."
+  },
+  {
+   "option": "ElectricalOutput",
+   "enumIndex": 145,
+   "kind": "float",
+   "label": "Electrical Output",
+   "category": "Misc",
+   "valueSet": "StaminaRegen",
+   "defaultIndex": 3,
+   "valueLabels": [
+    "25%",
+    "50%",
+    "75%",
+    "100%",
+    "125%",
+    "150%",
+    "200%",
+    "300%"
+   ],
+   "description": "Controls how much electrical power is produced."
+  },
+  {
+   "option": "SillyCelebrate",
+   "enumIndex": 146,
+   "kind": "int",
+   "label": "Celebrate Kills",
+   "category": "Misc",
+   "valueSet": "Celebrate",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "No",
+    "Yes",
+    "Headshot Only"
+   ],
+   "description": "Enable celebratory confetti particles on entity kill. \"Headshots Only\" option triggers confetti for headshot kills. Does not apply to passive animals."
+  },
+  {
+   "option": "SillyBigHeads",
+   "enumIndex": 147,
+   "kind": "bool",
+   "label": "Big Heads",
+   "category": "Misc",
+   "valueSet": "YesNo",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable a \"big head mode\" on zombies, animals, and traders."
+  },
+  {
+   "option": "SillyTinyZombies",
+   "enumIndex": 148,
+   "kind": "bool",
+   "label": "Tiny Zombies",
+   "category": "Misc",
+   "valueSet": "YesNo",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable smaller versions of the zombies."
+  },
+  {
+   "option": "SillyLowGravity",
+   "enumIndex": 150,
+   "kind": "float",
+   "label": "Gravity",
+   "category": "Misc",
+   "valueSet": "Gravity",
+   "defaultIndex": 5,
+   "valueLabels": [
+    "50%",
+    "60%",
+    "70%",
+    "80%",
+    "90%",
+    "100%"
+   ],
+   "description": "Controls the amount of gravity in-game."
+  },
+  {
+   "option": "SillySounds",
+   "enumIndex": 149,
+   "kind": "bool",
+   "label": "Silly Sounds",
+   "category": "Misc",
+   "valueSet": "YesNo",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable humorous sounds for in-game actions."
+  },
+  {
+   "option": "SillyBlackandWhite",
+   "enumIndex": 151,
+   "kind": "bool",
+   "label": "Black and White",
+   "category": "Misc",
+   "valueSet": "YesNo",
+   "defaultIndex": 0,
+   "valueLabels": [
+    "No",
+    "Yes"
+   ],
+   "description": "Enable a classic, greyscale palette inspired by classic 1960's horror films."
+  }
+ ]
+}

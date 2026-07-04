@@ -2,6 +2,7 @@ import { adminCss } from './admin';
 import { baseCss } from './base';
 import { fieldsCss } from './fields';
 import { overlayCss } from './overlay';
+import { sandboxCss } from './sandbox';
 
 const STYLE_ID = 'easy-config-styles';
 
@@ -19,6 +20,6 @@ export function injectStyles(): void {
 
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = [baseCss, fieldsCss, overlayCss, adminCss].join('\n');
+    style.textContent = [baseCss, fieldsCss, overlayCss, adminCss, sandboxCss].join('\n');
     document.head.appendChild(style);
 }

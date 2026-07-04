@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { pickLabel, useT } from '../lib/i18n';
+import { SandboxCodeField } from '../sandbox/SandboxCodeField';
 import type { ConfigParam, ParamConfig } from '../types';
 import { Input, Select, Textarea, Toggle } from '../ui/inputs';
 
@@ -21,6 +22,12 @@ export function FieldControl({ param, value, onChange, disabled, invalid, ariaLa
     // Env-linked params hard-cap at `max` (the value also drives the Pelican
     // variable); others let the player type above the slider max manually.
     const envLinked = typeof param.env_var === 'string' && param.env_var !== '';
+
+    // Generator-backed field (7DTD SandboxCode): the text value stays the
+    // source of truth, an inline panel re-encodes it from game options.
+    if (config.generator === '7dtd-sandbox') {
+        return <SandboxCodeField value={value} onChange={onChange} disabled={disabled} invalid={invalid} ariaLabel={ariaLabel} />;
+    }
 
     switch (param.display_type) {
         case 'boolean':

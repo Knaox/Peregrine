@@ -297,5 +297,27 @@
             "option_add": "Add option",
             "option_remove": "Remove option"
         }
+    },
+    "sandbox": {
+        "generator": "Generator",
+        "copy": "Copy the code",
+        "invalid": "This is not a valid sandbox code.",
+        "reset": "Reset to the default options.",
+        "reset_all": "Reset all",
+        "search": "Search an option...",
+        "modified": "{{count}} modified",
+        "unknown_records": "This code contains {{count}} unknown option(s) (newer game version?). They will be dropped if you change an option here.",
+        "yes": "Yes",
+        "no": "No",
+        "category": {
+            "General": "Player",
+            "Entities": "Entities",
+            "World": "World",
+            "Resources": "Resources",
+            "Crafting": "Crafting",
+            "Traders": "Traders",
+            "Tasks": "Tasks",
+            "Misc": "Misc"
+        }
     }
 }

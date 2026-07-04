@@ -297,5 +297,27 @@
             "option_add": "Ajouter une option",
             "option_remove": "Supprimer l'option"
         }
+    },
+    "sandbox": {
+        "generator": "Générateur",
+        "copy": "Copier le code",
+        "invalid": "Ce code sandbox n'est pas valide.",
+        "reset": "Réinitialiser aux options par défaut.",
+        "reset_all": "Tout réinitialiser",
+        "search": "Rechercher une option...",
+        "modified": "{{count}} modifiée(s)",
+        "unknown_records": "Ce code contient {{count}} option(s) inconnue(s) (version du jeu plus récente ?). Elles seront perdues si vous modifiez une option ici.",
+        "yes": "Oui",
+        "no": "Non",
+        "category": {
+            "General": "Joueur",
+            "Entities": "Entités",
+            "World": "Monde",
+            "Resources": "Ressources",
+            "Crafting": "Artisanat",
+            "Traders": "Marchands",
+            "Tasks": "Quêtes",
+            "Misc": "Divers"
+        }
     }
 }

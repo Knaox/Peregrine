@@ -32,6 +32,8 @@ export interface ParamConfig {
     max_length?: number;
     format?: string;
     default?: string | number | boolean;
+    /** Named client-side generator wired to this field (e.g. `7dtd-sandbox`). */
+    generator?: string;
 }
 
 /** Boost overlay state for a single parameter (populated from P8 onwards). */

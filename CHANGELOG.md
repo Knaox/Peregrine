@@ -8,6 +8,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added
+
+- **Easy Configuration 1.5.0 — built-in 7 Days to Die SandboxCode generator.** The SandboxCode field now embeds a hosthavoc-style generator: all 151 sandbox gameplay options (difficulty damages, XP, loot counts, blood moons, zombie speeds, quests…) grouped by game category with search, modified-count badges and per-rule option disabling. Changing any option re-encodes the code instantly; pasting a code from the game re-hydrates the options; invalid codes fall back to a plain field with one-click reset. The codec is an exact port of the game's format (version letter + 3-letter records, verified byte-identical against the stock Adventurer preset) and lives entirely in the plugin — zero core code. The official `7-days-to-die` template (1.1.0) drops the 30 legacy V1 gameplay properties that the V2 `serverconfig.xml` no longer reads (their replacements live inside the SandboxCode).
+
 ## [1.0.0-alpha.19] — 2026-07-04
 
 ### Added
