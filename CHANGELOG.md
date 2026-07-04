@@ -10,7 +10,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ### Added
 
-- **Easy Configuration 1.7.0 — one-click "Import egg" into Pelican.** Templates can now ship a Pelican egg bundle (`official/eggs/<template-id>.json`); the admin template list shows an "Import egg" button that pushes it through Pelican's Application API (`POST /api/application/eggs/import`). Pelican upserts by the egg's embedded uuid, so the first click creates the egg and every re-import UPDATES the existing one in place. After the import, Peregrine re-syncs its local egg mirror and automatically attaches the egg to the template's `target_eggs` — the 7 Days to Die template + its SANDBOX_CODE-wired egg go live with a single click.
+- **Easy Configuration 1.7.1 — one-click "Import egg" into Pelican.** Templates can now ship a Pelican egg bundle (`official/eggs/<template-id>.json`); the admin template list shows an "Import egg" button that pushes it through Pelican's Application API (`POST /api/application/eggs/import`). Pelican upserts by the egg's embedded uuid, so the first click creates the egg and every re-import UPDATES the existing one in place. After the import, Peregrine re-syncs its local egg mirror and automatically attaches the egg to the template's `target_eggs` — the 7 Days to Die template + its SANDBOX_CODE-wired egg go live with a single click. The template-card action row wraps instead of overflowing, so the delete button stays visible alongside the new action.
 
 ## [1.0.0-alpha.20] — 2026-07-04
 

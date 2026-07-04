@@ -117,7 +117,7 @@ export function TemplateListPage() {
                                 <Badge variant="muted">{t('admin.list.eggs', { count: tpl.target_eggs.length })}</Badge>
                                 {tpl.boost_enabled && <Badge variant="accent">{t('admin.list.boost')}</Badge>}
                             </div>
-                            <div className="ec-row">
+                            <div className="ec-template-card-actions">
                                 <Button size="sm" variant="secondary" onClick={() => navigate(`${ADMIN_PATH}/${tpl.template_id}`)}>
                                     <Pencil size={13} /> {t('common.edit')}
                                 </Button>
