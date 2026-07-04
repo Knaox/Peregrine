@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { X } from 'lucide-react';
 import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { IconButton } from './Button';
 
 interface DialogProps {
@@ -15,9 +16,14 @@ interface DialogProps {
 }
 
 /**
- * Modal dialog. Renders a fixed-position scrim inline (no portal — the host's
- * externalised react-dom doesn't expose createPortal). Closes on Escape or a
- * click on the backdrop.
+ * Modal dialog. The fixed-position scrim is PORTALED to document.body so it
+ * really covers the viewport: rendered inline, any ancestor with a transform /
+ * filter / backdrop-filter (glass cards, motion wrappers on host pages)
+ * becomes the containing block for `position: fixed` and traps the overlay
+ * inside that box. Older shells whose bridge lacks `createPortal` fall back
+ * to the inline render. The scrim carries `ec-root` so the plugin's scoped
+ * styles still apply once detached from the plugin's DOM subtree. Closes on
+ * Escape or a click on the backdrop.
  */
 export function Dialog({ open, onClose, title, children, footer, size = 'md', closeLabel }: DialogProps) {
     useEffect(() => {
@@ -38,9 +44,9 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md', cl
         return null;
     }
 
-    return (
+    const overlay = (
         <div
-            className="ec-scrim"
+            className="ec-scrim ec-root"
             onMouseDown={(event) => {
                 if (event.target === event.currentTarget) {
                     onClose();
@@ -59,4 +65,6 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md', cl
             </div>
         </div>
     );
+
+    return typeof createPortal === 'function' ? createPortal(overlay, document.body) : overlay;
 }

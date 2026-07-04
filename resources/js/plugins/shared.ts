@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import ReactDOM from 'react-dom/client';
 import * as ReactQuery from '@tanstack/react-query';
 import * as ReactRouterDom from 'react-router-dom';
@@ -12,7 +13,14 @@ declare global {
     interface Window {
         __PEREGRINE_SHARED__: {
             React: typeof React;
-            ReactDOM: typeof ReactDOM;
+            /**
+             * `react-dom/client` (createRoot…) merged with `createPortal` from
+             * `react-dom`, because plugin bundles externalise BOTH specifiers
+             * to this single object — and overlays rendered inline get trapped
+             * by any transformed/backdrop-filtered ancestor, so plugins need
+             * portals to escape to document.body.
+             */
+            ReactDOM: typeof ReactDOM & { createPortal: typeof createPortal };
             ReactQuery: typeof ReactQuery;
             ReactRouterDom: typeof ReactRouterDom;
             useTranslation: typeof useTranslation;
@@ -93,7 +101,7 @@ declare global {
 // Expose shared dependencies for plugin bundles
 window.__PEREGRINE_SHARED__ = {
     React,
-    ReactDOM,
+    ReactDOM: { ...ReactDOM, createPortal },
     ReactQuery,
     ReactRouterDom,
     useTranslation,

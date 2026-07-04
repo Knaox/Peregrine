@@ -8,6 +8,12 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.22] — 2026-07-04
+
+### Fixed
+
+- **Plugin overlays now really cover the viewport.** The plugin bridge's `ReactDOM` (built from `react-dom/client`) lacked `createPortal`, so plugin dialogs had to render inline — and any ancestor with a transform / filter / backdrop-filter (glass cards, motion wrappers) became the containing block for `position: fixed`, trapping the overlay inside the page content (visible with the SandboxCode generator opened from the startup-variables card). The bridge now merges `createPortal` into `ReactDOM`, and Easy Configuration 1.7.3 portals its dialogs to `document.body` (carrying the `ec-root` style scope, with an inline fallback on older shells).
+
 ## [1.0.0-alpha.21] — 2026-07-04
 
 ### Added
