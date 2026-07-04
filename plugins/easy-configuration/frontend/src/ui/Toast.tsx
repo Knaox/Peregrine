@@ -4,14 +4,23 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState, type
 
 type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 
+interface ToastOptions {
+    /** Toasts sharing a key REPLACE each other (live value updates) instead of stacking. */
+    key?: string;
+    /** Extra line rendered in a monospace pill (e.g. a generated code). */
+    detail?: string;
+}
+
 interface ToastItem {
     id: number;
     variant: ToastVariant;
     message: string;
+    key?: string;
+    detail?: string;
 }
 
 interface ToastApi {
-    show: (message: string, variant?: ToastVariant) => void;
+    show: (message: string, variant?: ToastVariant, options?: ToastOptions) => void;
     success: (message: string) => void;
     error: (message: string) => void;
     warning: (message: string) => void;
@@ -32,17 +41,38 @@ export function useToast(): ToastApi {
 export function ToastProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<ToastItem[]>([]);
     const counter = useRef(0);
+    const timers = useRef(new Map<number, number>());
 
     const dismiss = useCallback((id: number) => {
+        const timer = timers.current.get(id);
+        if (timer !== undefined) {
+            window.clearTimeout(timer);
+            timers.current.delete(id);
+        }
         setItems((prev) => prev.filter((item) => item.id !== id));
     }, []);
 
     const show = useCallback(
-        (message: string, variant: ToastVariant = 'info') => {
+        (message: string, variant: ToastVariant = 'info', options?: ToastOptions) => {
             counter.current += 1;
             const id = counter.current;
-            setItems((prev) => [...prev, { id, variant, message }]);
-            window.setTimeout(() => dismiss(id), 4500);
+            const next: ToastItem = { id, variant, message, key: options?.key, detail: options?.detail };
+            setItems((prev) => {
+                // Same-key toast: replace in place (its timer is rearmed below)
+                // so rapid successive updates read as ONE live notification.
+                const existing = options?.key !== undefined ? prev.find((item) => item.key === options.key) : undefined;
+                if (existing === undefined) {
+                    return [...prev, next];
+                }
+                const timer = timers.current.get(existing.id);
+                if (timer !== undefined) {
+                    window.clearTimeout(timer);
+                    timers.current.delete(existing.id);
+                }
+
+                return prev.map((item) => (item === existing ? next : item));
+            });
+            timers.current.set(id, window.setTimeout(() => dismiss(id), 4500));
         },
         [dismiss],
     );
@@ -72,7 +102,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                             <span className="ec-toast-icon">
                                 <ToastIcon variant={item.variant} />
                             </span>
-                            <span>{item.message}</span>
+                            <span className="ec-toast-body">
+                                {item.message}
+                                {item.detail !== undefined && <code className="ec-toast-detail">{item.detail}</code>}
+                            </span>
                         </div>
                     ))}
                 </div>

@@ -3,6 +3,7 @@ import { Check, Copy, Settings2 } from 'lucide-react';
 import { useT } from '../lib/i18n';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/inputs';
+import { useToast } from '../ui/Toast';
 import {
     decodeSandbox,
     encodeSandbox,
@@ -35,8 +36,15 @@ export function SandboxCodeField({
     ariaLabel?: string;
 }) {
     const { t } = useT();
+    const toast = useToast();
     const [openPanel, setOpenPanel] = useState(false);
     const [copied, setCopied] = useState(false);
+
+    // Live feedback: every option change re-raises ONE keyed notification
+    // showing the freshly generated code (same-key toasts replace in place).
+    const announce = (code: string): void => {
+        toast.show(t('sandbox.code_updated'), 'info', { key: 'sbx-code', detail: code });
+    };
 
     const decoded = useMemo((): { state: SandboxState | null; unknownRecords: number } => {
         if (value.trim() === '') {
@@ -54,7 +62,9 @@ export function SandboxCodeField({
         if (!option || decoded.state === null) {
             return;
         }
-        onChange(encodeSandbox({ ...decoded.state, [optionName]: valuesOf(option)[valueIndex] }));
+        const code = encodeSandbox({ ...decoded.state, [optionName]: valuesOf(option)[valueIndex] });
+        onChange(code);
+        announce(code);
     };
 
     const copy = (): void => {
@@ -87,7 +97,15 @@ export function SandboxCodeField({
                 <p className="sbx-error">
                     {t('sandbox.invalid')}{' '}
                     {!disabled && (
-                        <button type="button" className="sbx-link" onClick={() => onChange(encodeSandbox(sandboxDefaults()))}>
+                        <button
+                            type="button"
+                            className="sbx-link"
+                            onClick={() => {
+                                const code = encodeSandbox(sandboxDefaults());
+                                onChange(code);
+                                announce(code);
+                            }}
+                        >
                             {t('sandbox.reset')}
                         </button>
                     )}
@@ -102,7 +120,11 @@ export function SandboxCodeField({
                     state={decoded.state}
                     disabled={disabled === true}
                     onPick={pick}
-                    onResetAll={() => onChange(encodeSandbox(sandboxDefaults()))}
+                    onResetAll={() => {
+                        const code = encodeSandbox(sandboxDefaults());
+                        onChange(code);
+                        announce(code);
+                    }}
                 />
             )}
         </div>

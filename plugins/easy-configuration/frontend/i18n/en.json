@@ -318,6 +318,7 @@
             "Traders": "Traders",
             "Tasks": "Tasks",
             "Misc": "Misc"
-        }
+        },
+        "code_updated": "New sandbox code:"
     }
 }

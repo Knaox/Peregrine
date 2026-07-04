@@ -53,6 +53,10 @@ export const overlayCss = `
 .ec-toast-error .ec-toast-icon { color: var(--color-danger); }
 .ec-toast-success .ec-toast-icon { color: var(--color-success); }
 .ec-toast-warning .ec-toast-icon { color: var(--color-warning); }
+.ec-toast-body { min-width: 0; }
+.ec-toast-detail { display: block; margin-top: 0.3rem; padding: 0.25rem 0.4rem; border-radius: calc(var(--radius) / 2);
+    background: rgba(var(--color-primary-rgb), 0.1); border: 1px solid rgba(var(--color-primary-rgb), 0.25);
+    font-family: var(--font-mono, monospace); font-size: 0.68rem; letter-spacing: 0.02em; word-break: break-all; }
 
 .ec-tooltip { position: relative; display: inline-flex; }
 .ec-tooltip-pop { position: absolute; bottom: calc(100% + 0.4rem); left: 50%; transform: translateX(-50%);
