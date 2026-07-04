@@ -4,18 +4,56 @@
         {
             "id": "invitations",
             "name": "Server Invitations",
-            "version": "1.3.3",
-            "description": "Invite users to your servers by email with granular Pelican permissions. Edit permissions of active subusers and pending invitations. Ships with Peregrine by default. Admin-aware — panel admins can manage invitations / subusers on any server. Other plugins can register their own permission groups via the shared PermissionRegistry singleton with an optional `availableForServer` filter so they can hide their group on servers where it doesn't apply. Includes : (1) Resend button on pending invitations — token rotates on each resend so older mails are invalidated, throttled at 5 / min / user ; (2) plugin-permission persistence fix — modifications including plugin perms (modpack.*, arkmods.*, …) correctly land in the local pivot even when Pelican rejects unknown prefixes ; (3) full plugin-namespaced i18n (frontend strings + backend `__('invitations::messages.*')` + new `lang/{en,fr}/messages.php` files) — no more leaks into the Peregrine core bundle ; (4) `auto_activate_on_setup` manifest flag so the setup wizard activates the plugin without the core hard-coding any plugin id ; (5) v1.3.2 — invitation emails now resolve the brand name from SettingsService (canonical `app_name` set in /admin/settings) instead of the APP_NAME env var, fixing the literal \"LARAVEL\" header on Docker installs whose .env was never resynchronised after the wizard ; (6) v1.3.3 — accept / removal hardening : Pelican calls run outside the DB transaction with an idempotent `syncSubuser` so an accept never gets stuck \"pending\", removing a subuser truly drops local pivot access (no more \"revoked but still in\"), all email lookups are case-insensitive (`LOWER(email)`) to match the host's un-normalised OAuth / shop accounts, and accept / register catch `Throwable` to surface a clean retry instead of a 500.",
+            "version": "1.4.0",
+            "description": "Invite users to your servers by email with granular Pelican permissions. Edit permissions of active subusers and pending invitations. Ships with Peregrine by default. Admin-aware — panel admins can manage invitations / subusers on any server. Other plugins can register their own permission groups via the shared PermissionRegistry singleton with an optional `availableForServer` filter so they can hide their group on servers where it doesn't apply. Includes : (1) Resend button on pending invitations — token rotates on each resend so older mails are invalidated, throttled at 5 / min / user ; (2) plugin-permission persistence fix — modifications including plugin perms (modpack.*, arkmods.*, …) correctly land in the local pivot even when Pelican rejects unknown prefixes ; (3) full plugin-namespaced i18n (frontend strings + backend `__('invitations::messages.*')` + new `lang/{en,fr}/messages.php` files) — no more leaks into the Peregrine core bundle ; (4) `auto_activate_on_setup` manifest flag so the setup wizard activates the plugin without the core hard-coding any plugin id ; (5) v1.3.2 — invitation emails now resolve the brand name from SettingsService (canonical `app_name` set in /admin/settings) instead of the APP_NAME env var, fixing the literal \"LARAVEL\" header on Docker installs whose .env was never resynchronised after the wizard ; (6) v1.3.3 — accept / removal hardening : Pelican calls run outside the DB transaction with an idempotent `syncSubuser` so an accept never gets stuck \"pending\", removing a subuser truly drops local pivot access (no more \"revoked but still in\"), all email lookups are case-insensitive (`LOWER(email)`) to match the host's un-normalised OAuth / shop accounts, and accept / register catch `Throwable` to surface a clean retry instead of a 500. v1.4.0 — invite a user to several servers in a single email (one click accepts every server in the batch / accept-all), a \"Copy access\" action that replicates an active user's permission set to your other servers (restricted to servers running the same egg, since permissions are egg-specific), a global \"select all permissions\" toggle, cleaner centered invite/edit modals, and one-step acceptance for an already-signed-in invitee (the public invite page hydrates the session itself, so a logged-in user is no longer bounced through login).",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.4",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.11/invitations-1.3.3.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.12/invitations-1.4.0.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/invitations",
             "tags": [
                 "users",
                 "permissions",
                 "collaboration",
+                "default"
+            ]
+        },
+        {
+            "id": "easy-configuration",
+            "name": "Easy Configuration",
+            "version": "1.4.2",
+            "description": "Edit your server's game configuration files (server.properties, GameUserSettings.ini, config.yml, …) through a clean Nitrado-style UI — sliders, toggles, dropdowns — with a lossless round-trip that rewrites only the values you changed. Copy a configuration to other servers of the same egg, and schedule temporary value boosts (multiply or divide), optionally recurring. Templates are pure, shareable JSON render schemas managed from the admin. Ships with Peregrine and auto-activates on setup, like Invitations. v1.2.0 — read-only browsable editor while running, unreachable-vs-absent distinction, accessibility pass, Vitest tests, AI prompt generator. v1.2.2 — fixes importing and editing the official template catalog in production (route resolution under cached routes). v1.2.3 — the config editor stays usable when a single file can't be read (the other configs are still shown instead of blanking the whole section), and the bundled official Hytale template was refreshed (correct default-world path, fully bilingual server + world schema). v1.3.0 — opts into the panel's unified save bar (config edits save together with env-variable edits in one click; falls back to its own floating bar on older panels), and fixes boost-mode tooltips (« Inclure dans le boost », × / ÷) overflowing and being clipped at the card's left edge in 2- and 3-column layouts. v1.4.0 — adds XML support: a generic `xml` format (element text as dotted paths, attributes as `path@attr`) and a dedicated `xml-property` format for files built from `<property name=\"K\" value=\"V\"/>` rows — 7 Days to Die's serverconfig.xml and the like — surfacing one editable field per setting (sectioned by parent element) instead of every name/value attribute twice; both rewrite losslessly and the server-import flow auto-detects which to use. Also adds a per-template « require the server to be off to edit » toggle (on by default) that, when turned off, lets players edit that template's values while the server is running. v1.4.1 — fixes a stale-read after saving: the editor now refetches the live config file once a save succeeds, so a saved value no longer reverts to its previous value when you navigate away and back (no hard refresh needed).",
+            "author": "Peregrine Team",
+            "official": true,
+            "license": "MIT",
+            "min_peregrine_version": "1.0.0",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.19/easy-configuration-1.4.2.zip",
+            "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/easy-configuration",
+            "tags": [
+                "configuration",
+                "files",
+                "nitrado",
+                "boost",
+                "templates",
+                "default"
+            ]
+        },
+        {
+            "id": "peregrine-phpmyadmin",
+            "name": "phpMyAdmin Integration",
+            "version": "1.0.0",
+            "description": "Adds a one-click \"Open in phpMyAdmin\" button to every server database, with automatic login via phpMyAdmin's signon mechanism — or a manual-login mode where the user types the credentials (revealed in the Databases tab). phpMyAdmin is self-hosted by the admin; the plugin ships everything else: short-lived one-shot signon tokens, the credentials bridge, the React button, and a bilingual (FR/EN) in-page install guide with copy-to-clipboard snippets (the SignonScript and the config.inc.php block, pre-filled with your Peregrine URL and shared secret). Configured from /admin/pma-settings (PMA URL, shared secret with one-click regenerate, token TTL, signon server index, IP allowlist, reachability + ready-to-paste curl tests). Ships with Peregrine and auto-activates on setup, like Invitations. Security: one-shot tokens hashed at rest with a short TTL, constant-time shared-secret check that fails closed, optional IP allowlist, gated by the database.view_password permission, per-user rate limit, and a launch/redeem audit log.",
+            "author": "Peregrine Team",
+            "official": true,
+            "license": "MIT",
+            "min_peregrine_version": "1.0.0-alpha.15",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.15/peregrine-phpmyadmin-1.0.0.zip",
+            "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/peregrine-phpmyadmin",
+            "tags": [
+                "database",
+                "phpmyadmin",
+                "mysql",
                 "default"
             ]
         },
@@ -79,13 +117,13 @@
         {
             "id": "version-changer",
             "name": "Minecraft: Version - Changer",
-            "version": "1.1.1",
+            "version": "1.1.2",
             "description": "Change a Minecraft server's software (Vanilla, Paper, Spigot, Purpur, Forge, NeoForge, Fabric, Quilt, proxies, …) and version in one click, sourced from the public MCJars catalog. The server's egg is never changed — only the JAR is swapped. v1.1.0 : the install now runs synchronously inside the controller (`dispatchSync()`) — the response carries the final status / status_message instead of a log_id to poll, so the UI lands on the success / failure screen without a polling loop. v1.1.1 : the sidebar tab now correctly respects the admin egg whitelist (the manifest enricher was reading the pre-flatten `frontend.server_sidebar_entries` key after `PluginBootstrap::getActiveManifests()` had already hoisted entries to top-level `server_sidebar_entries`, so `requires_egg_ids` stayed at the empty plugin.json default and the tab surfaced on every server regardless of the admin config).",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.8/version-changer-1.1.1.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.19/version-changer-1.1.2.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/version-changer",
             "tags": [
                 "minecraft",
@@ -97,13 +135,13 @@
         {
             "id": "minecraft-mods-installer",
             "name": "Minecraft: Mods - Installer",
-            "version": "1.1.1",
-            "description": "Browse, install and remove Minecraft mods (Forge, NeoForge, Fabric, Quilt) directly from the player panel. CurseForge-backed catalog with per-egg gating and a singleton admin config. v1.1.0 : the loader banner now uses the new core `App\\Services\\Loader\\FallbackLoaderResolver` (filesystem probe → modpack-install row → egg name) when the MCJars fingerprint can't run, so it appears for every detectable server — hidden only when no source has a confident answer (no more leftover \"unknown server runtime\" placeholder). v1.1.1 : safe-save pattern for the CurseForge API key — the admin form now blanks the masked password field on fill and treats blank input on save as \"keep existing\", so re-saving the page with a browser whose password manager clears the masked input no longer wipes the stored key (mirrors the modpack-installer pattern).",
+            "version": "1.2.0",
+            "description": "Browse, install and remove Minecraft mods (Forge, NeoForge, Fabric, Quilt) directly from the player panel. CurseForge-backed catalog with per-egg gating and a singleton admin config. v1.1.0 : the loader banner now uses the new core `App\\Services\\Loader\\FallbackLoaderResolver` (filesystem probe → modpack-install row → egg name) when the MCJars fingerprint can't run, so it appears for every detectable server — hidden only when no source has a confident answer (no more leftover \"unknown server runtime\" placeholder). v1.1.1 : safe-save pattern for the CurseForge API key — the admin form now blanks the masked password field on fill and treats blank input on save as \"keep existing\", so re-saving the page with a browser whose password manager clears the masked input no longer wipes the stored key (mirrors the modpack-installer pattern). v1.2.0 — adds Modrinth as a second catalog source alongside CurseForge, selectable from a source picker in the Browse toolbar (Modrinth needs no API key). Full parity per source: Minecraft version list, loader / version / sort filters, the version-picker modal and install all behave the same. A provider abstraction (ModSource enum + registry) normalises both catalogs to one shape, and item IDs are now strings to accommodate Modrinth's alphanumeric project / version ids. New admin controls: enable / disable Modrinth and choose the default source.",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0-alpha.8",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.8/minecraft-mods-installer-1.1.1.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.18/minecraft-mods-installer-1.2.0.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/minecraft-mods-installer",
             "tags": [
                 "minecraft",
@@ -111,6 +149,7 @@
                 "forge",
                 "fabric",
                 "curseforge",
+                "modrinth",
                 "default"
             ]
         },
@@ -149,6 +188,28 @@
                 "hytale",
                 "mods",
                 "curseforge",
+                "default"
+            ]
+        },
+        {
+            "id": "peregrine-player-counter",
+            "name": "Player Counter",
+            "version": "1.2.1",
+            "description": "Shows the live connected-player count (and up to 5 player names) on each server overview, with automatic detection of the full GameDig catalogue — 350+ games including Minecraft (Java + Bedrock), Valheim, Sons of the Forest, ARK (Survival Ascended & Evolved), Palworld, Rust, Enshrouded, V Rising, Project Zomboid, 7 Days to Die, Satisfactory and more. Counts are read through a small self-hosted GameDig sidecar (A2S/Steam/Minecraft); games with no usable wire query (ARK, Palworld) are read over RCON. When a game needs a dedicated query or RCON port that isn't reachable, the server card shows a one-click \"Resolve\" button that allocates the port, configures the matching server variable and restarts — your choice, never automatic. Card visibility is controlled by an egg whitelist (empty = every egg). Ships a bilingual (FR/EN) Docker setup guide for the sidecar.",
+            "author": "Peregrine Team",
+            "official": true,
+            "license": "MIT",
+            "min_peregrine_version": "1.0.0-alpha.16",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.16/peregrine-player-counter-1.2.1.zip",
+            "homepage": "https://github.com/Knaox/Peregrine",
+            "tags": [
+                "players",
+                "monitoring",
+                "steam",
+                "minecraft",
+                "rcon",
+                "gamedig",
+                "a2s",
                 "default"
             ]
         }

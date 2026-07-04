@@ -8,6 +8,20 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.19] — 2026-07-04
+
+### Added
+
+- **Easy Configuration 1.4.2 — official 7 Days to Die template.** The "Import official templates" catalog now ships a complete `7-days-to-die` template covering the whole `serverconfig.xml` (identity, network, slots, world generation, difficulty, zombies, blood moons, land claims, loot…), including the now-essential **SandboxCode** sandbox-difficulty preset introduced by the game.
+
+### Fixed
+
+- **Schedules list updates instantly after every change.** Creating a schedule (incl. its preset task), editing, deleting, running one or adding/editing/removing tasks now refreshes the visible list immediately: mutation invalidations are awaited so the final refetch always wins, and the server-side 5-minute list cache is generation-versioned (`ScheduleCache`) so an in-flight stale read can no longer re-seed a pre-mutation snapshot right after a change (the reason a new schedule could stay invisible until a lucky manual reload). Copying a schedule also refreshes the target servers' cached lists, and `schedule` mirror events now map to the schedules query as a live-update safety net.
+- **Console now streams installation output.** During a (re)install Wings keeps reporting the power state as `offline`, which tripped the console's offline freeze — install lines only reached the history buffer while the live console stayed empty. Install frames now lift the freeze while streaming, and the completed install log stays on screen instead of being cleared by the still-offline state.
+- **Easy Configuration 1.4.2 — saving no longer breaks on numeric options, and new XML properties can be written.** Numeric select/multiselect option values (0/1/2 enums, world sizes…) were compared strictly against the string field value client-side, flagging legitimate choices invalid and blocking the whole save. And a template key missing from the file (e.g. `SandboxCode` on a `serverconfig.xml` generated before the game added it) is now appended to its section as a new `<property>` row instead of being silently skipped.
+- **Version Changer 1.1.2 — single-build versions are installable again.** The install dialog only preselected the first *stable* build and kept a stale selection when reopened on another version — with a single (or experimental-only) build the `<select>` looked filled while nothing was actually selected, so "Install this version" never enabled. The first available build is now truly preselected and the selection re-syncs whenever the build list changes.
+
+
 ## [1.0.0-alpha.18] — 2026-05-27
 
 ### Changed
