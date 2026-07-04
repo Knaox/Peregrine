@@ -75,6 +75,17 @@ declare global {
                 id: string,
                 component: React.ComponentType<{ serverId: number; database: Database }>
             ) => void;
+            /**
+             * Register an extra control rendered under a startup variable's
+             * input on the server "Configuration" card, keyed by the exact
+             * env_variable name (e.g. a plugin-owned generator/editor for a
+             * variable it understands). Same contract as the other slots:
+             * core never imports the plugin, plugins feature-detect this.
+             */
+            registerStartupVariableControl: (
+                envVariable: string,
+                component: React.ComponentType<{ value: string; onChange: (value: string) => void; disabled: boolean }>
+            ) => void;
         };
     }
 }
@@ -100,4 +111,5 @@ window.__PEREGRINE_PLUGINS__ = {
     registerSaveSource: () => {},
     unregisterSaveSource: () => {},
     registerDatabaseRowAction: () => {},
+    registerStartupVariableControl: () => {},
 };

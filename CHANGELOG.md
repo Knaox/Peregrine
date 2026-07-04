@@ -8,9 +8,15 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.21] — 2026-07-04
+
 ### Added
 
-- **Easy Configuration 1.7.1 — one-click "Import egg" into Pelican.** Templates can now ship a Pelican egg bundle (`official/eggs/<template-id>.json`); the admin template list shows an "Import egg" button that pushes it through Pelican's Application API (`POST /api/application/eggs/import`). Pelican upserts by the egg's embedded uuid, so the first click creates the egg and every re-import UPDATES the existing one in place. After the import, Peregrine re-syncs its local egg mirror and automatically attaches the egg to the template's `target_eggs` — the 7 Days to Die template + its SANDBOX_CODE-wired egg go live with a single click. The template-card action row wraps instead of overflowing, so the delete button stays visible alongside the new action.
+- **Plugins can attach a control to a startup variable (`registerStartupVariableControl`).** New shell bridge slot, same contract as the database-row-action slot: a plugin registers a component for an exact `env_variable` name and the server "Configuration" card renders it under that variable's input — edits flow through the card's normal onChange, so dirty tracking and the unified save bar apply untouched. Easy Configuration uses it to surface the **SandboxCode generator button on the `SANDBOX_CODE` variable**: the same full-viewport generator overlay is now available from the startup-variables card, not just the game-config field.
+
+### Added
+
+- **Easy Configuration 1.7.2 — one-click "Import egg" into Pelican.** Templates can now ship a Pelican egg bundle (`official/eggs/<template-id>.json`); the admin template list shows an "Import egg" button that pushes it through Pelican's Application API (`POST /api/application/eggs/import`). Pelican upserts by the egg's embedded uuid, so the first click creates the egg and every re-import UPDATES the existing one in place. After the import, Peregrine re-syncs its local egg mirror and automatically attaches the egg to the template's `target_eggs` — the 7 Days to Die template + its SANDBOX_CODE-wired egg go live with a single click. The template-card action row wraps instead of overflowing, so the delete button stays visible alongside the new action.
 
 ## [1.0.0-alpha.20] — 2026-07-04
 

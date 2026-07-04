@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import clsx from 'clsx';
 import { VariableControlInput } from '@/components/server/VariableControlInput';
+import { usePluginStore } from '@/plugins/pluginStore';
 import { controlFor, describeRules, parseRules } from '@/services/variableRules';
 import type { StartupVariable } from '@/types/StartupVariable';
 
@@ -56,6 +57,9 @@ export function VariableCard({
     const parsed = useMemo(() => parseRules(variable.rules ?? ''), [variable.rules]);
     const control = useMemo(() => controlFor(parsed, value), [parsed, value]);
     const hints = useMemo(() => describeRules(parsed), [parsed]);
+    // A plugin may register a richer control for a variable it understands
+    // (e.g. easy-configuration's SandboxCode generator for SANDBOX_CODE).
+    const PluginControl = usePluginStore((state) => state.startupVariableControlComponents[variable.env_variable]);
 
     return (
         <m.div
@@ -112,6 +116,10 @@ export function VariableCard({
                 emptyLabel={t('variables.empty_option')}
                 onChange={(next) => onChange(variable.env_variable, next)}
             />
+
+            {PluginControl !== undefined && (
+                <PluginControl value={value} onChange={(next) => onChange(variable.env_variable, next)} disabled={!editable} />
+            )}
 
             {(hints.length > 0 || isInvalid) && (
                 <p className={clsx('text-[11px] leading-relaxed', isInvalid ? 'text-[var(--color-danger)]' : 'text-[var(--color-text-muted)]')}>

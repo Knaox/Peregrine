@@ -9,6 +9,8 @@ interface PluginStore {
     serverPageComponents: Record<string, React.ComponentType>;
     serverHomeSectionComponents: Record<string, React.ComponentType<{ serverId: number; serverState?: string }>>;
     databaseRowActionComponents: Record<string, React.ComponentType<{ serverId: number; database: Database }>>;
+    /** Extra control under a startup variable's input, keyed by env_variable. */
+    startupVariableControlComponents: Record<string, React.ComponentType<{ value: string; onChange: (value: string) => void; disabled: boolean }>>;
     isLoading: boolean;
     isInitialized: boolean;
 
@@ -18,6 +20,7 @@ interface PluginStore {
     registerServerPage: (pageId: string, component: React.ComponentType) => void;
     registerServerHomeSection: (sectionId: string, component: React.ComponentType<{ serverId: number; serverState?: string }>) => void;
     registerDatabaseRowAction: (id: string, component: React.ComponentType<{ serverId: number; database: Database }>) => void;
+    registerStartupVariableControl: (envVariable: string, component: React.ComponentType<{ value: string; onChange: (value: string) => void; disabled: boolean }>) => void;
     getComponent: (pluginId: string) => React.ComponentType | undefined;
     init: () => void;
 }
@@ -28,6 +31,7 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
     serverPageComponents: {},
     serverHomeSectionComponents: {},
     databaseRowActionComponents: {},
+    startupVariableControlComponents: {},
     isLoading: true,
     isInitialized: false,
 
@@ -58,6 +62,12 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
         }));
     },
 
+    registerStartupVariableControl: (envVariable, component) => {
+        set((state) => ({
+            startupVariableControlComponents: { ...state.startupVariableControlComponents, [envVariable]: component },
+        }));
+    },
+
     getComponent: (pluginId) => get().components[pluginId],
 
     init: () => {
@@ -75,6 +85,9 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
             },
             registerDatabaseRowAction: (id: string, component: React.ComponentType<{ serverId: number; database: Database }>) => {
                 get().registerDatabaseRowAction(id, component);
+            },
+            registerStartupVariableControl: (envVariable: string, component: React.ComponentType<{ value: string; onChange: (value: string) => void; disabled: boolean }>) => {
+                get().registerStartupVariableControl(envVariable, component);
             },
             // Plugin → shell bridge for long-running operation lifecycle.
             // Implemented as plain DOM CustomEvents so the listener side

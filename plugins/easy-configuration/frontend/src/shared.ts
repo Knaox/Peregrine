@@ -20,6 +20,16 @@ interface PeregrinePlugins {
      */
     registerSaveSource?: (id: string, source: { dirtyCount: number; save: () => Promise<void> }) => void;
     unregisterSaveSource?: (id: string) => void;
+    /**
+     * Optional slot (newer shells): render an extra control under a startup
+     * variable's input on the core server "Configuration" card, keyed by
+     * env_variable — used to surface the SandboxCode generator next to the
+     * SANDBOX_CODE variable. Feature-detect before calling.
+     */
+    registerStartupVariableControl?: (
+        envVariable: string,
+        component: ComponentType<{ value: string; onChange: (value: string) => void; disabled: boolean }>,
+    ) => void;
 }
 
 declare global {
