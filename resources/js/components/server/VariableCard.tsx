@@ -1,7 +1,9 @@
-import { useCallback } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import clsx from 'clsx';
+import { VariableControlInput } from '@/components/server/VariableControlInput';
+import { controlFor, describeRules, parseRules } from '@/services/variableRules';
 import type { StartupVariable } from '@/types/StartupVariable';
 
 const LockIcon = (
@@ -24,15 +26,12 @@ const LinkIcon = (
     </svg>
 );
 
-function isBooleanRule(rules: string): boolean {
-    return /\bboolean\b/.test(rules) || /\bin:[01],[01]\b/.test(rules);
-}
-
 /**
  * Controlled startup-variable card. Holds no value state of its own — the
  * parent (via {@link useStartupVariablesEditor}) owns it so every edit feeds a
- * single batch save through the global save bar. No per-card save button: a
- * "modified" badge + reset are the only per-card affordances.
+ * single batch save through the global save bar. The control shape (toggle /
+ * select / bounded number / text) is derived from the variable's Pelican
+ * rules, and a localised hint line summarises the accepted format.
  */
 export function VariableCard({
     variable,
@@ -52,15 +51,11 @@ export function VariableCard({
     canEdit: boolean;
 }) {
     const { t } = useTranslation('server-shell');
-    const isBoolean = isBooleanRule(variable.rules);
     const editable = canEdit && variable.is_editable;
 
-    const handleToggle = useCallback(() => {
-        if (!editable) {
-            return;
-        }
-        onChange(variable.env_variable, value === '1' ? '0' : '1');
-    }, [editable, onChange, variable.env_variable, value]);
+    const parsed = useMemo(() => parseRules(variable.rules ?? ''), [variable.rules]);
+    const control = useMemo(() => controlFor(parsed, value), [parsed, value]);
+    const hints = useMemo(() => describeRules(parsed), [parsed]);
 
     return (
         <m.div
@@ -108,47 +103,21 @@ export function VariableCard({
                 </div>
             </div>
 
-            {isBoolean ? (
-                <button
-                    type="button"
-                    role="switch"
-                    aria-checked={value === '1'}
-                    disabled={!editable}
-                    onClick={handleToggle}
-                    className={clsx(
-                        'relative inline-flex h-6 w-11 shrink-0 rounded-full',
-                        'transition-colors duration-[var(--transition-fast)]',
-                        'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-glow)]',
-                        value === '1' ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-border)]',
-                        !editable && 'opacity-50 cursor-not-allowed',
-                    )}
-                >
-                    <span
-                        className={clsx(
-                            'pointer-events-none inline-block h-5 w-5 rounded-full',
-                            'bg-white shadow transform transition-transform duration-[var(--transition-fast)]',
-                            'mt-0.5',
-                            value === '1' ? 'translate-x-[22px]' : 'translate-x-0.5',
-                        )}
-                    />
-                </button>
-            ) : (
-                <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => onChange(variable.env_variable, e.target.value)}
-                    readOnly={!editable}
-                    disabled={!variable.is_editable}
-                    className={clsx(
-                        'w-full px-3 py-2 text-sm',
-                        'bg-[var(--color-surface)] rounded-[var(--radius)]',
-                        'text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]',
-                        'border transition-all duration-[var(--transition-fast)]',
-                        'focus:outline-none focus:ring-2 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary-glow)]',
-                        isInvalid ? 'border-[var(--color-danger)]' : 'border-[var(--color-border)]',
-                        !editable && 'opacity-50 cursor-not-allowed',
-                    )}
-                />
+            <VariableControlInput
+                control={control}
+                value={value}
+                editable={editable}
+                isInvalid={isInvalid}
+                ariaLabel={variable.name}
+                emptyLabel={t('variables.empty_option')}
+                onChange={(next) => onChange(variable.env_variable, next)}
+            />
+
+            {(hints.length > 0 || isInvalid) && (
+                <p className={clsx('text-[11px] leading-relaxed', isInvalid ? 'text-[var(--color-danger)]' : 'text-[var(--color-text-muted)]')}>
+                    {isInvalid && <span className="font-medium">{t('variables.invalid_value')} </span>}
+                    {hints.map((hint) => t(`variables.${hint.token}`, hint.params)).join(' · ')}
+                </p>
             )}
 
             {variable.description && (

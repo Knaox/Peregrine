@@ -44,7 +44,18 @@
         "linked": "Linked",
         "linked_hint": "This variable is managed by a plugin.",
         "advanced": "Advanced Configuration",
-        "advanced_count": "{{count}} file(s)"
+        "advanced_count": "{{count}} file(s)",
+        "empty_option": "(empty)",
+        "invalid_value": "Invalid value.",
+        "hint_integer": "Whole number",
+        "hint_number": "Number",
+        "hint_integer_between": "Whole number between {{min}} and {{max}}",
+        "hint_number_between": "Number between {{min}} and {{max}}",
+        "hint_min": "Minimum {{min}}",
+        "hint_max": "Maximum {{max}}",
+        "hint_max_length": "Max {{max}} characters",
+        "hint_pattern": "Constrained format",
+        "hint_optional": "Optional"
     },
     "save_bar": {
         "unsaved": "{{count}} unsaved change(s)",

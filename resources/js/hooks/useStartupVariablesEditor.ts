@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStartupVariables } from '@/hooks/useStartupVariables';
 import { useSaveSource } from '@/hooks/useSaveSource';
+import { parseRules, validateVariable } from '@/services/variableRules';
 
 /**
  * Add keys present in `source` but missing from `target`, preserving every
@@ -41,7 +42,21 @@ export function useStartupVariablesEditor(serverId: number, canEdit: boolean) {
 
     const [values, setValues] = useState<Record<string, string>>(initial);
     const [original, setOriginal] = useState<Record<string, string>>(initial);
-    const [invalidKeys, setInvalidKeys] = useState<Set<string>>(new Set());
+    // Keys rejected by the LAST save round-trip (Pelican-side failures).
+    const [failedKeys, setFailedKeys] = useState<Set<string>>(new Set());
+
+    // Live client-side validation against each variable's Pelican rules —
+    // the same checks the panel will enforce, surfaced before saving.
+    const invalidKeys = useMemo(() => {
+        const invalid = new Set<string>(failedKeys);
+        for (const variable of variables) {
+            const error = validateVariable(parseRules(variable.rules ?? ''), values[variable.env_variable] ?? '');
+            if (error !== null) {
+                invalid.add(variable.env_variable);
+            }
+        }
+        return invalid;
+    }, [variables, values, failedKeys]);
 
     // A refetch (e.g. after a save invalidation) brings keys in `initial`; merge
     // them in without clobbering unsaved edits to existing fields.
@@ -57,7 +72,9 @@ export function useStartupVariablesEditor(serverId: number, canEdit: boolean) {
 
     const onChange = useCallback((key: string, value: string) => {
         setValues((current) => ({ ...current, [key]: value }));
-        setInvalidKeys((current) => {
+        // A fresh edit clears the key's backend failure flag; the live rule
+        // validation above re-evaluates on its own.
+        setFailedKeys((current) => {
             if (!current.has(key)) {
                 return current;
             }
@@ -79,26 +96,31 @@ export function useStartupVariablesEditor(serverId: number, canEdit: boolean) {
         if (keys.length === 0) {
             return;
         }
+        // Don't ship values the rules already reject — Pelican would 422 them
+        // one by one; the cards are flagged, the save bar reports the failure.
+        if (keys.some((key) => invalidKeys.has(key))) {
+            throw new Error('invalid_values');
+        }
         const result = await saveVariables(keys.map((key) => ({ key, value: values[key] ?? '' })));
-        const failedKeys = Object.keys(result.errors ?? {});
+        const rejected = Object.keys(result.errors ?? {});
 
         // Sync `original` for every key that DID save (so they leave the dirty
         // set); failed keys stay dirty + get flagged invalid for a retry.
         setOriginal((prev) => {
             const next = { ...prev };
             for (const key of keys) {
-                if (!failedKeys.includes(key)) {
+                if (!rejected.includes(key)) {
                     next[key] = values[key] ?? '';
                 }
             }
             return next;
         });
-        setInvalidKeys(new Set(failedKeys));
+        setFailedKeys(new Set(rejected));
 
         if (!result.success) {
             throw new Error('partial_save_failed');
         }
-    }, [values, original, saveVariables]);
+    }, [values, original, invalidKeys, saveVariables]);
 
     useSaveSource('startup-variables', dirtyKeys.length, save, canEdit);
 

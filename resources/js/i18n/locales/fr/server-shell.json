@@ -44,7 +44,18 @@
         "linked": "Lié",
         "linked_hint": "Cette variable est gérée par un plugin.",
         "advanced": "Configuration avancée",
-        "advanced_count": "{{count}} fichier(s)"
+        "advanced_count": "{{count}} fichier(s)",
+        "empty_option": "(vide)",
+        "invalid_value": "Valeur invalide.",
+        "hint_integer": "Nombre entier",
+        "hint_number": "Nombre",
+        "hint_integer_between": "Entier entre {{min}} et {{max}}",
+        "hint_number_between": "Nombre entre {{min}} et {{max}}",
+        "hint_min": "Minimum {{min}}",
+        "hint_max": "Maximum {{max}}",
+        "hint_max_length": "{{max}} caractères max",
+        "hint_pattern": "Format contraint",
+        "hint_optional": "Facultatif"
     },
     "save_bar": {
         "unsaved": "{{count}} modification(s) non enregistrée(s)",
