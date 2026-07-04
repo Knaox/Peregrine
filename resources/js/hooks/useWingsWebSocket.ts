@@ -69,6 +69,11 @@ export function useWingsWebSocket(
     // buffer (so a reconnect's re-sent logs don't repopulate a console the user
     // expects to be cleared) while `history` keeps accumulating.
     const offline = useRef(false);
+    // Wings keeps reporting power-state `offline` during an egg (re)install, so
+    // the offline freeze must be lifted while install frames stream ('active')
+    // and the install log preserved after 'install completed' ('done') until
+    // the server has been seen active again.
+    const installPhase = useRef<'none' | 'active' | 'done'>('none');
     const retry = useWsRetryState();
 
     const clearMessages = useCallback(() => setMessages([]), []);
@@ -108,11 +113,23 @@ export function useWingsWebSocket(
 
     // Clear the live console the instant the server goes offline (so it shows
     // the "server is offline" placeholder) and freeze it until it comes back.
+    // Exception: while an install is streaming, the power-state stays `offline`
+    // but the console must keep flowing; right after an install, the log is
+    // kept on screen instead of being cleared by the still-offline state.
     const updateOfflineFreeze = useCallback((state: string) => {
+        if (installPhase.current === 'active') {
+            offline.current = false;
+            return;
+        }
         const isOff = state === 'offline' || state === 'stopped';
+        if (!isOff && installPhase.current === 'done') {
+            installPhase.current = 'none';
+        }
         if (isOff && !offline.current) {
             offline.current = true;
-            setMessages([]);
+            if (installPhase.current !== 'done') {
+                setMessages([]);
+            }
         } else if (!isOff && offline.current) {
             offline.current = false;
         }
@@ -220,11 +237,14 @@ export function useWingsWebSocket(
                     break;
 
                 // Wings emits `install output` while the egg install script
-                // runs (status='installing'). We treat it like console output
-                // so the same terminal component can render it. Lines are
-                // tagged with [install] for visual distinction.
+                // runs, but keeps reporting the power-state as `offline` the
+                // whole time — so these frames must lift the offline freeze
+                // themselves or they would only ever land in `history`. Lines
+                // are tagged with [install] for visual distinction.
                 case 'install output':
                     if (options.console && data.args[0] !== undefined) {
+                        installPhase.current = 'active';
+                        offline.current = false;
                         const cleaned = stripAnsi(data.args[0]);
                         scanForIssues(cleaned);
                         record(`[install] ${cleaned}`);
@@ -232,6 +252,8 @@ export function useWingsWebSocket(
                     break;
 
                 case 'install started':
+                    installPhase.current = 'active';
+                    offline.current = false;
                     if (options.console) {
                         record('[Peregrine] Installation starting…');
                     }
@@ -244,6 +266,9 @@ export function useWingsWebSocket(
                     if (options.console) {
                         record('[Peregrine] Installation completed.');
                     }
+                    // Keep the install log visible: the server is still offline
+                    // right after an install, and the freeze would clear it.
+                    installPhase.current = 'done';
                     setInstallCompleted(true);
                     break;
 
