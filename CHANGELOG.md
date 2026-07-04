@@ -8,7 +8,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.20] — 2026-07-04
+
 ### Added
+
+- **Startup variables now render with the right control for EVERY Pelican rule format.** Egg-variable rules are fully parsed (`boolean`, `in:` lists — incl. `true/false`, `yes/no`, `on/off` pairs rendered as toggles that keep the variable's own wire format —, `integer`/`numeric` with `between:`/`min:`/`max:` bounds, string `max:` length caps, `digits`, `regex:` — even patterns containing pipes —, `alpha_num`/`alpha_dash`, `url`/`email`/`ip`, `required`/`nullable`). Each variable gets the matching input (toggle / select with an "(empty)" option when allowed / bounded number field / capped text field), a localised FR/EN hint line summarising the accepted format, and live client-side validation that flags invalid values and blocks the batch save before Pelican would 422 it — server-side failures are still flagged per key.
 
 - **Easy Configuration 1.6.0 — 7DTD SandboxCode: full-screen generator overlay, FR/EN translations, boot-time injection.** The generator now opens in a file-editor-style full-viewport overlay (responsive, own scrolling body) instead of expanding inline. All 151 sandbox options — labels, descriptions and every value label — are fully translated (FR/EN). Each change still re-encodes the code instantly and raises a live replace-in-place notification. The field's default is the neutral `A` code (every option at its game default; the stock Adventurer preset `AAAJABJACJADJARFBNC` is documented in the description), and the template's SandboxCode is now linked to a `SANDBOX_CODE` egg variable so saves also sync Pelican — pair it with the updated 7DTD egg that passes `-SandboxCode=${SANDBOX_CODE}` at boot to apply the code before the server ever starts.
 
