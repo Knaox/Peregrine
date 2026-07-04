@@ -48,6 +48,7 @@ const RESOURCE_TO_QUERY_KEYS: Record<string, ReadonlyArray<readonly (string | nu
     allocation: [['servers', 'ID', 'network']],
     backup: [['servers', 'ID', 'backups']],
     database: [['servers', 'ID', 'databases']],
+    schedule: [['servers', 'ID', 'schedules']],
     subuser: [
         ['servers', 'ID', 'subusers'],
         ['subusers', 'ID'],

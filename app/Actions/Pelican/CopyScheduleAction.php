@@ -4,9 +4,9 @@ namespace App\Actions\Pelican;
 
 use App\Models\Server;
 use App\Services\Pelican\PelicanScheduleService;
+use App\Services\Pelican\ScheduleCache;
 use App\Services\Pelican\ScheduleNormalizer;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 /**
@@ -101,7 +101,7 @@ final class CopyScheduleAction
                 ]);
             }
 
-            Cache::forget("server_schedules:{$target->identifier}");
+            ScheduleCache::bust($target->identifier);
 
             $result['success'] = true;
             $result['schedule_id'] = $newScheduleId;

@@ -11,10 +11,10 @@ use App\Http\Requests\Server\CreateTaskRequest;
 use App\Http\Requests\Server\UpdateScheduleRequest;
 use App\Models\Server;
 use App\Services\Pelican\PelicanScheduleService;
+use App\Services\Pelican\ScheduleCache;
 use App\Services\Pelican\ScheduleNormalizer;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
 
 class ServerScheduleController extends Controller
 {
@@ -26,7 +26,7 @@ class ServerScheduleController extends Controller
     {
         $this->authorize('readSchedule', $server);
 
-        $data = Cache::remember("server_schedules:{$server->identifier}", 300, function () use ($server): array {
+        $data = ScheduleCache::remember($server->identifier, function () use ($server): array {
             $schedules = $this->scheduleService->listSchedules($server->identifier);
 
             return array_map(ScheduleNormalizer::normalize(...), $schedules);
@@ -46,7 +46,7 @@ class ServerScheduleController extends Controller
             return response()->json(['message' => $e->response->json('errors.0.detail') ?? 'Pelican error'], $e->response->status());
         }
 
-        Cache::forget("server_schedules:{$server->identifier}");
+        ScheduleCache::bust($server->identifier);
 
         $data = $result['attributes'] ?? $result;
 
@@ -63,7 +63,7 @@ class ServerScheduleController extends Controller
             $request->validated(),
         );
 
-        Cache::forget("server_schedules:{$server->identifier}");
+        ScheduleCache::bust($server->identifier);
 
         $this->audit($server, 'server.schedule.update', ['schedule_id' => $schedule]);
 
@@ -76,7 +76,7 @@ class ServerScheduleController extends Controller
 
         $this->scheduleService->executeSchedule($server->identifier, $schedule);
 
-        Cache::forget("server_schedules:{$server->identifier}");
+        ScheduleCache::bust($server->identifier);
 
         $this->audit($server, 'server.schedule.execute', ['schedule_id' => $schedule]);
 
@@ -89,7 +89,7 @@ class ServerScheduleController extends Controller
 
         $this->scheduleService->deleteSchedule($server->identifier, $schedule);
 
-        Cache::forget("server_schedules:{$server->identifier}");
+        ScheduleCache::bust($server->identifier);
 
         $this->audit($server, 'server.schedule.delete', ['schedule_id' => $schedule]);
 
@@ -143,7 +143,7 @@ class ServerScheduleController extends Controller
             $data,
         );
 
-        Cache::forget("server_schedules:{$server->identifier}");
+        ScheduleCache::bust($server->identifier);
 
         $this->audit($server, 'server.schedule.task.create', [
             'schedule_id' => $schedule,
@@ -164,7 +164,7 @@ class ServerScheduleController extends Controller
             $data,
         );
 
-        Cache::forget("server_schedules:{$server->identifier}");
+        ScheduleCache::bust($server->identifier);
 
         $this->audit($server, 'server.schedule.task.update', [
             'schedule_id' => $schedule,
@@ -181,7 +181,7 @@ class ServerScheduleController extends Controller
 
         $this->scheduleService->deleteTask($server->identifier, $schedule, $task);
 
-        Cache::forget("server_schedules:{$server->identifier}");
+        ScheduleCache::bust($server->identifier);
 
         $this->audit($server, 'server.schedule.task.delete', ['schedule_id' => $schedule, 'task_id' => $task]);
 

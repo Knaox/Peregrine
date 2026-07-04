@@ -98,11 +98,11 @@ function ServerSchedulesPageImpl() {
             payload.name = currentPreset.name;
         }
         try {
-            // Sequential, not parallel: create's auto-invalidation would refetch
-            // the schedule list before the preset task exists, and that stale
-            // refetch (no task) raced ahead of the task one — so the new task
-            // only showed up after a manual refresh. Awaiting the task creation
-            // makes addTask's invalidation the last refetch, which wins.
+            // Sequential, not parallel — and the hook's onSuccess RETURNS its
+            // invalidation promise, so each mutateAsync only resolves once the
+            // list refetch completed. The addTask refetch is therefore always
+            // the last one, and the server-side cache is generation-versioned
+            // (ScheduleCache) so an in-flight stale read can't repoison it.
             const newSchedule = await create.mutateAsync(payload);
             if (currentPreset?.task && newSchedule?.id) {
                 await addTask.mutateAsync({ scheduleId: newSchedule.id, payload: currentPreset.task });
