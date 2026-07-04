@@ -127,6 +127,8 @@ export interface TemplateRow {
     file_count: number;
     is_valid: boolean;
     last_error: string | null;
+    /** A Pelican egg bundle ships with this template (import button shown). */
+    has_egg?: boolean;
 }
 
 /** An egg in the admin template editor picker. */

@@ -30,7 +30,17 @@ final class TemplateController
     {
         $this->registry->rebuild();
 
-        return response()->json(['data' => $this->registry->all()]);
+        // `has_egg` flags templates shipping a Pelican egg bundle so the list
+        // can surface the "import egg into Pelican" action.
+        $rows = $this->registry->all()->map(static function ($row): array {
+            $payload = $row->toArray();
+            $path = TemplateEggController::bundlePath((string) $row->template_id);
+            $payload['has_egg'] = $path !== null && is_file($path);
+
+            return $payload;
+        });
+
+        return response()->json(['data' => $rows]);
     }
 
     public function show(string $id): JsonResponse

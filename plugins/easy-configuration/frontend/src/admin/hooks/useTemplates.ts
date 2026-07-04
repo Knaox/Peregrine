@@ -109,6 +109,32 @@ export interface OfficialImportResult {
  * One-click import of the 9 bundled official templates. Egg-agnostic on import;
  * existing templates of the same id are skipped, never overwritten.
  */
+/** Result of pushing a template's bundled egg into Pelican. */
+export interface EggImportResult {
+    updated: boolean;
+    pelican_egg_id: number | null;
+    attached_egg_id: number | null;
+}
+
+/**
+ * Push the egg bundled with a template into Pelican. Pelican upserts by the
+ * egg's uuid, so a re-import updates the already-imported egg in place. On
+ * success the backend also attaches the local egg to the template's
+ * target_eggs — invalidate both list and detail so the badge counts refresh.
+ */
+export function useImportTemplateEgg() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) =>
+            api<{ data: EggImportResult }>(`${BASE}/admin/templates/${id}/egg/import`, { method: 'POST' }).then((response) => response.data),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: LIST_KEY });
+            void queryClient.invalidateQueries({ queryKey: ['ec-admin-template'] });
+        },
+    });
+}
+
 export function useImportOfficialTemplates() {
     const queryClient = useQueryClient();
 

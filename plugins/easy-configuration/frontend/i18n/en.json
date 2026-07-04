@@ -296,6 +296,14 @@
             "option_value": "Value",
             "option_add": "Add option",
             "option_remove": "Remove option"
+        },
+        "egg": {
+            "button": "Import egg",
+            "hint": "Push the bundled Pelican egg to your panel — re-importing updates the existing egg (matched by its uuid).",
+            "imported": "Egg imported into Pelican.",
+            "updated": "Egg updated in Pelican.",
+            "attached": "Egg attached to this template's target eggs.",
+            "failed": "Egg import failed."
         }
     },
     "sandbox": {

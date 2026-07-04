@@ -9,6 +9,7 @@ use Plugins\EasyConfiguration\Http\Controllers\Admin\OfficialTemplateController;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\ServerCatalogController;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\ServerFileBrowserController;
 use Plugins\EasyConfiguration\Http\Controllers\Admin\TemplateController;
+use Plugins\EasyConfiguration\Http\Controllers\Admin\TemplateEggController;
 use Plugins\EasyConfiguration\Http\Controllers\BoostController;
 use Plugins\EasyConfiguration\Http\Controllers\CopyController;
 use Plugins\EasyConfiguration\Http\Controllers\ServerConfigController;
@@ -62,6 +63,9 @@ Route::middleware(['auth', 'throttle:240,1'])->group(function (): void {
         Route::post('templates/{id}/parameters', [TemplateController::class, 'addParameter'])->where('id', $templateId);
         Route::delete('templates/{id}', [TemplateController::class, 'destroy'])->where('id', $templateId);
         Route::get('templates/{id}/export', [TemplateController::class, 'export'])->where('id', $templateId);
+        // Push the template's bundled egg into Pelican (upsert by uuid — a
+        // re-import updates the already-imported egg in place).
+        Route::post('templates/{id}/egg/import', [TemplateEggController::class, 'import'])->where('id', $templateId);
         Route::get('eggs', [EggCatalogController::class, 'index']);
         Route::get('eggs/{egg}/env-vars', [EggCatalogController::class, 'envVars']);
 

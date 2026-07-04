@@ -1,4 +1,4 @@
-import { Download, FilePlus2, LayoutTemplate, PackageOpen, Pencil, Trash2, Upload } from 'lucide-react';
+import { Download, Egg, FilePlus2, LayoutTemplate, PackageOpen, Pencil, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pickLabel, useT } from '../lib/i18n';
@@ -8,7 +8,7 @@ import { Dialog } from '../ui/Dialog';
 import { Textarea } from '../ui/inputs';
 import { Badge, Card, EmptyState, Spinner } from '../ui/surfaces';
 import { useToast } from '../ui/Toast';
-import { useDeleteTemplate, useImportOfficialTemplates, useImportTemplate, useTemplateList } from './hooks/useTemplates';
+import { useDeleteTemplate, useImportOfficialTemplates, useImportTemplate, useImportTemplateEgg, useTemplateList } from './hooks/useTemplates';
 
 export function TemplateListPage() {
     const { t, lang } = useT();
@@ -18,8 +18,10 @@ export function TemplateListPage() {
     const remove = useDeleteTemplate();
     const importer = useImportTemplate();
     const official = useImportOfficialTemplates();
+    const eggImport = useImportTemplateEgg();
     const [importOpen, setImportOpen] = useState(false);
     const [importText, setImportText] = useState('');
+    const [importingEggFor, setImportingEggFor] = useState<string | null>(null);
 
     if (list.isError && (list.error as unknown as ApiError | null)?.status === 403) {
         return (
@@ -56,6 +58,20 @@ export function TemplateListPage() {
         official.mutate(undefined, {
             onSuccess: (result) => toast.success(t('admin.list.official_imported', { ok: result.imported.length, skipped: result.skipped.length })),
             onError: (error) => toast.error((error as unknown as ApiError).message ?? t('admin.list.official_failed')),
+        });
+    };
+
+    const onImportEgg = (id: string): void => {
+        setImportingEggFor(id);
+        eggImport.mutate(id, {
+            onSuccess: (result) => {
+                toast.success(result.updated ? t('admin.egg.updated') : t('admin.egg.imported'));
+                if (result.attached_egg_id !== null) {
+                    toast.show(t('admin.egg.attached'), 'info');
+                }
+            },
+            onError: (error) => toast.error((error as unknown as ApiError).message ?? t('admin.egg.failed')),
+            onSettled: () => setImportingEggFor(null),
         });
     };
 
@@ -105,6 +121,17 @@ export function TemplateListPage() {
                                 <Button size="sm" variant="secondary" onClick={() => navigate(`${ADMIN_PATH}/${tpl.template_id}`)}>
                                     <Pencil size={13} /> {t('common.edit')}
                                 </Button>
+                                {tpl.has_egg === true && (
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        loading={importingEggFor === tpl.template_id}
+                                        title={t('admin.egg.hint')}
+                                        onClick={() => onImportEgg(tpl.template_id)}
+                                    >
+                                        <Egg size={13} /> {t('admin.egg.button')}
+                                    </Button>
+                                )}
                                 <a className="ec-btn ec-btn-ghost ec-btn-sm" href={`${BASE}/admin/templates/${tpl.template_id}/export`}>
                                     <Download size={13} /> {t('common.export')}
                                 </a>
