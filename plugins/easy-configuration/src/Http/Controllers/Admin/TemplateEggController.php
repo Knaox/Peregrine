@@ -8,6 +8,7 @@ use App\Models\Egg;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Plugins\EasyConfiguration\Services\Pelican\EggBundleImporter;
+use Plugins\EasyConfiguration\Services\Pelican\EggStartupPropagator;
 use Plugins\EasyConfiguration\Services\Templates\TemplateRegistry;
 use Plugins\EasyConfiguration\Services\Templates\TemplateStorage;
 
@@ -25,13 +26,15 @@ final class TemplateEggController
         private readonly TemplateStorage $storage,
         private readonly TemplateRegistry $registry,
         private readonly EggBundleImporter $importer,
+        private readonly EggStartupPropagator $propagator,
     ) {}
 
     public function import(string $id): JsonResponse
     {
         $path = self::bundlePath($id);
         $raw = $path !== null && is_file($path) ? (string) file_get_contents($path) : '';
-        if ($raw === '' || ! is_array(json_decode($raw, true))) {
+        $bundle = $raw !== '' ? json_decode($raw, true) : null;
+        if (! is_array($bundle)) {
             return response()->json(['error' => ['code' => 'egg_bundle_missing', 'message' => 'No egg bundle ships with this template.']], 404);
         }
 
@@ -47,10 +50,28 @@ final class TemplateEggController
             ? $this->attach($id, $result['pelican_egg_id'])
             : null;
 
+        // Pelican freezes each server's startup at creation time, so push the
+        // bundle's (fresh) startup to this egg's existing servers — otherwise
+        // they keep booting with the old command and never see new wiring
+        // like the SandboxCode injection.
+        $startup = (string) (array_values((array) ($bundle['startup_commands'] ?? []))[0] ?? '');
+        $defaults = [];
+        foreach ((array) ($bundle['variables'] ?? []) as $variable) {
+            if (is_array($variable) && is_string($variable['env_variable'] ?? null)) {
+                $defaults[$variable['env_variable']] = (string) ($variable['default_value'] ?? '');
+            }
+        }
+        $propagation = $result['pelican_egg_id'] !== null
+            ? $this->propagator->propagate($result['pelican_egg_id'], $startup, $defaults)
+            : ['synced' => 0, 'skipped' => 0, 'failed' => 0];
+
         return response()->json(['data' => [
             'updated' => $result['updated'],
             'pelican_egg_id' => $result['pelican_egg_id'],
             'attached_egg_id' => $attachedEggId,
+            'startup_synced' => $propagation['synced'],
+            'startup_skipped' => $propagation['skipped'],
+            'startup_failed' => $propagation['failed'],
         ]]);
     }
 

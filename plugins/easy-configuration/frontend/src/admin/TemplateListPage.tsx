@@ -69,6 +69,12 @@ export function TemplateListPage() {
                 if (result.attached_egg_id !== null) {
                     toast.show(t('admin.egg.attached'), 'info');
                 }
+                if (result.startup_synced > 0) {
+                    toast.show(t('admin.egg.startup_synced', { count: result.startup_synced }), 'info');
+                }
+                if (result.startup_failed > 0) {
+                    toast.error(t('admin.egg.startup_failed', { count: result.startup_failed }));
+                }
             },
             onError: (error) => toast.error((error as unknown as ApiError).message ?? t('admin.egg.failed')),
             onSettled: () => setImportingEggFor(null),

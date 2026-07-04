@@ -114,6 +114,10 @@ export interface EggImportResult {
     updated: boolean;
     pelican_egg_id: number | null;
     attached_egg_id: number | null;
+    /** Existing servers of this egg whose startup command was resynced. */
+    startup_synced: number;
+    startup_skipped: number;
+    startup_failed: number;
 }
 
 /**

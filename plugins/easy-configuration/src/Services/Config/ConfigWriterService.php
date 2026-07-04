@@ -100,7 +100,7 @@ final class ConfigWriterService
      *
      * @param  array<string, mixed>  $def
      * @param  list<ConfigChange>  $changes
-     * @return array<string, string>  env_variable => value
+     * @return array<string, string> env_variable => value
      */
     public static function envUpdatesForFile(array $def, array $changes): array
     {

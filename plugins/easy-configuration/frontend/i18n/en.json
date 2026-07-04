@@ -303,7 +303,9 @@
             "imported": "Egg imported into Pelican.",
             "updated": "Egg updated in Pelican.",
             "attached": "Egg attached to this template's target eggs.",
-            "failed": "Egg import failed."
+            "failed": "Egg import failed.",
+            "startup_synced": "Startup command resynced on {{count}} existing server(s) of this egg.",
+            "startup_failed": "Startup resync failed on {{count}} server(s) — check the logs."
         }
     },
     "sandbox": {

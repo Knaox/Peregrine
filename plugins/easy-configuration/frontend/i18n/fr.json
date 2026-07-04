@@ -303,7 +303,9 @@
             "imported": "Egg importé dans Pelican.",
             "updated": "Egg mis à jour dans Pelican.",
             "attached": "Egg associé aux eggs cibles du template.",
-            "failed": "L'import de l'egg a échoué."
+            "failed": "L'import de l'egg a échoué.",
+            "startup_synced": "Commande de démarrage resynchronisée sur {{count}} serveur(s) existant(s) de cet egg.",
+            "startup_failed": "Échec de la resynchronisation du démarrage sur {{count}} serveur(s) — consultez les logs."
         }
     },
     "sandbox": {

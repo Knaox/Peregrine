@@ -8,6 +8,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Fixed
+
+- **Easy Configuration 1.7.4 — the SandboxCode really applies at boot now.** Two gaps fixed: (1) the bundled 7DTD egg's startup now UPSERTS the `SandboxCode` property into `serverconfig.xml` before launching (visible `[Peregrine] SandboxCode applied…` line in the boot console) instead of relying only on the `-SandboxCode` CLI flag, which never writes the file; (2) Pelican freezes each server's startup command at creation time, so updating the egg alone never reached existing servers — the "Import egg" action now also PUSHES the egg's fresh startup to every existing server of that egg (image/environment preserved, new variables seeded with their defaults), with a per-server sync report in the admin toasts.
+
 ## [1.0.0-alpha.22] — 2026-07-04
 
 ### Fixed

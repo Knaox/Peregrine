@@ -22,13 +22,13 @@
         {
             "id": "easy-configuration",
             "name": "Easy Configuration",
-            "version": "1.7.3",
+            "version": "1.7.4",
             "description": "Edit your server's game configuration files (server.properties, GameUserSettings.ini, config.yml, …) through a clean Nitrado-style UI — sliders, toggles, dropdowns — with a lossless round-trip that rewrites only the values you changed. Copy a configuration to other servers of the same egg, and schedule temporary value boosts (multiply or divide), optionally recurring. Templates are pure, shareable JSON render schemas managed from the admin. Ships with Peregrine and auto-activates on setup, like Invitations. v1.2.0 — read-only browsable editor while running, unreachable-vs-absent distinction, accessibility pass, Vitest tests, AI prompt generator. v1.2.2 — fixes importing and editing the official template catalog in production (route resolution under cached routes). v1.2.3 — the config editor stays usable when a single file can't be read (the other configs are still shown instead of blanking the whole section), and the bundled official Hytale template was refreshed (correct default-world path, fully bilingual server + world schema). v1.3.0 — opts into the panel's unified save bar (config edits save together with env-variable edits in one click; falls back to its own floating bar on older panels), and fixes boost-mode tooltips (« Inclure dans le boost », × / ÷) overflowing and being clipped at the card's left edge in 2- and 3-column layouts. v1.4.0 — adds XML support: a generic `xml` format (element text as dotted paths, attributes as `path@attr`) and a dedicated `xml-property` format for files built from `<property name=\"K\" value=\"V\"/>` rows — 7 Days to Die's serverconfig.xml and the like — surfacing one editable field per setting (sectioned by parent element) instead of every name/value attribute twice; both rewrite losslessly and the server-import flow auto-detects which to use. Also adds a per-template « require the server to be off to edit » toggle (on by default) that, when turned off, lets players edit that template's values while the server is running. v1.4.1 — fixes a stale-read after saving: the editor now refetches the live config file once a save succeeds, so a saved value no longer reverts to its previous value when you navigate away and back (no hard refresh needed).",
             "author": "Peregrine Team",
             "official": true,
             "license": "MIT",
             "min_peregrine_version": "1.0.0",
-            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.22/easy-configuration-1.7.3.zip",
+            "download_url": "https://github.com/Knaox/Peregrine/releases/download/v1.0.0-alpha.22/easy-configuration-1.7.4.zip",
             "homepage": "https://github.com/Knaox/Peregrine/tree/main/plugins/easy-configuration",
             "tags": [
                 "configuration",
