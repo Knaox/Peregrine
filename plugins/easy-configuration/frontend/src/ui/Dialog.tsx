@@ -9,7 +9,8 @@ interface DialogProps {
     title: ReactNode;
     children: ReactNode;
     footer?: ReactNode;
-    size?: 'md' | 'lg';
+    /** `xl` fills the viewport (file-editor-style overlay) with its own scrolling body. */
+    size?: 'md' | 'lg' | 'xl';
     closeLabel: string;
 }
 
@@ -46,7 +47,7 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md', cl
                 }
             }}
         >
-            <div className={clsx('ec-dialog', size === 'lg' && 'ec-dialog-lg')} role="dialog" aria-modal="true">
+            <div className={clsx('ec-dialog', size === 'lg' && 'ec-dialog-lg', size === 'xl' && 'ec-dialog-xl')} role="dialog" aria-modal="true">
                 <div className="ec-dialog-head">
                     <p className="ec-dialog-title ec-grow">{title}</p>
                     <IconButton label={closeLabel} onClick={onClose}>

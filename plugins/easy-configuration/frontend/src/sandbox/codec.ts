@@ -1,4 +1,5 @@
 import data from './sandbox-data.json';
+import frTranslations from './sandbox-i18n-fr.json';
 
 /**
  * Codec for 7 Days to Die's V2 `SandboxCode` (serverconfig.xml).
@@ -38,6 +39,7 @@ export type SandboxState = Record<string, SandboxValue>;
 
 const VERSION: string = data.formatVersionChar;
 const VALUE_SETS = data.valueSets as Record<string, SandboxValue[]>;
+const FR = frTranslations as { values: Record<string, string>; options: Record<string, { label: string; description: string }> };
 
 /** Canonical option table — encoding follows THIS array order. */
 export const SANDBOX_OPTIONS = data.options as SandboxOption[];
@@ -122,18 +124,35 @@ export function decodeSandbox(raw: string): { state: SandboxState; unknownRecord
     return { state, unknownRecords };
 }
 
-/** Human label for one ladder position (option-specific labels, Yes/No for booleans, else the raw value). */
-export function valueLabel(option: SandboxOption, index: number, yes = 'Yes', no = 'No'): string {
+/** Localised display name of an option (game term, EN by default, FR translated). */
+export function optionLabel(option: SandboxOption, lang: string): string {
+    return lang === 'fr' ? (FR.options[option.option]?.label ?? option.label) : option.label;
+}
+
+/** Localised long description of an option ('' when the game ships none). */
+export function optionDescription(option: SandboxOption, lang: string): string {
+    const english = option.description ?? '';
+
+    return lang === 'fr' ? (FR.options[option.option]?.description ?? english) : english;
+}
+
+/** Human label for one ladder position (option labels, Yes/No booleans, else the raw value) — localised. */
+export function valueLabel(option: SandboxOption, index: number, lang = 'en'): string {
     const custom = option.valueLabels?.[index];
     if (custom !== undefined) {
-        return custom;
+        return lang === 'fr' ? (FR.values[custom] ?? custom) : custom;
     }
     const value = valuesOf(option)[index];
     if (value === undefined) {
         return '';
     }
+    if (typeof value === 'boolean') {
+        const key = value ? 'Yes' : 'No';
 
-    return typeof value === 'boolean' ? (value ? yes : no) : String(value);
+        return lang === 'fr' ? (FR.values[key] ?? key) : key;
+    }
+
+    return String(value);
 }
 
 /** Options greyed out because another option's current value disables them. */

@@ -319,6 +319,8 @@
             "Tasks": "Quêtes",
             "Misc": "Divers"
         },
-        "code_updated": "Nouveau code sandbox :"
+        "code_updated": "Nouveau code sandbox :",
+        "generator_title": "7 Days to Die — Générateur de code Sandbox",
+        "dialog_hint": "Les modifications mettent le code à jour instantanément — pensez ensuite à enregistrer la configuration."
     }
 }

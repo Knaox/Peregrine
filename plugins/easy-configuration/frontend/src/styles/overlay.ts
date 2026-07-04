@@ -11,6 +11,12 @@ export const overlayCss = `
     border-radius: var(--radius-lg); border: 1px solid var(--color-border); background: var(--color-surface);
     box-shadow: var(--shadow-lg); display: flex; flex-direction: column; animation: ec-pop-in var(--transition-base); }
 .ec-dialog-lg { max-width: 760px; }
+/* File-editor-style full-viewport overlay: fills the scrim (which keeps a
+   responsive inset), fixed head/foot, the body scrolls on its own. */
+.ec-dialog-xl { max-width: none; width: 100%; height: 100%; max-height: 100%; overflow: hidden; }
+@media (min-width: 768px) { .ec-scrim:has(.ec-dialog-xl) { padding: 2rem; } }
+@media (min-width: 1024px) { .ec-scrim:has(.ec-dialog-xl) { padding: 3rem 4rem; } }
+.ec-dialog-xl .ec-dialog-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .ec-dialog-head { display: flex; align-items: center; gap: 0.6rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--color-border); }
 .ec-dialog-title { font-size: 0.95rem; font-weight: 700; margin: 0; }
 .ec-dialog-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }

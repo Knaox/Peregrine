@@ -6,6 +6,7 @@ import { Input } from '../ui/inputs';
 import {
     disabledSandboxOptions,
     modifiedSandboxOptions,
+    optionLabel,
     SANDBOX_CATEGORIES,
     SANDBOX_OPTIONS,
     type SandboxState,
@@ -30,7 +31,7 @@ export function SandboxOptionsPanel({
     onPick: (optionName: string, valueIndex: number) => void;
     onResetAll: () => void;
 }) {
-    const { t } = useT();
+    const { t, lang } = useT();
     const [search, setSearch] = useState('');
     const [open, setOpen] = useState<Set<string>>(new Set(['General']));
 
@@ -38,7 +39,10 @@ export function SandboxOptionsPanel({
     const visible = query === ''
         ? SANDBOX_OPTIONS
         : SANDBOX_OPTIONS.filter(
-            (option) => option.option.toLowerCase().includes(query) || option.label.toLowerCase().includes(query),
+            (option) =>
+                option.option.toLowerCase().includes(query)
+                || option.label.toLowerCase().includes(query)
+                || optionLabel(option, lang).toLowerCase().includes(query),
         );
 
     const modified = new Set(modifiedSandboxOptions(state));

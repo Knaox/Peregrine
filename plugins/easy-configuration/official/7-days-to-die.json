@@ -1,6 +1,6 @@
 {
   "id": "7-days-to-die",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "name": {
     "en": "7 Days to Die",
     "fr": "7 Days to Die"
@@ -1437,7 +1437,7 @@
           "SandboxCode": {
             "display_type": "text",
             "config": {
-              "default": "AAAGABGACGADGARJBAABBAAMLBMCBPFBZFCABCOHCXBDMNDBJDCIDDIDEIDJIFEDFIDFFGETKERG",
+              "default": "A",
               "max_length": 512,
               "generator": "7dtd-sandbox"
             },
@@ -1446,9 +1446,10 @@
               "fr": "Code Sandbox"
             },
             "description": {
-              "en": "Encodes every sandbox gameplay option (difficulty, XP, loot, blood moons, zombies…). Use the built-in generator to adjust the options — the code updates automatically — or paste a code copied from the game.",
-              "fr": "Encode toutes les options de gameplay sandbox (difficulté, XP, butin, lunes de sang, zombies…). Utilisez le générateur intégré pour ajuster les options — le code se met à jour automatiquement — ou collez un code copié depuis le jeu."
-            }
+              "en": "Encodes every sandbox gameplay option (difficulty, XP, loot, blood moons, zombies…). \"A\" = every option at its default. Use the built-in generator to adjust options — the code updates automatically — or paste a code from the game (stock Adventurer preset: AAAJABJACJADJARFBNC).",
+              "fr": "Encode toutes les options de gameplay sandbox (difficulté, XP, butin, lunes de sang, zombies…). « A » = toutes les options à leur valeur par défaut. Utilisez le générateur intégré — le code se met à jour automatiquement — ou collez un code du jeu (préréglage Aventurier d'origine : AAAJABJACJADJARFBNC)."
+            },
+            "env_var": "SANDBOX_CODE"
           }
         }
       }

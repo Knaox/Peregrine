@@ -21,4 +21,8 @@ export const sandboxCss = `
 .ec-root .sbx-opt-dot { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 50%; background: var(--color-primary); }
 .ec-root .sbx-opt-disabled { opacity: 0.45; pointer-events: none; }
 .ec-root .sbx-empty { margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--color-text-muted); }
+.ec-root .sbx-dialog-body { gap: 0.75rem; }
+.ec-root .sbx-dialog-body > .sbx-row { flex-wrap: wrap; }
+.ec-root .sbx-dialog-body .sbx-panel { border: none; background: transparent; padding: 0; }
+.ec-root .sbx-foot-hint { margin-right: auto; font-size: 0.75rem; color: var(--color-text-muted); }
 `;
