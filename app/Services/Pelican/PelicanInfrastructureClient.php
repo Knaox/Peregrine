@@ -263,22 +263,49 @@ class PelicanInfrastructureClient
      */
     public function getEggVariableDefaults(int $eggId): array
     {
+        $defaults = [];
+        foreach ($this->getEggVariableDefinitions($eggId) as $definition) {
+            $defaults[$definition['env_variable']] = $definition['default'];
+        }
+
+        return $defaults;
+    }
+
+    /**
+     * Full egg-variable definitions (default + validation rules) — what the
+     * provisioning path needs to normalise values against Pelican's own
+     * validation before creating a server.
+     *
+     * @return list<array{env_variable: string, default: string, rules: string}>
+     *
+     * @throws RequestException
+     */
+    public function getEggVariableDefinitions(int $eggId): array
+    {
         $response = $this->http->request()
             ->get("/api/application/eggs/{$eggId}", ['include' => 'variables'])
             ->throw();
 
         $variables = data_get($response->json(), 'attributes.relationships.variables.data', []);
-        $defaults = [];
+        $definitions = [];
 
         foreach ($variables as $entry) {
             $attrs = $entry['attributes'] ?? [];
             $key = $attrs['env_variable'] ?? null;
-            if ($key !== null && $key !== '') {
-                $defaults[(string) $key] = $attrs['default_value'] ?? '';
+            if ($key === null || $key === '') {
+                continue;
             }
+            // Pelican has historically served rules as a pipe string; newer
+            // builds may return an array — accept both.
+            $rules = $attrs['rules'] ?? '';
+            $definitions[] = [
+                'env_variable' => (string) $key,
+                'default' => (string) ($attrs['default_value'] ?? ''),
+                'rules' => is_array($rules) ? implode('|', array_map(strval(...), $rules)) : (string) $rules,
+            ];
         }
 
-        return $defaults;
+        return $definitions;
     }
 
     /**

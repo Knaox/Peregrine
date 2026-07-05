@@ -8,6 +8,12 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+## [1.0.0-alpha.23] — 2026-07-05
+
+### Fixed
+
+- **Provisioning no longer 422s on boolean / list egg variables.** Pelican validates every egg variable with its Laravel rules at server creation, and two very common egg shapes crashed the whole provisioning: a `boolean` variable whose default (or mapped static value) is the literal string `true`/`false` (Laravel only accepts `0/1`), and case mismatches against `in:True,False` lists — e.g. "The Forcer le respawn des créatures variable field…". The environment map is now normalised against each variable's actual rules right before the create call (boolean spellings coerced to `1`/`0`, in-list values re-canonicalised case-insensitively with default/first-option fallbacks), and required variables left without any usable value are logged explicitly instead of surfacing as a truncated Pelican 422.
+
 ### Fixed
 
 - **Easy Configuration 1.7.4 — the SandboxCode really applies at boot now.** Two gaps fixed: (1) the bundled 7DTD egg's startup now UPSERTS the `SandboxCode` property into `serverconfig.xml` before launching (visible `[Peregrine] SandboxCode applied…` line in the boot console) instead of relying only on the `-SandboxCode` CLI flag, which never writes the file; (2) Pelican freezes each server's startup command at creation time, so updating the egg alone never reached existing servers — the "Import egg" action now also PUSHES the egg's fresh startup to every existing server of that egg (image/environment preserved, new variables seeded with their defaults), with a per-server sync report in the admin toasts.

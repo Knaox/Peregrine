@@ -11,6 +11,7 @@ use App\Models\Node;
 use App\Models\Server;
 use App\Models\ServerConfiguration;
 use App\Models\User;
+use App\Services\Bridge\EnvironmentNormalizer;
 use App\Services\Bridge\EnvironmentResolver;
 use App\Services\Bridge\IpVariableResolver;
 use App\Services\Bridge\PortAllocator;
@@ -175,7 +176,11 @@ class ProvisionServerJob implements ShouldQueue
                 count: $configuration->effectivePortCount(),
             );
 
-            $eggDefaults = $pelican->getEggVariableDefaults((int) $egg->pelican_egg_id);
+            $eggDefinitions = $pelican->getEggVariableDefinitions((int) $egg->pelican_egg_id);
+            $eggDefaults = [];
+            foreach ($eggDefinitions as $definition) {
+                $eggDefaults[$definition['env_variable']] = $definition['default'];
+            }
             $environment = $environmentResolver->resolve($configuration, $allocations, $eggDefaults);
 
             $defaultAllocation = $allocations[0];
@@ -187,6 +192,18 @@ class ProvisionServerJob implements ShouldQueue
             // DoH. No-op when disabled ; never throws (a DNS miss leaves the
             // variable at its egg default).
             $environment = $ipVariableResolver->apply($environment, $configuration, $node, $defaultAllocation);
+
+            // Coerce every value into the shape its egg-variable rules accept
+            // (boolean "true"→"1", in-list re-canonicalisation…): Pelican
+            // validates each variable and 422s the WHOLE creation otherwise.
+            $normalized = app(EnvironmentNormalizer::class)->normalize($environment, $eggDefinitions);
+            $environment = $normalized['environment'];
+            if ($normalized['unfillable'] !== []) {
+                Log::warning('ProvisionServerJob: required egg variables have no usable value — Pelican will likely reject the creation', [
+                    'server_id' => $server->id,
+                    'variables' => $normalized['unfillable'],
+                ]);
+            }
 
             $startup = $egg->startup;
 

@@ -222,6 +222,16 @@ class PelicanApplicationService
     }
 
     /**
+     * @return list<array{env_variable: string, default: string, rules: string}>
+     *
+     * @throws RequestException
+     */
+    public function getEggVariableDefinitions(int $eggId): array
+    {
+        return $this->infra->getEggVariableDefinitions($eggId);
+    }
+
+    /**
      * @return list<array{env_variable: string, name: string, default: string}>
      *
      * @throws RequestException
