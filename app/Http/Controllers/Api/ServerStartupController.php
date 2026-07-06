@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Pelican\UpdateStartupCommandAction;
 use App\Actions\Pelican\UpdateStartupVariablesAction;
 use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Models\Server;
+use App\Services\Pelican\PelicanApplicationService;
 use App\Services\Pelican\PelicanClientService;
+use App\Services\Pelican\PelicanStartupClient;
 use App\Services\Plugin\StartupVariableClaimRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -67,6 +70,59 @@ class ServerStartupController extends Controller
         );
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * The server's startup command + the egg-defined named commands the user
+     * can switch between (Pelican beta26+ "multiple startup commands").
+     * `is_custom` flags an admin-customized command absent from the egg map —
+     * shown read-only by the UI, exactly like Pelican's own client area.
+     */
+    public function command(
+        Request $request,
+        Server $server,
+        PelicanApplicationService $pelican,
+        PelicanStartupClient $startupClient,
+    ): JsonResponse {
+        $this->authorize('readStartup', $server);
+
+        if ($server->pelican_server_id === null) {
+            return response()->json(['data' => null]);
+        }
+
+        $container = $pelican->getServerContainer($server->pelican_server_id);
+        $options = $startupClient->getEggStartupOptions((int) $container['egg']);
+        $currentName = array_search($container['startup'], $options, true);
+
+        return response()->json(['data' => [
+            'current' => $container['startup'],
+            'current_name' => $currentName === false ? null : $currentName,
+            'is_custom' => $currentName === false,
+            'options' => collect($options)
+                ->map(fn (string $command, string $name) => ['name' => $name, 'command' => $command])
+                ->values()
+                ->all(),
+        ]]);
+    }
+
+    /**
+     * Switch the startup command — strictly one of the egg-defined names
+     * (free text is rejected by UpdateStartupCommandAction with a 422).
+     */
+    public function updateCommand(Request $request, Server $server, UpdateStartupCommandAction $action): JsonResponse
+    {
+        $this->authorize('updateStartup', $server);
+        $validated = $request->validate(['name' => ['required', 'string', 'max:191']]);
+
+        $result = $action(
+            actor: $request->user(),
+            server: $server,
+            commandName: $validated['name'],
+            ip: $request->ip(),
+            userAgent: (string) $request->userAgent(),
+        );
+
+        return response()->json(['success' => true, ...$result]);
     }
 
     /**

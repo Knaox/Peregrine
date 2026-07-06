@@ -143,6 +143,9 @@ Route::middleware('auth')->group(function () {
     Route::put('servers/{server}/startup/variable', [ServerStartupController::class, 'update']);
     // Batch update — backs the unified save bar (one round-trip for N edits).
     Route::put('servers/{server}/startup/variables', [ServerStartupController::class, 'updateBatch']);
+    // Startup command selection (egg-defined named commands, Pelican beta26+).
+    Route::get('servers/{server}/startup/command', [ServerStartupController::class, 'command']);
+    Route::put('servers/{server}/startup/command', [ServerStartupController::class, 'updateCommand']);
 
     // Minecraft console quick-fixes — surfaced by the SPA when the live log
     // stream reports a boot failure (unaccepted EULA / incompatible Java).
