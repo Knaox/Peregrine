@@ -28,6 +28,9 @@ final readonly class PelicanServer
         // from the local DB return the same row tagged primary as the
         // live API path would.
         public ?int $defaultAllocationId = null,
+        // FULL Pelican uuid (Wings keys its routes on it, unlike the short
+        // identifier used by the Client API).
+        public string $uuid = '',
     ) {}
 
     public static function fromApiResponse(array $data): self
@@ -52,6 +55,7 @@ final readonly class PelicanServer
             sftpPort: $attributes['sftp_details']['port'] ?? 2022,
             status: is_string($rawStatus) ? $rawStatus : null,
             defaultAllocationId: is_numeric($defaultAllocation) ? (int) $defaultAllocation : null,
+            uuid: (string) ($attributes['uuid'] ?? ''),
         );
     }
 

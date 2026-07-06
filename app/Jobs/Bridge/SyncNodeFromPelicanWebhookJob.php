@@ -103,11 +103,11 @@ class SyncNodeFromPelicanWebhookJob implements ShouldQueue
             return;
         }
 
-        // Servers don't FK to Node locally (Peregrine doesn't mirror node
-        // assignment per server). The only local references are
-        // ServerConfiguration rows (default_node_id + allowed_node_ids).
-        // Refuse to delete a node still referenced by any configuration to
-        // avoid breaking provisioning.
+        // servers.node_id FKs to nodes with nullOnDelete: deleting the row
+        // simply unlinks those servers and the link re-resolves lazily
+        // (ResolveServerNodeAction) if the server still exists in Pelican.
+        // ServerConfiguration references (default_node_id + allowed_node_ids)
+        // however drive provisioning — refuse to delete while any remain.
         $referencingConfigurations = ServerConfiguration::query()
             ->where('default_node_id', $node->id)
             ->orWhereJsonContains('allowed_node_ids', $node->id)

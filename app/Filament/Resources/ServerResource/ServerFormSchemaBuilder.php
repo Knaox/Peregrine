@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ServerResource;
 
 use App\Services\Integrations\IntegrationStatusService;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Tabs;
@@ -72,6 +73,8 @@ final class ServerFormSchemaBuilder
                         ->placeholder('—')
                         ->columnSpanFull(),
                 ])->columns(2),
+
+            ServerNodeTabSchema::make(),
         ];
 
         if ($isShopStripe) {
@@ -89,11 +92,11 @@ final class ServerFormSchemaBuilder
                         ->nullable()
                         ->disabled()
                         ->helperText(__('admin/servers.helpers.payment_intent')),
-                    \Filament\Forms\Components\DateTimePicker::make('scheduled_suspension_at')
+                    DateTimePicker::make('scheduled_suspension_at')
                         ->label(__('admin/_shell.fields.scheduled_suspension_at'))
                         ->nullable()
                         ->helperText(__('admin/servers.helpers.scheduled_suspension')),
-                    \Filament\Forms\Components\DateTimePicker::make('scheduled_deletion_at')
+                    DateTimePicker::make('scheduled_deletion_at')
                         ->label(__('admin/_shell.fields.scheduled_deletion_at'))
                         ->nullable()
                         ->helperText(__('admin/servers.helpers.scheduled_deletion')),

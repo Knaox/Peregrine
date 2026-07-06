@@ -241,6 +241,10 @@ class ProvisionServerJob implements ShouldQueue
                 // Without it the local row exists but the SPA can't talk
                 // to Wings → 500 on /api/servers/{id}/startup, /websocket…
                 'identifier' => $pelicanServer->identifier,
+                // Full uuid + local node link power the Wings health probe.
+                // Node may be null if not mirrored yet — resolved lazily.
+                'pelican_uuid' => $pelicanServer->uuid ?: null,
+                'node_id' => Node::where('pelican_node_id', $pelicanServer->nodeId)->value('id'),
                 // Status STAYS 'provisioning' here. Pelican is still
                 // installing in the background — the canonical "install
                 // completed" signal is the Pelican webhook (`updated: Server`

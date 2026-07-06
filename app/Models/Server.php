@@ -18,9 +18,11 @@ class Server extends Model
         'user_id',
         'pelican_server_id',
         'identifier',
+        'pelican_uuid',
         'name',
         'status',
         'egg_id',
+        'node_id',
         'server_configuration_id',
         'external_order_id',
         'stripe_subscription_id',
@@ -44,6 +46,7 @@ class Server extends Model
             'pelican_server_id' => 'integer',
             'status' => 'string',
             'egg_id' => 'integer',
+            'node_id' => 'integer',
             'server_configuration_id' => 'integer',
             'scheduled_deletion_at' => 'datetime',
             'scheduled_suspension_at' => 'datetime',
@@ -64,6 +67,15 @@ class Server extends Model
     public function egg(): BelongsTo
     {
         return $this->belongsTo(Egg::class);
+    }
+
+    /**
+     * Local mirror of the Pelican node hosting this server. Nullable —
+     * hydrated at provisioning or lazily by ResolveServerNodeAction.
+     */
+    public function node(): BelongsTo
+    {
+        return $this->belongsTo(Node::class);
     }
 
     /**
