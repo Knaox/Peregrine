@@ -4,6 +4,7 @@ import type { WebSocketCredentials } from '@/types/WebSocketCredentials';
 import type { PowerSignal } from '@/types/PowerSignal';
 import type { StartupVariable } from '@/types/StartupVariable';
 import type { NodeStatusResponse } from '@/types/NodeStatus';
+import type { StartupCommandData } from '@/types/StartupCommand';
 import { request } from '@/services/http';
 
 interface ServerResponse {
@@ -39,6 +40,18 @@ export async function fetchServer(id: number): Promise<Server> {
 
 export async function fetchNodeStatus(id: number): Promise<NodeStatusResponse> {
     return request<NodeStatusResponse>(`/api/servers/${id}/node-status`);
+}
+
+export async function fetchStartupCommand(id: number): Promise<StartupCommandData | null> {
+    const { data } = await request<{ data: StartupCommandData | null }>(`/api/servers/${id}/startup/command`);
+    return data;
+}
+
+export async function updateStartupCommand(id: number, name: string): Promise<void> {
+    await request(`/api/servers/${id}/startup/command`, {
+        method: 'PUT',
+        body: JSON.stringify({ name }),
+    });
 }
 
 export async function fetchServerStats(): Promise<ServerStatsMap> {

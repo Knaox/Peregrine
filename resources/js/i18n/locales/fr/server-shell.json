@@ -44,6 +44,14 @@
         "download": "Téléchargement",
         "upload": "Envoi"
     },
+    "startup_command": {
+        "title": "Commande de démarrage",
+        "custom_badge": "Commande personnalisée",
+        "custom_hint": "Votre hébergeur a défini une commande de démarrage personnalisée pour ce serveur. Seul un administrateur peut la modifier.",
+        "hint": "Appliquée immédiatement — le serveur l'utilisera à son prochain démarrage.",
+        "saved": "Commande de démarrage appliquée. Elle sera utilisée au prochain démarrage du serveur.",
+        "error": "Impossible de changer la commande de démarrage. Réessayez."
+    },
     "variables": {
         "title": "Configuration du serveur",
         "count": "{{count}} variable(s)",

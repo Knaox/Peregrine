@@ -44,6 +44,14 @@
         "download": "Download",
         "upload": "Upload"
     },
+    "startup_command": {
+        "title": "Startup command",
+        "custom_badge": "Custom command",
+        "custom_hint": "Your host set a custom startup command for this server. Only an administrator can change it.",
+        "hint": "Applied immediately — the server uses it on its next start.",
+        "saved": "Startup command applied. It will be used on the next server start.",
+        "error": "The startup command could not be changed. Please try again."
+    },
     "variables": {
         "title": "Server Configuration",
         "count": "{{count}} variable(s)",

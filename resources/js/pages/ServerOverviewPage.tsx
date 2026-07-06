@@ -18,6 +18,7 @@ import { ServerResourceCards } from '@/components/server/ServerResourceCards';
 import { ServerInfoCard } from '@/components/server/ServerInfoCard';
 import { ServerSettingsActions } from '@/components/server/ServerSettingsActions';
 import { ServerVariables } from '@/components/server/ServerVariables';
+import { StartupCommandSelector } from '@/components/server/StartupCommandSelector';
 import { OverviewQuickActions } from '@/components/server/OverviewQuickActions';
 import { ServerOverviewHero } from '@/components/server/overview/ServerOverviewHero';
 import { InstallationOverview } from '@/components/server/InstallationOverview';
@@ -261,9 +262,12 @@ export function ServerOverviewPage() {
                 }} isLoading={!resources} live={isRunningState} /></section>
             )}
 
-            {/* Variables — only if user has startup.read permission */}
+            {/* Startup command + variables — only if user has startup.read permission */}
             {canViewStartup && (
-                <section><ServerVariables serverId={serverId} canEdit={canEditStartup} /></section>
+                <section className="space-y-6">
+                    <StartupCommandSelector serverId={serverId} canEdit={canEditStartup} />
+                    <ServerVariables serverId={serverId} canEdit={canEditStartup} />
+                </section>
             )}
 
             {/* Remaining plugin home sections (default placement) — grouped at the end. */}
