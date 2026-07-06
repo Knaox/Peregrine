@@ -1,9 +1,23 @@
 import type { Server } from '@/types/Server';
+import type { NodeHealthSeverity, NodeHealthStatusValue } from '@/types/NodeStatus';
 
 export interface ServerOwner {
     id: number;
     name: string;
     email: string;
+}
+
+export interface AdminServerNode {
+    id: number;
+    name: string;
+    /** Cached Wings verdict — null until the deferred probe has run once. */
+    health: {
+        status: NodeHealthStatusValue;
+        severity: NodeHealthSeverity;
+        latency_ms: number | null;
+        wings_version: string | null;
+        checked_at: string | null;
+    } | null;
 }
 
 /**
@@ -13,6 +27,7 @@ export interface ServerOwner {
  */
 export type AdminServer = Server & {
     owner: ServerOwner;
+    node?: AdminServerNode | null;
 };
 
 export interface AdminServersResponse {

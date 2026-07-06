@@ -15,17 +15,26 @@ function statusColor(status: string): string {
     return 'var(--color-text-muted)';
 }
 
+const NODE_SEVERITY_COLORS: Record<string, string> = {
+    ok: 'var(--color-success)',
+    warning: 'var(--color-warning)',
+    critical: 'var(--color-danger)',
+};
+
 /**
  * Modern admin servers row — egg thumbnail + status orb, server identity,
  * owner (avatar + email) and a status pill. Full-row link opens the server.
  * Theme-token driven; hover lifts + glows to match the biome dashboard.
  */
 export function AdminServerRow({ server }: AdminServerRowProps) {
-    useNamespace(["server-overview"] as const);
+    useNamespace(["server-overview", "server-shell"] as const);
     const { t } = useTranslation();
     const color = statusColor(server.status);
     const banner = server.egg?.banner_image ?? null;
     const ownerInitial = server.owner.name?.trim().charAt(0).toUpperCase() || '?';
+    const nodeColor = server.node?.health
+        ? (NODE_SEVERITY_COLORS[server.node.health.severity] ?? 'var(--color-text-muted)')
+        : 'var(--color-text-muted)';
 
     return (
         <Link
@@ -67,6 +76,22 @@ export function AdminServerRow({ server }: AdminServerRowProps) {
                     <div className="truncate text-xs text-[var(--color-text-muted)]">{server.owner.email}</div>
                 </div>
             </div>
+
+            {/* Hosting node + cached Wings health dot */}
+            {server.node && (
+                <div
+                    className="hidden w-36 min-w-0 items-center gap-1.5 md:flex"
+                    title={server.node.health
+                        ? t(`server-shell:detail.node_status.${server.node.health.status}`)
+                        : t('server-shell:detail.node_status.unknown')}
+                >
+                    <span
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{ background: nodeColor, boxShadow: server.node.health ? `0 0 6px ${nodeColor}` : undefined }}
+                    />
+                    <span className="truncate text-xs text-[var(--color-text-secondary)]">{server.node.name}</span>
+                </div>
+            )}
 
             {/* Status pill */}
             <span className="shrink-0 rounded-[var(--radius-full)] px-2.5 py-0.5 text-xs font-semibold"

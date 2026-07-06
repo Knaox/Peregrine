@@ -2,8 +2,15 @@ import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { ServerPowerControls } from '@/components/server/ServerPowerControls';
 import { formatUptime } from '@/utils/format';
+import { useNodeStatus } from '@/hooks/useNodeStatus';
 import type { Server } from '@/types/Server';
 import { useNamespace } from '@/i18n/useNamespace';
+
+const NODE_SEVERITY_COLORS: Record<string, string> = {
+    ok: 'var(--color-success)',
+    warning: 'var(--color-warning)',
+    critical: 'var(--color-danger)',
+};
 
 interface ServerOverviewHeroProps {
     server: Server;
@@ -36,9 +43,11 @@ export function ServerOverviewHero({
     server, state, statusLabel, isRunningState, uptime, address, copied, onCopy,
     canPower, canStart, canStop, canRestart,
 }: ServerOverviewHeroProps) {
-    useNamespace(["server-overview"] as const);
+    useNamespace(["server-overview", "server-shell"] as const);
     const { t } = useTranslation();
     const hasArt = !!server.egg?.banner_image;
+    const { data: nodeStatus } = useNodeStatus(server.id);
+    const nodeColor = nodeStatus ? (NODE_SEVERITY_COLORS[nodeStatus.health.severity] ?? 'var(--color-text-muted)') : null;
 
     return (
         <m.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
@@ -104,6 +113,16 @@ export function ServerOverviewHero({
                                 <span className="inline-flex items-center gap-1.5 rounded-full text-sm text-white" style={{ ...chipStyle, padding: '4px 14px' }}>
                                     {server.egg.banner_image && <img src={server.egg.banner_image} alt="" className="h-4 w-4 rounded object-cover" />}
                                     {server.egg.name}
+                                </span>
+                            )}
+                            {nodeStatus?.node && (
+                                <span
+                                    className="inline-flex items-center gap-1.5 rounded-full text-sm text-white"
+                                    style={{ ...chipStyle, padding: '4px 14px' }}
+                                    title={t(`server-shell:detail.node_status.${nodeStatus.health.status}`)}
+                                >
+                                    <span className="inline-flex h-2 w-2 rounded-full" style={{ background: nodeColor ?? 'var(--color-text-muted)', boxShadow: nodeColor ? `0 0 6px ${nodeColor}` : undefined }} />
+                                    {nodeStatus.node.name}
                                 </span>
                             )}
                             {canPower && (

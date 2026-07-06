@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\Wings\NodeHealthService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -30,6 +31,13 @@ class AdminServerResource extends JsonResource
                 'name' => $this->egg->name,
                 'banner_image' => $this->egg->banner_image ? asset('storage/'.$this->egg->banner_image) : null,
             ]),
+            'node' => $this->node ? [
+                'id' => $this->node->id,
+                'name' => $this->node->name,
+                // From cache only (peekNode) — null until the deferred probe
+                // scheduled by AdminServersController has run once.
+                'health' => app(NodeHealthService::class)->peekNode($this->node)?->toArray(),
+            ] : null,
             'configuration' => $this->whenLoaded('serverConfiguration', fn () => [
                 'id' => $this->serverConfiguration->id,
                 'internal_name' => $this->serverConfiguration->internal_name,

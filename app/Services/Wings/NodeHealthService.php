@@ -44,6 +44,16 @@ class NodeHealthService
         );
     }
 
+    /**
+     * Cached node report WITHOUT probing — for list surfaces that must never
+     * wait on a dead node's timeouts. Null = not probed in the last 30s;
+     * callers typically defer() a checkNode() so the next load has it.
+     */
+    public function peekNode(Node $node): ?NodeHealthReport
+    {
+        return Cache::get("wings_health:node:{$node->id}");
+    }
+
     public function checkServerOnNode(Node $node, string $serverUuid): NodeHealthReport
     {
         return Cache::remember(
