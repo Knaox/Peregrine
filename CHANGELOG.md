@@ -8,6 +8,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added
+
+- **Node visibility + live Wings health, admin & player side.** The admin server page gains a **Node** tab (which node hosts the server, FQDN/port, Pelican node id, Wings version, maintenance flag) with a live health verdict probed directly against the Wings API — including the raw technical detail (Wings error bodies, request ids) for debugging. The player server-home now shows the node name with a severity dot in the info card, plus a friendly banner that appears **only when something is wrong**: node unreachable, node slow, server unknown to Wings, or the sneaky degraded mode where Wings still answers `/api/system` while every server operation returns generic HTTP 500s ("Could not load files!", typical of fd/inotify exhaustion on LXC hosts) — detected by a three-stage probe (`/api/system` → `/api/servers/{uuid}` → files list). Daemon tokens hydrate lazily from `nodes/{id}/configuration` and self-heal on rotation; probes are cached 30 s per node/server so pages never stampede a daemon.
+- **Players can switch the startup command (Pelican beta26+ multiple startup commands).** New card above the startup variables on the server overview: select between the egg's named commands ("Default", "Aikar flags", …), applied immediately via the Application API (egg/env/image preserved, `skip_scripts`), used by Wings on the next start. Strictly limited to egg-defined commands — free-typed commands are rejected server-side, mirroring upstream Pelican's security stance. Admin-customized commands show read-only with a badge. Gated on `startup.read`/`startup.update` (owner + subusers), cross-user admin changes audited, legacy single-`startup` Pelican installs still supported.
+
 ## [1.0.0-alpha.23] — 2026-07-05
 
 ### Fixed
