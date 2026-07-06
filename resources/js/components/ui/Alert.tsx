@@ -17,13 +17,21 @@ const variantClasses: Record<AlertProps['variant'], string> = {
         'border border-[var(--color-info)]/20 border-l-2 border-l-[var(--color-info)]',
         'text-[var(--color-info)]',
     ),
+    warning: clsx(
+        'bg-[var(--color-warning)]/5 backdrop-blur-sm',
+        'border border-[var(--color-warning)]/20 border-l-2 border-l-[var(--color-warning)]',
+        'text-[var(--color-warning)]',
+    ),
 };
 
 function AlertIcon({ variant }: { variant: AlertProps['variant'] }) {
-    if (variant === 'error') {
+    if (variant === 'error' || variant === 'warning') {
         return (
             <svg
-                className='w-5 h-5 flex-shrink-0 text-[var(--color-danger)]'
+                className={clsx(
+                    'w-5 h-5 flex-shrink-0',
+                    variant === 'error' ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]',
+                )}
                 fill='none'
                 viewBox='0 0 24 24'
                 stroke='currentColor'

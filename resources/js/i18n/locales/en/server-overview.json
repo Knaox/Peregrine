@@ -65,6 +65,20 @@
         "failed_title": "Install failed",
         "failed_description": "An operator can retry the install from the overview. This page stays unavailable until the install completes."
     },
+    "node": {
+        "banner": {
+            "unreachable_title": "Node temporarily unreachable",
+            "unreachable_body": "The machine hosting your server ({{node}}) is not responding right now. If your server was online it most likely still is, but the console, files and power actions are unavailable. Our team is aware — no need to restart anything.",
+            "degraded_title": "Node responding slowly",
+            "degraded_body": "The machine hosting your server ({{node}}) is slower than usual ({{latency}} ms). The console and file operations may lag for a while.",
+            "server_unreachable_title": "Your server is unreachable on its node",
+            "server_unreachable_body": "The node {{node}} is online but your server does not respond on it. If this persists more than a few minutes, please contact support.",
+            "server_errors_title": "Server operations are currently failing",
+            "server_errors_body": "The node {{node}} is online but operations on your server (files, console…) are failing right now. Our team has been notified — this usually clears after a quick maintenance on the node.",
+            "maintenance_title": "Node under maintenance",
+            "maintenance_body": "The machine hosting your server ({{node}}) is undergoing maintenance. Some actions are temporarily unavailable — everything will be back shortly."
+        }
+    },
     "operations": {
         "completion": {
             "install": "Installation complete. The server is ready.",

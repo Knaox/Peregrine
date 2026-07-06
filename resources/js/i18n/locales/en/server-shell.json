@@ -22,6 +22,17 @@
         "plan": "Plan",
         "allocated": "Allocated Resources",
         "created": "Created",
+        "node": "Node",
+        "node_status": {
+            "healthy": "Node operational",
+            "degraded": "Node responding slowly",
+            "unreachable": "Node unreachable",
+            "auth_failed": "Node status unavailable",
+            "maintenance": "Node under maintenance",
+            "server_unreachable": "Server unreachable on the node",
+            "server_errors": "Server operations failing on the node",
+            "unknown": "Node status unknown"
+        },
         "not_found": "Server not found.",
         "back": "Back to servers"
     },

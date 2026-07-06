@@ -2,7 +2,14 @@ import { useTranslation } from 'react-i18next';
 import { m } from 'motion/react';
 import { formatBytes, formatDate } from '@/utils/format';
 import type { ServerInfoCardProps } from '@/components/server/ServerInfoCard.props';
+import { useNodeStatus } from '@/hooks/useNodeStatus';
 import { useNamespace } from '@/i18n/useNamespace';
+
+const SEVERITY_DOT_COLORS: Record<string, string> = {
+    ok: 'var(--color-success)',
+    warning: 'var(--color-warning)',
+    critical: 'var(--color-danger)',
+};
 
 function InfoItem({ icon, label, children }: {
     icon: React.ReactNode; label: string; children: React.ReactNode;
@@ -22,10 +29,12 @@ const EggIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" str
 const PlanIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>;
 const ResourceIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>;
 const CalendarIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>;
+const NodeIcon = <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z" /></svg>;
 
 export function ServerInfoCard({ server }: ServerInfoCardProps) {
     useNamespace(["server-shell"] as const);
     const { t } = useTranslation();
+    const { data: nodeStatus } = useNodeStatus(server.id);
 
     // Use plan if available, otherwise fall back to Pelican limits
     const ram = server.plan?.ram ?? server.limits?.memory;
@@ -64,6 +73,17 @@ export function ServerInfoCard({ server }: ServerInfoCardProps) {
                         <span className="rounded px-1.5 py-0.5 text-[10px] font-medium" style={{ background: 'rgba(var(--color-accent-rgb), 0.12)', color: 'var(--color-accent)' }}>{diskLabel}</span>
                     </div>
                 </InfoItem>
+                {nodeStatus?.node && (
+                    <InfoItem icon={NodeIcon} label={t('server-shell:detail.node')}>
+                        <div className="flex items-center gap-1.5" title={t(`server-shell:detail.node_status.${nodeStatus.health.status}`)}>
+                            <span
+                                className="inline-flex h-2 w-2 flex-shrink-0 rounded-full"
+                                style={{ background: SEVERITY_DOT_COLORS[nodeStatus.health.severity] ?? 'var(--color-text-muted)' }}
+                            />
+                            {nodeStatus.node.name}
+                        </div>
+                    </InfoItem>
+                )}
                 <InfoItem icon={CalendarIcon} label={t('server-shell:detail.created')}>
                     <span className="text-xs" style={{ opacity: 0.7 }}>{formatDate(server.created_at)}</span>
                 </InfoItem>

@@ -3,6 +3,7 @@ import type { ServerStatsMap } from '@/types/ServerStats';
 import type { WebSocketCredentials } from '@/types/WebSocketCredentials';
 import type { PowerSignal } from '@/types/PowerSignal';
 import type { StartupVariable } from '@/types/StartupVariable';
+import type { NodeStatusResponse } from '@/types/NodeStatus';
 import { request } from '@/services/http';
 
 interface ServerResponse {
@@ -34,6 +35,10 @@ export async function fetchServer(id: number): Promise<Server> {
     server.role = response.role ?? 'owner';
     server.permissions = response.permissions ?? null;
     return server;
+}
+
+export async function fetchNodeStatus(id: number): Promise<NodeStatusResponse> {
+    return request<NodeStatusResponse>(`/api/servers/${id}/node-status`);
 }
 
 export async function fetchServerStats(): Promise<ServerStatsMap> {

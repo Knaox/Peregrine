@@ -22,6 +22,17 @@
         "plan": "Plan",
         "allocated": "Ressources allouées",
         "created": "Date de création",
+        "node": "Nœud",
+        "node_status": {
+            "healthy": "Nœud opérationnel",
+            "degraded": "Nœud lent à répondre",
+            "unreachable": "Nœud injoignable",
+            "auth_failed": "État du nœud indisponible",
+            "maintenance": "Nœud en maintenance",
+            "server_unreachable": "Serveur injoignable sur le nœud",
+            "server_errors": "Opérations serveur en échec sur le nœud",
+            "unknown": "État du nœud inconnu"
+        },
         "not_found": "Serveur introuvable.",
         "back": "Retour aux serveurs"
     },

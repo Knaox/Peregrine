@@ -65,6 +65,20 @@
         "failed_title": "L'installation a échoué",
         "failed_description": "Un opérateur peut relancer l'installation depuis l'aperçu. Cette page reste indisponible tant que l'installation n'est pas terminée."
     },
+    "node": {
+        "banner": {
+            "unreachable_title": "Nœud temporairement injoignable",
+            "unreachable_body": "La machine qui héberge votre serveur ({{node}}) ne répond pas pour le moment. Si votre serveur était en ligne, il l'est très probablement encore, mais la console, les fichiers et les actions d'alimentation sont indisponibles. Notre équipe est au courant — inutile de redémarrer quoi que ce soit.",
+            "degraded_title": "Nœud lent à répondre",
+            "degraded_body": "La machine qui héberge votre serveur ({{node}}) est plus lente que d'habitude ({{latency}} ms). La console et les opérations sur les fichiers peuvent ramer temporairement.",
+            "server_unreachable_title": "Votre serveur est injoignable sur son nœud",
+            "server_unreachable_body": "Le nœud {{node}} est en ligne mais votre serveur n'y répond pas. Si cela persiste plus de quelques minutes, contactez le support.",
+            "server_errors_title": "Les opérations du serveur échouent actuellement",
+            "server_errors_body": "Le nœud {{node}} est en ligne mais les opérations sur votre serveur (fichiers, console…) échouent en ce moment. Notre équipe a été prévenue — cela rentre généralement dans l'ordre après une courte maintenance du nœud.",
+            "maintenance_title": "Nœud en maintenance",
+            "maintenance_body": "La machine qui héberge votre serveur ({{node}}) est en maintenance. Certaines actions sont temporairement indisponibles — tout revient très vite."
+        }
+    },
     "operations": {
         "completion": {
             "install": "Installation terminée. Le serveur est prêt.",

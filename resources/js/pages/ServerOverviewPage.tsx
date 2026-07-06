@@ -10,9 +10,10 @@ import type { CompletedOperation } from '@/hooks/useServerOperationLifecycle';
 import { useSidebarConfig } from '@/hooks/useSidebarConfig';
 import { usePluginStore } from '@/plugins/pluginStore';
 import { SIDEBAR_ENTRY_PERMISSIONS } from '@/utils/serverPermissions';
-import { Alert } from '@/components/ui/Alert';
 import { Spinner } from '@/components/ui/Spinner';
 import { ServerBootFixPrompts } from '@/components/console/ServerBootFixPrompts';
+import { NodeStatusBanner } from '@/components/server/overview/NodeStatusBanner';
+import { OperationCompletionAlert } from '@/components/server/overview/OperationCompletionAlert';
 import { ServerResourceCards } from '@/components/server/ServerResourceCards';
 import { ServerInfoCard } from '@/components/server/ServerInfoCard';
 import { ServerSettingsActions } from '@/components/server/ServerSettingsActions';
@@ -208,20 +209,11 @@ export function ServerOverviewPage() {
         <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }} className="space-y-6">
 
+            {/* Node health — renders only when the hosting node is in trouble. */}
+            <NodeStatusBanner serverId={serverId} />
+
             {completedOp && opAlertVisible && completionMessage ? (
-                <Alert variant="success">
-                    <div className="flex w-full items-center justify-between gap-3">
-                        <span>{completionMessage}</span>
-                        <button
-                            type="button"
-                            onClick={() => setOpAlertVisible(false)}
-                            className="text-xs opacity-70 transition-opacity hover:opacity-100"
-                            aria-label={t('server-overview:operations.completion.dismiss')}
-                        >
-                            {t('server-overview:operations.completion.dismiss')}
-                        </button>
-                    </div>
-                </Alert>
+                <OperationCompletionAlert message={completionMessage} onDismiss={() => setOpAlertVisible(false)} />
             ) : null}
 
             {/* Minecraft boot-failure quick-fixes — same detection as the
