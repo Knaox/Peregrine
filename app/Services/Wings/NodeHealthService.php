@@ -5,6 +5,7 @@ namespace App\Services\Wings;
 use App\Enums\NodeHealthStatus;
 use App\Models\Node;
 use App\Services\Wings\DTOs\NodeHealthReport;
+use Closure;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 
@@ -60,30 +61,50 @@ class NodeHealthService
 
     public function checkNode(Node $node): NodeHealthReport
     {
-        return Cache::remember(
+        return $this->remember(
             "wings_health:node:{$node->id}",
-            self::CACHE_TTL_SECONDS,
             fn () => $this->confirm("node:{$node->id}", $this->probeNode($node)),
         );
     }
 
     /**
      * Cached node report WITHOUT probing — for list surfaces that must never
-     * wait on a dead node's timeouts. Null = not probed in the last 30s;
-     * callers typically defer() a checkNode() so the next load has it.
+     * wait on a dead node's timeouts. Null = no usable report in the last
+     * 30s; callers typically defer() a checkNode() so the next load has it.
      */
     public function peekNode(Node $node): ?NodeHealthReport
     {
-        return Cache::get("wings_health:node:{$node->id}");
+        $cached = Cache::get("wings_health:node:{$node->id}");
+
+        return $cached instanceof NodeHealthReport ? $cached : null;
     }
 
     public function checkServerOnNode(Node $node, string $serverUuid): NodeHealthReport
     {
-        return Cache::remember(
+        return $this->remember(
             "wings_health:server:{$serverUuid}",
-            self::CACHE_TTL_SECONDS,
             fn () => $this->confirm("server:{$serverUuid}", $this->probeServer($node, $serverUuid)),
         );
+    }
+
+    /**
+     * Cache::remember with a type guard. An entry serialized by another code
+     * version (rolling deploy, stale container sharing the same Redis) can
+     * unserialize to __PHP_Incomplete_Class; returning it verbatim used to
+     * TypeError on every read for the entry's whole TTL. Anything that is
+     * not a NodeHealthReport is a miss: re-probe and overwrite it.
+     */
+    private function remember(string $key, Closure $probe): NodeHealthReport
+    {
+        $cached = Cache::get($key);
+        if ($cached instanceof NodeHealthReport) {
+            return $cached;
+        }
+
+        $report = $probe();
+        Cache::put($key, $report, self::CACHE_TTL_SECONDS);
+
+        return $report;
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Models\Server;
 use App\Models\User;
 use App\Services\Wings\NodeHealthService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -100,6 +101,30 @@ class AdminServersNodeTest extends TestCase
 
         $response->assertOk()->assertJsonPath('data.0.node.name', 'node-fr-1');
         $this->assertSame($node->id, $server->fresh()->node_id);
+    }
+
+    public function test_admin_list_survives_poisoned_health_cache(): void
+    {
+        Http::fake([
+            self::WINGS.'/api/system' => Http::response(['version' => '1.0.0'], 200),
+        ]);
+        $admin = User::factory()->create(['is_admin' => true]);
+        $node = $this->makeNode();
+        $this->makeServer($admin, ['node_id' => $node->id, 'pelican_uuid' => 'uuid-1']);
+
+        // A stale entry from another code version unserializes to
+        // __PHP_Incomplete_Class — the list must degrade, never 500.
+        $legacyClass = 'App\Services\Wings\NodeHealthReport';
+        Cache::put(
+            "wings_health:node:{$node->id}",
+            unserialize(sprintf('O:%d:"%s":0:{}', strlen($legacyClass), $legacyClass)),
+            30,
+        );
+
+        $this->actingAs($admin)->getJson('/api/admin/servers')
+            ->assertOk()
+            ->assertJsonPath('data.0.node.name', 'node-fr-1')
+            ->assertJsonPath('data.0.node.health', null);
     }
 
     public function test_non_admin_cannot_list(): void
