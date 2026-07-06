@@ -57,6 +57,7 @@ class NodeHealthService
     public function __construct(
         private readonly WingsDaemonClient $wings,
         private readonly NodeDaemonCredentialsResolver $credentials,
+        private readonly NodeConnectionRefresher $connection,
     ) {}
 
     public function checkNode(Node $node): NodeHealthReport
@@ -156,7 +157,20 @@ class NodeHealthService
             $startedAt = microtime(true);
             $response = $this->wings->getSystem($node);
         } catch (ConnectionException $e) {
-            return NodeHealthReport::make(NodeHealthStatus::Unreachable, detail: $e->getMessage());
+            // A connection failure can mean stale mirrored connection
+            // details (daemon_connect port, fqdn, scheme) rather than a
+            // dead node — re-pull them from Pelican (cooldown-gated) and
+            // retry once when the address actually changed.
+            if (! $this->connection->refresh($node)) {
+                return NodeHealthReport::make(NodeHealthStatus::Unreachable, detail: $e->getMessage());
+            }
+
+            try {
+                $startedAt = microtime(true);
+                $response = $this->wings->getSystem($node);
+            } catch (ConnectionException $retry) {
+                return NodeHealthReport::make(NodeHealthStatus::Unreachable, detail: $retry->getMessage());
+            }
         }
 
         // 401/403 → the daemon token rotated on the Pelican side. Re-hydrate

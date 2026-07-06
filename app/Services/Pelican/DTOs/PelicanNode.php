@@ -28,7 +28,12 @@ final readonly class PelicanNode
             disk: $attributes['disk'] ?? 0,
             location: $attributes['location_id'] ?? '',
             scheme: (string) ($attributes['scheme'] ?? 'https'),
-            daemonListen: (int) ($attributes['daemon_listen'] ?? 8080),
+            // The panel must dial Pelican's `daemon_connect` (public-facing
+            // port — what Pelican's own getConnectionAddress() uses), NOT
+            // `daemon_listen` (the port Wings binds to, 8080 by default even
+            // when the reachable port differs). Panels without
+            // daemon_connect fall back to daemon_listen.
+            daemonListen: (int) ($attributes['daemon_connect'] ?? $attributes['daemon_listen'] ?? 8080),
             maintenanceMode: (bool) ($attributes['maintenance_mode'] ?? false),
         );
     }
