@@ -33,6 +33,7 @@ final class PelicanMirrorSyncer
         if ($dryRun) {
             return count($newPelicanIds);
         }
+
         return $this->userSync->importUsers($newPelicanIds);
     }
 
@@ -49,6 +50,9 @@ final class PelicanMirrorSyncer
                 [
                     'name' => $remote->name,
                     'fqdn' => $remote->fqdn,
+                    'scheme' => $remote->scheme,
+                    'daemon_listen' => $remote->daemonListen,
+                    'maintenance_mode' => $remote->maintenanceMode,
                     'memory' => $remote->memory,
                     'disk' => $remote->disk,
                     'location' => $remote->location,
@@ -56,6 +60,7 @@ final class PelicanMirrorSyncer
             );
             $count++;
         }
+
         return $count;
     }
 
@@ -89,6 +94,7 @@ final class PelicanMirrorSyncer
             );
             $count++;
         }
+
         return $count;
     }
 
@@ -114,7 +120,7 @@ final class PelicanMirrorSyncer
         if ($dryRun) {
             return count($imports);
         }
+
         return $this->serverSync->importServers($imports);
     }
-
 }

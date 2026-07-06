@@ -56,6 +56,7 @@ class SyncNodeFromPelicanWebhookJob implements ShouldQueue
     {
         if ($this->eventKind === PelicanEventKind::NodeDeleted) {
             $this->handleDeletion();
+
             return;
         }
 
@@ -67,6 +68,7 @@ class SyncNodeFromPelicanWebhookJob implements ShouldQueue
                     'pelican_node_id' => $this->pelicanNodeId,
                     'event_kind' => $this->eventKind->value,
                 ]);
+
                 return;
             }
             throw $e;
@@ -77,6 +79,9 @@ class SyncNodeFromPelicanWebhookJob implements ShouldQueue
             [
                 'name' => $pelicanNode->name,
                 'fqdn' => $pelicanNode->fqdn,
+                'scheme' => $pelicanNode->scheme,
+                'daemon_listen' => $pelicanNode->daemonListen,
+                'maintenance_mode' => $pelicanNode->maintenanceMode,
                 'memory' => $pelicanNode->memory,
                 'disk' => $pelicanNode->disk,
                 'location' => $pelicanNode->location,
@@ -114,6 +119,7 @@ class SyncNodeFromPelicanWebhookJob implements ShouldQueue
                 'local_node_id' => $node->id,
                 'referencing_configurations' => $referencingConfigurations,
             ]);
+
             return;
         }
 

@@ -35,7 +35,7 @@ class InfrastructureSync
             if ($pelicanEgg->nestId > 0) {
                 $nest = Nest::updateOrCreate(
                     ['pelican_nest_id' => $pelicanEgg->nestId],
-                    ['name' => 'Nest #' . $pelicanEgg->nestId],
+                    ['name' => 'Nest #'.$pelicanEgg->nestId],
                 );
                 $nestId = $nest->id;
             }
@@ -74,6 +74,9 @@ class InfrastructureSync
                 [
                     'name' => $pelicanNode->name,
                     'fqdn' => $pelicanNode->fqdn,
+                    'scheme' => $pelicanNode->scheme,
+                    'daemon_listen' => $pelicanNode->daemonListen,
+                    'maintenance_mode' => $pelicanNode->maintenanceMode,
                     'memory' => $pelicanNode->memory,
                     'disk' => $pelicanNode->disk,
                     'location' => $pelicanNode->location,
