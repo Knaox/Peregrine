@@ -8,6 +8,7 @@ use App\Models\Server;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -184,6 +185,66 @@ class ServerStartupCommandTest extends TestCase
         $this->actingAs($owner)->putJson("/api/servers/{$server->id}/startup/command", ['name' => 'Default'])->assertOk();
         $this->actingAs($owner)->getJson("/api/servers/{$server->id}/startup/command")->assertOk();
         Http::assertSentCount(5);
+    }
+
+    public function test_display_read_survives_a_pelican_outage_on_the_last_good_snapshot(): void
+    {
+        // First round-trip healthy, everything after = Pelican down/throttled.
+        Http::fake([
+            '*/api/application/servers/42*' => Http::sequence()
+                ->push([
+                    'attributes' => [
+                        'id' => 42,
+                        'egg' => 3,
+                        'container' => [
+                            'image' => 'ghcr.io/yolks/java_21',
+                            'startup_command' => 'java -jar {{SERVER_JARFILE}}',
+                            'environment' => ['SERVER_JARFILE' => 'server.jar'],
+                        ],
+                    ],
+                ], 200)
+                ->whenEmpty(Http::response(['error' => 'upstream down'], 500)),
+            '*/api/application/eggs/3*' => Http::sequence()
+                ->push([
+                    'attributes' => [
+                        'id' => 3,
+                        'startup_commands' => [
+                            'Default' => 'java -jar {{SERVER_JARFILE}}',
+                            'Aikar flags' => 'java -XX:+UseG1GC -jar {{SERVER_JARFILE}}',
+                        ],
+                    ],
+                ], 200)
+                ->whenEmpty(Http::response(['error' => 'upstream down'], 500)),
+        ]);
+        $owner = User::factory()->create();
+        $server = $this->makeServer($owner);
+
+        // Healthy first read seeds the last-good snapshots.
+        $this->actingAs($owner)->getJson("/api/servers/{$server->id}/startup/command")->assertOk();
+
+        // The 60s display cache expires, then Pelican goes down / throttles.
+        Cache::forget('peregrine:server-startup-context:42');
+        Cache::forget('peregrine:egg-startup-commands:3');
+
+        // The card must NOT vanish: the endpoint serves the last snapshot.
+        $this->actingAs($owner)
+            ->getJson("/api/servers/{$server->id}/startup/command")
+            ->assertOk()
+            ->assertJsonPath('data.current', 'java -jar {{SERVER_JARFILE}}')
+            ->assertJsonPath('data.current_name', 'Default')
+            ->assertJsonPath('data.options.1.name', 'Aikar flags');
+    }
+
+    public function test_cold_pelican_failure_still_errors(): void
+    {
+        // No last-good snapshot yet → nothing sane to serve, keep the 500.
+        Http::fake(['*' => Http::response(['error' => 'upstream down'], 500)]);
+        $owner = User::factory()->create();
+        $server = $this->makeServer($owner);
+
+        $this->actingAs($owner)
+            ->getJson("/api/servers/{$server->id}/startup/command")
+            ->assertStatus(500);
     }
 
     public function test_legacy_pelican_single_startup_falls_back_to_default_option(): void

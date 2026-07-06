@@ -8,6 +8,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Fixed
+
+- **The "node unreachable" banner no longer cries wolf on a single probe blip.** The Wings health probes run with short timeouts and no retries, so one transient hiccup (TCP blip, slow round-trip, momentary 5xx) flipped a perfectly healthy node to `unreachable`/`degraded` for 30–75 s and popped the player banner while the node was fine. Possibly-transient outcomes now need **two consecutive probe rounds** to replace a recently-healthy report (hysteresis at both the node and server-on-node level); a node that was never seen healthy still reports its failure on the very first probe, so genuine outages surface instantly.
+- **The startup-command card no longer vanishes when Pelican hiccups.** The display read behind `GET /startup/command` depended on a single point-in-time Pelican call once its 60 s cache expired — one throttle window / restart / timeout turned into a 500 and the card disappeared from the overview. The container context and the egg command map now keep a last-good snapshot (24 h, display-only, never used to build a PATCH) that is served whenever the fresh Pelican read fails; only a cold failure with no snapshot still errors.
+
 ## [1.0.0-beta.1] — 2026-07-06
 
 ### Added

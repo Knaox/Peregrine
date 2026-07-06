@@ -21,6 +21,15 @@ class PelicanStartupClient
 {
     private const CONTEXT_CACHE_TTL_SECONDS = 60;
 
+    /**
+     * Display reads survive a Pelican outage/throttle window by falling back
+     * to the last successful snapshot — without it, one failed re-read after
+     * the 60s cache expired turned into a 500 and the startup card vanished
+     * from the overview. 24h is plenty: the snapshot refreshes on every
+     * successful read and is only ever used for DISPLAY, never for a PATCH.
+     */
+    private const LAST_GOOD_TTL_SECONDS = 86400;
+
     public function __construct(
         private readonly PelicanHttpClient $http,
         private readonly PelicanInfrastructureClient $infrastructure,
@@ -42,8 +51,37 @@ class PelicanStartupClient
         return Cache::remember(
             "peregrine:server-startup-context:{$pelicanServerId}",
             now()->addSeconds(self::CONTEXT_CACHE_TTL_SECONDS),
-            fn (): array => $this->infrastructure->getServerContainer($pelicanServerId),
+            fn (): array => $this->resolveContextWithFallback($pelicanServerId),
         );
+    }
+
+    /**
+     * Fresh read, falling back to the last good snapshot when Pelican is
+     * unreachable or throttling. Only a cold failure (no snapshot yet)
+     * still bubbles up.
+     *
+     * @return array{egg: int, image: string, startup: string, environment: array<string, string>, egg_docker_images: array<string, string>}
+     *
+     * @throws RequestException
+     */
+    private function resolveContextWithFallback(int $pelicanServerId): array
+    {
+        $lastGoodKey = "peregrine:server-startup-context-last-good:{$pelicanServerId}";
+
+        try {
+            $fresh = $this->infrastructure->getServerContainer($pelicanServerId);
+        } catch (\Throwable $e) {
+            $stale = Cache::get($lastGoodKey);
+            if (is_array($stale)) {
+                return $stale;
+            }
+
+            throw $e;
+        }
+
+        Cache::put($lastGoodKey, $fresh, now()->addSeconds(self::LAST_GOOD_TTL_SECONDS));
+
+        return $fresh;
     }
 
     public function forgetServerStartupContext(int $pelicanServerId): void
@@ -69,22 +107,50 @@ class PelicanStartupClient
         return Cache::remember(
             "peregrine:egg-startup-commands:{$pelicanEggId}",
             now()->addMinutes(5),
-            function () use ($pelicanEggId): array {
-                $response = $this->http->request()
-                    ->get("/api/application/eggs/{$pelicanEggId}")
-                    ->throw();
-
-                $commands = $response->json('attributes.startup_commands');
-                if (is_array($commands)) {
-                    return $this->normaliseCommands($commands);
-                }
-
-                // Pre-beta26 Pelican: single startup string.
-                $legacy = $response->json('attributes.startup');
-
-                return is_string($legacy) && trim($legacy) !== '' ? ['Default' => $legacy] : [];
-            },
+            fn (): array => $this->resolveEggOptionsWithFallback($pelicanEggId),
         );
+    }
+
+    /**
+     * Fresh read of the egg command map, falling back to the last non-empty
+     * snapshot when Pelican is unreachable or throttling (same policy as the
+     * server context — display must survive a transient outage).
+     *
+     * @return array<string, string> name → command
+     *
+     * @throws RequestException
+     */
+    private function resolveEggOptionsWithFallback(int $pelicanEggId): array
+    {
+        $lastGoodKey = "peregrine:egg-startup-commands-last-good:{$pelicanEggId}";
+
+        try {
+            $response = $this->http->request()
+                ->get("/api/application/eggs/{$pelicanEggId}")
+                ->throw();
+        } catch (\Throwable $e) {
+            $stale = Cache::get($lastGoodKey);
+            if (is_array($stale)) {
+                return $stale;
+            }
+
+            throw $e;
+        }
+
+        $commands = $response->json('attributes.startup_commands');
+        $options = is_array($commands) ? $this->normaliseCommands($commands) : [];
+
+        if ($options === []) {
+            // Pre-beta26 Pelican: single startup string.
+            $legacy = $response->json('attributes.startup');
+            $options = is_string($legacy) && trim($legacy) !== '' ? ['Default' => $legacy] : [];
+        }
+
+        if ($options !== []) {
+            Cache::put($lastGoodKey, $options, now()->addSeconds(self::LAST_GOOD_TTL_SECONDS));
+        }
+
+        return $options;
     }
 
     /**
