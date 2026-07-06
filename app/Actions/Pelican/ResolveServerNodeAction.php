@@ -39,8 +39,22 @@ final readonly class ResolveServerNodeAction
             return null;
         }
 
+        // The whole backfill is best-effort: DB writes included, so a
+        // half-migrated install or a Pelican outage degrades to the node we
+        // already know locally (or unknown) instead of a 500 on the page.
         try {
             $pelicanServer = $this->pelican->getServer($server->pelican_server_id);
+
+            $node = Node::where('pelican_node_id', $pelicanServer->nodeId)->first()
+                ?? $this->mirrorNode($pelicanServer->nodeId);
+
+            $server->forceFill([
+                // Never erase a known placement with a failed mirror.
+                'node_id' => $node?->id ?? $server->node_id,
+                'pelican_uuid' => $pelicanServer->uuid !== '' ? $pelicanServer->uuid : $server->pelican_uuid,
+            ])->save();
+
+            return $node ?? $server->node;
         } catch (Throwable $e) {
             Log::info('ResolveServerNodeAction: could not resolve server node from Pelican', [
                 'server_id' => $server->id,
@@ -48,18 +62,10 @@ final readonly class ResolveServerNodeAction
                 'error' => $e->getMessage(),
             ]);
 
-            return null;
+            // Partial link (node known, uuid still missing) — keep showing
+            // the node name; health probing simply stays node-level.
+            return $server->node_id !== null ? $server->node : null;
         }
-
-        $node = Node::where('pelican_node_id', $pelicanServer->nodeId)->first()
-            ?? $this->mirrorNode($pelicanServer->nodeId);
-
-        $server->forceFill([
-            'node_id' => $node?->id,
-            'pelican_uuid' => $pelicanServer->uuid !== '' ? $pelicanServer->uuid : $server->pelican_uuid,
-        ])->save();
-
-        return $node;
     }
 
     private function mirrorNode(int $pelicanNodeId): ?Node

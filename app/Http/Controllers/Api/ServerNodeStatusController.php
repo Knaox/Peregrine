@@ -10,6 +10,7 @@ use App\Services\Wings\DTOs\NodeHealthReport;
 use App\Services\Wings\NodeHealthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Node placement + Wings health for one server — powers the node name,
@@ -18,6 +19,10 @@ use Illuminate\Http\Request;
  * Backed by NodeHealthService's 30s cache so the SPA can poll gently
  * (~45s) without stampeding the daemon. Players only get the classified
  * status; raw Wings error bodies (request ids…) are admin-only.
+ *
+ * This endpoint must NEVER 500: the node name is permanent UI (hero chip
+ * + info card) and a crash would blank it. Any internal failure degrades
+ * to health `unknown` (which renders no player banner) and gets logged.
  */
 class ServerNodeStatusController extends Controller
 {
@@ -38,9 +43,18 @@ class ServerNodeStatusController extends Controller
             ]);
         }
 
-        $report = $server->pelican_uuid !== null
-            ? $health->checkServerOnNode($node, $server->pelican_uuid)
-            : $health->checkNode($node);
+        try {
+            $report = $server->pelican_uuid !== null
+                ? $health->checkServerOnNode($node, $server->pelican_uuid)
+                : $health->checkNode($node);
+        } catch (\Throwable $e) {
+            Log::warning('ServerNodeStatus: health probe crashed — degrading to unknown', [
+                'server_id' => $server->id,
+                'node_id' => $node->id,
+                'error' => $e->getMessage(),
+            ]);
+            $report = NodeHealthReport::make(NodeHealthStatus::Unknown, detail: $e->getMessage());
+        }
 
         return response()->json([
             'node' => [

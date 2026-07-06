@@ -33,12 +33,27 @@ class NodeDaemonCredentialsResolver
      */
     public function refresh(Node $node): bool
     {
+        // Fully best-effort (the save() included): a failure here must
+        // degrade the health check to `unknown`, never 500 the page —
+        // e.g. a prod install whose nodes table misses the token columns.
         try {
             $response = $this->http->request()
                 ->get("/api/application/nodes/{$node->pelican_node_id}/configuration")
                 ->throw();
+
+            $token = (string) $response->json('token', '');
+            if ($token === '') {
+                return false;
+            }
+
+            $node->forceFill([
+                'daemon_token_id' => (string) $response->json('token_id', ''),
+                'daemon_token' => $token,
+            ])->save();
+
+            return true;
         } catch (\Throwable $e) {
-            Log::warning('NodeDaemonCredentialsResolver: could not fetch node configuration', [
+            Log::warning('NodeDaemonCredentialsResolver: could not refresh daemon credentials', [
                 'node_id' => $node->id,
                 'pelican_node_id' => $node->pelican_node_id,
                 'error' => $e->getMessage(),
@@ -46,17 +61,5 @@ class NodeDaemonCredentialsResolver
 
             return false;
         }
-
-        $token = (string) $response->json('token', '');
-        if ($token === '') {
-            return false;
-        }
-
-        $node->forceFill([
-            'daemon_token_id' => (string) $response->json('token_id', ''),
-            'daemon_token' => $token,
-        ])->save();
-
-        return true;
     }
 }

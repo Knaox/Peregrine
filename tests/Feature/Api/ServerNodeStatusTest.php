@@ -7,6 +7,7 @@ namespace Tests\Feature\Api;
 use App\Models\Node;
 use App\Models\Server;
 use App\Models\User;
+use App\Services\Wings\NodeHealthService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
@@ -126,5 +127,44 @@ class ServerNodeStatusTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('node', null)
             ->assertJsonPath('health.status', 'unknown');
+    }
+
+    public function test_health_probe_crash_degrades_to_unknown_with_node_still_visible(): void
+    {
+        // The node name is permanent UI (hero chip + info card): an internal
+        // crash in the health layer must never 500 the endpoint nor blank
+        // the node — it degrades to `unknown`, which renders no banner.
+        $this->mock(NodeHealthService::class)
+            ->shouldReceive('checkServerOnNode')
+            ->andThrow(new \RuntimeException('cache backend exploded'));
+
+        $owner = User::factory()->create();
+        $node = $this->makeNode();
+        $server = $this->makeOwnedServer($owner, ['node_id' => $node->id, 'pelican_uuid' => 'uuid-1']);
+
+        $response = $this->actingAs($owner)->getJson("/api/servers/{$server->id}/node-status");
+
+        $response->assertOk()
+            ->assertJsonPath('node.name', 'node-fr-1')
+            ->assertJsonPath('health.status', 'unknown')
+            ->assertJsonMissingPath('health.detail');
+    }
+
+    public function test_probe_crash_detail_is_admin_only(): void
+    {
+        $this->mock(NodeHealthService::class)
+            ->shouldReceive('checkServerOnNode')
+            ->andThrow(new \RuntimeException('cache backend exploded'));
+
+        $admin = User::factory()->create(['is_admin' => true]);
+        $owner = User::factory()->create();
+        $node = $this->makeNode();
+        $server = $this->makeOwnedServer($owner, ['node_id' => $node->id, 'pelican_uuid' => 'uuid-1']);
+
+        $this->actingAs($admin)
+            ->getJson("/api/servers/{$server->id}/node-status")
+            ->assertOk()
+            ->assertJsonPath('health.status', 'unknown')
+            ->assertJsonPath('health.detail', 'cache backend exploded');
     }
 }

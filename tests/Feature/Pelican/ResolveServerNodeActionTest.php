@@ -137,4 +137,38 @@ class ResolveServerNodeActionTest extends TestCase
         $this->assertNull(app(ResolveServerNodeAction::class)($server));
         Http::assertNothingSent();
     }
+
+    public function test_pelican_failure_falls_back_to_locally_known_node(): void
+    {
+        // node_id already linked but the uuid backfill still pending: a
+        // Pelican outage must keep the node name on the page (health simply
+        // stays node-level) instead of blanking the chip.
+        Http::fake([
+            '*/api/application/servers/42*' => Http::response(['error' => 'down'], 500),
+        ]);
+        $node = $this->makeNode();
+        $server = $this->makeServer(['node_id' => $node->id]);
+
+        $resolved = app(ResolveServerNodeAction::class)($server);
+
+        $this->assertSame($node->id, $resolved?->id);
+    }
+
+    public function test_failed_node_mirror_does_not_erase_known_placement(): void
+    {
+        // Pelican answers but the node mirror fetch fails: the previously
+        // known node_id must survive the forceFill (uuid still updates).
+        Http::fake([
+            '*/api/application/servers/42*' => Http::response($this->pelicanServerPayload(9), 200),
+            '*/api/application/nodes/9*' => Http::response(['error' => 'down'], 500),
+        ]);
+        $node = $this->makeNode(); // pelican_node_id 5 ≠ 9 → mirror path runs and fails
+        $server = $this->makeServer(['node_id' => $node->id]);
+
+        $resolved = app(ResolveServerNodeAction::class)($server);
+
+        $this->assertSame($node->id, $server->fresh()->node_id);
+        $this->assertSame('abc12345-1111-2222-3333-444455556666', $server->fresh()->pelican_uuid);
+        $this->assertSame($node->id, $resolved?->id);
+    }
 }
