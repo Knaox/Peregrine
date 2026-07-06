@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\ServerController;
 use App\Http\Controllers\Api\ServerDatabaseController;
 use App\Http\Controllers\Api\ServerFileController;
 use App\Http\Controllers\Api\ServerNetworkController;
+use App\Http\Controllers\Api\ServerNodeStatusController;
 use App\Http\Controllers\Api\ServerPowerController;
 use App\Http\Controllers\Api\ServerRuntimeFixController;
 use App\Http\Controllers\Api\ServerScheduleController;
@@ -132,6 +133,10 @@ Route::middleware('auth')->group(function () {
         Route::post('servers/{server}/power', ServerPowerController::class);
         Route::post('servers/{server}/command', [ServerConsoleController::class, 'command']);
     });
+
+    // Node placement + Wings health for the server-home banner. Probes are
+    // cached 30s server-side, so gentle SPA polling stays cheap for Wings.
+    Route::get('servers/{server}/node-status', ServerNodeStatusController::class);
 
     // Server startup variables
     Route::get('servers/{server}/startup', [ServerStartupController::class, 'index']);
