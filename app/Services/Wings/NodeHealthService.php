@@ -23,10 +23,33 @@ use Illuminate\Support\Facades\Cache;
  *
  * Results are cached 30s per node / per server: Wings is not behind the
  * Pelican panel throttle, but page loads must never stampede a daemon.
+ *
+ * Transient-failure hysteresis: the probes run with short timeouts and no
+ * retries, so a single TCP blip used to flip a healthy node straight to
+ * "unreachable" for 30-75s — the player banner cried wolf while the node
+ * was fine. A probe outcome that MAY be transient (unreachable / degraded
+ * / server_unreachable / server_errors) is only reported once it repeats
+ * on CONFIRM_ROUNDS consecutive probe rounds; the first bad round keeps
+ * serving the last healthy report (if one was seen within LAST_GOOD_TTL).
+ * A node that was never seen healthy still reports its failure instantly.
  */
 class NodeHealthService
 {
     private const CACHE_TTL_SECONDS = 30;
+
+    private const CONFIRM_ROUNDS = 2;
+
+    private const STREAK_TTL_SECONDS = 600;
+
+    private const LAST_GOOD_TTL_SECONDS = 900;
+
+    /** Probe outcomes that can be caused by a one-off blip (timeout, slow round-trip). */
+    private const TRANSIENT_FAILURES = [
+        NodeHealthStatus::Unreachable,
+        NodeHealthStatus::Degraded,
+        NodeHealthStatus::ServerUnreachable,
+        NodeHealthStatus::ServerErrors,
+    ];
 
     public const SLOW_THRESHOLD_MS = 1500;
 
@@ -40,7 +63,7 @@ class NodeHealthService
         return Cache::remember(
             "wings_health:node:{$node->id}",
             self::CACHE_TTL_SECONDS,
-            fn () => $this->probeNode($node),
+            fn () => $this->confirm("node:{$node->id}", $this->probeNode($node)),
         );
     }
 
@@ -59,8 +82,40 @@ class NodeHealthService
         return Cache::remember(
             "wings_health:server:{$serverUuid}",
             self::CACHE_TTL_SECONDS,
-            fn () => $this->probeServer($node, $serverUuid),
+            fn () => $this->confirm("server:{$serverUuid}", $this->probeServer($node, $serverUuid)),
         );
+    }
+
+    /**
+     * Hysteresis gate between a fresh probe outcome and what we report.
+     * Possibly-transient failures must repeat on CONFIRM_ROUNDS consecutive
+     * probe rounds before they replace a recently-healthy report; anything
+     * else (healthy, maintenance, auth_failed, unknown) passes through and
+     * resets the failure streak.
+     */
+    private function confirm(string $key, NodeHealthReport $fresh): NodeHealthReport
+    {
+        $streakKey = "wings_health:streak:{$key}";
+
+        if (! in_array($fresh->status, self::TRANSIENT_FAILURES, true)) {
+            Cache::forget($streakKey);
+            if ($fresh->status === NodeHealthStatus::Healthy) {
+                Cache::put("wings_health:last_good:{$key}", $fresh, self::LAST_GOOD_TTL_SECONDS);
+            }
+
+            return $fresh;
+        }
+
+        $streak = (int) Cache::get($streakKey, 0) + 1;
+        Cache::put($streakKey, $streak, self::STREAK_TTL_SECONDS);
+
+        if ($streak >= self::CONFIRM_ROUNDS) {
+            return $fresh;
+        }
+
+        $lastGood = Cache::get("wings_health:last_good:{$key}");
+
+        return $lastGood instanceof NodeHealthReport ? $lastGood : $fresh;
     }
 
     private function probeNode(Node $node): NodeHealthReport

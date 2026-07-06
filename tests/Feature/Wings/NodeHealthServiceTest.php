@@ -9,6 +9,7 @@ use App\Models\Node;
 use App\Services\Wings\NodeHealthService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -201,5 +202,118 @@ class NodeHealthServiceTest extends TestCase
         $service->checkNode($node);
 
         Http::assertSentCount(1);
+    }
+
+    /**
+     * Simulates the 30s report cache expiring between two SPA polls, so the
+     * next checkNode() runs a fresh probe round.
+     */
+    private function expireReportCaches(Node $node, ?string $serverUuid = null): void
+    {
+        Cache::forget("wings_health:node:{$node->id}");
+        if ($serverUuid !== null) {
+            Cache::forget("wings_health:server:{$serverUuid}");
+        }
+    }
+
+    public function test_single_probe_blip_after_a_healthy_round_keeps_reporting_healthy(): void
+    {
+        Http::fake([
+            self::WINGS.'/api/system' => Http::sequence()
+                ->push(['version' => '1.0.0'], 200)
+                ->pushFailedConnection('cURL error 28: timeout'),
+        ]);
+
+        $node = $this->makeNode();
+        $service = $this->service();
+
+        $this->assertSame(NodeHealthStatus::Healthy, $service->checkNode($node)->status);
+
+        $this->expireReportCaches($node);
+
+        // One transient blip must NOT flip the player banner — the last
+        // healthy report is served until a second round confirms the outage.
+        $this->assertSame(NodeHealthStatus::Healthy, $service->checkNode($node)->status);
+    }
+
+    public function test_two_consecutive_failed_rounds_report_unreachable(): void
+    {
+        Http::fake([
+            self::WINGS.'/api/system' => Http::sequence()
+                ->push(['version' => '1.0.0'], 200)
+                ->pushFailedConnection('refused')
+                ->pushFailedConnection('refused'),
+        ]);
+
+        $node = $this->makeNode();
+        $service = $this->service();
+
+        $this->assertSame(NodeHealthStatus::Healthy, $service->checkNode($node)->status);
+
+        $this->expireReportCaches($node);
+        $this->assertSame(NodeHealthStatus::Healthy, $service->checkNode($node)->status);
+
+        $this->expireReportCaches($node);
+        $report = $service->checkNode($node);
+
+        $this->assertSame(NodeHealthStatus::Unreachable, $report->status);
+        $this->assertStringContainsString('refused', (string) $report->detail);
+    }
+
+    public function test_recovery_resets_the_failure_streak(): void
+    {
+        Http::fake([
+            self::WINGS.'/api/system' => Http::sequence()
+                ->push(['version' => '1.0.0'], 200)
+                ->pushFailedConnection('blip 1')
+                ->push(['version' => '1.0.0'], 200)
+                ->pushFailedConnection('blip 2'),
+        ]);
+
+        $node = $this->makeNode();
+        $service = $this->service();
+
+        $this->assertSame(NodeHealthStatus::Healthy, $service->checkNode($node)->status);
+        $this->expireReportCaches($node);
+        $this->assertSame(NodeHealthStatus::Healthy, $service->checkNode($node)->status); // blip 1 masked
+        $this->expireReportCaches($node);
+        $this->assertSame(NodeHealthStatus::Healthy, $service->checkNode($node)->status); // genuine recovery
+        $this->expireReportCaches($node);
+
+        // blip 2 starts a NEW streak (the healthy round reset the counter).
+        $this->assertSame(NodeHealthStatus::Healthy, $service->checkNode($node)->status);
+    }
+
+    public function test_single_server_probe_blip_keeps_reporting_healthy(): void
+    {
+        Http::fake([
+            self::WINGS.'/api/system' => Http::response(['version' => '1.0.0'], 200),
+            self::WINGS.'/api/servers/uuid-1/files/list-directory*' => Http::sequence()
+                ->push(['data' => []], 200)
+                ->pushFailedConnection('cURL error 28: timeout'),
+            self::WINGS.'/api/servers/uuid-1' => Http::response(['state' => 'running'], 200),
+        ]);
+
+        $node = $this->makeNode();
+        $service = $this->service();
+
+        $this->assertSame(NodeHealthStatus::Healthy, $service->checkServerOnNode($node, 'uuid-1')->status);
+
+        $this->expireReportCaches($node, 'uuid-1');
+
+        $this->assertSame(NodeHealthStatus::Healthy, $service->checkServerOnNode($node, 'uuid-1')->status);
+    }
+
+    public function test_never_seen_healthy_node_reports_its_failure_immediately(): void
+    {
+        Http::fake([
+            self::WINGS.'/api/system' => fn () => throw new ConnectionException('refused'),
+        ]);
+
+        // No healthy history at all (cold cache) → a genuinely down node
+        // must show up on the very first probe, not after CONFIRM_ROUNDS.
+        $report = $this->service()->checkNode($this->makeNode());
+
+        $this->assertSame(NodeHealthStatus::Unreachable, $report->status);
     }
 }
