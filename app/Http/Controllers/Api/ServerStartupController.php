@@ -7,7 +7,6 @@ use App\Actions\Pelican\UpdateStartupVariablesAction;
 use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Models\Server;
-use App\Services\Pelican\PelicanApplicationService;
 use App\Services\Pelican\PelicanClientService;
 use App\Services\Pelican\PelicanStartupClient;
 use App\Services\Plugin\StartupVariableClaimRegistry;
@@ -81,7 +80,6 @@ class ServerStartupController extends Controller
     public function command(
         Request $request,
         Server $server,
-        PelicanApplicationService $pelican,
         PelicanStartupClient $startupClient,
     ): JsonResponse {
         $this->authorize('readStartup', $server);
@@ -90,7 +88,9 @@ class ServerStartupController extends Controller
             return response()->json(['data' => null]);
         }
 
-        $container = $pelican->getServerContainer($server->pelican_server_id);
+        // Display path — 60s-cached context, so revisiting the overview does
+        // not spam the Pelican Application API. Invalidated on switch.
+        $container = $startupClient->getServerStartupContext($server->pelican_server_id);
         $options = $startupClient->getEggStartupOptions((int) $container['egg']);
         $currentName = array_search($container['startup'], $options, true);
 

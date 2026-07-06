@@ -168,6 +168,24 @@ class ServerStartupCommandTest extends TestCase
             ->assertJsonPath('data', null);
     }
 
+    public function test_display_reads_are_cached_and_invalidated_on_switch(): void
+    {
+        $this->fakePelican();
+        $owner = User::factory()->create();
+        $server = $this->makeServer($owner);
+
+        // Two reads → container + egg options each hit Pelican exactly once.
+        $this->actingAs($owner)->getJson("/api/servers/{$server->id}/startup/command")->assertOk();
+        $this->actingAs($owner)->getJson("/api/servers/{$server->id}/startup/command")->assertOk();
+        Http::assertSentCount(2);
+
+        // A switch reads a FRESH container (never the display cache), sends
+        // the PATCH, and drops the display cache → next read re-fetches it.
+        $this->actingAs($owner)->putJson("/api/servers/{$server->id}/startup/command", ['name' => 'Default'])->assertOk();
+        $this->actingAs($owner)->getJson("/api/servers/{$server->id}/startup/command")->assertOk();
+        Http::assertSentCount(5);
+    }
+
     public function test_legacy_pelican_single_startup_falls_back_to_default_option(): void
     {
         Http::fake([

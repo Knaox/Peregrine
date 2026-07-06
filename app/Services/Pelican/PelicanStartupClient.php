@@ -19,10 +19,37 @@ use Illuminate\Support\Facades\Cache;
  */
 class PelicanStartupClient
 {
+    private const CONTEXT_CACHE_TTL_SECONDS = 60;
+
     public function __construct(
         private readonly PelicanHttpClient $http,
         private readonly PelicanInfrastructureClient $infrastructure,
     ) {}
+
+    /**
+     * Cached view of the server's container (egg/startup/image/environment)
+     * for DISPLAY paths — the overview card re-reads it on every visit, and
+     * without a cache each page load costs one Pelican Application call.
+     * NEVER used to build a PATCH (a stale environment would overwrite
+     * variables edited in between): writes read fresh, then invalidate this.
+     *
+     * @return array{egg: int, image: string, startup: string, environment: array<string, string>, egg_docker_images: array<string, string>}
+     *
+     * @throws RequestException
+     */
+    public function getServerStartupContext(int $pelicanServerId): array
+    {
+        return Cache::remember(
+            "peregrine:server-startup-context:{$pelicanServerId}",
+            now()->addSeconds(self::CONTEXT_CACHE_TTL_SECONDS),
+            fn (): array => $this->infrastructure->getServerContainer($pelicanServerId),
+        );
+    }
+
+    public function forgetServerStartupContext(int $pelicanServerId): void
+    {
+        Cache::forget("peregrine:server-startup-context:{$pelicanServerId}");
+    }
 
     /**
      * Named startup commands defined on an egg, in the egg's declared order.
@@ -98,6 +125,10 @@ class PelicanStartupClient
         $this->http->request()
             ->patch("/api/application/servers/{$pelicanServerId}/startup", $payload)
             ->throw();
+
+        // The display cache now holds the pre-switch command — drop it so the
+        // SPA's immediate refetch reads the fresh state.
+        $this->forgetServerStartupContext($pelicanServerId);
     }
 
     /**

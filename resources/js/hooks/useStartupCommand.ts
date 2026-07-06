@@ -16,6 +16,9 @@ export function useStartupCommand(serverId: number) {
         queryKey,
         queryFn: () => fetchStartupCommand(serverId),
         staleTime: 60_000,
+        // Startup commands change rarely and only through this UI — an
+        // alt-tab must not trigger a refetch (Pelican API budget).
+        refetchOnWindowFocus: false,
         enabled: Number.isFinite(serverId) && serverId > 0,
     });
 
